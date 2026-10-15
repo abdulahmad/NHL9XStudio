@@ -382,9 +382,9 @@ assert.strictEqual(snes94frame.pixels[0], 1);
 
 assert.strictEqual(APP_NAME, 'NHL9X Studio');
 
-assert.strictEqual(GAMES.length, 8);
+assert.strictEqual(GAMES.length, 9);
 const staticManifest = buildManifest();
-assert.strictEqual(staticManifest.length, 8);
+assert.strictEqual(staticManifest.length, 9);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
 
@@ -1108,19 +1108,29 @@ const audioRom = retail92
   || romIf(path.join(root, 'EA-NHL-Tools', 'NHL92FMTunes-To-MIDI', 'nhl92retail.bin'));
 const previewRender = require('./lib/audio/preview-render');
 const nhl92Z80 = require('./lib/audio/nhl92-z80');
+const z80Machine = require('./lib/audio/z80-machine');
+const z80Patterns = require('./lib/audio/z80-test-patterns');
+const soundSystem = require('./lib/audio/nhl92-sound-system');
+
+const ramWalk = z80Patterns.run('ram_walk');
+assert.ok(ramWalk.ok, ramWalk.detail);
 
 if (audioRom) {
   const rom = audioRom;
-  const z80Loaded = nhl92Z80.loadIntoRam(rom);
-  assert.ok(z80Loaded);
-  assert.strictEqual(z80Loaded.blob[0], 0xc3);
-  assert.strictEqual(z80Loaded.ram[0], 0xc3);
-  let z80Steps = 0;
-  try {
-    for (; z80Steps < 2000; z80Steps++) z80Loaded.cpu.step();
-  } catch (err) {
-    assert.ok(z80Steps >= 5, 'Z80 driver should execute some instructions before unimplemented opcode');
-  }
+  const blob = nhl92Z80.extractProgram(rom);
+  assert.ok(blob);
+  assert.strictEqual(blob[0], 0xc3);
+  const machine = z80Machine.create();
+  machine.loadProgram(blob, 0);
+  const boot = machine.runInstructions(3000);
+  assert.ok(boot.instructions > 200, 'NHL Z80 program should run many instructions');
+  const driverPat = z80Patterns.run('nhl_driver_boot', rom);
+  assert.ok(driverPat.ok, driverPat.detail);
+  const sys = soundSystem.create(rom);
+  sys.initialZ80();
+  sys.initTune(1);
+  const tick = sys.tick();
+  assert.ok(tick.snapshot.instructions > 0);
   const scan = scanGenesisAudio(rom, audio.genesis.gameMeta('nhl92'));
   assert.ok(scan.fmtune && scan.fmtune.fmtuneTable === 0x10294);
   assert.ok(scan.fmtune.fmtuneTracks >= 5);
