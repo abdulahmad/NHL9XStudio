@@ -42,11 +42,12 @@ async function initEngine() {
   const base = generatedBaseUrl();
   const { Ym2612 } = await import(new URL('ym2612-runtime.js', base).href);
   const { default: moduleFactory } = await import(new URL('ym2612_wasm.js', base).href);
+  const wasmRes = await fetch(new URL('ym2612_wasm.wasm', base).href);
+  if (!wasmRes.ok) throw new Error('WASM fetch failed (' + wasmRes.status + ')');
+  const wasmBinary = new Uint8Array(await wasmRes.arrayBuffer());
   ymChip = await Ym2612.create({
     moduleFactory,
-    moduleOptions: {
-      locateFile: (name) => new URL(name, base).href
-    }
+    moduleOptions: { wasmBinary }
   });
   ymChip.reset();
   psg = NhlSn76489.create({ clock: 3579545 });
