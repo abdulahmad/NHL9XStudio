@@ -6,6 +6,8 @@ Genesis (AUD-0 / AUD-1):
 - `genesis-92-sequence.js` — NHL 92 68k cmdstream → note schedule (loop table, transpose, instruments).
 - `preview-render.js` — Node/browser PCM preview (RMS-testable without Web Audio).
 - `m68k-cpu.js` — 68000 interpreter (no dependencies, no cycle timing) for running the retail 68k sound driver. Validated against SingleStepTests 680x0 (`node test/m68k-singlestep.js`, downloads the suite); see `docs/M68K-CORE.md` and `docs/M68K-SINGLESTEP-REPORT.md`.
+- `nhl92-68k-harness.js` — step 6: the retail 68k sound driver (ROM bytes) on `m68k-cpu.js`, with a Z80 window, bus/reset ports and the game's `song`/`sfx` wrappers (re-assembled from middle.asm). `nhl92-68k-run.js` makes per-vblank logs, `nhl92-68k-analysis.js` cross-checks them against `nhl92-sound-data.js`, `tools/run-nhl92-68k-driver.js` writes them (hashes pinned in `data/audio/nhl92-68k-driver.json`). See `docs/NHL92-68K-DRIVER.md`.
+- `nhl92-sfx-names.js` — SFX names by ID (EA sound list + ram.asm equates), with the disassembly's shifted labels/comments for reference.
 - `z80-cpu-core.js` — vendored `@dcorp80/z80cpu` (regenerate: `node tools/vendor-z80cpu.js`).
 - `ym2612.js` — YM2612 register bus (Z80 / harness).
 - `ym2612-wasm.js` + `generated/ym2612_wasm.*` — ymfm YM2612 PCM (BSD-3-Clause, see `licenses-ymfm.txt`).

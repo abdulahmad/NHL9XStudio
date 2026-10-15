@@ -5,6 +5,7 @@
  */
 (function (root) {
   const SD = () => root.Nhl92SoundData;
+  const NAMES = () => root.Nhl92SfxNames;
   let data = null;
   let error = '';
   let loading = null;
@@ -48,7 +49,7 @@
     }
     for (const s of data.sfx) {
       const kinds = s.actions.map((a) => (a.type === 'dac' ? 'DAC' : 'FM ch' + a.channel)).join(' + ');
-      out.push({ id: 'sfx-' + s.id, group: 'SFX', label: s.id + ' · ' + s.label, sub: kinds + ' · handler ' + h(s.handler) });
+      out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: kinds + ' · disassembly label handle_sfx_' + s.label });
     }
     out.push({ id: 'stop', group: 'SFX', label: 'Stop DAC (configure_ym2612)', sub: 'called by Stop/Pause music · ' + h(data.stopHandler.handler) });
     out.push({ id: 'envelopes', group: 'Tables', label: 'Pitch envelopes', sub: data.envelopes.length + ' envelopes · ' + h(data.envelopes[0].start) });
@@ -211,9 +212,12 @@
     if (id.startsWith('song-')) renderSong(box, Number(id.slice(5)));
     else if (id.startsWith('sfx-')) {
       const s = data.sfx[Number(id.slice(4))];
-      box.appendChild(make('h3', null, 'SFX ' + s.id + ' · ' + s.label));
-      box.appendChild(make('p', 'sd-note', 'sfx_pointer_table entry ' + h(data.sfxTable + s.id * 4) + ' → handler ' + h(s.handler) +
-        '. Label from the disassembly; the game\'s own SFX constants are not in this data.'));
+      const N = NAMES();
+      box.appendChild(make('h3', null, 'SFX ' + N.name(s.id)));
+      box.appendChild(make('p', 'sd-note', 'Name from the EA sound list' + (N.EQUATES[s.id] ? ' and the src/ram.asm equate' + (N.EQUATES[s.id].length > 1 ? 's ' : ' ') + N.EQUATES[s.id].join(', ') : '') +
+        '. sfx_pointer_table entry ' + h(data.sfxTable + s.id * 4) + ' → handler ' + h(s.handler) + '.'));
+      box.appendChild(make('p', 'sd-note', 'In sound.asm this handler is labelled handle_sfx_' + s.label + ' and its table comment reads "' +
+        N.TABLE_COMMENTS[s.id] + '". Those labels and comments are shifted against the IDs, so they are shown here only for reference.'));
       renderSfxActions(box, s.actions);
     } else if (id === 'stop') {
       box.appendChild(make('h3', null, 'configure_ym2612'));
@@ -234,7 +238,7 @@
       rows.push(['Patterns', String(pats.size) + ' distinct']);
     } else if (id.startsWith('sfx-')) {
       const s = data.sfx[Number(id.slice(4))];
-      rows.push(['SFX id', String(s.id)], ['Handler', h(s.handler)], ['Actions', s.actions.map((a) => (a.type === 'dac' ? 'DAC ' + h(a.sample) : 'FM ' + h(a.stream))).join(', ')]);
+      rows.push(['SFX id', String(s.id)], ['Name', NAMES().name(s.id).replace(/^\d+ · /, '')], ['Disassembly label', 'handle_sfx_' + s.label], ['Handler', h(s.handler)], ['Actions', s.actions.map((a) => (a.type === 'dac' ? 'DAC ' + h(a.sample) : 'FM ' + h(a.stream))).join(', ')]);
     }
     rows.push(['Source', 'Bundled NHL 92 sound slice ($F4C8–$24213)']);
     rows.push(['Format', 'docs/NHL92-SOUND-DATA.md']);
