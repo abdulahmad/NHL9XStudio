@@ -1,0 +1,60 @@
+name: Deploy GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: abdulahmad/EA-NHL-Tools
+          path: ea-nhl-tools
+          sparse-checkout: |
+            ANIM-To-BMP
+            JIM-Tools
+            PAL-To-ACT
+            NHL92FMTunes-To-MIDI
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare ANIM-To-BMP golden BMPs
+        working-directory: ea-nhl-tools/ANIM-To-BMP
+        run: |
+          for f in Sprites.anim Puck.anim Zam.anim Crowd.anim; do
+            node animToBmp.js "$f"
+          done
+      - run: node tools/build-manifest.js
+        env:
+          EA_NHL_TOOLS_ROOT: ${{ github.workspace }}/ea-nhl-tools
+      - run: node test.js
+        env:
+          EA_NHL_TOOLS_ROOT: ${{ github.workspace }}/ea-nhl-tools
+      - name: Assemble static site
+        run: |
+          mkdir -p _site
+          cp -r public/* _site/
+          cp -r lib _site/lib
+          cp -r data _site/data
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
