@@ -446,6 +446,19 @@
       "m68kMatchesStep6": true
     }
   ],
+  "sfxMusicOff": [
+    {
+      "id": 0,
+      "frames": 603,
+      "file": "sfx/sfx-00-siren-SFXsiren-after-music-off.wav",
+      "ymWrites": 3071,
+      "psgWrites": 0,
+      "peak": 4999,
+      "wav": "bcfb2d8f4c76f0d9204652c5c897181d060ff5d5a93fd27bb4bcab734532e52d",
+      "log": "248ca557e1b3aeaa2db9f21b512b820f755a5df18c1eb8ef39450c15522f7407",
+      "prelude": "song 0 init, p_turnoff, then sfx"
+    }
+  ],
   "mixes": [
     {
       "id": 0,

@@ -24,6 +24,8 @@ const ROOT = path.join(__dirname, '..');
 const MANIFEST = path.join(ROOT, 'data', 'audio', 'nhl92-sound-chain.json');
 const STEP6 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'audio', 'nhl92-68k-driver.json'), 'utf8'));
 
+const GROUP = { song: 'songs', sfx: 'sfx', 'sfx-music-off': 'sfxMusicOff', mix: 'mixes' };
+
 async function main() {
   const args = process.argv.slice(2);
   const update = args.includes('--update');
@@ -36,13 +38,14 @@ async function main() {
     frameTstates: chainApi.FRAME_TSTATES,
     songs: [],
     sfx: [],
+    sfxMusicOff: [],
     mixes: []
   };
   const failures = [];
   const t0 = Date.now();
   for (const item of R.renders(src)) {
     const r = await R.render(item, src);
-    const dir = item.kind === 'song' ? 'songs' : item.kind === 'sfx' ? 'sfx' : 'mixes';
+    const dir = item.kind === 'song' ? 'songs' : item.kind === 'mix' ? 'mixes' : 'sfx';
     fs.writeFileSync(path.join(outDir, dir, item.file + '.wav'), r.wav);
     fs.writeFileSync(path.join(outDir, dir, item.file + '.ymlog.txt'), r.log);
     const entry = {
@@ -59,13 +62,16 @@ async function main() {
       entry.song = item.plan.id;
       entry.sfxAt = item.plan.sfxAt;
       entry.note = item.note;
+    } else if (item.kind === 'sfx-music-off') {
+      // Not a step 6 run (song + p_turnoff prelude), so there is no step 6 68k pin to compare.
+      entry.prelude = 'song 0 init, p_turnoff, then sfx';
     } else {
       const pin = (item.kind === 'song' ? STEP6.songs : STEP6.sfx).find((p) => p.id === item.id);
       entry.m68kMatchesStep6 = !!pin && pin.sha256 === r.m68kSha256;
       if (!entry.m68kMatchesStep6) failures.push(item.file + ': 68k log differs from step 6');
     }
     if (r.chain.psgWrites) failures.push(item.file + ': PSG written');
-    manifest[item.kind === 'mix' ? 'mixes' : item.kind === 'song' ? 'songs' : 'sfx'].push(entry);
+    manifest[GROUP[item.kind]].push(entry);
     console.log(item.file, 'ym', r.chain.ymWrites, 'peak', r.peak, r.wavSha256.slice(0, 12),
       entry.m68kMatchesStep6 === false ? '68k DIFFERS' : '');
   }
