@@ -5,6 +5,7 @@ Genesis (AUD-0 / AUD-1):
 - `genesis-constants.js` — ROM offsets (`Hockey.snd`, FMTune, SFX cmdstreams for NHL 92).
 - `genesis-92-sequence.js` — NHL 92 68k cmdstream → note schedule (loop table, transpose, instruments).
 - `preview-render.js` — Node/browser PCM preview (RMS-testable without Web Audio).
+- `m68k-cpu.js` — 68000 interpreter (no dependencies, no cycle timing) for running the retail 68k sound driver. Validated against SingleStepTests 680x0 (`node test/m68k-singlestep.js`, downloads the suite); see `docs/M68K-CORE.md` and `docs/M68K-SINGLESTEP-REPORT.md`.
 - `z80-cpu-core.js` — vendored `@dcorp80/z80cpu` (regenerate: `node tools/vendor-z80cpu.js`).
 - `ym2612.js` — YM2612 register bus (Z80 / harness).
 - `ym2612-wasm.js` + `generated/ym2612_wasm.*` — ymfm YM2612 PCM (BSD-3-Clause, see `licenses-ymfm.txt`).
