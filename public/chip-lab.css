@@ -49,6 +49,11 @@
   padding: 0.45rem 0.75rem;
 }
 
+.chip-card button.is-selected {
+  border-color: var(--amber);
+  color: var(--ice);
+}
+
 .chip-card button.primary {
   border-color: var(--ice-2);
   background: #2a4555;
