@@ -196,9 +196,17 @@ async function playZ80Pattern() {
   await new Promise((resolve) => window.setTimeout(resolve, 0));
   try {
     const rom = await ensureRom();
+    if (!rom) {
+      z80LastResult = 'Bundled sound fixture failed to load (check network / GitHub Pages data path).';
+      renderCaption();
+      renderDetail();
+      return;
+    }
     const out = NhlZ80TestPatterns.run(state.z80Pattern, rom);
-    z80LastResult = out.detail || (out.ok ? 'OK' : 'Failed');
-    if (out.schedule && out.schedule.events && out.schedule.events.length) {
+    z80LastResult = out.ok
+      ? (out.detail || 'OK')
+      : ('Failed: ' + (out.detail || 'pattern returned not ok'));
+    if (out.ok && out.schedule && out.schedule.events && out.schedule.events.length) {
       audioLoadError = '';
       const play = await NhlAudioEngine.playSchedule(out.schedule);
       state.playing = true;
@@ -1881,14 +1889,15 @@ async function icePaletteBytes() {
 async function ensureRom() {
   if (!gameInfo) return null;
   if (isZ80TestGame() && typeof Nhl92SoundFixture !== 'undefined') {
+    const cached = roms.get(gameInfo.id);
+    if (cached && cached.length) return cached;
     try {
-      const base = resolveUrl('').replace(/\/?$/, '');
-      const rom = await Nhl92SoundFixture.ensureSyntheticRom({ baseUrl: base });
+      const rom = await Nhl92SoundFixture.ensureSyntheticRom({ baseUrl: pathPrefix });
       roms.set(gameInfo.id, rom);
       return rom;
     } catch (err) {
-      roms.set(gameInfo.id, null);
-      return null;
+      roms.delete(gameInfo.id);
+      throw err;
     }
   }
   if (roms.has(gameInfo.id)) {
@@ -2274,6 +2283,14 @@ async function loadGame(id, keepSelection) {
     }
     if (state.mode === 'audio' && (!audioCatalog || !audioCatalog.entries || !audioCatalog.entries.length)) {
       state.mode = 'spa';
+    }
+  }
+  if (info.kind === 'z80test') {
+    z80LastResult = '';
+    try {
+      await ensureRom();
+    } catch (err) {
+      audioLoadError = 'Sound fixture: ' + (err && err.message ? err.message : 'load failed');
     }
   }
   if (info.pixels) {

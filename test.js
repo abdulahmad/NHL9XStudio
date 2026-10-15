@@ -1114,11 +1114,17 @@ const soundSystem = require('./lib/audio/nhl92-sound-system');
 const soundFixture = require('./lib/audio/nhl92-sound-fixture');
 
 const ramWalk = z80Patterns.run('ram_walk');
+const ymPing = z80Patterns.run('ym_ping');
 const fixtureRom = soundFixture.resolveRom(null);
 assert.ok(fixtureRom && fixtureRom.length >= 0x11800, 'bundled sound fixture should load in Node');
 const fixtureBoot = z80Patterns.run('nhl_driver_boot', null);
+const fixtureTitle = z80Patterns.run('nhl_fmtune_title', null);
+const fixtureSfx = z80Patterns.run('nhl_sfx_beep', null);
 assert.ok(fixtureBoot.ok, fixtureBoot.detail);
 assert.ok(ramWalk.ok, ramWalk.detail);
+assert.ok(ymPing.ok, ymPing.detail);
+assert.ok(fixtureTitle.ok, fixtureTitle.detail);
+assert.ok(fixtureSfx.ok, fixtureSfx.detail);
 
 if (audioRom) {
   const rom = audioRom;
