@@ -1,7 +1,8 @@
-import { Ym2612 } from '../lib/audio/generated/ym2612-runtime.js';
-
 const SAMPLE_RATE = 44100;
-const base = new URL('../lib/audio/generated/', import.meta.url);
+
+function generatedBaseUrl() {
+  return new URL('lib/audio/generated/', document.baseURI).href;
+}
 
 const el = (id) => document.getElementById(id);
 const ymMeter = el('ym-meter');
@@ -15,29 +16,10 @@ let node = null;
 let running = false;
 let ymPreset = '440';
 let psgMode = 'tone';
-
-function rms(buf) {
-  if (!buf || !buf.length) return 0;
-  let s = 0;
-  for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
-  return Math.sqrt(s / buf.length);
-}
-
-async function initEngine() {
-  statusEl.textContent = 'Loading YM2612 WASM…';
-  const { default: moduleFactory } = await import(new URL('ym2612_wasm.js', base));
-  ymChip = await Ym2612.create({
-    moduleFactory,
-    moduleOptions: {
-      locateFile: (name) => new URL(name, base).href
-    }
-  });
-  ymChip.reset();
-  psg = NhlSn76489.create({ clock: 3579545 });
-  statusEl.textContent = 'Ready — pick a preset and press Play';
-}
+let engineReady = false;
 
 function applyYm() {
+  if (!ymChip) return;
   ymChip.reset();
   NhlChipLabPresets.applyYmPreset({
     writePort(port, value) {
@@ -48,13 +30,35 @@ function applyYm() {
 }
 
 function applyPsg() {
+  if (!psg) return;
   psg.reset();
   if (psgMode === 'noise') NhlChipLabPresets.psgNoisePreset(psg);
   else NhlChipLabPresets.psgTonePreset(psg, 523.25);
   psgMeter.textContent = 'PSG: ' + psgMode;
 }
 
+async function initEngine() {
+  statusEl.textContent = 'Loading YM2612 WASM…';
+  const base = generatedBaseUrl();
+  const { Ym2612 } = await import(new URL('ym2612-runtime.js', base).href);
+  const { default: moduleFactory } = await import(new URL('ym2612_wasm.js', base).href);
+  ymChip = await Ym2612.create({
+    moduleFactory,
+    moduleOptions: {
+      locateFile: (name) => new URL(name, base).href
+    }
+  });
+  ymChip.reset();
+  psg = NhlSn76489.create({ clock: 3579545 });
+  engineReady = true;
+  statusEl.textContent = 'Ready — pick a preset and press Play';
+}
+
 async function startAudio() {
+  if (!engineReady || !ymChip || !psg) {
+    statusEl.textContent = 'Still loading — wait for Ready';
+    return;
+  }
   applyYm();
   applyPsg();
   if (!ctx) {
@@ -89,13 +93,14 @@ async function startAudio() {
 
 function stopAudio() {
   running = false;
-  statusEl.textContent = 'Stopped';
+  statusEl.textContent = engineReady ? 'Stopped' : statusEl.textContent;
 }
 
 document.querySelectorAll('[data-ym]').forEach((btn) => {
   btn.addEventListener('click', () => {
     ymPreset = btn.getAttribute('data-ym');
     ymMeter.textContent = 'YM preset selected: ' + ymPreset;
+    if (running) applyYm();
   });
 });
 
@@ -103,6 +108,7 @@ document.querySelectorAll('[data-psg]').forEach((btn) => {
   btn.addEventListener('click', () => {
     psgMode = btn.getAttribute('data-psg');
     psgMeter.textContent = 'PSG selected: ' + psgMode;
+    if (running) applyPsg();
   });
 });
 
@@ -115,5 +121,7 @@ el('play').addEventListener('click', () => {
 el('stop').addEventListener('click', stopAudio);
 
 initEngine().catch((err) => {
-  statusEl.textContent = 'Init failed: ' + (err.message || err);
+  engineReady = false;
+  statusEl.textContent = 'Init failed: ' + (err && err.message ? err.message : String(err));
+  console.error(err);
 });
