@@ -17,9 +17,12 @@ const openAsset = require('./lib/open-asset');
 const pc95 = require('./lib/pc95');
 
 const root = __dirname;
+const bundledFixtures = path.join(root, 'test', 'fixtures');
 const toolsRoot = process.env.EA_NHL_TOOLS_ROOT
   ? path.resolve(process.env.EA_NHL_TOOLS_ROOT)
-  : path.join(root, '..');
+  : fs.existsSync(path.join(bundledFixtures, 'ANIM-To-BMP', 'Sprites.anim'))
+    ? bundledFixtures
+    : path.join(root, '..');
 const framesSrc = fs.readFileSync(path.join(root, 'data', 'frames.asm'), 'utf8');
 const catalog = parseFrames(framesSrc);
 
@@ -282,6 +285,8 @@ assert.strictEqual(later.end, null);
 assert.strictEqual(later.group, 'Other');
 assert.strictEqual(snes94cat.spfs.find((item) => item.name === 'SPFcelebrate').start, 185);
 assert.strictEqual(snes94cat.spfs.find((item) => item.name === 'SPFpump').start, 201);
+assert.ok(snes94cat.anims.some((anim) => anim.name === 'SPAcelebrate'));
+assert.ok(snes94cat.anims.some((anim) => anim.name === 'SPApump'));
 assert.strictEqual(snes94cat.anims.filter((anim) => anim.name === 'SPAskatewp').length, 1);
 
 const literal = unpack93(Buffer.from([0x02, 1, 2, 3, 0xe0, 0]), 0);

@@ -1,22 +1,18 @@
 # NHL9X Studio — agent handoff
 
-**Last updated:** 2026-10-15 (synced to NHL9XStudio)  
-**Canonical app repo:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (app at repo root)  
-**Upstream tools + mirror source:** [EA-NHL-Tools](https://github.com/abdulahmad/EA-NHL-Tools) `Sprite-Viewer/`  
-**Design / roadmap:** `docs/DESIGN.md`  
-**Open PR with latest graphics work:** [#16](https://github.com/abdulahmad/EA-NHL-Tools/pull/16) (`cursor/nhl95-frame-banks-f507`)
+**Last updated:** 2026-10-15  
+**Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
+**Design / roadmap:** `docs/DESIGN.md`
 
 ---
 
 ## Where to work
 
-| Location | Role |
-|----------|------|
-| **[NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio)** | **Primary app repo** — push branches, open PRs to `main`, enable GitHub Pages. |
-| **EA-NHL-Tools `Sprite-Viewer/`** | Upstream copy during transition; merge graphics PRs there, then sync per `docs/MIGRATION.md`. |
-| **EA-NHL-Tools (rest)** | ANIM/JIM extractors, `Asset-Extractor`, tests that need `EA_NHL_TOOLS_ROOT`. |
+Work only in **NHL9XStudio**. Push branches (`cursor/<name>-f507`), open PRs to `main`.
 
-Do **not** commit `pc95` symlink or retail ROMs. `roms/*.bin` are optional local symlinks for tests.
+Do **not** commit `pc95` symlink or retail ROMs. Optional ROM paths for local tests are listed below.
+
+Bundled regression fixtures live in `test/fixtures/` (ANIM/JIM/PAL). Full golden tests run without any external repo checkout.
 
 ---
 
@@ -24,129 +20,73 @@ Do **not** commit `pc95` symlink or retail ROMs. `roms/*.bin` are optional local
 
 **92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC**
 
-Audio is a separate track (`AUD-*` in DESIGN.md). **MID94-Tools** is unfinished; do not depend on it.
+Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 
 ---
 
-## Done (on `main` or in PR #16)
+## On `main` (after PR #1)
 
-### Merged to `main` (via PR #15, NHL9X Studio / hosting)
-
-- Rebrand to **NHL9X Studio**; expanded `DESIGN.md`.
-- Genesis **auxiliary frame banks** for **92G** (incl. FaceOff), **93G**, **94G** (Crowd, FaceOff, Zam, Stanley, PlayoffSprite) via `sheetGameBanks()` in `lib/games.js`.
-- SPA blurbs for celebrate vs bench-check (`lib/parse-frames.js`).
-- **HOST:** drag-and-drop, `lib/open-asset.js`, `rom-detect.js`, `manifest.js`, `public/games.json`, static boot without `/api`, `.github/workflows/pages.yml`.
-- PC95 folder catalog in client (`lib/pc95.js`).
-
-### In PR #16 (95G frame banks + decoder)
-
-- **95G** Frame tab banks: **Crowd** (`0x18B628`–`0x18DAA8`), **FaceOff** (`0x14A490`–`0x14C148`) from `NHL95Genesis/tools/extractAssets95.js`.
-- **Not** at `segmap95` labels `0xA4B54` etc. — on the 2 MB ROM those addresses are inside player-card data, not crowd.
-- **No Genesis Zamboni** in NHL 95 (`display95.asm`: no `showzam`).
-- `openFrames(..., { record: '95' })` for NHL 95 sprite records; higher per-frame sprite cap for dense crowd frames.
-- Viewer passes `record: '95'` when `game.sheet.record === '95'`.
-- Tests + regenerated `public/games.json`.
+- Full NHL9X Studio app, GitHub Pages workflow, static `public/games.json`
+- Genesis auxiliary frame banks **92G–94G**; **93G** title/setup frame banks; **95G** Crowd/FaceOff + `openFrames` `record: '95'`
+- GAP-2 extract slice checks; optional `nhlpa93.bin` tests
+- SNES **94S** `SPAcelebrate` / `SPApump` named in `frames94snes.asm` (was SPAextra42/43)
+- Self-contained `test/fixtures/` for CI
 
 ---
 
-## Not done (backlog)
+## Backlog
 
 | ID | Scope | Notes |
 |----|--------|------|
-| **GAP-2** | 93G | Extract slice checks in `test.js`; Frame tab banks for `GameSetup.anim` / title frames; ROM tests when `nhlpa93.bin` present. Full JIM inventory vs extract still optional. |
-| **GAP-3** | 94G | Largely done on main; optional SPA search aliases / doc polish. |
-| **GAP-4** | 95G | Crowd/FaceOff in PR #16; arena gfx / full `genesis-images` audit vs extract still open. |
-| **GAP-5–6** | 93S / 94S | SNES picture catalog, refs/crowd/faceoff when disasm offsets pinned. |
-| **GAP-7–8** | 95PC / 94PC | 95PC polish; **94PC** new profile (bench crowd on DOS, not Genesis). |
-| **HOST-3** | OPFS persistence | Not implemented. |
-| **HOST-5** | 95 ISO mount | Stub / message only. |
-| **AUD-*** | Genesis audio | New `lib/audio/genesis.js`; per-title after graphics queue. |
-| **NHL9XStudio** | Remote repo | Push mirror; enable Pages on that repo if split is desired. |
+| **GAP-2** | 93G | JIM inventory polish optional |
+| **GAP-3** | 94G | SPA search aliases / doc polish |
+| **GAP-4** | 95G | Arena gfx / `genesis-images` audit vs retail extract |
+| **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
+| **GAP-7–8** | 95PC / 94PC | DOS catalog + `nhl94pc` profile |
+| **HOST-3** | OPFS | Not implemented |
+| **HOST-5** | 95 ISO | Stub only |
+| **AUD-*** | Audio | After graphics queue |
 
 ---
 
-## Key files
+## Key paths
 
 | Path | Purpose |
 |------|---------|
-| `lib/games.js` | Game profiles, `sheetGameBanks`, portraits/logos stamping |
-| `lib/genesis-images.js` | Genesis ROM image slices (retail offsets) |
-| `lib/sheet.js` | Player sheet + `openFrames` (94 vs 95 sprite layout) |
-| `public/viewer.js` | UI, drop-open, bank/image loading |
-| `test.js` | Regression tests; set `EA_NHL_TOOLS_ROOT` to EA-NHL-Tools checkout |
-| `tools/build-manifest.js` | Regenerate `public/games.json` after catalog changes |
+| `lib/games.js` | Game profiles, banks |
+| `lib/genesis-images.js` | Genesis ROM image slices |
+| `lib/sheet.js` | Sheets + `openFrames` (94 vs 95) |
+| `public/viewer.js` | UI |
+| `test.js` | Regression tests |
+| `tools/build-manifest.js` | Regenerate `public/games.json` |
 
-### ROMs for local / CI tests (optional)
+### Optional ROMs (local)
 
 ```
-/tmp/disasm/NHL95Genesis/lst/nhl95.bin
+/tmp/disasm/NHLPA93Genesis/lst/nhlpa93.bin
 /tmp/disasm/NHL94Genesis/lst/nhl94.bin
-Sprite-Viewer/roms/nhl95.bin  → often symlink to above
+/tmp/disasm/NHL95Genesis/lst/nhl95.bin
+/tmp/snes/93/lst/nhlpa93snes.bin
+/tmp/snes/94/lst/nhl94snes.sfc
 ```
 
 ### Commands
 
 ```bash
-export EA_NHL_TOOLS_ROOT=/path/to/EA-NHL-Tools   # optional if repo is sibling layout
 node test.js
-node tools/build-manifest.js   # after changing games.js / genesis-images.js
-node server.js                 # http://localhost:8732
+node tools/build-manifest.js
+node server.js    # http://localhost:8732
 ```
 
-**Branch naming for cloud agents:** `cursor/<descriptive-name>-f507`
-
----
-
-## Genesis 94 vs 95 — bench celebration
-
-- **Genesis 94/95:** on-ice celebrate via **SPA** (`SPAcelebrate`, `SPApump`). No bench-sit celebration like **95 PC** (`SPFbench`).
-- **Crowd** is `Crowd.anim` / `CrowdFrameList`, not player SPF.
-
----
-
-## PRs (context)
-
-| PR | Status | Topic |
-|----|--------|--------|
-| [#15](https://github.com/abdulahmad/EA-NHL-Tools/pull/15) | Merged | NHL9X Studio, hosting, 92–94G banks |
-| [#16](https://github.com/abdulahmad/EA-NHL-Tools/pull/16) | Draft (reviewed) | 95G crowd/faceoff banks + `openFrames` 95 — merged into NHL9XStudio sync branch |
+**Branch naming:** `cursor/<descriptive-name>-f507`
 
 ---
 
 ## Prompt for the next agent
 
-Copy everything below into a new Cloud Agent on **EA-NHL-Tools** (base branch `main`; merge or continue from PR #16 as needed).
-
 ```
-You are continuing NHL9X Studio in EA-NHL-Tools/Sprite-Viewer/.
-
-Read first:
-- docs/AGENT-HANDOFF.md (this handoff)
-- Sprite-Viewer/docs/DESIGN.md (priority table and GAP/HOST sections)
-
-Repo: https://github.com/abdulahmad/EA-NHL-Tools
-Work only in EA-NHL-Tools (push branches, PRs to main). Do not rely on pushing to NHL9XStudio unless write access was fixed.
-
+Continue NHL9X Studio in NHL9XStudio (main). Read docs/AGENT-HANDOFF.md and docs/DESIGN.md.
 Graphics priority: 92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC.
-
-Immediate tasks:
-1. Review/merge PR #16 if still open (95G Crowd + FaceOff frame banks; openFrames record '95').
-2. GAP-2 (93G): audit genesis-images vs Asset-Extractor/extractAssets93.js; extend test.js when nhlpa93.bin present.
-3. Then GAP-5/6 (SNES) per DESIGN.md.
-
-Conventions:
-- Branch names: cursor/<name>-f507
-- After catalog changes: node Sprite-Viewer/test.js && node Sprite-Viewer/tools/build-manifest.js
-- Minimal diffs; match existing code style in lib/ and public/viewer.js
-- Do not commit pc95 symlink, ROMs, or user game files
-
-Optional: sync a copy to NHL9XStudio only if the user has granted push access; otherwise document in PR only.
+After catalog changes: node test.js && node tools/build-manifest.js
+Do not commit pc95, ROMs, or user game files.
 ```
-
----
-
-## Human actions (if desired)
-
-1. **Merge PR #16** when satisfied with 95G crowd/faceoff in the Frame tab.
-2. **NHL9XStudio:** grant GitHub write to Cursor cloud agents, or `git push` the prepared `main` from a machine with access.
-3. **GitHub Pages:** enable for EA-NHL-Tools or NHL9XStudio per `DESIGN.md` §5 after HOST client paths are acceptable without Node.
