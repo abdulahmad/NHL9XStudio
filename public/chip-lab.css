@@ -1,0 +1,73 @@
+@import url("viewer.css");
+
+.chip-lab main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.chip-lab h1 {
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+}
+
+.chip-lab .lead {
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.chip-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.chip-card {
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.chip-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.chip-card .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chip-card button {
+  background: var(--raise-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+}
+
+.chip-card button.primary {
+  border-color: var(--ice-2);
+  background: #2a4555;
+}
+
+.chip-card .meter {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--good);
+  min-height: 1.4em;
+}
+
+.chip-lab .transport {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.chip-lab a.back {
+  color: var(--ice-2);
+}

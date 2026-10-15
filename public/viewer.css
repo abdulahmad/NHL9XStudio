@@ -96,6 +96,12 @@ button { cursor: pointer; }
 }
 .head-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
 .open-files { display: flex; gap: 8px; align-items: center; }
+a.ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .ghost-btn {
   background: var(--bg);
   border: 1px solid var(--line);

@@ -6,6 +6,10 @@ Genesis (AUD-0 / AUD-1):
 - `genesis-92-sequence.js` — NHL 92 68k cmdstream → note schedule (loop table, transpose, instruments).
 - `preview-render.js` — Node/browser PCM preview (RMS-testable without Web Audio).
 - `z80-cpu-core.js` — vendored `@dcorp80/z80cpu` (regenerate: `node tools/vendor-z80cpu.js`).
+- `ym2612.js` — YM2612 register bus (Z80 / harness).
+- `ym2612-wasm.js` + `generated/ym2612_wasm.*` — ymfm YM2612 PCM (BSD-3-Clause, see `licenses-ymfm.txt`).
+- `sn76489.js` — SN76489 PSG latch/data + sample generator.
+- `chip-lab-presets.js` — demo register sequences for `public/chip-lab.html`.
 - `z80-machine.js` — Genesis 8K RAM + YM2612 bus + I/O stubs.
 - `nhl92-z80.js` — extract/load `Z80_Program_Code` (`0x116A6`, `0x598` bytes).
 - `nhl92-sound-system.js` — NHL 92 68k↔Z80 vblank hooks + FM/SFX preview schedules.

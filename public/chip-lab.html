@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chip lab · YM2612 &amp; SN76489 · NHL9X Studio</title>
+  <link rel="stylesheet" href="chip-lab.css">
+</head>
+<body class="chip-lab">
+  <main>
+    <p><a class="back" href="index.html">← NHL9X Studio</a></p>
+    <h1>Chip lab</h1>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy).</p>
+    <div class="chip-grid">
+      <section class="chip-card" aria-labelledby="ym-title">
+        <h2 id="ym-title">YM2612 (Genesis FM)</h2>
+        <div class="row">
+          <button type="button" data-ym="440">A4 beep</button>
+          <button type="button" data-ym="mid">E4 beep</button>
+          <button type="button" data-ym="low">A2 beep</button>
+        </div>
+        <p class="meter" id="ym-meter">Engine idle</p>
+      </section>
+      <section class="chip-card" aria-labelledby="psg-title">
+        <h2 id="psg-title">SN76489 (PSG)</h2>
+        <div class="row">
+          <button type="button" data-psg="tone">Square tone</button>
+          <button type="button" data-psg="noise">Noise</button>
+        </div>
+        <p class="meter" id="psg-meter">Engine idle</p>
+      </section>
+    </div>
+    <div class="transport">
+      <button type="button" class="primary" id="play">Play</button>
+      <button type="button" id="stop">Stop</button>
+      <span class="meter" id="status">Loading WASM…</span>
+    </div>
+  </main>
+  <script src="lib/audio/sn76489.js"></script>
+  <script src="lib/audio/chip-lab-presets.js"></script>
+  <script type="module" src="chip-lab.js"></script>
+</body>
+</html>

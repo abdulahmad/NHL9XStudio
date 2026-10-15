@@ -1181,3 +1181,5 @@ if (genesis94Rom) {
   );
   assert.ok(schedule94 && schedule94.events.length > 0, '94G team song preview should emit notes');
 }
+
+require('./test/chip-audio');
