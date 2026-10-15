@@ -87,3 +87,134 @@ for (const value of [0x00, 0x02, 0x05, 0xff]) {
 }
 
 console.log('nhl92 z80 driver: loader + helpers OK');
+
+// --- Snapshot / SFX builders (68k-side inputs, sound.asm p_music_vblank_fn) ---------
+
+/** One 8-byte channel slot; omitted fields keep bit 7 set ("no change"). */
+function slot(fields) {
+  const f = fields || {};
+  const s = [0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff];
+  if (f.patch != null) {
+    s[0] = 0x00;
+    s[1] = f.patch >> 8;
+    s[2] = f.patch & 0xff;
+  }
+  if (f.key != null) s[3] = f.key;
+  if (f.freq) {
+    s[4] = 0x00;
+    s[5] = f.freq[0];
+    s[6] = f.freq[1];
+  }
+  if (f.tl != null) s[7] = f.tl;
+  return s;
+}
+
+function channels(slots) {
+  const out = [];
+  for (let i = 0; i < 6; i++) out.push(...slot(slots && slots[i]));
+  return out;
+}
+
+/** sfx bytes in 68k order ($FFE6..$FFEB -> $BF,$BE,$C0,$C1,$C2,$C3). */
+function sfx(addr, rate, bank, priority) {
+  return [addr >> 8, addr & 0xff, 0x00, rate, bank, priority];
+}
+
+function frame(z, input) {
+  if (input) z.vblank(input);
+  z.run(FRAME);
+}
+
+const IDLE = { flag: 1, channels: channels(), pending: 0 };
+const dacWrites = (z) => z.ym.filter((w) => w.part === 0 && w.reg === 0x2a);
+const spacings = (ws) => ws.slice(1).map((w, i) => w.t - ws[i].t);
+
+// --- DAC / PSG paths -------------------------------------------------------------
+
+{
+  // Static: no $7Fxx operand (PSG/VDP) and no reference to the iy DAC writer at $025E
+  // anywhere in the code ranges ($0000-$00C4, $00E0-$0272, $0569-$0596).
+  const code = [];
+  for (const [a, b] of [[0x000, 0x0c5], [0x0e0, 0x273], [0x569, 0x597]]) {
+    for (let i = a; i < b; i++) code.push(i);
+  }
+  assert.deepStrictEqual(code.filter((i) => PROGRAM[i] === 0x7f), [], 'no PSG/VDP address in driver code');
+  assert.deepStrictEqual(
+    code.filter((i) => PROGRAM[i] === 0x5e && PROGRAM[i + 1] === 0x02), [],
+    '$025E (iy-indexed DAC writer) is unreachable'
+  );
+}
+
+const SAMPLE_ROM = (() => {
+  const rom = new Uint8Array(0x40000);
+  rom.set([0x80, 0x90, 0x70, 0x60, 0x50, 0x00, 0x00], 0x12345);
+  rom.set([0x81, 0x82, 0x00, 0x01], 0x14000);
+  rom[0x17ffe] = 0x11;
+  rom[0x17fff] = 0x22;
+  rom.set([0x33, 0x00, 0x00], 0x18000);
+  return rom;
+})();
+
+{
+  // Boot leaves the DAC idle ($02A4 = $FF): no DAC traffic, no PSG, nothing outside RAM/YM.
+  const z = booted(SAMPLE_ROM);
+  assert.strictEqual(z.ram[0x2a4], 0xff);
+  for (let i = 0; i < 3; i++) frame(z, IDLE);
+  assert.deepStrictEqual(regLog(z), []);
+  assert.strictEqual(z.bankReads.length, 0);
+}
+{
+  // Trigger: first byte is read from (BF:BE)+1 in bank C2; DAC enabled, bytes streamed
+  // to $2A until a 0 byte; next byte != 1 ends it: DAC off, $02A4 = $FF, $C4 = $FF.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xa344, 0x10, 0x02, 0x05) });
+  assert.deepStrictEqual(regLog(z), [
+    '0:$2B=$80', '0:$2A=$80', '0:$2A=$90', '0:$2A=$70', '0:$2A=$60', '0:$2A=$50', '0:$2B=$0'
+  ]);
+  assert.strictEqual(z.bankReads[0].addr68k, 0x12345);
+  assert.deepStrictEqual(spacings(dacWrites(z)), [433, 433, 433, 433], 'period 161 + 17*rate');
+  assert.strictEqual(z.ram[0x2a4], 0xff);
+  assert.strictEqual(z.ram[0xc4], 0xff);
+  assert.strictEqual(z.ram[0xc0], 0xff);
+  assert.strictEqual(z.log.filter((e) => e.kind === 'psg' || e.kind === 'vdp').length, 0);
+}
+for (const rate of [0x01, 0x19, 0x40, 0x00]) {
+  // Rate byte becomes the djnz count at $007A; 0 means 256 passes.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xa344, rate, 0x02, 0x05) });
+  const n = rate || 256;
+  for (const d of spacings(dacWrites(z))) assert.strictEqual(d, 161 + 17 * n, 'rate ' + hex(rate));
+  assert.strictEqual(z.ram[0x7a], rate);
+}
+{
+  // Crossing $FFFF: bank+1 via $056A, HL=$8000, and the byte at $FFFF is skipped.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xfffd, 0x40, 0x02, 0x05) });
+  assert.deepStrictEqual(regLog(z), ['0:$2B=$80', '0:$2A=$11', '0:$2A=$33', '0:$2B=$0']);
+  assert.deepStrictEqual(spacings(dacWrites(z)), [161 + 17 * 0x40 + 262]);
+  assert.strictEqual(z.bank, 3);
+  assert.strictEqual(z.ram[0x56a], 3);
+}
+{
+  // 0 then 1 loops: back to $009B (DAC on again, bank reloaded from $00A8, same start).
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xbfff, 0x08, 0x02, 0x05) });
+  const log = regLog(z);
+  const loop = ['0:$2B=$80', '0:$2A=$81', '0:$2A=$82'];
+  assert.deepStrictEqual(log.slice(0, 9), loop.concat(loop, loop));
+  assert.strictEqual(z.ram[0x2a4], 0x01, 'still playing');
+  assert.ok(!log.includes('0:$2B=$0'), 'looping sample never disables the DAC');
+}
+{
+  // Music updates still run while the DAC plays: key-on lands between samples.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xbfff, 0x40, 0x02, 0x05) });
+  z.clearLogs();
+  frame(z, { flag: 0, channels: channels([{ key: 0x01 }]), pending: 0 });
+  const log = regLog(z);
+  const k = log.indexOf('0:$28=$0');
+  assert.ok(k > 0 && log[k + 1] === '0:$28=$F0', 'key-on processed during playback');
+  assert.ok(log.slice(k + 2).includes('0:$2A=$81'), 'DAC continues after the update');
+}
+
+console.log('nhl92 z80 driver: DAC used for SFX, PSG never written OK');
