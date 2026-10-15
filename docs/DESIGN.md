@@ -152,7 +152,7 @@ Work **92G → … → 94PC** (see **Implementation priority** above). PC DOS ti
 | **GAP-3** | **94G** | Banks + discoverability | Multi-bank Frame tab like 92G (`Crowd.anim`, `FaceOff.anim`, `Zam.anim`, `PlayoffSprite.bin`); SPA blurbs (`SPAbenchcheck*` vs PC `SPFbench`); search aliases for celebrate vs bench. |
 | **GAP-4** | **95G** | Banks + images | Crowd + FaceOff on Frame tab (retail `0x18B628`, `0x14A490`; not `segmap95` `0xA4B54`); no Genesis Zam; `openFrames` `record: '95'`. Remaining: arena gfx / full `genesis-images` audit vs `extractAssets95.js`. |
 | **GAP-5** | **93S** | SNES catalog | Pictures catalog (15 images); crowd/zamboni/faceoff on main sprite sheet (`SPFcrowd` 659, etc.). Still open: dedicated crowd picture banks if ROM offsets are pinned. |
-| **GAP-6** | **94S** | SNES parity | SPF celebrate/pump bases match Genesis (`frames94snes.asm`); Images tab still missing several Genesis-parity screens (refs, scouting, framer, faceoff map) pending LoROM offsets. |
+| **GAP-6** | **94S** | SNES parity | `SPAcelebrate` / `SPApump` named in `frames94snes.asm`; Images tab still missing several Genesis-parity screens (refs, scouting, framer, faceoff map) pending LoROM offsets. |
 | **GAP-7** | **95PC** | DOS polish | Remaining QFS/PPV catalog holes, goalie palette edge cases, hotspot/dynamic rules — viewer already has core `pc95` path. |
 | **GAP-8** | **94PC** | New profile | §2: PPV/QPP decode, `frames94pc.asm`, `nhl94pc` — bench/crowd `F000+` SPFs live here, not on Genesis. |
 

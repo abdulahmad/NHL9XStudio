@@ -800,7 +800,7 @@ SPAextra41	= *-SPAList	; SNES 94 sequence
 .6	dc.w	297,20,298,20,299,1000,299,-1000
 .7	dc.w	281,20,282,20,283,1000,283,-1000
 
-SPAextra42	= *-SPAList	; SNES 94 sequence
+SPAcelebrate	= *-SPAList	; On-ice celebrate (93 SNES SPAcelebrate vblank list; was SPAextra42)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -813,7 +813,7 @@ SPAextra42	= *-SPAList	; SNES 94 sequence
 .6	dc.w	213,5,197,6,198,6,197,12,198,40,197,-5
 .7	dc.w	215,5,199,6,200,6,199,12,200,40,199,-5
 
-SPAextra43	= *-SPAList	; SNES 94 sequence
+SPApump	= *-SPAList	; Scorer pump (93 SNES SPApump vblank list; was SPAextra43)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
