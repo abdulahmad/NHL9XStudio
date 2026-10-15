@@ -381,6 +381,12 @@ assert.strictEqual(snes94frame.pixels[0], 1);
 
 assert.strictEqual(APP_NAME, 'NHL9X Studio');
 
+assert.strictEqual(GAMES.length, 8);
+const staticManifest = buildManifest();
+assert.strictEqual(staticManifest.length, 8);
+assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
+assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
+
 const nhl92 = GAMES.find((game) => game.id === 'nhl92');
 assert.ok(nhl92.banks.some((bank) => bank.id === 'FaceOff.anim'));
 for (const bank of nhl92.banks) {
