@@ -306,6 +306,31 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === '/api/z80/patterns') {
+    send(res, 200, JSON.stringify(audio.z80Patterns.list()), MIME['.json']);
+    return;
+  }
+
+  const z80Run = /^\/api\/z80\/run$/.exec(pathname);
+  if (z80Run) {
+    const patternId = url.searchParams.get('pattern') || 'nhl_driver_boot';
+    const game = gameById('nhl92');
+    const file = game ? findRom(game) : null;
+    const rom = file && game ? readRom(file, game) : null;
+    try {
+      const out = audio.z80PreviewFromRom(rom, patternId);
+      send(res, 200, JSON.stringify({
+        ok: out.ok,
+        detail: out.detail,
+        schedule: out.schedule || null,
+        snapshot: out.snapshot || null
+      }), MIME['.json']);
+    } catch (err) {
+      send(res, 400, err.message || 'Z80 test failed', 'text/plain; charset=utf-8');
+    }
+    return;
+  }
+
   const gameAudioPreview = /^\/api\/games\/([a-z0-9]+)\/audio\/preview$/.exec(pathname);
   if (gameAudioPreview) {
     const game = gameById(gameAudioPreview[1]);
@@ -315,7 +340,19 @@ const server = http.createServer((req, res) => {
     if (!file) { send(res, 404, 'ROM not found', 'text/plain; charset=utf-8'); return; }
     try {
       const rom = readRom(file, game);
-      const out = audio.previewFromRom(game.id, entryId, rom);
+      let out = audio.previewFromRom(game.id, entryId, rom);
+      if ((!out || !out.schedule || !out.schedule.events || !out.schedule.events.length)
+        && (game.id === 'nhl92' || game.id === 'z80test')) {
+        const catalog = audio.loadCatalog(game.id);
+        const entry = catalog && catalog.entries.find((e) => e.id === entryId);
+        if (entry) {
+          try {
+            const sys = audio.soundSystem.create(rom);
+            const schedule = sys.playEntry(entry, catalog.previewMeta, entry.type === 'fm-song' ? 90 : 45);
+            out = { entry, schedule };
+          } catch (e) { /* fall through */ }
+        }
+      }
       if (!out) { send(res, 404, 'Unknown entry', 'text/plain; charset=utf-8'); return; }
       send(res, 200, JSON.stringify(out.schedule), MIME['.json']);
     } catch (err) {

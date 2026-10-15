@@ -1,0 +1,21 @@
+{
+  "gameId": "z80test",
+  "platform": "genesis",
+  "playback": true,
+  "note": "Select Z80 tab for CPU/driver tests. Audio tab mirrors NHL 92 FM/SFX when a ROM is loaded.",
+  "streamDriver": null,
+  "previewMeta": {
+    "soundBase": 62664,
+    "fmtuneTable": 66196,
+    "fmtuneStride": 26,
+    "noteFreqTable": 65914,
+    "noteOctaveTable": 66010,
+    "instrumentTable": null,
+    "streamDriver": null
+  },
+  "entries": [
+    { "id": "fmtune-1", "label": "Title (FM tune 1)", "group": "Music", "type": "fm-song", "track": 1, "playable": true },
+    { "id": "sfx_beep1", "label": "UI beep 1", "group": "SFX", "type": "fm-sfx", "start": 65898, "end": 65914, "playable": true },
+    { "id": "sfx_horn", "label": "Horn", "group": "SFX", "type": "fm-sfx", "start": 65520, "end": 65550, "playable": true }
+  ]
+}
