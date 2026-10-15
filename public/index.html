@@ -21,6 +21,12 @@
         </div>
       </div>
       <div class="head-controls">
+        <div class="open-files" role="group" aria-label="Load files">
+          <button type="button" id="open-rom" class="ghost-btn" title="Load a Genesis or SNES ROM, or a single ANIM/JIM/PPV file">Open file…</button>
+          <button type="button" id="open-folder" class="ghost-btn" title="Load an NHL 95/94 PC install folder (PPV, QFS, QPP)">Open folder…</button>
+          <input type="file" id="file-open" class="sr" hidden accept=".bin,.md,.gen,.sfc,.smc,.anim,.jim,.map.jim,.ppv,.qfs,.qpp,.iso,.img">
+          <input type="file" id="folder-open" class="sr" hidden multiple webkitdirectory>
+        </div>
         <label class="field">
           <span>Game</span>
           <select id="game"></select>
@@ -135,7 +141,7 @@
         <p><b>Frame</b> is the 1-based picture in the ANIM file. The docs count the same pictures from 0, shown here as the index.</p>
         <p><b>SPF</b> names a run of those pictures in <span class="mono">frames.asm</span>. When the run is eight facings side by side, the compass steps through them.</p>
         <p><b>SPA</b> is an animation. Each of the eight facings has its own list of frame and vblank pairs. A negative time is the last step. The picture stays up for one extra vblank, the one that expires the counter, and never changes faster than every 4 vblanks. Bit 0 of the flags word loops it. <b>Groups</b> follows the sidebar categories. <b>File</b> is the order in frames.asm. Switching games stays on an SPA or SPF of the same name when the new game has one.</p>
-        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. NHL 92 can draw its sprite banks without a ROM. The other games, and these extra pictures, need the ROM named in the caption.</p>
+        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code> or <code>pc95/</code>.</p>
         <p>Facing 0 is north on a vertical rink, then clockwise. A horizontal rink subtracts 2 from the facing before this lookup.</p>
         <p>The dashed box is the frame's canvas. <b>Pin</b> chooses the point held in the middle of the stage. <b>0, 0</b> is the player's position, at the skates, and <b>Hotspot</b> is where the puck sits. The amber mark is 0, 0. The red cross is the hotspot.</p>
       </section>

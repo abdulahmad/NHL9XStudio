@@ -1406,6 +1406,36 @@ function wire() {
   window.addEventListener('resize', paintStage);
   new ResizeObserver(paintStage).observe(el('stage').parentElement);
   wireDropTarget();
+  wireFilePicker();
+}
+
+function wireFilePicker() {
+  const fileInput = el('file-open');
+  const folderInput = el('folder-open');
+  el('open-rom').addEventListener('click', () => fileInput.click());
+  el('open-folder').addEventListener('click', () => folderInput.click());
+  fileInput.addEventListener('change', async () => {
+    if (!fileInput.files || !fileInput.files.length) return;
+    loadError = '';
+    try {
+      await ingestDroppedFiles(fileInput.files);
+    } catch (err) {
+      loadError = err.message || String(err);
+      refreshAll();
+    }
+    fileInput.value = '';
+  });
+  folderInput.addEventListener('change', async () => {
+    if (!folderInput.files || !folderInput.files.length) return;
+    loadError = '';
+    try {
+      await ingestDroppedFiles(folderInput.files);
+    } catch (err) {
+      loadError = err.message || String(err);
+      refreshAll();
+    }
+    folderInput.value = '';
+  });
 }
 
 function nudge(delta) {
