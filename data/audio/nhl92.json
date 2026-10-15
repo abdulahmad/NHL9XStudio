@@ -10,6 +10,7 @@
     "fmtuneStride": 26,
     "noteFreqTable": 65914,
     "noteOctaveTable": 66010,
+    "instrumentTable": 71334,
     "streamDriver": null
   },
   "entries": [

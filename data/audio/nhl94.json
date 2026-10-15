@@ -10,6 +10,7 @@
     "fmtuneStride": 26,
     "noteFreqTable": null,
     "noteOctaveTable": null,
+    "instrumentTable": null,
     "streamDriver": "event-94"
   },
   "entries": [

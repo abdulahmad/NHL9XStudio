@@ -1096,6 +1096,10 @@ if (audioRom) {
   const schedule = audio.genesis.previewEntry(rom, title, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
   assert.ok(schedule && schedule.events.length > 4, 'title track should emit notes');
   assert.ok(schedule.duration > 0.5);
+  const titleTrack = nhl92Audio.entries.find((e) => e.id === 'fmtune-1');
+  const titleSched = audio.genesis.previewEntry(rom, titleTrack, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
+  assert.ok(titleSched && titleSched.events.length > 80, 'NHL 92 title should parse many notes');
+  assert.ok(titleSched.events.every((e) => e.midi >= 20), 'title notes should be in audible range');
 }
 const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'lst/nhlpa93.bin'));
 if (genesis93Rom) {
