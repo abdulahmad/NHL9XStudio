@@ -11,6 +11,8 @@ Genesis (AUD-0 / AUD-1):
 - `sn76489.js` — SN76489 PSG latch/data + sample generator.
 - `chip-lab-presets.js` — demo register sequences for `public/chip-lab.html`.
 - `z80-machine.js` — Genesis 8K RAM + YM2612 bus + I/O stubs.
+- `nhl92-z80-harness.js` — full Genesis Z80 bus (RAM mirror, YM 4000–5FFF, bank 6000, PSG 7F11, 68k window) with a YM stub that logs register writes and T-states; `vblank()` applies the 68k `p_music_vblank_fn` write order. Driven by `test/nhl92-z80-driver.js`.
+- `nhl92-z80-golden.js` — replay recorded vblank inputs (`data/captures/nhl92/*.json`) and compare to a retail YM log or VGM.
 - `nhl92-z80.js` — extract/load `Z80_Program_Code` (`0x116A6`, `0x598` bytes).
 - `nhl92-sound-system.js` — NHL 92 68k↔Z80 vblank hooks + FM/SFX preview schedules.
 - `z80-test-patterns.js` — built-in harness tests (viewer **Z80 test** game).
