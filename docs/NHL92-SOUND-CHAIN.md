@@ -47,10 +47,11 @@ Why T-state 0:
 
 ## What's rendered
 
-`node tools/render-nhl92-sound-chain.js [--update]` (about 160 s) writes `out/nhl92-sound-chain/{songs,sfx,mixes}/*.wav`, a `.ymlog.txt` per WAV and `manifest.json`, and zips them to `out/nhl92-sound-chain.zip`. `out/` is git-ignored.
+`node tools/render-nhl92-sound-chain.js [--update]` (about 4 minutes) writes `out/nhl92-sound-chain/{songs,sfx,mixes}/*.wav`, a `.ymlog.txt` per WAV and `manifest.json`, and zips them to `out/nhl92-sound-chain.zip`. `out/` is git-ignored.
 
 - **Songs 0–4** at step 6's lengths: 3,600 vblanks, and 9,000 for SngTitle so the switch to the reprise is heard. Named like `song-1-SngTitle.wav`.
 - **SFX 0–34** at 600 vblanks each, named by ID and `nhl92-sfx-names.js`, e.g. `sfx-13-slap-shot-SFXshotfh.wav`. Each run is boot, one vblank, then `sfx n`, the same sequence as step 6's runs.
+- **SFX 0 after music off** (`sfx-00-siren-SFXsiren-after-music-off.wav`, 603 vblanks): boot, `song 0` (its init vblank), `p_turnoff`, then `sfx 0`. This is the siren as the Sound test plays it; see finding 1.
 - **Four mixes** of a song with SFX on top (900 vblanks). "ch n" below is the driver channel, which is YM2612 channel n + 1 (key-on codes 0, 1, 2, 4, 5, 6).
 
 | Mix | Song | SFX on top |
@@ -66,6 +67,7 @@ The tool checks every song and SFX run's 68k log against step 6's pinned hash (`
 
 - **Shared RAM and bus.** Both harnesses use one RAM. The program copy is byte for byte. The boot's handshake order is as in sound.asm, and every later vblank is one bus hold. There are no Z80 RAM writes without the bus. A stalled Z80 executes nothing.
 - **68k unchanged from step 6.** Song 4 and SFX 13 give the same step 6 log text connected as standalone. The rendered subset's 68k logs match the step 6 pins.
+- **Siren after music off.** The render matches its pins. After the `p_turnoff` vblank every channel's `$41` is `$FF`. The three prelude vblanks write only key-offs and the empty-DAC `$2B` pair. Key-ons appear only on codes 0/1 and only from the siren's vblank on, and both siren channels get their patch. The bare-boot siren is a flat line (range 0); this one swings −4,264…4,999.
 - **Pinned output.** SFX 0, 13, 15 and 24 and mixes 0 and 1 are re-rendered, and their WAV and YM-log hashes match the manifest. A second render of SFX 24 is byte-identical. WAV length is exactly `sampleAt(frames × 59,736)` at 53,267 Hz, and the PSG has 0 writes and a peak of 0.
 - **Buffer oracle.** In every frame, the non-DAC YM writes are exactly what step 3's slot decode makes of the bytes the Z80 finds at `$0273`–`$02A3` after that vblank: patch, key off/on, frequency, TL, in slot order. This covers every key-on and frequency.
   - With update flag 1, the 68k sends no buffer and the Z80 writes nothing.
@@ -87,7 +89,9 @@ The tool checks every song and SFX run's 68k log against step 6's pinned hash (`
 
 ## Findings
 
-1. **The siren played straight after boot is nearly silent.** Step 6 found that it skips its patch load, because the cleared instrument byte `$41` equals the siren's instrument 0. So the Z80 never writes patch registers for ch0/ch1, and the YM2612 keeps its reset state (attack rate 0). The WAV peaks at 504 of 32,767. Played over a song (mix 1), the siren loads patches on both channels, because `Sound_InitMusicTrack` set `$41` to `$FF`. In the game the siren comes after music has played. `sfx-00-siren-SFXsiren.wav` is the retail-accurate "first thing after boot" case; worth checking by ear.
+1. **The siren played straight after boot is nearly silent.** Step 6 found that it skips its patch load, because the cleared instrument byte `$41` equals the siren's instrument 0. So the Z80 never writes patch registers for ch0/ch1, and the YM2612 keeps its reset state (attack rate 0). The WAV peaks at 504 of 32,767. Played over a song (mix 1), the siren loads patches on both channels, because `Sound_InitMusicTrack` set `$41` to `$FF`. In the game the siren comes after music has played. `sfx-00-siren-SFXsiren.wav` is the retail-accurate "first thing after boot" case and stays pinned; its WAV is a constant 504 (ymfm's idle DC level), i.e. silence.
+
+   **Hearing the siren without the song.** One vblank of `song 0` sets `$41` to `$FF` but parses no notes: `Sound_UpdateMusicState` runs `Sound_InitMusicTrack` on the init frame and processes channels only from the next one. PR #28 then called `sfx 0` on that next frame, so SngEOP's first notes keyed on codes 2, 4, 5 and 6 alongside the siren. The fix puts `p_turnoff` on the second frame instead. `p_turnoff` only sets `g_AudioStopFlag`, so that vblank runs `Sound_PauseMusic`: music off, SFX reset, empty DAC sample, key-offs. It doesn't touch `$41`. The game itself calls `p_turnoff` at game setup (penalty.asm, before `SetupIce`) and on pause (hockey.asm), so "music initialised, then turned off, then an SFX" is a state retail reaches. Measured: in the prelude the YM gets only key-offs and `$2B=$80/$00`; the siren then loads both patches (`$30`/`$31` on part 0) and keys on codes 0/1 only. Peak 4,999.
 2. **SFX don't give a song its instrument back.** `.effect_stop` only clears key-on and marks the channel inactive, and a music channel loads a patch only at its own `$80` command. In mix 0, SngEOP's ch4 notes from vb 196 on play with the whistle's patch `$0465`, and nothing restores the song's patch on that channel before vb 360 (the test checks up to there). After the foghorn, SngEOP gets ch0/ch1 back at its own instrument change at vb 449.
 3. **Music updates stretch DAC samples.** The DAC period is 161 + 17 × rate T-states (348 at rate `$0B`, 484 at `$13`), except when the Z80 handles a buffer mid-sample.
    - Under SngEOG, the crowd cheer's 27,006 bytes play at 484 T-states, apart from 186 gaps of 2,406, 15 of 3,648 and 7 of 11,444 (up to 3.2 ms, at patch loads).
@@ -101,7 +105,7 @@ The tool checks every song and SFX run's 68k log against step 6's pinned hash (`
 NHL 92 has a **Sound test** tab next to Sound data. Pick song 0–4 or SFX 0–34, then press Play or Stop.
 
 - **Rendering:** each ScriptProcessor block (4,096 samples) steps `Nhl92SoundChain` as many frames as it needs (`keepLogs: false`), on a fresh ymfm chip instance and SN76489. The 53,267 Hz output is linearly resampled (`chip-resampler.js`) to the audio device rate.
-- **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, one vblank of song 0, then the siren, so Sound_InitMusicTrack has set each channel's instrument byte to `$FF` before the effect starts. That matches siren over initialized channels in the game. Step 6's `runSfx` path (boot, idle vblank, siren) is still what `sfx-00-siren-SFXsiren.wav` renders and is nearly silent by retail rules.
+- **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, `song 0` (one init vblank, no notes), `p_turnoff`, then the siren (`sfxPlanAfterMusicOff`), the same as `sfx-00-siren-SFXsiren-after-music-off.wav`. Before this, PR #28's plan (song 0, then the siren on the next vblank) let SngEOP's first notes play under it. Other SFX keep step 6's boot, idle vblank, SFX.
 - **Leaving:** picking another item or leaving the tab stops playback.
 - **Default view:** still NHL 92 with the SPA tab.
 
