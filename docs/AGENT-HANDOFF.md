@@ -1,6 +1,6 @@
 # NHL9X Studio — agent handoff
 
-**Last updated:** 2026-10-15  
+**Last updated:** 2026-10-15 (PRs #1–#6 merged; feature branches deleted)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
 **Design / roadmap:** `docs/DESIGN.md`
 
@@ -8,7 +8,7 @@
 
 ## Where to work
 
-Work only in **NHL9XStudio**. Push branches (`cursor/<name>-f507`), open PRs to `main`.
+Work only in **NHL9XStudio**. Push branches (`cursor/<name>-e6a9`), open PRs to `main`.
 
 Do **not** commit `pc95` symlink or retail ROMs. Optional ROM paths for local tests are listed below.
 
@@ -42,7 +42,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 | ID | Scope | Notes |
 |----|--------|------|
 | **GAP-2** | 93G | JIM inventory polish optional |
-| **GAP-3** | 94G | SPA/SPF/image search terms for celebrate vs bench-check (done); optional doc polish |
+| **GAP-3** | 94G | Done — SPA/SPF/image search aliases + celebrate vs bench-check blurbs |
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
@@ -82,7 +82,9 @@ node tools/build-manifest.js
 node server.js    # http://localhost:8732
 ```
 
-**Branch naming:** `cursor/<descriptive-name>-f507`
+**Branch naming:** `cursor/<descriptive-name>-e6a9`
+
+**Pages:** https://abdulahmad.github.io/NHL9XStudio/ — NHL 92 uses bundled `anim/*.anim`; other games need **Open file…** or ROM drop.
 
 ---
 
