@@ -3,7 +3,8 @@
 Genesis (AUD-0 / AUD-1):
 
 - `genesis-constants.js` — ROM offsets (`Hockey.snd`, FMTune, SFX cmdstreams for NHL 92).
-- `genesis.js` — NHL 92 byte cmdstream + 93/94 event-stream preview schedules (Web Audio sketch, not YM2612).
+- `genesis-92-sequence.js` — NHL 92 driver-accurate cmdstream parser (loop table, transpose, instruments).
+- `genesis.js` — builds preview schedules; 93/94 use `genesis-events.js`.
 - `genesis-events.js` — 4-byte event parser for NHL 93+ (`NhlGenesisEvents` in browser).
 - `parse-sound-asm.js` + `data/*-streams.json` — stream tables from disasm `sound*.asm` + `extractAssets*.js`.
 - `data/audio/<gameId>.json` — static catalogs (`node tools/build-audio-catalog.js`).
