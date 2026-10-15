@@ -4,7 +4,7 @@ let spritePalette = '';
 
 const SPA_ORDER = ['Skating', 'Shooting', 'Checking', 'Falls', 'Fight', 'Celebrate', 'Goalies', 'Puck', 'Special', 'Other'];
 const SPF_ORDER = ['Players', 'Goalies', 'Ice', 'Other'];
-const AUDIO_ORDER = ['Music', 'SFX', 'Samples', 'Other'];
+const AUDIO_ORDER = ['Music', 'Music — Team', 'Music — Shared', 'SFX', 'Samples', 'Other'];
 
 const el = (id) => document.getElementById(id);
 function isPcGame(kind) {

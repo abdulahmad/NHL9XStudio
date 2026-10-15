@@ -3,12 +3,14 @@
   "platform": "genesis",
   "playback": true,
   "note": null,
+  "streamDriver": null,
   "previewMeta": {
     "soundBase": 62664,
     "fmtuneTable": 66196,
     "fmtuneStride": 26,
     "noteFreqTable": 65914,
-    "noteOctaveTable": 66010
+    "noteOctaveTable": 66010,
+    "streamDriver": null
   },
   "entries": [
     {
@@ -23,7 +25,7 @@
     },
     {
       "id": "fmtune-0",
-      "label": "Title / menu A",
+      "label": "SngEOP",
       "group": "Music",
       "type": "fm-song",
       "track": 0,
@@ -31,7 +33,7 @@
     },
     {
       "id": "fmtune-1",
-      "label": "Title / menu B",
+      "label": "SngTitle",
       "group": "Music",
       "type": "fm-song",
       "track": 1,
@@ -39,7 +41,7 @@
     },
     {
       "id": "fmtune-2",
-      "label": "In-game A",
+      "label": "SngTitle reprise",
       "group": "Music",
       "type": "fm-song",
       "track": 2,
@@ -47,7 +49,7 @@
     },
     {
       "id": "fmtune-3",
-      "label": "In-game B",
+      "label": "SngEOG",
       "group": "Music",
       "type": "fm-song",
       "track": 3,
@@ -55,7 +57,7 @@
     },
     {
       "id": "fmtune-4",
-      "label": "Organ / sting A",
+      "label": "SngPO",
       "group": "Music",
       "type": "fm-song",
       "track": 4,
@@ -63,7 +65,7 @@
     },
     {
       "id": "fmtune-5",
-      "label": "Organ / sting B",
+      "label": "In-game organ",
       "group": "Music",
       "type": "fm-song",
       "track": 5,

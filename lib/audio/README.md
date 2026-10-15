@@ -3,10 +3,14 @@
 Genesis (AUD-0 / AUD-1):
 
 - `genesis-constants.js` — ROM offsets (`Hockey.snd`, FMTune, SFX cmdstreams for NHL 92).
-- `genesis.js` — cmdstream → preview note schedule (Web Audio sketch, not YM2612).
+- `genesis.js` — NHL 92 byte cmdstream + 93/94 event-stream preview schedules (Web Audio sketch, not YM2612).
+- `genesis-events.js` — 4-byte event parser for NHL 93+ (`NhlGenesisEvents` in browser).
+- `parse-sound-asm.js` + `data/*-streams.json` — stream tables from disasm `sound*.asm` + `extractAssets*.js`.
 - `data/audio/<gameId>.json` — static catalogs (`node tools/build-audio-catalog.js`).
 
-Browser: `lib/audio/genesis-constants.js` + `genesis.js` (global `NhlGenesisAudio`) run FM preview when a ROM is loaded in the viewer (Open file or API `roms/`).
+Regenerate 93/94 stream packs: `DISASM93=/path/NHLPA93Genesis DISASM94=/path/NHL94Genesis node tools/build-genesis-stream-data.js`, then `node tools/build-audio-catalog.js`.
+
+Browser: `genesis-constants.js` + `genesis-events.js` + `genesis.js` (`NhlGenesisAudio`) when a ROM is loaded in the viewer (Open file or API `roms/`).
 
 API (optional local server):
 

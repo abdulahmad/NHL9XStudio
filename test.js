@@ -1047,9 +1047,37 @@ assert.strictEqual(nhl92Audio.entries.filter((e) => e.type === 'fm-song').length
 assert.strictEqual(nhl92Audio.entries.filter((e) => e.type === 'fm-sfx').length, 17);
 const fmtune0 = nhl92Audio.entries.find((e) => e.id === 'fmtune-0');
 assert.ok(fmtune0 && fmtune0.playable);
+const { loadMerged } = require('./lib/audio/parse-sound-asm');
+const disasm93 = '/tmp/NHLPA93Genesis';
+const disasm94 = '/tmp/NHL94Genesis';
+if (fs.existsSync(path.join(disasm93, 'src/sound93.asm'))) {
+  const merged93 = loadMerged(
+    'nhlpa93',
+    path.join(disasm93, 'src/sound93.asm'),
+    path.join(disasm93, 'tools/extractAssets93-1.1.js')
+  );
+  assert.strictEqual(merged93.streams.length, 56);
+}
+if (fs.existsSync(path.join(disasm94, 'src/sound94.asm'))) {
+  const merged94 = loadMerged(
+    'nhl94',
+    path.join(disasm94, 'src/sound94.asm'),
+    path.join(disasm94, 'tools/extractAssets94.js')
+  );
+  assert.strictEqual(merged94.streams.length, 123);
+}
+
+const nhlpa93Audio = audio.genesis.buildCatalog('nhlpa93');
+assert.strictEqual(nhlpa93Audio.playback, true);
+assert.strictEqual(nhlpa93Audio.streamDriver, 'event-93');
+assert.strictEqual(nhlpa93Audio.entries.filter((e) => e.type === 'fm-stream').length, 56);
+
 const nhl94Audio = audio.genesis.buildCatalog('nhl94');
-assert.strictEqual(nhl94Audio.playback, false);
-assert.strictEqual(nhl94Audio.entries.length, 1);
+assert.strictEqual(nhl94Audio.playback, true);
+assert.strictEqual(nhl94Audio.streamDriver, 'event-94');
+assert.strictEqual(nhl94Audio.entries.filter((e) => e.type === 'fm-stream').length, 123);
+assert.ok(nhl94Audio.entries.some((e) => e.group === 'Music — Team'));
+assert.ok(nhl94Audio.entries.some((e) => e.group === 'Music — Shared'));
 const catalogPath = audio.catalogPath('nhl92');
 assert.ok(fs.existsSync(catalogPath));
 const onDisk = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
@@ -1068,4 +1096,24 @@ if (audioRom) {
   const schedule = audio.genesis.previewEntry(rom, title, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
   assert.ok(schedule && schedule.events.length > 4, 'title track should emit notes');
   assert.ok(schedule.duration > 0.5);
+}
+const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'lst/nhlpa93.bin'));
+if (genesis93Rom) {
+  const entry = nhlpa93Audio.entries.find((e) => e.id === 'snd-30') || nhlpa93Audio.entries.find((e) => e.type === 'fm-stream' && e.group === 'Music');
+  const schedule93 = audio.genesis.previewEntry(
+    genesis93Rom,
+    entry,
+    audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhlpa93'))
+  );
+  assert.ok(schedule93 && schedule93.events.length > 0, '93G stream preview should emit notes');
+}
+const genesis94Rom = genesis94 || romIf(path.join(disasm94, 'lst/nhl94.bin'));
+if (genesis94Rom) {
+  const teamSong = nhl94Audio.entries.find((e) => e.group === 'Music — Team');
+  const schedule94 = audio.genesis.previewEntry(
+    genesis94Rom,
+    teamSong,
+    audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl94'))
+  );
+  assert.ok(schedule94 && schedule94.events.length > 0, '94G team song preview should emit notes');
 }
