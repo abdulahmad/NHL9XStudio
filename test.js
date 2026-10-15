@@ -287,6 +287,8 @@ assert.strictEqual(snes94cat.spfs.find((item) => item.name === 'SPFcelebrate').s
 assert.strictEqual(snes94cat.spfs.find((item) => item.name === 'SPFpump').start, 201);
 assert.ok(snes94cat.anims.some((anim) => anim.name === 'SPAcelebrate'));
 assert.ok(snes94cat.anims.some((anim) => anim.name === 'SPApump'));
+const cel94 = snes94cat.anims.find((anim) => anim.name === 'SPAcelebrate');
+assert.ok(cel94.searchTerms && /celebrate/.test(cel94.searchTerms));
 assert.strictEqual(snes94cat.anims.filter((anim) => anim.name === 'SPAskatewp').length, 1);
 
 const literal = unpack93(Buffer.from([0x02, 1, 2, 3, 0xe0, 0]), 0);
@@ -431,6 +433,7 @@ assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.bin' && imag
 assert.ok(g95.images.some((image) => image.id === 'CardGuyHebert.bin' && image.paletteAt));
 assert.ok(g95.images.some((image) => image.id === 'logoANA.map.jim'));
 assert.ok(g95.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
+assert.strictEqual(g95.images.filter((image) => /^ArenaGfx/.test(image.id)).length, 29);
 assert.strictEqual(g95.banks.length, sheetGameBanks(g95.images).length);
 assert.strictEqual(g95.banks.filter((bank) => bank.kind === 'frames').length, 2);
 assert.ok(g95.banks.some((bank) => bank.id === 'FaceOff.anim' && bank.kind === 'frames'));

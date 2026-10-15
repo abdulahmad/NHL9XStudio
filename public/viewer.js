@@ -565,6 +565,13 @@ function bindSpfEnd() {
 }
 
 const IMAGE_ORDER = ['Screens', 'Logos', 'Players', 'Sprites', 'Ice', 'Jumbotron', 'Fonts', 'Other'];
+const IMAGE_SEARCH_EXTRA = {
+  'crowd.anim': 'crowd audience stands reaction',
+  'faceoff.anim': 'faceoff face off referee',
+  'zam.anim': 'zamboni zam ice',
+  'playoffsprite.bin': 'playoff arrows stanley',
+  'stanley.anim': 'stanley cup easn spin'
+};
 const imageMemory = new Map();
 
 function renderImageList(box, q) {
@@ -581,7 +588,8 @@ function renderImageList(box, q) {
   const groups = new Map();
   const visible = [];
   for (const image of images) {
-    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.group || '')).toLowerCase();
+    const extra = IMAGE_SEARCH_EXTRA[image.id.toLowerCase()] || '';
+    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.group || '') + ' ' + extra).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(image);
     const group = image.group || 'Other';
@@ -677,7 +685,7 @@ function renderList() {
   const visible = [];
   const groups = new Map();
   for (const entry of entries) {
-    const hay = (entry.name + ' ' + (entry.blurb || '') + ' ' + (entry.comment || '')).toLowerCase();
+    const hay = (entry.name + ' ' + (entry.blurb || '') + ' ' + (entry.comment || '') + ' ' + (entry.searchTerms || '')).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(entry);
     const group = entry.group || 'Other';
