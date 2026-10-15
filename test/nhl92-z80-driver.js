@@ -218,3 +218,97 @@ for (const rate of [0x01, 0x19, 0x40, 0x00]) {
 }
 
 console.log('nhl92 z80 driver: DAC used for SFX, PSG never written OK');
+
+// --- Snapshot decode -------------------------------------------------------------
+
+/**
+ * Per slot ($0155), in this order: +0 bit7 clear -> 26-byte patch from Z80 address
+ * (+1:+2) in $00C5 register order; +3 bit7 clear -> $28=c, then $28=c+$F0 if bit0;
+ * +4 bit7 clear -> $A4+ch=(+5), $A0+ch=(+6); +7 bit7 clear -> $4C+ch=(+7).
+ * Channels 4-6 use part 2 with ch=c&3, but $28 always goes through part 1.
+ */
+function expectedSlot(c, s, mem) {
+  const part = c >> 2;
+  const ch = c & 3;
+  const out = [];
+  const w = (p, reg, value) => out.push(fmt({ part: p, reg, value }));
+  if (!(s[0] & 0x80)) {
+    const at = (s[1] << 8) | s[2];
+    PATCH_REGS.forEach((reg, j) => w(part, reg + ch, mem[at + j]));
+  }
+  if (!(s[3] & 0x80)) {
+    w(0, 0x28, c);
+    if (s[3] & 1) w(0, 0x28, c + 0xf0);
+  }
+  if (!(s[4] & 0x80)) {
+    w(part, 0xa4 + ch, s[5]);
+    w(part, 0xa0 + ch, s[6]);
+  }
+  if (!(s[7] & 0x80)) w(part, 0x4c + ch, s[7]);
+  return out;
+}
+
+function expectedFrame(buf, mem) {
+  const out = [];
+  SLOT_CHANNELS.forEach((c, i) => out.push(...expectedSlot(c, buf.slice(i * 8, i * 8 + 8), mem)));
+  return out;
+}
+
+const PATCHES = [];
+for (let at = 0x2a5; at + 0x20 <= 0x569; at += 0x20) PATCHES.push(at);
+assert.strictEqual(PATCHES.length, 22);
+
+{
+  // All six slots, every field, different retail patches.
+  const z = booted();
+  const buf = channels(SLOT_CHANNELS.map((c, i) => ({
+    patch: PATCHES[i * 3],
+    key: 0x01,
+    freq: [0x22 + i, 0x69 + i],
+    tl: 0x10 + i
+  })));
+  frame(z, { flag: 0, channels: buf, pending: 0 });
+  assert.deepStrictEqual(regLog(z), expectedFrame(buf, PROGRAM));
+  assert.strictEqual(z.ym.length, 6 * (26 + 2 + 2 + 1));
+  for (let i = 0; i < 6; i++) {
+    const s = Array.from(z.ram.subarray(SLOT_BASE + i * 8, SLOT_BASE + i * 8 + 8));
+    assert.deepStrictEqual([s[0], s[3], s[4], s[7]], [0xff, 0xff, 0xff, 0xff], 'flags consumed');
+    assert.deepStrictEqual([s[1], s[2], s[5], s[6]], [buf[i * 8 + 1], buf[i * 8 + 2], buf[i * 8 + 5], buf[i * 8 + 6]]);
+  }
+  frame(z, IDLE);
+  assert.strictEqual(z.ym.length, 6 * 31, 'nothing re-sent without a new update');
+}
+for (const c of [0, 6]) {
+  // Every retail patch through a part-1 and a part-2 channel.
+  for (const at of PATCHES) {
+    const z = booted();
+    const slots = [];
+    slots[SLOT_CHANNELS.indexOf(c)] = { patch: at };
+    const buf = channels(slots);
+    frame(z, { flag: 0, channels: buf, pending: 0 });
+    assert.deepStrictEqual(regLog(z), expectedFrame(buf, PROGRAM), 'patch ' + hex(at) + ' ch ' + c);
+  }
+}
+for (const [field, value] of [['key', 0x00], ['key', 0x7e], ['key', 0x7f], ['key', 0x80], ['tl', 0x7f], ['tl', 0x80]]) {
+  // Only bit 7 gates a field; key bit 0 picks off-only vs off+on.
+  const z = booted();
+  const buf = channels([{}, {}, {}, {}, { [field]: value }]);
+  frame(z, { flag: 0, channels: buf, pending: 0 });
+  assert.deepStrictEqual(regLog(z), expectedFrame(buf, PROGRAM), field + '=' + hex(value));
+}
+{
+  // Within a slot the key write precedes the frequency write (retail order).
+  const z = booted();
+  frame(z, { flag: 0, channels: channels([{ key: 0x01, freq: [0x1a, 0x8c] }]), pending: 0 });
+  assert.deepStrictEqual(regLog(z), ['0:$28=$0', '0:$28=$F0', '0:$A4=$1A', '0:$A0=$8C']);
+}
+{
+  // The patch pointer is any Z80 address: the loader reads Z80 RAM, not the 68k.
+  const z = booted();
+  for (let j = 0; j < 26; j++) z.busWrite(0x1000 + j, 0x40 + j);
+  const buf = channels([{}, {}, {}, { patch: 0x1000 }]);
+  frame(z, { flag: 0, channels: buf, pending: 0 });
+  assert.deepStrictEqual(regLog(z), PATCH_REGS.map((reg, j) => fmt({ part: 1, reg, value: 0x40 + j })));
+}
+
+console.log('nhl92 z80 driver: snapshot decode OK');
