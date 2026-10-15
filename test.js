@@ -433,7 +433,7 @@ assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.bin' && imag
 assert.ok(g95.images.some((image) => image.id === 'CardGuyHebert.bin' && image.paletteAt));
 assert.ok(g95.images.some((image) => image.id === 'logoANA.map.jim'));
 assert.ok(g95.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
-assert.strictEqual(g95.images.filter((image) => /^ArenaGfx/.test(image.id)).length, 29);
+assert.strictEqual(g95.images.filter((image) => /^ArenaGfx/.test(image.id)).length, 27);
 assert.strictEqual(g95.banks.length, sheetGameBanks(g95.images).length);
 assert.strictEqual(g95.banks.filter((bank) => bank.kind === 'frames').length, 2);
 assert.ok(g95.banks.some((bank) => bank.id === 'FaceOff.anim' && bank.kind === 'frames'));
