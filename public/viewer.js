@@ -14,6 +14,33 @@ function isZ80TestGame() {
   return gameInfo && gameInfo.kind === 'z80test';
 }
 
+/** The Sound data tab parses the NHL '92 sound module (bundled slice), so it is NHL 92 only. */
+function hasSoundData(info) {
+  return !!(info && info.id === 'nhl92' && typeof NhlSoundDataView !== 'undefined');
+}
+
+function renderSoundDataView() {
+  const view = el('sound-data-view');
+  const on = state.mode === 'sounddata';
+  view.hidden = !on;
+  el('stage').parentElement.parentElement.classList.toggle('is-sounddata', on);
+  if (!on) return;
+  const key = state.soundItem + '|' + (NhlSoundDataView.ready ? 1 : 0);
+  if (view.dataset.key === key) return;
+  view.dataset.key = key;
+  view.scrollTop = 0;
+  NhlSoundDataView.renderPanel(view, state.soundItem);
+}
+
+async function enterSoundData() {
+  try {
+    await NhlSoundDataView.ensure(pathPrefix);
+  } catch (err) { /* NhlSoundDataView.error carries the message */ }
+  const ids = NhlSoundDataView.entries().map((e) => e.id);
+  if (ids.length && !ids.includes(state.soundItem)) state.soundItem = ids[0];
+  if (state.mode === 'sounddata') refreshAll();
+}
+
 function syncModeTabs() {
   const z80 = isZ80TestGame();
   for (const mode of ['frame', 'spf', 'spa', 'image']) {
@@ -48,6 +75,7 @@ const state = {
   query: '',
   audioId: '',
   z80Pattern: 'nhl_driver_boot',
+  soundItem: 'song-1',
   acc: 0,
   holdKey: '',
   holdLeft: null,
@@ -338,6 +366,9 @@ function buildSequence(anim) {
   if (!catalog) {
     return { key: 'empty', steps: [], directions: false, spin: false, loopDefault: true, title: 'Loading' };
   }
+  if (state.mode === 'sounddata') {
+    return { key: 'sounddata:' + state.soundItem, steps: [], directions: false, spin: false, loopDefault: false, title: 'Sound data' };
+  }
   if (state.mode === 'audio') {
     const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
     return {
@@ -578,6 +609,7 @@ function paintStage() {
   const cssW = wrap.clientWidth;
   const cssH = wrap.clientHeight;
   if (!cssW || !cssH) return;
+  if (state.mode === 'sounddata') return;
   if (state.mode === 'z80') {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
@@ -903,6 +935,46 @@ function renderImageList(box, q) {
   }
 }
 
+function renderSoundDataList(box, q) {
+  const list = NhlSoundDataView.entries().filter((e) => !q || (e.label + ' ' + e.sub).toLowerCase().includes(q));
+  if (!list.length) {
+    const note = document.createElement('p');
+    note.className = 'empty-note';
+    note.textContent = NhlSoundDataView.error || (NhlSoundDataView.ready ? 'Nothing matches that search.' : 'Loading sound data…');
+    box.appendChild(note);
+    return;
+  }
+  let group = '';
+  for (const entry of list) {
+    if (entry.group !== group) {
+      group = entry.group;
+      const label = document.createElement('div');
+      label.className = 'group-label';
+      label.textContent = group;
+      box.appendChild(label);
+    }
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'item';
+    button.setAttribute('role', 'option');
+    const selected = entry.id === state.soundItem;
+    button.classList.toggle('is-current', selected);
+    button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = entry.label;
+    const sub = document.createElement('span');
+    sub.className = 'sub';
+    sub.textContent = entry.sub;
+    button.append(name, sub);
+    button.addEventListener('click', () => {
+      state.soundItem = entry.id;
+      refreshAll();
+    });
+    box.appendChild(button);
+  }
+}
+
 function renderList() {
   const box = el('catalog');
   box.replaceChildren();
@@ -914,6 +986,10 @@ function renderList() {
   }
   if (state.mode === 'z80') {
     renderZ80List(box, q);
+    return;
+  }
+  if (state.mode === 'sounddata') {
+    renderSoundDataList(box, q);
     return;
   }
   if (state.mode === 'audio') {
@@ -1169,6 +1245,8 @@ function renderMeta() {
       rows.push(['ROM', pat.needsRom ? 'required' : 'optional']);
     }
     if (z80LastResult) rows.push(['Last run', z80LastResult]);
+  } else if (state.mode === 'sounddata') {
+    rows.push(...NhlSoundDataView.metaRows(state.soundItem));
   } else if (state.mode === 'audio') {
     const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
     if (entry) {
@@ -1232,6 +1310,10 @@ function renderMeta() {
     detail.append(dt, dd);
   }
   el('detail-title').textContent = frame ? 'Frame ' + frame.frame : 'Frame';
+  const soundData = state.mode === 'sounddata';
+  if (soundData) el('detail-title').textContent = 'Sound data';
+  el('sprites').closest('section').hidden = soundData;
+  el('palette').closest('section').hidden = soundData;
 
   const table = el('sprites');
   table.replaceChildren();
@@ -1354,6 +1436,12 @@ function renderCaption() {
     cap.textContent = z80LastResult || (pat ? pat.label + ' · Play to run' : 'Z80 test pattern');
     return;
   }
+  if (state.mode === 'sounddata') {
+    cap.textContent = '';
+    cap.hidden = true;
+    return;
+  }
+  cap.hidden = false;
   if (state.mode === 'audio') {
     const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
     cap.textContent = audioLoadError || (entry
@@ -1456,14 +1544,15 @@ function renderTransport() {
   el('sort-file').setAttribute('aria-pressed', state.sort === 'file' ? 'true' : 'false');
   if ([...el('bank').options].some((option) => option.value === state.bank)) el('bank').value = state.bank;
   el('bank').disabled = state.mode !== 'frame' || !gameInfo || gameInfo.banks.length < 2;
-  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'z80']) {
+  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'z80', 'sounddata']) {
     const tab = el('mode-' + mode);
     if (!tab) continue;
     tab.setAttribute('aria-selected', state.mode === mode ? 'true' : 'false');
   }
-  el('filmstrip').classList.toggle('is-hidden', state.mode === 'audio' || state.mode === 'z80');
+  const noFrames = state.mode === 'audio' || state.mode === 'z80' || state.mode === 'sounddata';
+  el('filmstrip').classList.toggle('is-hidden', noFrames);
   const orderRow = el('sort-group') && el('sort-group').closest('.order');
-  if (orderRow) orderRow.classList.toggle('is-hidden', state.mode === 'audio' || state.mode === 'z80');
+  if (orderRow) orderRow.classList.toggle('is-hidden', noFrames);
 }
 
 function refreshPlaybackChrome() {
@@ -1480,6 +1569,7 @@ function refreshAll() {
   renderSwatches();
   refreshPlaybackChrome();
   renderFilmstrip();
+  renderSoundDataView();
   paintStage();
   writeHash();
 }
@@ -1500,6 +1590,8 @@ function writeHash() {
     params.set('audio', state.audioId);
   } else if (state.mode === 'z80') {
     params.set('z80', state.z80Pattern);
+  } else if (state.mode === 'sounddata') {
+    params.set('snd', state.soundItem);
   } else {
     params.set('spa', state.spa);
     params.set('dir', String(state.dir));
@@ -1514,7 +1606,7 @@ function writeHash() {
 function readHash() {
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   const mode = params.get('mode');
-  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'z80') {
+  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'z80' || mode === 'sounddata') {
     state.mode = mode;
   }
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) state.game = params.get('game');
@@ -1529,6 +1621,7 @@ function readHash() {
   if (params.get('step')) state.step = Number(params.get('step')) || 0;
   if (params.get('audio')) state.audioId = params.get('audio');
   if (params.get('z80')) state.z80Pattern = params.get('z80');
+  if (params.get('snd')) state.soundItem = params.get('snd');
   if (params.has('pal')) {
     state.paletteExplicit = true;
     state.paletteName = params.get('pal') === 'embedded' ? '' : params.get('pal');
@@ -1644,6 +1737,7 @@ function wire() {
     writeHash();
   });
   el('play').addEventListener('click', () => {
+    if (state.mode === 'sounddata') return;
     if (state.mode === 'z80') {
       if (state.playing) {
         state.playing = false;
@@ -1692,6 +1786,15 @@ function wire() {
     NhlAudioEngine.stopAll();
     if (!audioCatalog) await loadAudioCatalog(state.game);
     refreshAll();
+  });
+  el('mode-sounddata').addEventListener('click', async () => {
+    clearSearch();
+    await restoreSpritePalette();
+    state.mode = 'sounddata';
+    state.playing = false;
+    NhlAudioEngine.stopAll();
+    refreshAll();
+    await enterSoundData();
   });
   const modeZ80 = el('mode-z80');
   if (modeZ80) {
@@ -2167,6 +2270,8 @@ async function loadGame(id, keepSelection) {
   state.playing = false;
   const audioTab = el('mode-audio');
   if (audioTab) audioTab.hidden = info.platform !== 'genesis';
+  el('mode-sounddata').hidden = !hasSoundData(info);
+  if (!hasSoundData(info) && state.mode === 'sounddata') state.mode = 'spa';
   syncModeTabs();
   if (info.platform !== 'genesis') {
     audioCatalog = null;
@@ -2231,7 +2336,8 @@ async function loadGame(id, keepSelection) {
     state.dir = previous.dir;
     state.step = previous.step;
   } else {
-    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image' || previous.mode === 'audio' || previous.mode === 'z80'
+    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image' || previous.mode === 'audio' || previous.mode === 'z80' ||
+      (previous.mode === 'sounddata' && hasSoundData(info))
       ? previous.mode
       : (info.kind === 'z80test' ? 'z80' : 'spa');
     state.dir = previous.dir;
@@ -2239,6 +2345,7 @@ async function loadGame(id, keepSelection) {
     state.frame = previous.frame || 1;
     state.playing = state.mode === 'spa' || state.mode === 'spf';
   }
+  if (state.mode === 'sounddata' && !hasSoundData(info)) state.mode = 'spa';
   if (keepSelection && state.mode !== 'spa' && state.mode !== 'spf') state.playing = false;
   const spaMatch = named(catalog.anims, previous.spa) || named(catalog.anims, 'SPAskatewp') || catalog.anims[0];
   const spfMatch = named(catalog.spfs, previous.spf) || catalog.spfs[0];
@@ -2285,6 +2392,7 @@ async function loadGame(id, keepSelection) {
       state.mode = 'spa';
     }
   }
+  if (state.mode === 'sounddata') enterSoundData();
   if (info.kind === 'z80test') {
     z80LastResult = '';
     try {

@@ -415,3 +415,33 @@ select:focus, input:focus, button:focus-visible {
   .app.show-list .scrim,
   .app.show-meta .scrim { display: block; }
 }
+
+.sound-data-view {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 16px 18px 56px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.sound-data-view[hidden] { display: none; }
+.sound-data-view h3 { margin: 0 0 6px; font-size: 16px; }
+.sound-data-view h4 { margin: 14px 0 6px; font-size: 13px; color: var(--ice-2); }
+.sound-data-view .sd-note { margin: 4px 0 8px; color: var(--muted); }
+.sound-data-view .mono { font-family: var(--mono); }
+.sd-order { margin: 0; padding-left: 22px; }
+.sd-order li { margin: 2px 0; }
+.sd-order .sd-at { color: var(--muted); margin-right: 8px; font-size: 12px; }
+.sd-order .sd-ctl { color: var(--amber); }
+.sd-pattern { display: inline-block; vertical-align: top; }
+.sd-pattern summary { cursor: pointer; }
+.sd-events { border-collapse: collapse; margin: 6px 0 10px; font-size: 12px; }
+.sd-events th, .sd-events td { text-align: left; padding: 2px 10px 2px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.sd-events th { color: var(--muted); font-weight: 600; }
+.sd-events tr.ev-note td:nth-child(3) { color: var(--text); }
+.sd-events tr.ev-rest td:nth-child(3), .sd-events tr.ev-duration td:nth-child(3) { color: var(--muted); }
+.sd-events tr.ev-end td:nth-child(3), .sd-events tr.ev-stop td:nth-child(3) { color: var(--amber); }
+.sd-events tr.ev-instrument td:nth-child(3) { color: var(--good); }
+.stage-panel.is-sounddata .transport { display: none; }

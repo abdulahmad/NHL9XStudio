@@ -58,6 +58,7 @@
         <button type="button" id="mode-image" role="tab" aria-selected="false">Images</button>
         <button type="button" id="mode-audio" role="tab" aria-selected="false" hidden>Audio</button>
         <button type="button" id="mode-z80" role="tab" aria-selected="false" hidden>Z80</button>
+        <button type="button" id="mode-sounddata" role="tab" aria-selected="false" hidden>Sound data</button>
       </div>
       <div class="order">
         <span>Order</span>
@@ -81,6 +82,7 @@
       </div>
       <div class="stage-wrap">
         <canvas id="stage" aria-label="Sprite stage"></canvas>
+        <div id="sound-data-view" class="sound-data-view" hidden></div>
         <div class="compass" id="compass" aria-label="Facing">
           <button type="button" data-dir="7" title="Northwest">↖</button>
           <button type="button" data-dir="0" title="North">↑</button>
@@ -174,6 +176,8 @@
   <script src="lib/audio/nhl92-sound-fixture.js"></script>
   <script src="lib/audio/nhl92-sound-system.js"></script>
   <script src="lib/audio/z80-test-patterns.js"></script>
+  <script src="lib/audio/nhl92-sound-data.js"></script>
+  <script src="sound-data-view.js"></script>
   <script src="audio-engine.js"></script>
   <script src="viewer.js"></script>
 </body>
