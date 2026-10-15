@@ -743,8 +743,27 @@ const shortPack = Buffer.from([
 assert.strictEqual(Buffer.from(pc95.decompressRefPack(shortPack)).toString('ascii'), 'abcabc');
 const qppPack = Buffer.from(shortPack);
 qppPack[0] = 0x30;
-assert.ok(pc95.isRefPack(qppPack));
-assert.strictEqual(Buffer.from(pc95.decompressRefPack(qppPack)).toString('ascii'), 'abcabc');
+assert.ok(pc95.isEaHuffPack(qppPack));
+assert.ok(!pc95.isRefPack(qppPack));
+const arenaQpp = path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94', 'ARENA.QPP');
+if (fs.existsSync(arenaQpp)) {
+  const arenaOpened = pc95.openBytes(fs.readFileSync(arenaQpp));
+  assert.ok(arenaOpened && arenaOpened.shapes.length >= 1);
+  assert.ok(arenaOpened.palette);
+  const cflag = path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94', 'CFLAG.QPP');
+  const cflagOpened = pc95.openBytes(fs.readFileSync(cflag));
+  assert.ok(cflagOpened && cflagOpened.shapes.length >= 1);
+  const pc94Listed = pc95.catalogDirectory(path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94'));
+  assert.ok(pc94Listed.images.length >= 10, 'pc94 QPP pictures in catalog');
+}
+
+const romDetectBuf94 = Buffer.alloc(0x100000, 0);
+romDetectBuf94.write('SEGA', 0x100);
+assert.strictEqual(romDetect.detect('NHL94.bin', romDetectBuf94).id, 'nhl94');
+const romDetectBuf93 = Buffer.alloc(0x80000, 0);
+romDetectBuf93.write('SEGA', 0x100);
+assert.strictEqual(romDetect.detect('NHLPA93.bin', romDetectBuf93).id, 'nhlpa93');
+assert.strictEqual(romDetect.detect('NHL94.sfc', Buffer.alloc(0x100000, 0)).id, 'nhl94snes');
 
 const sizedPack = Buffer.from([
   0x11, 0xFB, 0x00, 0x00, 0x00,
@@ -1100,6 +1119,11 @@ if (audioRom) {
   const titleSched = audio.genesis.previewEntry(rom, titleTrack, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
   assert.ok(titleSched && titleSched.events.length > 80, 'NHL 92 title should parse many notes');
   assert.ok(titleSched.events.every((e) => e.midi >= 20), 'title notes should be in audible range');
+  const poTrack = nhl92Audio.entries.find((e) => e.id === 'fmtune-4');
+  const t0 = Date.now();
+  const poSched = audio.genesis.previewEntry(rom, poTrack, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
+  assert.ok(Date.now() - t0 < 3000, 'SngPO preview should not hang');
+  assert.ok(poSched && poSched.events.length > 10, 'SngPO should emit notes');
 }
 const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'lst/nhlpa93.bin'));
 if (genesis93Rom) {

@@ -1,11 +1,12 @@
 /**
- * Browser playback for Genesis FM schedules (Web Audio; not cycle-accurate YM2612).
+ * Browser playback for Genesis FM schedules (offline render → single buffer).
  */
 (function (root) {
   let ctx = null;
   let active = [];
 
-  const MAX_VOICES = 320;
+  const MAX_RENDER_EVENTS = 360;
+  const MAX_RENDER_SEC = 75;
 
   function midiToHz(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
@@ -25,35 +26,45 @@
     active = [];
   }
 
-  function playVoice(audio, t0, ev, gainMaster) {
-    const carrierHz = Math.max(20, midiToHz(ev.midi));
-    const dur = Math.max(0.04, ev.duration || 0.1);
-    const start = t0 + (ev.time || 0);
-    const stop = start + dur + 0.03;
+  function thinEvents(events) {
+    if (events.length <= MAX_RENDER_EVENTS) return events;
+    const step = Math.ceil(events.length / MAX_RENDER_EVENTS);
+    return events.filter((_, i) => i % step === 0);
+  }
 
-    const osc = audio.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(carrierHz, start);
+  async function renderSchedule(schedule, options) {
+    const events = thinEvents((schedule && schedule.events) || []);
+    if (!events.length) return null;
+    const endTime = events.reduce((m, e) => Math.max(m, (e.time || 0) + (e.duration || 0.1)), 0);
+    const durationSec = Math.min(MAX_RENDER_SEC, Math.max(0.5, endTime + 0.15));
+    const sampleRate = 44100;
+    const length = Math.ceil(durationSec * sampleRate);
+    const offline = new OfflineAudioContext(1, length, sampleRate);
+    const master = offline.createGain();
+    const vol = (options && options.volume) != null ? options.volume : 0.45;
+    master.gain.value = vol;
+    master.connect(offline.destination);
+    const mix = Math.sqrt(Math.min(events.length, 48));
 
-    const amp = audio.createGain();
-    const peak = 0.28 / Math.sqrt(Math.max(1, (ev._mix || 8)));
-    amp.gain.setValueAtTime(0.001, start);
-    amp.gain.exponentialRampToValueAtTime(peak, start + Math.min(0.025, dur * 0.12));
-    amp.gain.exponentialRampToValueAtTime(peak * 0.35, start + dur * 0.7);
-    amp.gain.exponentialRampToValueAtTime(0.001, stop);
+    for (const ev of events) {
+      const start = Math.max(0, ev.time || 0);
+      const dur = Math.max(0.05, ev.duration || 0.1);
+      const hz = Math.max(30, midiToHz(ev.midi));
+      const osc = offline.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = hz;
+      const g = offline.createGain();
+      const peak = 0.35 / mix;
+      g.gain.setValueAtTime(0.001, start);
+      g.gain.exponentialRampToValueAtTime(peak, start + Math.min(0.03, dur * 0.1));
+      g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(start);
+      osc.stop(Math.min(durationSec, start + dur + 0.02));
+    }
 
-    const filter = audio.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 4200;
-    filter.Q.value = 0.6;
-
-    osc.connect(filter);
-    filter.connect(amp);
-    amp.connect(gainMaster);
-
-    osc.start(start);
-    osc.stop(stop);
-    active.push(osc);
+    return { buffer: await offline.startRendering(), duration: durationSec };
   }
 
   async function playSchedule(schedule, options) {
@@ -62,25 +73,17 @@
     if (audio.state === 'suspended') {
       await audio.resume();
     }
-    const gainMaster = audio.createGain();
-    const vol = (options && options.volume) != null ? options.volume : 0.35;
-    gainMaster.gain.value = vol;
-    gainMaster.connect(audio.destination);
-
-    const t0 = audio.currentTime + 0.06;
-    let events = (schedule && schedule.events) ? schedule.events.slice() : [];
-    if (events.length > MAX_VOICES) {
-      const step = Math.ceil(events.length / MAX_VOICES);
-      events = events.filter((_, i) => i % step === 0);
+    const rendered = await renderSchedule(schedule, options);
+    if (!rendered || !rendered.buffer) {
+      return { duration: 0 };
     }
-    const mix = Math.min(16, Math.max(4, Math.ceil(events.length / 40)));
-    for (const ev of events) {
-      ev._mix = mix;
-      playVoice(audio, t0, ev, gainMaster);
-    }
-    const duration = (schedule && schedule.duration) || 3;
-    return { duration };
+    const src = audio.createBufferSource();
+    src.buffer = rendered.buffer;
+    src.connect(audio.destination);
+    src.start();
+    active.push(src);
+    return { duration: rendered.duration };
   }
 
-  root.NhlAudioEngine = { playSchedule, stopAll, ensureContext };
+  root.NhlAudioEngine = { playSchedule, stopAll, ensureContext, renderSchedule };
 })(typeof self !== 'undefined' ? self : this);
