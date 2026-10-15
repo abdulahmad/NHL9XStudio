@@ -1,0 +1,13 @@
+{
+  "source": "NHL Hockey (Genesis) retail sound region",
+  "soundSlice": {
+    "romOffset": 62664,
+    "length": 85324
+  },
+  "z80Program": {
+    "romOffset": 71334,
+    "length": 1432
+  },
+  "syntheticRomSize": 151552,
+  "note": "Bundled for Z80 test mode only. Not a full game ROM."
+}

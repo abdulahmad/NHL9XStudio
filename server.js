@@ -336,10 +336,12 @@ const server = http.createServer((req, res) => {
     const game = gameById(gameAudioPreview[1]);
     const entryId = url.searchParams.get('entry');
     if (!game || !entryId) { send(res, 400, 'Bad request', 'text/plain; charset=utf-8'); return; }
+    let rom = null;
     const file = findRom(game);
-    if (!file) { send(res, 404, 'ROM not found', 'text/plain; charset=utf-8'); return; }
+    if (file) rom = readRom(file, game);
+    else if (game.id === 'z80test') rom = audio.soundFixture.resolveRom(null);
+    if (!rom) { send(res, 404, 'ROM not found', 'text/plain; charset=utf-8'); return; }
     try {
-      const rom = readRom(file, game);
       let out = audio.previewFromRom(game.id, entryId, rom);
       if ((!out || !out.schedule || !out.schedule.events || !out.schedule.events.length)
         && (game.id === 'nhl92' || game.id === 'z80test')) {
