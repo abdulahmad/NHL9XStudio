@@ -5,8 +5,8 @@
   let ctx = null;
   let active = [];
 
-  const MAX_RENDER_EVENTS = 360;
-  const MAX_RENDER_SEC = 75;
+  const MAX_RENDER_EVENTS = 400;
+  const MAX_RENDER_SEC = 24;
 
   function midiToHz(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
@@ -32,8 +32,15 @@
     return events.filter((_, i) => i % step === 0);
   }
 
+  function trimToPreview(schedule) {
+    const all = (schedule && schedule.events) || [];
+    const events = all.filter((e) => (e.time || 0) < MAX_RENDER_SEC);
+    if (!events.length) return [];
+    return thinEvents(events);
+  }
+
   async function renderSchedule(schedule, options) {
-    const events = thinEvents((schedule && schedule.events) || []);
+    const events = trimToPreview(schedule);
     if (!events.length) return null;
     const endTime = events.reduce((m, e) => Math.max(m, (e.time || 0) + (e.duration || 0.1)), 0);
     const durationSec = Math.min(MAX_RENDER_SEC, Math.max(0.5, endTime + 0.15));
@@ -54,7 +61,7 @@
       osc.type = 'triangle';
       osc.frequency.value = hz;
       const g = offline.createGain();
-      const peak = 0.35 / mix;
+      const peak = 0.55 / mix;
       g.gain.setValueAtTime(0.001, start);
       g.gain.exponentialRampToValueAtTime(peak, start + Math.min(0.03, dur * 0.1));
       g.gain.exponentialRampToValueAtTime(0.001, start + dur);

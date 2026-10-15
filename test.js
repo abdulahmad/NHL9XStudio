@@ -1106,8 +1106,21 @@ assert.ok(onDisk.previewMeta && onDisk.previewMeta.fmtuneTable === 0x10294);
 const { scanGenesisAudio } = require('./lib/audio/genesis-scan');
 const audioRom = retail92
   || romIf(path.join(root, 'EA-NHL-Tools', 'NHL92FMTunes-To-MIDI', 'nhl92retail.bin'));
+const previewRender = require('./lib/audio/preview-render');
+const nhl92Z80 = require('./lib/audio/nhl92-z80');
+
 if (audioRom) {
   const rom = audioRom;
+  const z80Loaded = nhl92Z80.loadIntoRam(rom);
+  assert.ok(z80Loaded);
+  assert.strictEqual(z80Loaded.blob[0], 0xc3);
+  assert.strictEqual(z80Loaded.ram[0], 0xc3);
+  let z80Steps = 0;
+  try {
+    for (; z80Steps < 2000; z80Steps++) z80Loaded.cpu.step();
+  } catch (err) {
+    assert.ok(z80Steps >= 5, 'Z80 driver should execute some instructions before unimplemented opcode');
+  }
   const scan = scanGenesisAudio(rom, audio.genesis.gameMeta('nhl92'));
   assert.ok(scan.fmtune && scan.fmtune.fmtuneTable === 0x10294);
   assert.ok(scan.fmtune.fmtuneTracks >= 5);
@@ -1124,6 +1137,8 @@ if (audioRom) {
   const poSched = audio.genesis.previewEntry(rom, poTrack, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
   assert.ok(Date.now() - t0 < 3000, 'SngPO preview should not hang');
   assert.ok(poSched && poSched.events.length > 10, 'SngPO should emit notes');
+  const titleRender = previewRender.renderSchedule(titleSched);
+  assert.ok(previewRender.rms(titleRender.samples) > 0.01, 'title preview PCM should have energy');
 }
 const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'lst/nhlpa93.bin'));
 if (genesis93Rom) {
