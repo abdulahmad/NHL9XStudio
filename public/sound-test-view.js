@@ -73,10 +73,13 @@
     return id.startsWith('song-') ? 'Song ' + n + ' · ' + data.songs[n].name : 'SFX ' + NAMES().name(n);
   }
 
-  /** The renders' plans: boot, then song n at vblank 0, or a settle vblank and sfx n. */
+  /** Plans for live playback (not the same as tools/render-nhl92-sound-chain.js for siren). */
   function planFor(id) {
     const n = Number(id.split('-')[1]);
-    return id.startsWith('song-') ? Chain().songPlan(n, Infinity) : Chain().sfxPlan(n, SFX_VBLANKS);
+    if (id.startsWith('song-')) return Chain().songPlan(n, Infinity);
+    // Siren (instrument 0) needs one song-init vblank after boot; see sfxPlanAfterSongInit.
+    if (n === 0) return Chain().sfxPlanAfterSongInit(0, SFX_VBLANKS, 0);
+    return Chain().sfxPlan(n, SFX_VBLANKS);
   }
 
   function ensureContext() {
@@ -185,7 +188,9 @@
     box.appendChild(make('h3', null, title(id)));
     box.appendChild(make('p', 'sd-note', id.startsWith('song-')
       ? 'Boot (p_initialZ80, p_turnoff, p_music_vblank), then song(' + id.slice(5) + ') and p_music_vblank every vblank, until Stop.'
-      : 'Boot, one vblank, then sfx(' + id.slice(4) + ') and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.'));
+      : id === 'sfx-0'
+        ? 'Boot, then song(0) for one vblank (Sound_InitMusicTrack sets each channel\'s instrument to $FF), then sfx(0) and p_music_vblank every vblank for ' + SFX_VBLANKS + ' vblanks. Without that init, siren\'s instrument 0 matches the cleared workspace and the driver skips the patch load (nearly silent), as in step 6\'s runSfx.'
+        : 'Boot, one vblank, then sfx(' + id.slice(4) + ') and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.'));
     box.appendChild(make('p', 'sd-note', 'Rendered live from the retail code: 68k driver → Z80 RAM → Z80 driver → YM2612 (ymfm) + SN76489, ' +
       'one frame (59,736 Z80 T-states) at a time at 53,267 Hz, resampled to ' + (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '.'));
     const row = make('div', 'st-buttons');
