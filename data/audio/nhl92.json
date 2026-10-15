@@ -3,6 +3,13 @@
   "platform": "genesis",
   "playback": true,
   "note": null,
+  "previewMeta": {
+    "soundBase": 62664,
+    "fmtuneTable": 66196,
+    "fmtuneStride": 26,
+    "noteFreqTable": 65914,
+    "noteOctaveTable": 66010
+  },
   "entries": [
     {
       "id": "hockey-snd",

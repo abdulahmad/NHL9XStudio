@@ -103,24 +103,34 @@ async function playAudioEntry() {
   if (!audioCatalog || !state.audioId) return;
   const entry = audioCatalog.entries.find((e) => e.id === state.audioId);
   if (!entry || !entry.playable) {
-    audioLoadError = 'FM preview needs the retail ROM in roms/ and node server.js.';
+    audioLoadError = 'This entry is catalog-only until driver tables are pinned.';
     renderCaption();
     return;
   }
-  if (!useApi) {
-    audioLoadError = 'FM preview runs through the local API (node server.js + roms/).';
+  const meta = audioCatalog.previewMeta;
+  if (!meta) {
+    audioLoadError = 'No FM preview metadata for this game.';
     renderCaption();
     return;
   }
   NhlAudioEngine.stopAll();
-  const response = await fetch(resolveUrl('/api/games/' + state.game + '/audio/preview?entry=' + encodeURIComponent(state.audioId)));
-  if (!response.ok) {
-    audioLoadError = 'Could not build preview — add the ROM to roms/.';
+  let schedule = null;
+  const rom = await ensureRom();
+  if (rom && typeof NhlGenesisAudio !== 'undefined') {
+    schedule = NhlGenesisAudio.previewEntry(rom, entry, meta);
+  }
+  if (!schedule && useApi) {
+    const response = await fetch(resolveUrl('/api/games/' + state.game + '/audio/preview?entry=' + encodeURIComponent(state.audioId)));
+    if (response.ok) schedule = await response.json();
+  }
+  if (!schedule || !schedule.events || !schedule.events.length) {
+    audioLoadError = rom
+      ? 'Could not build a preview for this entry.'
+      : 'Load the retail ROM (Open file… or place it under roms/ for the local server).';
     renderCaption();
     return;
   }
   audioLoadError = '';
-  const schedule = await response.json();
   const out = NhlAudioEngine.playSchedule(schedule);
   state.playing = true;
   renderTransport();
@@ -1002,7 +1012,19 @@ function renderMeta() {
   const detail = el('detail');
   detail.replaceChildren();
   const rows = [];
-  if (state.mode === 'spa' && seq.spa) {
+  if (state.mode === 'audio') {
+    const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
+    if (entry) {
+      rows.push(['Entry', entry.label]);
+      rows.push(['Type', entry.type]);
+      if (entry.track != null) rows.push(['FMTune track', String(entry.track)]);
+      if (entry.start != null && entry.end != null) {
+        rows.push(['ROM range', '0x' + entry.start.toString(16) + '–0x' + entry.end.toString(16)]);
+      }
+      if (entry.blurb) rows.push(['Note', entry.blurb]);
+    }
+    if (audioCatalog && audioCatalog.note) rows.push(['Catalog', audioCatalog.note]);
+  } else if (state.mode === 'spa' && seq.spa) {
     const dir = seq.spa.directions[state.dir];
     const facing = catalog.directions[state.dir];
     rows.push(['SPA', seq.spa.name]);

@@ -1054,3 +1054,18 @@ const catalogPath = audio.catalogPath('nhl92');
 assert.ok(fs.existsSync(catalogPath));
 const onDisk = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
 assert.strictEqual(onDisk.entries.length, nhl92Audio.entries.length);
+assert.ok(onDisk.previewMeta && onDisk.previewMeta.fmtuneTable === 0x10294);
+
+const { scanGenesisAudio } = require('./lib/audio/genesis-scan');
+const audioRom = retail92
+  || romIf(path.join(root, 'EA-NHL-Tools', 'NHL92FMTunes-To-MIDI', 'nhl92retail.bin'));
+if (audioRom) {
+  const rom = audioRom;
+  const scan = scanGenesisAudio(rom, audio.genesis.gameMeta('nhl92'));
+  assert.ok(scan.fmtune && scan.fmtune.fmtuneTable === 0x10294);
+  assert.ok(scan.fmtune.fmtuneTracks >= 5);
+  const title = nhl92Audio.entries.find((e) => e.id === 'fmtune-0');
+  const schedule = audio.genesis.previewEntry(rom, title, audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhl92')));
+  assert.ok(schedule && schedule.events.length > 4, 'title track should emit notes');
+  assert.ok(schedule.duration > 0.5);
+}
