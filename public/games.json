@@ -5803,7 +5803,7 @@
     "jerseyRow": 9,
     "paletteLabel": "Team colors",
     "tagline": "DOS install under pc94/ — gfxpak PPV sprite sheets, QPP pictures, 876 player frames",
-    "hint": "Copy the NHL 94 PC install into pc94/ (PPV, QPP, HOMEPALS.BIN, AWAYPALS.BIN, HOCKEY.EXE). QPP pictures use RefPack 30 FB. Player sheets are 000_049.PPV … 850_875.PPV; rink/crowd use F000_049.PPV and siblings (same gfxpak SPIT pack as 95, not SHPI-in-file). SPA table from HOCKEY.EXE is still pending. Restart the server after adding files.",
+    "hint": "Copy the NHL 94 PC install into pc94/ (PPV, QPP, HOMEPALS.BIN, AWAYPALS.BIN, HOCKEY.EXE). QPP pictures use RefPack 30 FB. Player sheets are 000_049.PPV … 850_875.PPV; rink/crowd use F000_049.PPV and siblings (gfxpak SPIT packs). SPA tab uses an interim 95 PC–derived script set (frames ≤875); retail HOCKEY.EXE SPA extract is still in progress. Restart the server after adding files.",
     "frames": "frames94pc.asm",
     "banks": [
       {

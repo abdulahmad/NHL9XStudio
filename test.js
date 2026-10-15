@@ -951,7 +951,9 @@ for (const spf of pc94Catalog.spfs) {
   pc94cursor = spf.end + 1;
 }
 assert.strictEqual(pc94cursor, 877);
-assert.strictEqual(pc94Catalog.anims.length, 0);
+assert.ok(pc94Catalog.anims.length >= 90, 'pc94 SPA interim catalog');
+assert.strictEqual(pc94Catalog.anims.find((a) => a.name === 'SPAskate').directions[0].steps[0].frame, 42);
+assert.ok(!pc94Catalog.anims.some((a) => a.name === 'SPAgoalie95'));
 const pc94empty = pc95.openSpriteBundle(Buffer.alloc(0), 'nhl94pc');
 assert.strictEqual(pc94empty.numFrames, 876);
 assert.strictEqual(pc95.playerFrameCount('nhl94pc'), 876);

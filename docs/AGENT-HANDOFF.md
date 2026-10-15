@@ -46,7 +46,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
-| **GAP-8** | 94PC | SPF + gfxpak PPV decode in `pc95.js`; QPP `30 FB` + `pc94/` routes done; SPA from `HOCKEY.EXE` still open |
+| **GAP-8** | 94PC | gfxpak PPV decode; interim SPA (98×, from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
 | **AUD-*** | Audio | After graphics queue |
