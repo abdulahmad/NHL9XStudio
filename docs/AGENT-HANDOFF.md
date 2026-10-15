@@ -41,7 +41,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 |----|--------|------|
 | **GAP-2** | 93G | JIM inventory polish optional |
 | **GAP-3** | 94G | SPA/SPF/image search terms for celebrate vs bench-check (done); optional doc polish |
-| **GAP-4** | 95G | 29 `ArenaGfx*` entries on catalog; full extract audit vs retail still optional |
+| **GAP-4** | 95G | 27 `ArenaGfx*` team screens on catalog; full extract audit vs retail still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7–8** | 95PC / 94PC | DOS catalog + `nhl94pc` profile |
 | **HOST-3** | OPFS | Not implemented |
