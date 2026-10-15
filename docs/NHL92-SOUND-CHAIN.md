@@ -101,7 +101,7 @@ The tool checks every song and SFX run's 68k log against step 6's pinned hash (`
 NHL 92 has a **Sound test** tab next to Sound data. Pick song 0–4 or SFX 0–34, then press Play or Stop.
 
 - **Rendering:** each ScriptProcessor block (4,096 samples) steps `Nhl92SoundChain` as many frames as it needs (`keepLogs: false`), on a fresh ymfm chip instance and SN76489. The 53,267 Hz output is linearly resampled (`chip-resampler.js`) to the audio device rate.
-- **Lengths:** songs run until Stop; SFX run for 600 vblanks.
+- **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, one vblank of song 0, then the siren, so Sound_InitMusicTrack has set each channel's instrument byte to `$FF` before the effect starts. That matches siren over initialized channels in the game. Step 6's `runSfx` path (boot, idle vblank, siren) is still what `sfx-00-siren-SFXsiren.wav` renders and is nearly silent by retail rules.
 - **Leaving:** picking another item or leaving the tab stops playback.
 - **Default view:** still NHL 92 with the SPA tab.
 
