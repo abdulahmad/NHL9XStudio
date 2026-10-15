@@ -174,13 +174,13 @@ The handler names are the disassembly's. Its table comments (for example "SFXche
 | Byte | Args | Meaning |
 |---|---|---|
 | `$80 id` | 1 | Instrument (loaded only if it differs from the current one), then key-on. |
-| `$81 n` | 1 | After the current sweep ends, replay it `n` more times. |
-| `$82 n` | 1 | Like `$81`, but also sets Z80 slot +0 so the patch reloads on each replay. |
+| `$81 n` | 1 | The next sweep plays `n` extra times (restarting from its start frequency each time). |
+| `$82 n` | 1 | Like `$81`, but each replay also sets Z80 slot +0 so the patch reloads. |
 | `$83 n f s` | 1 + 4 + 4 | Sweep: start frequency `f` (long), signed step `s` (long) added each frame for `n` frames. `f` above `$7FF` is halved into higher blocks. |
 | `$84` | 0 | Stop: key-off and free the channel. |
 | `$85` | 0 | Loop to the start of the stream. |
 
-The retail streams contain 26 instrument commands, 36 `$81` holds, 36 sweeps and 17 stops, and never `$82` or `$85`. Every stream is followed by one byte the driver never reads, because the `$84` before it stops processing; the tests pin these bytes.
+The retail streams contain 26 instrument commands, 36 `$81` repeat counts, 36 sweeps and 17 stops, and never `$82` or `$85`. Every stream is followed by one byte the driver never reads, because the `$84` before it stops processing; the tests pin these bytes.
 
 ### DAC samples
 
