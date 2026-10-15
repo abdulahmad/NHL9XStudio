@@ -911,8 +911,22 @@ const pc94Game = GAMES.find((game) => game.id === 'nhl94pc');
 assert.strictEqual(pc94Game.kind, 'pc94');
 assert.strictEqual(pc94Game.frames, 'frames94pc.asm');
 const pc94Catalog = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames94pc.asm'), 'utf8'));
-assert.strictEqual(pc94Catalog.spfs.length, 1);
 assert.strictEqual(pc94Catalog.spfs[0].name, 'SPFskaters');
+assert.strictEqual(pc94Catalog.spfs[0].end, 352);
+assert.ok(pc94Catalog.spfs.some((spf) => spf.name === 'SPFref'));
+assert.ok(pc94Catalog.spfs.some((spf) => spf.name === 'SPFfaceoff'));
+assert.ok(!pc94Catalog.spfs.some((spf) => spf.name === 'SPFbenchcheck'));
+let pc94cursor = 1;
+for (const spf of pc94Catalog.spfs) {
+  assert.strictEqual(spf.start, pc94cursor, spf.name);
+  pc94cursor = spf.end + 1;
+}
+assert.strictEqual(pc94cursor, 877);
+assert.strictEqual(pc94Catalog.anims.length, 0);
+const pc94empty = pc95.openSpriteBundle(Buffer.alloc(0), 'nhl94pc');
+assert.strictEqual(pc94empty.numFrames, 876);
+assert.strictEqual(pc95.playerFrameCount('nhl94pc'), 876);
+assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
 const pcDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc95-'));

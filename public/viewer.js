@@ -1567,7 +1567,7 @@ async function ensureBank(name) {
       if (!response.ok) return null;
       bundle = new Uint8Array(await response.arrayBuffer());
     }
-    parsed = Nhl95Pc.openSpriteBundle(bundle);
+    parsed = Nhl95Pc.openSpriteBundle(bundle, gameInfo.id);
   } else if (gameInfo.kind === 'snes93' || gameInfo.kind === 'snes94') {
     if (!gameInfo.pixels) return null;
     const rom = await ensureRom();
