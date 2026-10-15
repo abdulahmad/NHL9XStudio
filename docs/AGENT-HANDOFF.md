@@ -2,7 +2,8 @@
 
 **Last updated:** 2026-10-15 (Genesis audio AUD-1 v1: catalog + FM preview for NHL 92)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
-**Design / roadmap:** `docs/DESIGN.md`
+**Design / roadmap:** `docs/DESIGN.md`  
+**Upstream sync runbook:** `docs/sync.md` — use when aligning with disasm / EA-NHL-Tools (“sync per sync.md”).
 
 ---
 
@@ -94,6 +95,7 @@ node server.js    # http://localhost:8732
 
 ```
 Continue NHL9X Studio in NHL9XStudio (main). Read docs/AGENT-HANDOFF.md and docs/DESIGN.md.
+To refresh catalogs from disasm or EA-NHL-Tools, follow docs/sync.md.
 Graphics priority: 92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC.
 After catalog changes: node test.js && node tools/build-manifest.js
 Do not commit pc95, ROMs, or user game files.

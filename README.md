@@ -1,6 +1,6 @@
 # NHL9X Studio
 
-Browse sprite frames and the animations that play them for NHL 92, NHLPA 93, NHL 94, and NHL 95 on the Genesis, NHLPA 93 and NHL 94 on the SNES, and NHL 95 on PC. Roadmap and platform priority: [`docs/DESIGN.md`](docs/DESIGN.md). Agent handoff: [`docs/AGENT-HANDOFF.md`](docs/AGENT-HANDOFF.md).
+Browse sprite frames and the animations that play them for NHL 92, NHLPA 93, NHL 94, and NHL 95 on the Genesis, NHLPA 93 and NHL 94 on the SNES, and NHL 95 on PC. Roadmap and platform priority: [`docs/DESIGN.md`](docs/DESIGN.md). Agent handoff: [`docs/AGENT-HANDOFF.md`](docs/AGENT-HANDOFF.md). **Syncing with disasm / EA-NHL-Tools:** [`docs/sync.md`](docs/sync.md).
 
 **Live demo (GitHub Pages):** https://abdulahmad.github.io/NHL9XStudio/ — in repo **Settings → Pages**, set **Deploy from a branch**, branch **`gh-pages`**, folder **`/ (root)`**. Pushes to `main` refresh `gh-pages` via the workflow. **NHL 92** runs from bundled sprite banks; for Genesis/SNES ROMs use **Open file…** in the header (or drag-and-drop). **Open folder…** loads an NHL 95/94 PC install.
 

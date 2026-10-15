@@ -425,7 +425,8 @@ Local Node keeps `/api/games` for convenience; Studio Web implements the same `g
 
 | Path | Topic |
 |------|--------|
-| `Sprite-Viewer/README.md` | NHL9X Studio runbook |
+| `docs/sync.md` | **Sync runbook** — disasm + EA-NHL-Tools → Studio catalogs |
+| `Sprite-Viewer/README.md` | NHL9X Studio runbook (historical; see `docs/MIGRATION.md`) |
 | `Docs/Sprites/Readme.md` | Frame numbering Genesis & DOS |
 | `Docs/SND/Readme.md` | `Hockey.snd` offsets |
 | `MID94-Tools/README.md` | 94G cmdstream experiment (unfinished) |
