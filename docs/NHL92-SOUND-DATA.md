@@ -165,7 +165,7 @@ The data never selects an instrument ID above 21.
 
 `configure_ym2612` (`$FD44`) isn't in the table. `Sound_StopMusic` (`$F5C4`) and `Sound_PauseMusic` call it, and it requests DAC `$14882` at rate `$0B`, priority 0. That sample is empty, so the request cuts any playing DAC SFX.
 
-The handler names are the disassembly's. Its table comments (for example "SFXcheck2 = 3") contradict those names, and the game's SFX constants aren't in this data, so the table above uses the handler labels.
+The "Handler label" column above is the disassembly's handler label, not the sound's name. Those labels, and the table's comments, are shifted against the IDs. Step 6 names each SFX by ID from the EA sound list and the `src/ram.asm` equates, and lists every mismatch: see [`docs/NHL92-68K-DRIVER.md`](NHL92-68K-DRIVER.md#sfx-labels-in-soundasm-are-shifted-against-the-ids).
 
 ### FM SFX streams (`$FF74`–`$10179`)
 
