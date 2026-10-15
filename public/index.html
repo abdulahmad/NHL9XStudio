@@ -32,18 +32,18 @@
           <span>Game</span>
           <select id="game"></select>
         </label>
-        <label class="field">
+        <label class="field sprite-only">
           <span>Bank</span>
           <select id="bank"></select>
         </label>
-        <div class="pin">
+        <div class="pin sprite-only">
           <span>Pin</span>
           <div class="pin-options" role="group" aria-label="Pin point">
             <button type="button" id="pin-origin" aria-pressed="true" title="Player position. On skaters this is at the skates.">0, 0</button>
             <button type="button" id="pin-hotspot" aria-pressed="false" title="Where the puck sits when the player has possession.">Hotspot</button>
           </div>
         </div>
-        <label class="field">
+        <label class="field sprite-only">
           <span>Scale <b id="scale-readout">6×</b></span>
           <input id="scale" type="range" min="1" max="12" value="8">
         </label>
@@ -58,10 +58,9 @@
         <button type="button" id="mode-image" role="tab" aria-selected="false">Images</button>
         <button type="button" id="mode-audio" role="tab" aria-selected="false" hidden>Audio</button>
         <button type="button" id="mode-z80" role="tab" aria-selected="false" hidden>Z80</button>
-        <button type="button" id="mode-sounddata" role="tab" aria-selected="false" hidden>Sound data</button>
         <button type="button" id="mode-soundtest" role="tab" aria-selected="false" hidden>Sound test</button>
       </div>
-      <div class="order">
+      <div class="order sprite-only">
         <span>Order</span>
         <div class="pin-options" role="group" aria-label="List order">
           <button type="button" id="sort-group" aria-pressed="true">Groups</button>
@@ -73,7 +72,7 @@
         <input id="search" type="search" placeholder="Search names" autocomplete="off">
       </label>
       <div id="catalog" class="catalog" role="listbox" aria-label="Catalog"></div>
-      <p class="keys">← → step · Shift or PgUp/PgDn jump · Q E face · Space play · S spin</p>
+      <p class="keys" id="keys-hint">← → step · Shift or PgUp/PgDn jump · Q E face · Space play · S spin</p>
     </aside>
 
     <main class="stage-panel">
@@ -83,7 +82,7 @@
       </div>
       <div class="stage-wrap">
         <canvas id="stage" aria-label="Sprite stage"></canvas>
-        <div id="sound-data-view" class="sound-data-view" hidden></div>
+        <div id="sound-panel" class="sound-panel" hidden></div>
         <div class="compass" id="compass" aria-label="Facing">
           <button type="button" data-dir="7" title="Northwest">↖</button>
           <button type="button" data-dir="0" title="North">↑</button>
@@ -142,7 +141,7 @@
         <h2>Sprites in frame</h2>
         <div id="sprites" class="sprite-table"></div>
       </section>
-      <section class="about">
+      <section class="about sprite-only">
         <h2>How the numbers work</h2>
         <p><b>Frame</b> is the 1-based picture in the ANIM file. The docs count the same pictures from 0, shown here as the index.</p>
         <p><b>SPF</b> names a run of those pictures in <span class="mono">frames.asm</span>. When the run is eight facings side by side, the compass steps through them.</p>
@@ -186,7 +185,6 @@
   <script src="lib/audio/nhl92-sound-chain.js"></script>
   <script src="lib/audio/sn76489.js"></script>
   <script src="lib/audio/chip-resampler.js"></script>
-  <script src="sound-data-view.js"></script>
   <script src="sound-test-view.js"></script>
   <script src="audio-engine.js"></script>
   <script src="viewer.js"></script>

@@ -14,29 +14,29 @@ function isZ80TestGame() {
   return gameInfo && gameInfo.kind === 'z80test';
 }
 
-/** The Sound data tab parses the NHL '92 sound module (bundled slice), so it is NHL 92 only. */
-function hasSoundData(info) {
-  return !!(info && info.id === 'nhl92' && typeof NhlSoundDataView !== 'undefined');
-}
-
 /** The Sound test tab plays the NHL '92 sound chain live (bundled slice), NHL 92 only. */
 function hasSoundTest(info) {
   return !!(info && info.id === 'nhl92' && typeof NhlSoundTestView !== 'undefined');
 }
 
-/** Stage panels that replace the sprite stage: their view module and selection key in state. */
-const SOUND_PANELS = {
-  sounddata: { view: () => NhlSoundDataView, key: 'soundItem', title: 'Sound data', available: hasSoundData },
-  soundtest: { view: () => NhlSoundTestView, key: 'soundTestItem', title: 'Sound test', available: hasSoundTest }
-};
-const soundPanel = (mode) => SOUND_PANELS[mode || state.mode] || null;
+/**
+ * The Audio tab (AUD-1 square-wave sketch of the FM cmdstreams) is for the other Genesis
+ * games and the Z80 test profile. NHL 92's audio is the Sound test (the retail driver chain).
+ */
+function hasAudioTab(info) {
+  return !!(info && info.platform === 'genesis' && info.id !== 'nhl92');
+}
 
-function renderSoundDataView() {
-  const view = el('sound-data-view');
+/** The Sound test panel replaces the sprite stage: its view module and selection key in state. */
+const SOUND_TEST = { view: () => NhlSoundTestView, key: 'soundTestItem', title: 'Sound test', available: hasSoundTest };
+const soundPanel = (mode) => ((mode || state.mode) === 'soundtest' ? SOUND_TEST : null);
+
+function renderSoundPanel() {
+  const view = el('sound-panel');
   const panel = soundPanel();
-  if (state.mode !== 'soundtest' && typeof NhlSoundTestView !== 'undefined' && NhlSoundTestView.playing) NhlSoundTestView.stop();
+  if (!panel && typeof NhlSoundTestView !== 'undefined' && NhlSoundTestView.playing) NhlSoundTestView.stop();
   view.hidden = !panel;
-  el('stage').parentElement.parentElement.classList.toggle('is-sounddata', !!panel);
+  el('stage').parentElement.parentElement.classList.toggle('is-soundpanel', !!panel);
   if (!panel) return;
   const item = state[panel.key];
   const key = state.mode + '|' + item + '|' + (panel.view().ready ? 1 : 0);
@@ -46,7 +46,7 @@ function renderSoundDataView() {
   panel.view().renderPanel(view, item);
 }
 
-async function enterSoundData() {
+async function enterSoundPanel() {
   const mode = state.mode;
   const panel = soundPanel(mode);
   if (!panel) return;
@@ -92,7 +92,6 @@ const state = {
   query: '',
   audioId: '',
   z80Pattern: 'nhl_driver_boot',
-  soundItem: 'song-1',
   soundTestItem: 'song-0',
   acc: 0,
   holdKey: '',
@@ -195,7 +194,7 @@ async function playAudioEntry() {
   audioLoadError = 'Building preview…';
   renderCaption();
   await new Promise((resolve) => window.setTimeout(resolve, 0));
-  if (rom && typeof Nhl92SoundSystem !== 'undefined' && (state.game === 'nhl92' || isZ80TestGame())) {
+  if (rom && typeof Nhl92SoundSystem !== 'undefined' && isZ80TestGame()) {
     try {
       const sys = Nhl92SoundSystem.create(rom);
       schedule = sys.playEntry(entry, meta, entry.type === 'fm-song' ? 90 : 45);
@@ -954,7 +953,7 @@ function renderImageList(box, q) {
   }
 }
 
-function renderSoundDataList(box, q) {
+function renderSoundList(box, q) {
   const panel = soundPanel();
   const view = panel.view();
   const list = view.entries().filter((e) => !q || (e.label + ' ' + e.sub).toLowerCase().includes(q));
@@ -981,20 +980,40 @@ function renderSoundDataList(box, q) {
     const selected = entry.id === state[panel.key];
     button.classList.toggle('is-current', selected);
     button.setAttribute('aria-selected', selected ? 'true' : 'false');
+    const playing = view.playingId === entry.id;
+    button.classList.toggle('is-playing', playing);
     const name = document.createElement('span');
     name.className = 'name';
-    name.textContent = entry.label;
+    name.textContent = (playing ? '▶ ' : '') + entry.label;
     const sub = document.createElement('span');
     sub.className = 'sub';
     sub.textContent = entry.sub;
     button.append(name, sub);
+    button.title = 'Double-click or Enter to play';
     button.addEventListener('click', () => {
       state[panel.key] = entry.id;
       refreshAll();
     });
+    button.addEventListener('dblclick', () => toggleSoundTest(entry.id));
     box.appendChild(button);
   }
 }
+
+/** Play or stop a Sound test item; failures show in the panel's status line. */
+function toggleSoundTest(id) {
+  if (!soundPanel() || typeof NhlSoundTestView === 'undefined') return;
+  NhlSoundTestView.toggle(id).catch((err) => {
+    const st = el('sound-panel').querySelector('.st-status');
+    if (st) st.textContent = 'Playback failed: ' + (err && err.message ? err.message : String(err));
+  });
+}
+
+const KEYS_HINT = {
+  soundtest: '↑ ↓ pick · Space or Enter play/stop · double-click plays',
+  z80: '↑ ↓ pick · Space run',
+  audio: '↑ ↓ pick · Space play/stop'
+};
+let defaultKeysHint = '';
 
 function renderList() {
   const box = el('catalog');
@@ -1010,7 +1029,7 @@ function renderList() {
     return;
   }
   if (soundPanel()) {
-    renderSoundDataList(box, q);
+    renderSoundList(box, q);
     return;
   }
   if (state.mode === 'audio') {
@@ -1565,12 +1584,18 @@ function renderTransport() {
   el('sort-file').setAttribute('aria-pressed', state.sort === 'file' ? 'true' : 'false');
   if ([...el('bank').options].some((option) => option.value === state.bank)) el('bank').value = state.bank;
   el('bank').disabled = state.mode !== 'frame' || !gameInfo || gameInfo.banks.length < 2;
-  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'z80', 'sounddata', 'soundtest']) {
+  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'z80', 'soundtest']) {
     const tab = el('mode-' + mode);
     if (!tab) continue;
     tab.setAttribute('aria-selected', state.mode === mode ? 'true' : 'false');
   }
   const noFrames = state.mode === 'audio' || state.mode === 'z80' || !!soundPanel();
+  document.querySelector('.app').classList.toggle('is-sound', !!soundPanel());
+  const hint = el('keys-hint');
+  if (hint) {
+    if (!defaultKeysHint) defaultKeysHint = hint.textContent;
+    hint.textContent = KEYS_HINT[state.mode] || defaultKeysHint;
+  }
   el('filmstrip').classList.toggle('is-hidden', noFrames);
   const orderRow = el('sort-group') && el('sort-group').closest('.order');
   if (orderRow) orderRow.classList.toggle('is-hidden', noFrames);
@@ -1590,7 +1615,7 @@ function refreshAll() {
   renderSwatches();
   refreshPlaybackChrome();
   renderFilmstrip();
-  renderSoundDataView();
+  renderSoundPanel();
   paintStage();
   writeHash();
 }
@@ -1611,8 +1636,6 @@ function writeHash() {
     params.set('audio', state.audioId);
   } else if (state.mode === 'z80') {
     params.set('z80', state.z80Pattern);
-  } else if (state.mode === 'sounddata') {
-    params.set('snd', state.soundItem);
   } else if (state.mode === 'soundtest') {
     params.set('sndtest', state.soundTestItem);
   } else {
@@ -1629,9 +1652,12 @@ function writeHash() {
 function readHash() {
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   const mode = params.get('mode');
-  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'z80' || mode === 'sounddata' || mode === 'soundtest') {
+  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'z80' || mode === 'soundtest') {
     state.mode = mode;
   }
+  // Old links: the Sound data tab is gone; NHL 92 sound is the Sound test (loadGame also
+  // moves NHL 92's old Audio links there).
+  if (mode === 'sounddata') state.mode = 'soundtest';
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) state.game = params.get('game');
   if (params.get('bank') && gameInfo && gameInfo.banks.some((bank) => bank.id === params.get('bank'))) {
     state.bank = params.get('bank');
@@ -1644,7 +1670,6 @@ function readHash() {
   if (params.get('step')) state.step = Number(params.get('step')) || 0;
   if (params.get('audio')) state.audioId = params.get('audio');
   if (params.get('z80')) state.z80Pattern = params.get('z80');
-  if (params.get('snd')) state.soundItem = params.get('snd');
   if (params.get('sndtest')) state.soundTestItem = params.get('sndtest');
   if (params.has('pal')) {
     state.paletteExplicit = true;
@@ -1761,7 +1786,10 @@ function wire() {
     writeHash();
   });
   el('play').addEventListener('click', () => {
-    if (soundPanel()) return;
+    if (soundPanel()) {
+      toggleSoundTest(state.soundTestItem);
+      return;
+    }
     if (state.mode === 'z80') {
       if (state.playing) {
         state.playing = false;
@@ -1811,15 +1839,6 @@ function wire() {
     if (!audioCatalog) await loadAudioCatalog(state.game);
     refreshAll();
   });
-  el('mode-sounddata').addEventListener('click', async () => {
-    clearSearch();
-    await restoreSpritePalette();
-    state.mode = 'sounddata';
-    state.playing = false;
-    NhlAudioEngine.stopAll();
-    refreshAll();
-    await enterSoundData();
-  });
   el('mode-soundtest').addEventListener('click', async () => {
     clearSearch();
     await restoreSpritePalette();
@@ -1827,7 +1846,7 @@ function wire() {
     state.playing = false;
     NhlAudioEngine.stopAll();
     refreshAll();
-    await enterSoundData();
+    await enterSoundPanel();
   });
   const modeZ80 = el('mode-z80');
   if (modeZ80) {
@@ -1932,6 +1951,13 @@ function wire() {
     else if (event.code === 'PageUp') { event.preventDefault(); nudge(-filmstripStepJump()); }
     else if (event.code === 'ArrowDown') { event.preventDefault(); selectNeighbor(1); }
     else if (event.code === 'ArrowUp') { event.preventDefault(); selectNeighbor(-1); }
+    else if (event.code === 'Enter' && soundPanel() && (event.target === document.body || el('catalog').contains(event.target))) {
+      event.preventDefault();
+      const item = event.target.closest && event.target.closest('.item');
+      if (item) item.click();
+      toggleSoundTest(state.soundTestItem);
+    }
+    else if (soundPanel()) return;
     else if (event.key === 'q' || event.key === 'Q') rotate(-1);
     else if (event.key === 'e' || event.key === 'E') rotate(1);
     else if (event.key === 's' || event.key === 'S') el('spin').click();
@@ -2302,16 +2328,15 @@ async function loadGame(id, keepSelection) {
   NhlAudioEngine.stopAll();
   state.playing = false;
   const audioTab = el('mode-audio');
-  if (audioTab) audioTab.hidden = info.platform !== 'genesis';
-  el('mode-sounddata').hidden = !hasSoundData(info);
+  if (audioTab) audioTab.hidden = !hasAudioTab(info);
   el('mode-soundtest').hidden = !hasSoundTest(info);
   if (soundPanel() && !soundPanel().available(info)) state.mode = 'spa';
   syncModeTabs();
-  if (info.platform !== 'genesis') {
+  if (!hasAudioTab(info)) {
     audioCatalog = null;
     audioLoadError = '';
-    if (state.mode === 'audio' || state.mode === 'z80') state.mode = 'spa';
   }
+  if (info.platform !== 'genesis' && state.mode === 'z80') state.mode = 'spa';
   if (info.kind === 'z80test' && !keepSelection) {
     state.mode = 'z80';
     state.playing = false;
@@ -2380,6 +2405,7 @@ async function loadGame(id, keepSelection) {
     state.playing = state.mode === 'spa' || state.mode === 'spf';
   }
   if (soundPanel() && !soundPanel().available(info)) state.mode = 'spa';
+  if (state.mode === 'audio' && !hasAudioTab(info)) state.mode = hasSoundTest(info) ? 'soundtest' : 'spa';
   if (keepSelection && state.mode !== 'spa' && state.mode !== 'spf') state.playing = false;
   const spaMatch = named(catalog.anims, previous.spa) || named(catalog.anims, 'SPAskatewp') || catalog.anims[0];
   const spfMatch = named(catalog.spfs, previous.spf) || catalog.spfs[0];
@@ -2413,7 +2439,7 @@ async function loadGame(id, keepSelection) {
     ? 'Frame index, SPF groups, SPA sequences, and other pictures'
     : 'SPF and SPA names from ' + info.source + '. Pictures need the ROM.');
   document.title = info.title + ' · NHL9X Studio';
-  if (info.platform === 'genesis') {
+  if (hasAudioTab(info)) {
     await loadAudioCatalog(info.id);
     if (audioCatalog && audioCatalog.entries && audioCatalog.entries.length) {
       const has = audioCatalog.entries.some((e) => e.id === state.audioId);
@@ -2426,7 +2452,7 @@ async function loadGame(id, keepSelection) {
       state.mode = 'spa';
     }
   }
-  if (soundPanel()) enterSoundData();
+  if (soundPanel()) enterSoundPanel();
   if (info.kind === 'z80test') {
     z80LastResult = '';
     try {
@@ -2620,6 +2646,7 @@ async function boot() {
   el('game').value = state.game;
   syncModeTabs();
   wire();
+  if (typeof NhlSoundTestView !== 'undefined') NhlSoundTestView.onChange = () => { if (soundPanel()) renderList(); };
   await loadGame(state.game, true);
   requestAnimationFrame(clock);
 }
