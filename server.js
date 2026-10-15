@@ -5,6 +5,7 @@ const { GAMES, gameById, revAAdjust, sheetGameBanks } = require('./lib/games');
 const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
+const audio = require('./lib/audio');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
@@ -293,6 +294,34 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const gameAudio = /^\/api\/games\/([a-z0-9]+)\/audio$/.exec(pathname);
+  if (gameAudio) {
+    const game = gameById(gameAudio[1]);
+    if (!game) { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
+    const catalog = audio.loadCatalog(game.id);
+    if (!catalog) { send(res, 404, 'No audio catalog', 'text/plain; charset=utf-8'); return; }
+    send(res, 200, JSON.stringify(catalog), MIME['.json']);
+    return;
+  }
+
+  const gameAudioPreview = /^\/api\/games\/([a-z0-9]+)\/audio\/preview$/.exec(pathname);
+  if (gameAudioPreview) {
+    const game = gameById(gameAudioPreview[1]);
+    const entryId = url.searchParams.get('entry');
+    if (!game || !entryId) { send(res, 400, 'Bad request', 'text/plain; charset=utf-8'); return; }
+    const file = findRom(game);
+    if (!file) { send(res, 404, 'ROM not found', 'text/plain; charset=utf-8'); return; }
+    try {
+      const rom = readRom(file, game);
+      const out = audio.previewFromRom(game.id, entryId, rom);
+      if (!out) { send(res, 404, 'Unknown entry', 'text/plain; charset=utf-8'); return; }
+      send(res, 200, JSON.stringify(out.schedule), MIME['.json']);
+    } catch (err) {
+      send(res, 500, 'Preview failed', 'text/plain; charset=utf-8');
+    }
+    return;
+  }
+
   const gameRom = /^\/api\/games\/([a-z0-9]+)\/rom$/.exec(pathname);
   if (gameRom) {
     const game = gameById(gameRom[1]);
@@ -345,7 +374,7 @@ const server = http.createServer((req, res) => {
     serveFile(res, file);
     return;
   }
-  if (pathname === '/viewer.js' || pathname === '/viewer.css') {
+  if (pathname === '/viewer.js' || pathname === '/viewer.css' || pathname === '/audio-engine.js') {
     serveFile(res, path.join(PUBLIC, pathname.slice(1)));
     return;
   }

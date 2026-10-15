@@ -1,0 +1,228 @@
+{
+  "gameId": "nhl92",
+  "platform": "genesis",
+  "playback": true,
+  "note": null,
+  "streamDriver": null,
+  "previewMeta": {
+    "soundBase": 62664,
+    "fmtuneTable": 66196,
+    "fmtuneStride": 26,
+    "noteFreqTable": 65914,
+    "noteOctaveTable": 66010,
+    "streamDriver": null
+  },
+  "entries": [
+    {
+      "id": "hockey-snd",
+      "label": "Hockey.snd (ROM)",
+      "group": "Samples",
+      "type": "region",
+      "start": 62664,
+      "end": 147988,
+      "playable": false,
+      "blurb": "Digital sample pack; anchor 0x149d0"
+    },
+    {
+      "id": "fmtune-0",
+      "label": "SngEOP",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 0,
+      "playable": true
+    },
+    {
+      "id": "fmtune-1",
+      "label": "SngTitle",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 1,
+      "playable": true
+    },
+    {
+      "id": "fmtune-2",
+      "label": "SngTitle reprise",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 2,
+      "playable": true
+    },
+    {
+      "id": "fmtune-3",
+      "label": "SngEOG",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 3,
+      "playable": true
+    },
+    {
+      "id": "fmtune-4",
+      "label": "SngPO",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 4,
+      "playable": true
+    },
+    {
+      "id": "fmtune-5",
+      "label": "In-game organ",
+      "group": "Music",
+      "type": "fm-song",
+      "track": 5,
+      "playable": true
+    },
+    {
+      "id": "sfx_siren_ch0",
+      "label": "Siren (channel 0)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65396,
+      "end": 65424,
+      "playable": true
+    },
+    {
+      "id": "sfx_siren_ch1",
+      "label": "Siren (channel 1)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65424,
+      "end": 65464,
+      "playable": true
+    },
+    {
+      "id": "sfx_shotfh",
+      "label": "Shot (forehand)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65464,
+      "end": 65480,
+      "playable": true
+    },
+    {
+      "id": "sfx_stdef",
+      "label": "Stick defend",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65480,
+      "end": 65520,
+      "playable": true
+    },
+    {
+      "id": "sfx_horn",
+      "label": "Horn",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65520,
+      "end": 65550,
+      "playable": true
+    },
+    {
+      "id": "sfx_shotwiff",
+      "label": "Shot whiff",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65550,
+      "end": 65580,
+      "playable": true
+    },
+    {
+      "id": "sfx_crowdcheer_ch0",
+      "label": "Crowd cheer (ch 0)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65580,
+      "end": 65620,
+      "playable": true
+    },
+    {
+      "id": "sfx_crowdcheer_ch1",
+      "label": "Crowd cheer (ch 1)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65620,
+      "end": 65672,
+      "playable": true
+    },
+    {
+      "id": "sfx_puckwall2",
+      "label": "Puck wall 2",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65672,
+      "end": 65702,
+      "playable": true
+    },
+    {
+      "id": "sfx_pass",
+      "label": "Pass",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65702,
+      "end": 65732,
+      "playable": true
+    },
+    {
+      "id": "sfx_id_27",
+      "label": "SFX 27",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65732,
+      "end": 65762,
+      "playable": true
+    },
+    {
+      "id": "sfx_id_28",
+      "label": "SFX 28",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65762,
+      "end": 65792,
+      "playable": true
+    },
+    {
+      "id": "sfx_shotbh",
+      "label": "Shot (backhand)",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65792,
+      "end": 65822,
+      "playable": true
+    },
+    {
+      "id": "sfx_id_29",
+      "label": "SFX 29",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65822,
+      "end": 65852,
+      "playable": true
+    },
+    {
+      "id": "sfx_id_30",
+      "label": "SFX 30",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65852,
+      "end": 65882,
+      "playable": true
+    },
+    {
+      "id": "sfx_beep2",
+      "label": "UI beep 2",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65882,
+      "end": 65898,
+      "playable": true
+    },
+    {
+      "id": "sfx_beep1",
+      "label": "UI beep 1",
+      "group": "SFX",
+      "type": "fm-sfx",
+      "start": 65898,
+      "end": 65914,
+      "playable": true
+    }
+  ]
+}

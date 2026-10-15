@@ -1,6 +1,6 @@
 # NHL9X Studio — agent handoff
 
-**Last updated:** 2026-10-15 (PRs #1–#8 merged; 94 PC gfxpak PPV decode in progress)  
+**Last updated:** 2026-10-15 (Genesis audio AUD-1 v1: catalog + FM preview for NHL 92)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
 **Design / roadmap:** `docs/DESIGN.md`
 
@@ -20,7 +20,7 @@ Bundled regression fixtures live in `test/fixtures/` (ANIM/JIM/PAL). Full golden
 
 **92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC**
 
-Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
+Audio: **AUD-1 in progress** — Genesis **92G** catalog (`data/audio/*.json`), **Audio** tab, FM cmdstream preview via `node server.js` + `roms/` (square-wave sketch, not YM2612). **93G–95G** catalogs are region-only until offsets are pinned. See `lib/audio/README.md`. Do not depend on MID94-Tools.
 
 ---
 
@@ -49,7 +49,8 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 | **GAP-8** | 94PC | gfxpak PPV decode; interim SPA (98×, from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
-| **AUD-*** | Audio | After graphics queue |
+| **AUD-1** | 92G audio | Catalog + preview API; 93–95 placeholders |
+| **AUD-*** | Audio | SNES/PC, PCM decode, WASM FM |
 
 ---
 
@@ -60,7 +61,8 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 | `lib/games.js` | Game profiles, banks |
 | `lib/genesis-images.js` | Genesis ROM image slices |
 | `lib/sheet.js` | Sheets + `openFrames` (94 vs 95) |
-| `public/viewer.js` | UI |
+| `public/viewer.js` | UI (includes **Audio** tab for Genesis) |
+| `lib/audio/` | Genesis catalogs + FM preview (`genesis.js`, `data/audio/`) |
 | `test.js` | Regression tests |
 | `tools/build-manifest.js` | Regenerate `public/games.json` |
 
