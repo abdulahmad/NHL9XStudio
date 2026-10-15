@@ -429,3 +429,64 @@ for (const pri of [0x05, 0x03]) {
 }
 
 console.log('nhl92 z80 driver: main loop, update flag, SFX params OK');
+
+// --- Golden: recorded snapshots in -> retail YM register log out -------------------
+
+const golden = require('../lib/audio/nhl92-z80-golden');
+{
+  const vgm = new Uint8Array(0x40 + 32);
+  const dv = new DataView(vgm.buffer);
+  dv.setUint32(0, 0x206d6756, true);
+  dv.setUint32(8, 0x150, true);
+  dv.setUint32(0x34, 0x0c, true);
+  vgm.set([
+    0x67, 0x66, 0x00, 0x02, 0x00, 0x00, 0x00, 0x7f, 0x81,
+    0x52, 0x28, 0xf0, 0x62, 0x53, 0xa4, 0x22, 0x50, 0x9f,
+    0xe0, 0x01, 0x00, 0x00, 0x00, 0x83, 0x61, 0x10, 0x00, 0x66
+  ], 0x40);
+  const got = golden.ymLogFromVgm(vgm);
+  assert.deepStrictEqual(got.ym.map((w) => [w.sample, w.part, w.reg, w.value]), [
+    [0, 0, 0x28, 0xf0], [735, 1, 0xa4, 0x22], [735, 0, 0x2a, 0x81]
+  ]);
+  assert.deepStrictEqual(got.psg, [{ sample: 735, value: 0x9f }]);
+  assert.deepStrictEqual(golden.compare([[0, 1, 2]], [[0, 1, 2]]), { ok: true, count: 1 });
+  assert.strictEqual(golden.compare([[0, 1, 2]], [[0, 1, 3]]).index, 0);
+  assert.strictEqual(golden.compare([[0, 1, 2]], [[0, 1, 2], [0, 1, 2]]).index, 1);
+
+  // Replay plumbing only (synthetic inputs, not a retail comparison).
+  const toHex = (a) => Buffer.from(a).toString('hex');
+  const out = golden.replay({
+    frames: [
+      { flag: 1, channels: toHex(channels()), pending: 0 },
+      { flag: 0, channels: toHex(channels([{}, {}, {}, {}, { key: 0x01 }])), pending: 0 }
+    ]
+  }, { program: PROGRAM });
+  assert.deepStrictEqual(out.ym, [[0, 0x28, 0x05], [0, 0x28, 0xf5]]);
+  assert.deepStrictEqual(out.frameStarts, [0, 0]);
+  assert.deepStrictEqual(out.other, []);
+}
+{
+  const dir = path.join(__dirname, '..', 'data', 'captures', 'nhl92');
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.json')) : [];
+  const romPath = path.join(__dirname, '..', 'roms', 'nhl92.bin');
+  if (!files.length) {
+    console.log('nhl92 z80 driver: SKIP golden replay — no retail captures in data/captures/nhl92 (step 1)');
+  }
+  for (const file of files) {
+    const capture = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
+    const rom = fs.existsSync(romPath) ? fs.readFileSync(romPath) : null;
+    const usesDac = capture.frames.some((f) => f.pending);
+    if (usesDac && !rom) {
+      console.log('nhl92 z80 driver: SKIP golden ' + file + ' — SFX samples need roms/nhl92.bin');
+      continue;
+    }
+    const expected = capture.vgm
+      ? golden.ymLogFromVgm(fs.readFileSync(path.join(dir, capture.vgm))).ym.map((w) => [w.part, w.reg, w.value])
+      : capture.ym;
+    const out = golden.replay(capture, { program: PROGRAM, rom });
+    const result = golden.compare(out.ym, expected);
+    assert.ok(result.ok, 'golden ' + file + ': ' + JSON.stringify(result));
+    assert.deepStrictEqual(out.other, [], 'golden ' + file + ': only YM/bank traffic');
+    console.log('nhl92 z80 driver: golden ' + file + ' matches ' + result.count + ' retail YM writes');
+  }
+}
