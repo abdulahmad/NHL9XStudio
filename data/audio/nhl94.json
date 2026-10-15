@@ -1,0 +1,18 @@
+{
+  "gameId": "nhl94",
+  "platform": "genesis",
+  "playback": false,
+  "note": "Song table ($30–$7A) lives in sound94.asm — catalog pending",
+  "entries": [
+    {
+      "id": "hockey-snd",
+      "label": "Hockey.snd (ROM)",
+      "group": "Samples",
+      "type": "region",
+      "start": 62664,
+      "end": 147988,
+      "playable": false,
+      "blurb": "Digital sample pack; anchor 0x23330"
+    }
+  ]
+}

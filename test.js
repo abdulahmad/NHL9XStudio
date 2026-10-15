@@ -15,6 +15,7 @@ const { buildManifest } = require('./lib/manifest');
 const romDetect = require('./lib/rom-detect');
 const openAsset = require('./lib/open-asset');
 const pc95 = require('./lib/pc95');
+const audio = require('./lib/audio');
 
 const root = __dirname;
 const bundledFixtures = path.join(root, 'test', 'fixtures');
@@ -1038,3 +1039,18 @@ console.log('banks', {
   crowd: crowdAnim.numFrames
 });
 console.log('parse-frames and small ANIM banks match ANIM-To-BMP');
+
+const nhl92Audio = audio.genesis.buildCatalog('nhl92');
+assert.ok(nhl92Audio);
+assert.strictEqual(nhl92Audio.playback, true);
+assert.strictEqual(nhl92Audio.entries.filter((e) => e.type === 'fm-song').length, 6);
+assert.strictEqual(nhl92Audio.entries.filter((e) => e.type === 'fm-sfx').length, 17);
+const fmtune0 = nhl92Audio.entries.find((e) => e.id === 'fmtune-0');
+assert.ok(fmtune0 && fmtune0.playable);
+const nhl94Audio = audio.genesis.buildCatalog('nhl94');
+assert.strictEqual(nhl94Audio.playback, false);
+assert.strictEqual(nhl94Audio.entries.length, 1);
+const catalogPath = audio.catalogPath('nhl92');
+assert.ok(fs.existsSync(catalogPath));
+const onDisk = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+assert.strictEqual(onDisk.entries.length, nhl92Audio.entries.length);

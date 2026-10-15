@@ -4,6 +4,7 @@ let spritePalette = '';
 
 const SPA_ORDER = ['Skating', 'Shooting', 'Checking', 'Falls', 'Fight', 'Celebrate', 'Goalies', 'Puck', 'Special', 'Other'];
 const SPF_ORDER = ['Players', 'Goalies', 'Ice', 'Other'];
+const AUDIO_ORDER = ['Music', 'SFX', 'Samples', 'Other'];
 
 const el = (id) => document.getElementById(id);
 function isPcGame(kind) {
@@ -32,6 +33,7 @@ const state = {
   paletteName: '',
   paletteExplicit: false,
   query: '',
+  audioId: '',
   acc: 0,
   holdKey: '',
   holdLeft: null,
@@ -76,7 +78,61 @@ async function loadGamesList() {
   }
   return fetch(resolveUrl('/games.json')).then((response) => response.json());
 }
+
+async function loadAudioCatalog(gameId) {
+  audioCatalog = null;
+  audioLoadError = '';
+  if (!gameInfo || gameInfo.platform !== 'genesis') return;
+  const url = useApi
+    ? resolveUrl('/api/games/' + gameId + '/audio')
+    : resolveUrl('/data/audio/' + gameId + '.json');
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Audio catalog not found');
+    audioCatalog = await response.json();
+    if (!state.audioId && audioCatalog.entries && audioCatalog.entries.length) {
+      const pick = audioCatalog.entries.find((e) => e.playable) || audioCatalog.entries[0];
+      state.audioId = pick.id;
+    }
+  } catch (err) {
+    audioLoadError = err.message;
+  }
+}
+
+async function playAudioEntry() {
+  if (!audioCatalog || !state.audioId) return;
+  const entry = audioCatalog.entries.find((e) => e.id === state.audioId);
+  if (!entry || !entry.playable) {
+    audioLoadError = 'FM preview needs the retail ROM in roms/ and node server.js.';
+    renderCaption();
+    return;
+  }
+  if (!useApi) {
+    audioLoadError = 'FM preview runs through the local API (node server.js + roms/).';
+    renderCaption();
+    return;
+  }
+  NhlAudioEngine.stopAll();
+  const response = await fetch(resolveUrl('/api/games/' + state.game + '/audio/preview?entry=' + encodeURIComponent(state.audioId)));
+  if (!response.ok) {
+    audioLoadError = 'Could not build preview — add the ROM to roms/.';
+    renderCaption();
+    return;
+  }
+  audioLoadError = '';
+  const schedule = await response.json();
+  const out = NhlAudioEngine.playSchedule(schedule);
+  state.playing = true;
+  renderTransport();
+  window.setTimeout(() => {
+    state.playing = false;
+    renderTransport();
+  }, Math.ceil((out.duration + 0.4) * 1000));
+}
+
 let catalog = null;
+let audioCatalog = null;
+let audioLoadError = '';
 let sequenceKey = '';
 const FILMSTRIP_LAZY_THRESHOLD = 48;
 let filmstripPaintQueue = [];
@@ -151,6 +207,17 @@ function sequence() {
 function buildSequence(anim) {
   if (!catalog) {
     return { key: 'empty', steps: [], directions: false, spin: false, loopDefault: true, title: 'Loading' };
+  }
+  if (state.mode === 'audio') {
+    const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
+    return {
+      key: 'audio:' + (state.audioId || ''),
+      steps: [],
+      directions: false,
+      spin: false,
+      loopDefault: false,
+      title: entry ? entry.label : 'Audio'
+    };
   }
   if (state.mode === 'image') {
     const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
@@ -381,6 +448,23 @@ function paintStage() {
   const cssW = wrap.clientWidth;
   const cssH = wrap.clientHeight;
   if (!cssW || !cssH) return;
+  if (state.mode === 'audio') {
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#0e1118';
+    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillStyle = '#9aa8c4';
+    ctx.font = '600 18px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Genesis FM preview', cssW / 2, cssH / 2 - 12);
+    ctx.font = '14px system-ui,sans-serif';
+    ctx.fillStyle = '#6b7a99';
+    ctx.fillText('Square-wave sketch — not YM2612', cssW / 2, cssH / 2 + 14);
+    return;
+  }
   const dpr = window.devicePixelRatio || 1;
   if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
     canvas.width = Math.round(cssW * dpr);
@@ -674,6 +758,63 @@ function renderList() {
   if (!catalog) return;
   if (state.mode === 'image') {
     renderImageList(box, q);
+    return;
+  }
+  if (state.mode === 'audio') {
+    const order = AUDIO_ORDER;
+    if (!audioCatalog || !audioCatalog.entries) {
+      const note = document.createElement('p');
+      note.className = 'empty-note';
+      note.textContent = audioLoadError || 'No audio catalog for this game.';
+      box.appendChild(note);
+      return;
+    }
+    const groups = new Map();
+    for (const entry of audioCatalog.entries) {
+      const hay = (entry.id + ' ' + entry.label + ' ' + (entry.blurb || '')).toLowerCase();
+      if (q && !hay.includes(q)) continue;
+      const group = entry.group || 'Other';
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(entry);
+    }
+    const extra = [...groups.keys()].filter((g) => !order.includes(g));
+    const sections = order.concat(extra).filter((g) => groups.has(g)).map((g) => ({ label: g, items: groups.get(g) }));
+    if (!sections.length) {
+      const note = document.createElement('p');
+      note.className = 'empty-note';
+      note.textContent = 'Nothing matches that search.';
+      box.appendChild(note);
+      return;
+    }
+    for (const section of sections) {
+      const label = document.createElement('div');
+      label.className = 'group-label';
+      label.textContent = section.label;
+      box.appendChild(label);
+      for (const entry of section.items) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'item';
+        button.setAttribute('role', 'option');
+        const selected = entry.id === state.audioId;
+        button.classList.toggle('is-current', selected);
+        button.setAttribute('aria-selected', selected ? 'true' : 'false');
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = entry.label;
+        const sub = document.createElement('span');
+        sub.className = 'sub';
+        sub.textContent = entry.type + (entry.playable ? '' : ' · catalog only');
+        button.append(name, sub);
+        button.addEventListener('click', () => {
+          state.audioId = entry.id;
+          state.playing = false;
+          NhlAudioEngine.stopAll();
+          refreshAll();
+        });
+        box.appendChild(button);
+      }
+    }
     return;
   }
   if (state.mode === 'frame') {
@@ -1026,9 +1167,16 @@ async function restoreSpritePalette() {
 }
 
 function renderCaption() {
+  const cap = el('caption');
+  if (state.mode === 'audio') {
+    const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
+    cap.textContent = audioLoadError || (entry
+      ? entry.label + ' · ' + entry.type + (entry.playable ? ' · Play for FM sketch' : '')
+      : 'Pick a sound or music entry.');
+    return;
+  }
   const seq = sequence();
   const step = seq.steps[state.step];
-  const cap = el('caption');
   if (!step) {
     cap.textContent = loadError || (state.mode === 'spa'
       ? (catalog && !catalog.anims.length
@@ -1122,9 +1270,14 @@ function renderTransport() {
   el('sort-file').setAttribute('aria-pressed', state.sort === 'file' ? 'true' : 'false');
   if ([...el('bank').options].some((option) => option.value === state.bank)) el('bank').value = state.bank;
   el('bank').disabled = state.mode !== 'frame' || !gameInfo || gameInfo.banks.length < 2;
-  for (const mode of ['frame', 'spf', 'spa', 'image']) {
-    el('mode-' + mode).setAttribute('aria-selected', state.mode === mode ? 'true' : 'false');
+  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio']) {
+    const tab = el('mode-' + mode);
+    if (!tab) continue;
+    tab.setAttribute('aria-selected', state.mode === mode ? 'true' : 'false');
   }
+  el('filmstrip').classList.toggle('is-hidden', state.mode === 'audio');
+  const orderRow = el('sort-group') && el('sort-group').closest('.order');
+  if (orderRow) orderRow.classList.toggle('is-hidden', state.mode === 'audio');
 }
 
 function refreshPlaybackChrome() {
@@ -1157,6 +1310,8 @@ function writeHash() {
   } else if (state.mode === 'spf') {
     params.set('spf', state.spf);
     params.set('dir', String(state.dir));
+  } else if (state.mode === 'audio') {
+    params.set('audio', state.audioId);
   } else {
     params.set('spa', state.spa);
     params.set('dir', String(state.dir));
@@ -1171,7 +1326,7 @@ function writeHash() {
 function readHash() {
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   const mode = params.get('mode');
-  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image') state.mode = mode;
+  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio') state.mode = mode;
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) state.game = params.get('game');
   if (params.get('bank') && gameInfo && gameInfo.banks.some((bank) => bank.id === params.get('bank'))) {
     state.bank = params.get('bank');
@@ -1182,6 +1337,7 @@ function readHash() {
   if (params.get('dir')) state.dir = Math.max(0, Math.min(7, Number(params.get('dir')) || 0));
   if (params.get('frame')) state.frame = Number(params.get('frame')) || 1;
   if (params.get('step')) state.step = Number(params.get('step')) || 0;
+  if (params.get('audio')) state.audioId = params.get('audio');
   if (params.has('pal')) {
     state.paletteExplicit = true;
     state.paletteName = params.get('pal') === 'embedded' ? '' : params.get('pal');
@@ -1297,6 +1453,16 @@ function wire() {
     writeHash();
   });
   el('play').addEventListener('click', () => {
+    if (state.mode === 'audio') {
+      if (state.playing) {
+        state.playing = false;
+        NhlAudioEngine.stopAll();
+      } else {
+        playAudioEntry().catch(() => {});
+      }
+      renderTransport();
+      return;
+    }
     state.playing = !state.playing;
     state.acc = 0;
     state.holdKey = '';
@@ -1306,6 +1472,15 @@ function wire() {
       if (ticks == null || state.step === seq.steps.length - 1 && !state.loop) state.step = 0;
     }
     renderTransport();
+  });
+  el('mode-audio').addEventListener('click', async () => {
+    clearSearch();
+    await restoreSpritePalette();
+    state.mode = 'audio';
+    state.playing = false;
+    NhlAudioEngine.stopAll();
+    if (!audioCatalog) await loadAudioCatalog(state.game);
+    refreshAll();
   });
   el('prev').addEventListener('click', (event) => nudge(event.shiftKey ? -filmstripStepJump() : -1));
   el('next').addEventListener('click', (event) => nudge(event.shiftKey ? filmstripStepJump() : 1));
@@ -1706,6 +1881,15 @@ async function loadGame(id, keepSelection) {
   const info = games.find((game) => game.id === id) || games[0];
   state.game = info.id;
   gameInfo = info;
+  NhlAudioEngine.stopAll();
+  state.playing = false;
+  const audioTab = el('mode-audio');
+  if (audioTab) audioTab.hidden = info.platform !== 'genesis';
+  if (info.platform !== 'genesis') {
+    audioCatalog = null;
+    audioLoadError = '';
+    if (state.mode === 'audio') state.mode = 'spa';
+  }
   loadToken += 1;
   loadError = '';
   banks.clear();
@@ -1756,7 +1940,7 @@ async function loadGame(id, keepSelection) {
     state.dir = previous.dir;
     state.step = previous.step;
   } else {
-    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image'
+    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image' || previous.mode === 'audio'
       ? previous.mode
       : 'spa';
     state.dir = previous.dir;
@@ -1797,6 +1981,19 @@ async function loadGame(id, keepSelection) {
     ? 'Frame index, SPF groups, SPA sequences, and other pictures'
     : 'SPF and SPA names from ' + info.source + '. Pictures need the ROM.');
   document.title = info.title + ' · NHL9X Studio';
+  if (info.platform === 'genesis') {
+    await loadAudioCatalog(info.id);
+    if (audioCatalog && audioCatalog.entries && audioCatalog.entries.length) {
+      const has = audioCatalog.entries.some((e) => e.id === state.audioId);
+      if (!has) {
+        const pick = audioCatalog.entries.find((e) => e.playable) || audioCatalog.entries[0];
+        state.audioId = pick.id;
+      }
+    }
+    if (state.mode === 'audio' && (!audioCatalog || !audioCatalog.entries || !audioCatalog.entries.length)) {
+      state.mode = 'spa';
+    }
+  }
   if (info.pixels) {
     await ensureBank(spritesBankId());
     if (state.mode === 'frame' && state.bank !== spritesBankId()) await ensureBank(state.bank);
@@ -1820,7 +2017,7 @@ async function loadGame(id, keepSelection) {
     }
     seqCache = null;
     if (state.step >= sequence().steps.length) state.step = 0;
-  } else if (state.step >= sequence().steps.length) {
+  } else if (state.mode !== 'audio' && state.step >= sequence().steps.length) {
     state.step = 0;
   }
   refreshAll();

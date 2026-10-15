@@ -1,0 +1,18 @@
+{
+  "gameId": "nhlpa93",
+  "platform": "genesis",
+  "playback": false,
+  "note": "FMTune/SFX offsets not vendored yet; digital anchor from Docs/SND",
+  "entries": [
+    {
+      "id": "hockey-snd",
+      "label": "Hockey.snd (ROM)",
+      "group": "Samples",
+      "type": "region",
+      "start": 62664,
+      "end": 147988,
+      "playable": false,
+      "blurb": "Digital sample pack; anchor 0x1f420"
+    }
+  ]
+}
