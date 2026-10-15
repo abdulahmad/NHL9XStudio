@@ -24,7 +24,7 @@ function syncModeTabs() {
   if (z80Tab) z80Tab.hidden = !z80;
 }
 const state = {
-  mode: 'z80',
+  mode: 'spa',
   bank: 'Sprites.anim',
   frame: 1,
   spf: 'SPFskatewp',
@@ -41,7 +41,7 @@ const state = {
   minGap: true,
   transparentOverride: null,
   sort: 'group',
-  game: 'z80test',
+  game: 'nhl92',
   image: '',
   paletteName: '',
   paletteExplicit: false,
@@ -2467,19 +2467,14 @@ function wireDropTarget() {
 
 async function boot() {
   games = await loadGamesList();
-  const defaultGame = 'z80test';
-  fillSelect(el('game'), games.map((game) => ({ value: game.id, label: game.title })), defaultGame);
+  fillSelect(el('game'), games.map((game) => ({ value: game.id, label: game.title })), 'nhl92');
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) {
     state.game = params.get('game');
-  } else if (!params.get('game') && games.some((game) => game.id === defaultGame)) {
-    state.game = defaultGame;
   }
-  const gameFallback = games.find((game) => game.id === defaultGame) || games[0];
-  gameInfo = games.find((game) => game.id === state.game) || gameFallback;
+  gameInfo = games.find((game) => game.id === state.game) || games[0];
   readHash();
-  if (state.game === defaultGame && !params.get('mode')) state.mode = 'z80';
-  gameInfo = games.find((game) => game.id === state.game) || gameFallback;
+  gameInfo = games.find((game) => game.id === state.game) || games[0];
   el('game').value = state.game;
   syncModeTabs();
   wire();
