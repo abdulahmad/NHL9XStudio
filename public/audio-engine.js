@@ -1,20 +1,11 @@
 /**
- * Browser playback for Genesis FM schedules (2-op style Web Audio, not cycle-accurate YM2612).
+ * Browser playback for Genesis FM schedules (Web Audio; not cycle-accurate YM2612).
  */
 (function (root) {
   let ctx = null;
   let active = [];
 
-  const FM_PRESETS = [
-    { modRatio: 1, modIndex: 1.2, filter: 3200 },
-    { modRatio: 2, modIndex: 2.5, filter: 2800 },
-    { modRatio: 1, modIndex: 3.5, filter: 2200 },
-    { modRatio: 3, modIndex: 1.8, filter: 4000 },
-    { modRatio: 0.5, modIndex: 2, filter: 1800 },
-    { modRatio: 2, modIndex: 4, filter: 2600 },
-    { modRatio: 1, modIndex: 0.8, filter: 5000 },
-    { modRatio: 4, modIndex: 1.5, filter: 3500 }
-  ];
+  const MAX_VOICES = 320;
 
   function midiToHz(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
@@ -34,74 +25,60 @@
     active = [];
   }
 
-  function presetFor(instrument) {
-    const idx = (instrument != null ? instrument : 0) % FM_PRESETS.length;
-    return FM_PRESETS[idx];
-  }
-
-  function playFmVoice(audio, t0, ev, gainMaster) {
-    const preset = presetFor(ev.instrument);
-    const carrierHz = midiToHz(ev.midi);
-    const modHz = carrierHz * preset.modRatio;
+  function playVoice(audio, t0, ev, gainMaster) {
+    const carrierHz = Math.max(20, midiToHz(ev.midi));
     const dur = Math.max(0.04, ev.duration || 0.1);
     const start = t0 + (ev.time || 0);
-    const stop = start + dur + 0.02;
+    const stop = start + dur + 0.03;
 
-    const mod = audio.createOscillator();
-    mod.type = 'sine';
-    mod.frequency.value = modHz;
-
-    const modGain = audio.createGain();
-    modGain.gain.value = preset.modIndex * carrierHz * 0.012;
-
-    const carrier = audio.createOscillator();
-    carrier.type = 'sine';
-    carrier.frequency.value = carrierHz;
-
-    mod.connect(modGain);
-    modGain.connect(carrier.frequency);
+    const osc = audio.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(carrierHz, start);
 
     const amp = audio.createGain();
-    amp.gain.setValueAtTime(0.0001, start);
-    amp.gain.exponentialRampToValueAtTime(0.35, start + Math.min(0.02, dur * 0.15));
-    amp.gain.exponentialRampToValueAtTime(0.12, start + dur * 0.55);
-    amp.gain.exponentialRampToValueAtTime(0.0001, stop);
+    const peak = 0.28 / Math.sqrt(Math.max(1, (ev._mix || 8)));
+    amp.gain.setValueAtTime(0.001, start);
+    amp.gain.exponentialRampToValueAtTime(peak, start + Math.min(0.025, dur * 0.12));
+    amp.gain.exponentialRampToValueAtTime(peak * 0.35, start + dur * 0.7);
+    amp.gain.exponentialRampToValueAtTime(0.001, stop);
 
     const filter = audio.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.value = preset.filter;
-    filter.Q.value = 0.7;
+    filter.frequency.value = 4200;
+    filter.Q.value = 0.6;
 
-    carrier.connect(filter);
+    osc.connect(filter);
     filter.connect(amp);
     amp.connect(gainMaster);
 
-    mod.start(start);
-    carrier.start(start);
-    mod.stop(stop);
-    carrier.stop(stop);
-    active.push(carrier);
-    active.push(mod);
+    osc.start(start);
+    osc.stop(stop);
+    active.push(osc);
   }
 
-  function playSchedule(schedule, options) {
+  async function playSchedule(schedule, options) {
     stopAll();
     const audio = ensureContext();
-    if (audio.state === 'suspended') audio.resume();
+    if (audio.state === 'suspended') {
+      await audio.resume();
+    }
     const gainMaster = audio.createGain();
-    const vol = (options && options.volume) != null ? options.volume : 0.22;
+    const vol = (options && options.volume) != null ? options.volume : 0.35;
     gainMaster.gain.value = vol;
     gainMaster.connect(audio.destination);
-    const t0 = audio.currentTime + 0.05;
-    const events = schedule.events || [];
-    const peakVoices = Math.min(12, Math.max(4, Math.ceil(events.length / 80)));
-    const voiceGain = 1 / Math.sqrt(peakVoices);
-    gainMaster.gain.value = vol * voiceGain;
 
-    for (const ev of events) {
-      playFmVoice(audio, t0, ev, gainMaster);
+    const t0 = audio.currentTime + 0.06;
+    let events = (schedule && schedule.events) ? schedule.events.slice() : [];
+    if (events.length > MAX_VOICES) {
+      const step = Math.ceil(events.length / MAX_VOICES);
+      events = events.filter((_, i) => i % step === 0);
     }
-    const duration = schedule.duration || 3;
+    const mix = Math.min(16, Math.max(4, Math.ceil(events.length / 40)));
+    for (const ev of events) {
+      ev._mix = mix;
+      playVoice(audio, t0, ev, gainMaster);
+    }
+    const duration = (schedule && schedule.duration) || 3;
     return { duration };
   }
 

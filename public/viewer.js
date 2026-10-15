@@ -79,6 +79,17 @@ async function loadGamesList() {
   return fetch(resolveUrl('/games.json')).then((response) => response.json());
 }
 
+function audioPreviewMeta() {
+  if (!audioCatalog || !audioCatalog.previewMeta) return null;
+  let meta = audioCatalog.previewMeta;
+  if (typeof NhlGenesisAudio !== 'undefined' && state.game) {
+    const gameMeta = NhlGenesisAudio.gameMeta(state.game);
+    const pinned = gameMeta && NhlGenesisAudio.previewMetaFromGame(gameMeta);
+    if (pinned) meta = Object.assign({}, pinned, meta);
+  }
+  return meta;
+}
+
 async function loadAudioCatalog(gameId) {
   audioCatalog = null;
   audioLoadError = '';
@@ -107,7 +118,7 @@ async function playAudioEntry() {
     renderCaption();
     return;
   }
-  const meta = audioCatalog.previewMeta;
+  const meta = audioPreviewMeta();
   if (!meta) {
     audioLoadError = 'No FM preview metadata for this game.';
     renderCaption();
@@ -117,9 +128,13 @@ async function playAudioEntry() {
   let schedule = null;
   const rom = await ensureRom();
   if (rom && typeof NhlGenesisAudio !== 'undefined') {
-    schedule = NhlGenesisAudio.previewEntry(rom, entry, meta);
+    try {
+      schedule = NhlGenesisAudio.previewEntry(rom, entry, meta);
+    } catch (err) {
+      schedule = null;
+    }
   }
-  if (!schedule && useApi) {
+  if ((!schedule || !schedule.events || !schedule.events.length) && useApi) {
     const response = await fetch(resolveUrl('/api/games/' + state.game + '/audio/preview?entry=' + encodeURIComponent(state.audioId)));
     if (response.ok) schedule = await response.json();
   }
@@ -131,7 +146,7 @@ async function playAudioEntry() {
     return;
   }
   audioLoadError = '';
-  const out = NhlAudioEngine.playSchedule(schedule);
+  const out = await NhlAudioEngine.playSchedule(schedule);
   state.playing = true;
   renderTransport();
   window.setTimeout(() => {
@@ -1688,7 +1703,10 @@ async function icePaletteBytes() {
 
 async function ensureRom() {
   if (!gameInfo) return null;
-  if (roms.has(gameInfo.id)) return roms.get(gameInfo.id);
+  if (roms.has(gameInfo.id)) {
+    const cached = roms.get(gameInfo.id);
+    return cached || null;
+  }
   if (!useApi) return null;
   const response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/rom'));
   if (!response.ok) {
