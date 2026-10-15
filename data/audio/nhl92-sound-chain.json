@@ -1,0 +1,555 @@
+{
+  "note": "SHA-256 of WAV/YM-log output from tools/render-nhl92-sound-chain.js. Regenerate with --update only when the chain intentionally changes.",
+  "sampleRate": 53267,
+  "frameTstates": 59736,
+  "songs": [
+    {
+      "id": 0,
+      "frames": 3601,
+      "file": "songs/song-0-SngEOP.wav",
+      "ymWrites": 46014,
+      "psgWrites": 0,
+      "peak": 12855,
+      "wav": "8d09b392a7aa3d54791ef1b6d3e63e826ca005423b477d88384e3ab5c7b0ac2b",
+      "log": "d65041dc7b3990c14c22708234660eea7d30fb32071a3807dff1e6453f78a2cd",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 1,
+      "frames": 9001,
+      "file": "songs/song-1-SngTitle.wav",
+      "ymWrites": 120203,
+      "psgWrites": 0,
+      "peak": 14493,
+      "wav": "9a88ad62c5cc7cc9890225eb7af7bb16fd247ea3a77ac65f1a0e1201e8e3e998",
+      "log": "3497583f0ba7d4a47d504a5fc9a084e191f5d3550444ada9f7a8e62a7a52f438",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 2,
+      "frames": 3601,
+      "file": "songs/song-2-SngTitle-reprise.wav",
+      "ymWrites": 54972,
+      "psgWrites": 0,
+      "peak": 14577,
+      "wav": "423558eb9d2927eaca6cf86cd445a851a356fad6a7a3142ef9f15f9f11e9b86d",
+      "log": "4de83fc0288ffcc7080c91c61adfcacc1624078be3ce7f0eb1f95929dc55dc08",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 3,
+      "frames": 3601,
+      "file": "songs/song-3-SngEOG.wav",
+      "ymWrites": 53496,
+      "psgWrites": 0,
+      "peak": 14535,
+      "wav": "a936270fca5e646713d98b039d91491be41aae0b674df1bba8dc58634100a935",
+      "log": "141c6d89b1e2f9637f95d64ee572e46dab07c68ceed39b029c0044eefbd03698",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 4,
+      "frames": 3601,
+      "file": "songs/song-4-SngPO.wav",
+      "ymWrites": 50454,
+      "psgWrites": 0,
+      "peak": 14199,
+      "wav": "e1cce0d6fed14f3b9e44f816cd5a272f396687dc0df7e6083b1667e172312694",
+      "log": "a64186a111724df9d31454d1776ba144059139466f02c1852086dca502800e96",
+      "m68kMatchesStep6": true
+    }
+  ],
+  "sfx": [
+    {
+      "id": 0,
+      "frames": 602,
+      "file": "sfx/sfx-00-siren-SFXsiren.wav",
+      "ymWrites": 2933,
+      "psgWrites": 0,
+      "peak": 504,
+      "wav": "5409bcab40b1c640d2d525f800956f42c7d90dde82dc07db12a58b2e61cbb532",
+      "log": "f0f436b7d238067b5629cd07f73c9221f48e4f3c5a355b610f9efee10ed7c5df",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 1,
+      "frames": 602,
+      "file": "sfx/sfx-01-skating-SFXbeep1.wav",
+      "ymWrites": 95,
+      "psgWrites": 0,
+      "peak": 3423,
+      "wav": "f44091bb3dfe0e1c2fbb5dd9446324b44398117e7e71eacaa0ba12a5b171e6ce",
+      "log": "ba3eac89015e68e93c45cd93b72a0df25a7a2cddee8ada103a18edc2e05b922d",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 2,
+      "frames": 602,
+      "file": "sfx/sfx-02-skating-SFXbeep2.wav",
+      "ymWrites": 95,
+      "psgWrites": 0,
+      "peak": 3423,
+      "wav": "ec65f37c716c09b879efae0b3b91a34aa0fc81abc742c997a21400540d544b44",
+      "log": "12cf8de129cf0442b3de9611e852df1fb6093a24e7af9e5112ff262ba3949a20",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 3,
+      "frames": 602,
+      "file": "sfx/sfx-03-skating-SFXcheck2.wav",
+      "ymWrites": 16084,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "730af3f45184e89066e7629c98ff0562e5d0f900d59710d20b84f35087571599",
+      "log": "2c8a17403f3772404bfb513f73021e0ead9bfd5388707bd06fd1d77579c0035b",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 4,
+      "frames": 602,
+      "file": "sfx/sfx-04-skating.wav",
+      "ymWrites": 16084,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "1714e600bbb91a72d6685d6b17ff1d8a798ad32159a617e8f0c0936a26a11341",
+      "log": "29d69035354a3da529077d21e62d3d774add672874c675a197e1c8441c41d691",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 5,
+      "frames": 602,
+      "file": "sfx/sfx-05-hit-puck-SFXstdef-SFXpuckbody.wav",
+      "ymWrites": 111,
+      "psgWrites": 0,
+      "peak": 2751,
+      "wav": "bf8414c5d39c320b1f2bb212ef6c7ebe4cf994324f379e22814dc3dd7fa764d4",
+      "log": "328012dc59e6ec4d8465b207d45629cea1f44614050e751780018d48b029344b",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 6,
+      "frames": 602,
+      "file": "sfx/sfx-06-hit-board.wav",
+      "ymWrites": 371,
+      "psgWrites": 0,
+      "peak": 3969,
+      "wav": "343ea3f6366b9be2abb1f6709cb8b95578e464d6c5491d0a97be973c82a1321b",
+      "log": "45530521ed10222f822311ea6d3d4c5bddb6592449936d963c7da8c96876428c",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 7,
+      "frames": 602,
+      "file": "sfx/sfx-07-hit-board-SFXpuckwall1.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 3969,
+      "wav": "97e23f29777edd1f30a5b745eb03ce93879ecc0a05af48bd4132cdd3cdb3d7de",
+      "log": "f6472f20d72d7963e282cd596db442b5c1a054c2168b19afe11e00edcfee2fb0",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 8,
+      "frames": 602,
+      "file": "sfx/sfx-08-puck-faceoff-SFXpuckget-SFXpuckice.wav",
+      "ymWrites": 83,
+      "psgWrites": 0,
+      "peak": 2751,
+      "wav": "f0ff492b056e0efb5422fd3429d15613ba0d64d88e5dd0e03b2749341d6d4123",
+      "log": "1ff5d06278e19bfbb5f33ed4df1a5d8f4df62176a3f5c1b8e39a568a5e1dbe1e",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 9,
+      "frames": 602,
+      "file": "sfx/sfx-09-post-SFXpuckpost.wav",
+      "ymWrites": 547,
+      "psgWrites": 0,
+      "peak": 3969,
+      "wav": "78ff38916a3cac21e050f06aaa4d68f0287f38a86cf50ea260f8aecfa85be369",
+      "log": "0b2237acfd8e8cf371db2ecca147063027511ab7aa11183b9841f8f17ce75c2a",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 10,
+      "frames": 602,
+      "file": "sfx/sfx-10-whistle-SFXwhistle.wav",
+      "ymWrites": 139,
+      "psgWrites": 0,
+      "peak": 3423,
+      "wav": "0b1356e426dfe0d634892adc8ec175e163ea842b1e4fa548b13effc957acaa4e",
+      "log": "ea498f654463ff55d7b5a36e7420d969119d307c8f712bc51990e545d71a120f",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 11,
+      "frames": 602,
+      "file": "sfx/sfx-11-pass-sample-SFXpass.wav",
+      "ymWrites": 7764,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "8c96bb9d3e50314b859bef9b266441d23b3a4b44b64a0ad0ecd2758cd79d80e3",
+      "log": "34e887196d44a78d1e1b7658dc4fa74239c11878a0955c1eec729d0b7651815c",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 12,
+      "frames": 602,
+      "file": "sfx/sfx-12-pass-sample-SFXshotbh.wav",
+      "ymWrites": 7712,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "57f68996e1adeceea199e36e0aa9d4d95a7a748513705769fb82d6cf2ca9fd32",
+      "log": "ac3de68e9d41c4f7ebfdcc29872c4f7b68edf823cf0bd9298c50e70169f9df7c",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 13,
+      "frames": 602,
+      "file": "sfx/sfx-13-slap-shot-SFXshotfh.wav",
+      "ymWrites": 7236,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "cfa8f97c1718010abef6f1a85bc9a3a2d6af0de9a384c608e606767d19dbd8eb",
+      "log": "4d6f9cb492777be5c2304e29e7a22e5152126bc6709fb253c27ac49b03be6822",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 14,
+      "frames": 602,
+      "file": "sfx/sfx-14-whiff-SFXshotwiff.wav",
+      "ymWrites": 231,
+      "psgWrites": 0,
+      "peak": 4537,
+      "wav": "73a65f4c3e42993a8ce8dda1cd86578600212f5eb818bf6637f80330ad8d68d3",
+      "log": "d6efd442398b10c0b05b6583d3f9474bf6295ae22dbc2f19181bb1e68a5f1a9a",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 15,
+      "frames": 602,
+      "file": "sfx/sfx-15-player-hits-boards-SFXplayerwall.wav",
+      "ymWrites": 7990,
+      "psgWrites": 0,
+      "peak": 8801,
+      "wav": "255beea636127ec0c34c4b50fdf69d5a79860062f42623a3c541d1e190ea3b3c",
+      "log": "b7eb2ec979a974cd964b509ddad8a76ea06348e5c7f702bc11b50e0e4531b356",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 16,
+      "frames": 602,
+      "file": "sfx/sfx-16-player-hits-boards.wav",
+      "ymWrites": 7990,
+      "psgWrites": 0,
+      "peak": 9137,
+      "wav": "de9c7ddb928f140b5c6a50802e4130b6b6965a831b615bd24a55834af2358351",
+      "log": "7addbd90274e36d4111e001621625ea04b78b3c225af05677ec93dc3b0e71142",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 17,
+      "frames": 602,
+      "file": "sfx/sfx-17-player-hits-boards.wav",
+      "ymWrites": 7990,
+      "psgWrites": 0,
+      "peak": 8843,
+      "wav": "0630ea4c6f32d136e92ccdc982189c064dd614feeb1f04202f4c0635e3269212",
+      "log": "5972b3280cdc0f29cdb0c924670f3664f2c562debcf4aa22ddc9f76350af1cf6",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 18,
+      "frames": 602,
+      "file": "sfx/sfx-18-check-SFXcheck.wav",
+      "ymWrites": 8852,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "5a3526c016211dca7b73e5b7c74dcf77c6e0b07310d2383b7309376c9950821a",
+      "log": "f05fe209c1c633da5c997c4597422f67ed38efdde08914be89d7f58f4a5dada7",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 19,
+      "frames": 602,
+      "file": "sfx/sfx-19-check.wav",
+      "ymWrites": 8852,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "c14814d0351755448f6542fa8d8100d2df0f294be7efa119886751cf154b9599",
+      "log": "334c07aeea7e97ffdcbb2d6b406f5915c219f44151d5a70f4e08b5e3565cb687",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 20,
+      "frames": 602,
+      "file": "sfx/sfx-20-check.wav",
+      "ymWrites": 8852,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "5630692c96ee4edf1ef769294f91aa8a224b7b07af3a15c4c10041a5c3b9e2e0",
+      "log": "6e38fc331d18875b3b77e50c6bb1255d5aafdbc868ac60dfd803d0cf35cebb23",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 21,
+      "frames": 602,
+      "file": "sfx/sfx-21-punch-SFXhithigh.wav",
+      "ymWrites": 2756,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "50da838f39c3374aee3515d1448e079ad277e03fd3f87c3c82f13f7651377896",
+      "log": "1d9ef2cca60779fc816aa9b8f29b4693b66678123c0acc53fe6eefd4627514f3",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 22,
+      "frames": 602,
+      "file": "sfx/sfx-22-punch.wav",
+      "ymWrites": 2756,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "a4903c2e5368b7a13355fd9f930cd5cf392930c64697bebf26d4b0a3249647fd",
+      "log": "5da1c0992a549891fe8b465790fd0edaca0792e23d6f5d472b9087a3f8b484af",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 23,
+      "frames": 602,
+      "file": "sfx/sfx-23-punch-SFXhitlow.wav",
+      "ymWrites": 2756,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "7e8036fbf8ecea7c286b01491a58cafa956263a638c71c0514e44f2458d6a94d",
+      "log": "43f75bd5e29a80ea2ab2abad039fdc7b489a95f37f63f679cdce157449a48f56",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 24,
+      "frames": 602,
+      "file": "sfx/sfx-24-foghorn-SFXhorn.wav",
+      "ymWrites": 869,
+      "psgWrites": 0,
+      "peak": 9788,
+      "wav": "69e5ff648e8d9c56d2520a6dd3d8e9e180e2bb81aadfd8872c6cb6b11f87c292",
+      "log": "e22cb8464211c5f4576566ececdc2b535188486aa4f3845cc538465411c25d98",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 25,
+      "frames": 602,
+      "file": "sfx/sfx-25-crowd-cheer-SFXcrowdcheer.wav",
+      "ymWrites": 54034,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "0f02000be87121d81b82eeaf74a566a23c8f2670fc8dd9faec14fe039e57dd03",
+      "log": "00896f0e8fbe5343b69702a2eeb773e45cac984b9dc9c6010d402117698f4f3e",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 26,
+      "frames": 602,
+      "file": "sfx/sfx-26-boo-SFXcrowdboo.wav",
+      "ymWrites": 19156,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "173fe5e95efdec6786c9447cfad9800076d4587b68f2d92cf21965f68587d7af",
+      "log": "883e751411b22cfec4a99e89abece14c0c2cb0a61e8478e4a554c7e1b5b84541",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 27,
+      "frames": 602,
+      "file": "sfx/sfx-27-hitboard-quieter.wav",
+      "ymWrites": 371,
+      "psgWrites": 0,
+      "peak": 2961,
+      "wav": "62da15f9aa4c746d2f1c9437931c26a278391dd8fdb05dae218c50a37f440a30",
+      "log": "404b9cb6b0e4cd3256ab780652df15b8f3be5ecc2d073188a0f2cc3ebdbb9698",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 28,
+      "frames": 602,
+      "file": "sfx/sfx-28-hitboard-quieter.wav",
+      "ymWrites": 371,
+      "psgWrites": 0,
+      "peak": 2226,
+      "wav": "e4e611724596fb0577af61fdc3489f9d796a7734de16a84af3676599382e5042",
+      "log": "3dd7a7775c6abc0205fb7068cf9035fb945f395f68fe5aa531b8b12a5244fb5a",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 29,
+      "frames": 602,
+      "file": "sfx/sfx-29-hitboard-quieter-SFXpuckwall2.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 2961,
+      "wav": "69fee8fcb2afeacb8ffea7e99c7bf9fd867ece69b0350929a2da9fde411b0b10",
+      "log": "b7dcc07645cada2861f8c24479316e3de6b6d8dabf926ee9f145624b7cfc6ae9",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 30,
+      "frames": 602,
+      "file": "sfx/sfx-30-hitboard-quieter-SFXpuckwall3.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 2226,
+      "wav": "9992fa591077a50954cadc679d0448cb6b1bfd638abd5633f376dfa37e9802ee",
+      "log": "6e700024806f92afeb9f6dd6ffb6bf76ece0b0bda7b13bd314c4914ece623780",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 31,
+      "frames": 602,
+      "file": "sfx/sfx-31-SFXoooh-SFXoooh.wav",
+      "ymWrites": 19346,
+      "psgWrites": 0,
+      "peak": 5797,
+      "wav": "3eafd096be294fd24232f407d1ca5b695b82a1ed11ec32da457c7f6cc3ab1359",
+      "log": "b1a9cadf4c023d6f89ce39eaa55008003d8d4bf31d06ff8d56241f63795f2cd9",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 32,
+      "frames": 602,
+      "file": "sfx/sfx-32-not-in-the-EA-list.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 2226,
+      "wav": "9992fa591077a50954cadc679d0448cb6b1bfd638abd5633f376dfa37e9802ee",
+      "log": "e60f2199929103abc667347ff1d1f0341da30caae7d442025442cbc24a8503d1",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 33,
+      "frames": 602,
+      "file": "sfx/sfx-33-not-in-the-EA-list.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 2226,
+      "wav": "9992fa591077a50954cadc679d0448cb6b1bfd638abd5633f376dfa37e9802ee",
+      "log": "dce6430fd1887beaae832cdd71c68399e57346d22517783fd75643be96c6016b",
+      "m68kMatchesStep6": true
+    },
+    {
+      "id": 34,
+      "frames": 602,
+      "file": "sfx/sfx-34-not-in-the-EA-list.wav",
+      "ymWrites": 367,
+      "psgWrites": 0,
+      "peak": 2226,
+      "wav": "9992fa591077a50954cadc679d0448cb6b1bfd638abd5633f376dfa37e9802ee",
+      "log": "067fed08046b3d2cc05905f5d49436b7a3d6a26d66610e896b5856a72a8509d3",
+      "m68kMatchesStep6": true
+    }
+  ],
+  "mixes": [
+    {
+      "id": 0,
+      "frames": 901,
+      "file": "mixes/mix-0-SngEOP-sfx10-sfx24.wav",
+      "ymWrites": 11374,
+      "psgWrites": 0,
+      "peak": 19408,
+      "wav": "3e74d50e6c88b0d28f41ddb78ba4dc370dfc183bce696171daa680f7b3e11c15",
+      "log": "bf045c92102f3ab139f741eb9124726575028927e20f1d0bc07bdbe9dc31f3ae",
+      "song": 0,
+      "sfxAt": [
+        [
+          120,
+          10
+        ],
+        [
+          360,
+          24
+        ]
+      ],
+      "note": "SngEOP; whistle (ch4) at vb 120, foghorn (ch0+ch1) at vb 360"
+    },
+    {
+      "id": 1,
+      "frames": 901,
+      "file": "mixes/mix-1-SngPO-sfx0.wav",
+      "ymWrites": 15734,
+      "psgWrites": 0,
+      "peak": 13884,
+      "wav": "9c59b493a675b9016ea34830783d1563675f684ccd8e8ffea24b762d8e8b68e2",
+      "log": "300b5e4d745c91151073c53972d4d7e5b0327fbb8f891787cfe9bbaa4737894a",
+      "song": 4,
+      "sfxAt": [
+        [
+          180,
+          0
+        ]
+      ],
+      "note": "SngPO; siren (ch0+ch1) at vb 180"
+    },
+    {
+      "id": 2,
+      "frames": 901,
+      "file": "mixes/mix-2-SngEOG-sfx13-sfx25-sfx15.wav",
+      "ymWrites": 82515,
+      "psgWrites": 0,
+      "peak": 15501,
+      "wav": "dd0e0406f80a0f31025d1c7a4adfbe4f709548ba668028d92bb1895cb59063d9",
+      "log": "1ab7fbb917748974075b06f56616dfdf6a719ef8be377977ddbe4ca4c3ae2c2d",
+      "song": 3,
+      "sfxAt": [
+        [
+          60,
+          13
+        ],
+        [
+          240,
+          25
+        ],
+        [
+          480,
+          15
+        ]
+      ],
+      "note": "SngEOG; slap shot (DAC) at vb 60, crowd cheer (DAC) at vb 240, player hits boards (DAC + ch2) at vb 480"
+    },
+    {
+      "id": 3,
+      "frames": 901,
+      "file": "mixes/mix-3-SngTitle-sfx5-sfx7-sfx5-sfx7-sfx8-sfx9.wav",
+      "ymWrites": 11124,
+      "psgWrites": 0,
+      "peak": 14157,
+      "wav": "10bf84adb6cd2482076ab4de1ebfb679eca18e4c43ccf6e2ec06827784e1625f",
+      "log": "bd42e111e769adc0c053fe6d152a82b27a1c2c4536bb4747a34ee981d442c96b",
+      "song": 1,
+      "sfxAt": [
+        [
+          120,
+          5
+        ],
+        [
+          150,
+          7
+        ],
+        [
+          180,
+          5
+        ],
+        [
+          210,
+          7
+        ],
+        [
+          240,
+          8
+        ],
+        [
+          270,
+          9
+        ]
+      ],
+      "note": "SngTitle; hit puck (ch1), hit board (ch2), hit puck, hit board, puck faceoff (ch1), post (ch2), every 30 vblanks from vb 120"
+    }
+  ]
+}
