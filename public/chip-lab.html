@@ -4,6 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chip lab · YM2612 &amp; SN76489 · NHL9X Studio</title>
+  <script>
+    (function () {
+      var path = location.pathname || '/';
+      var slash = path.lastIndexOf('/');
+      var base = slash >= 0 ? path.slice(0, slash + 1) : '/';
+      var b = document.createElement('base');
+      b.href = base;
+      document.head.appendChild(b);
+    })();
+  </script>
   <link rel="stylesheet" href="chip-lab.css">
 </head>
 <body class="chip-lab">
