@@ -1,6 +1,6 @@
 # NHL9X Studio — agent handoff
 
-**Last updated:** 2026-10-15 (PRs #1–#6 merged; feature branches deleted)  
+**Last updated:** 2026-10-15 (PRs #1–#8 merged; 94 PC gfxpak PPV decode in progress)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
 **Design / roadmap:** `docs/DESIGN.md`
 
@@ -46,7 +46,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
-| **GAP-8** | 94PC | SPF table in `frames94pc.asm` (876 frames); QPP `30 FB` + `pc94/` routes done; legacy PPV gfxpak + SPA from `HOCKEY.EXE` still open |
+| **GAP-8** | 94PC | gfxpak PPV decode; interim SPA (98×, from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
 | **AUD-*** | Audio | After graphics queue |

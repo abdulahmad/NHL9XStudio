@@ -780,6 +780,35 @@ function shapeBank(tag, spit) {
   return bank;
 }
 
+/** NHL 94 PC gfxpak-style .PPV (SPIT blob directory, not SHPI). */
+function gfxPakBank(startTag, count, spit) {
+  const blobs = [];
+  for (let i = 0; i < count; i++) blobs.push(Buffer.from(spit));
+  const data = Buffer.concat(blobs);
+  const offsets = [];
+  let pos = 0;
+  for (const blob of blobs) {
+    offsets.push(pos);
+    pos += blob.length;
+  }
+  const header = 6 + count * 4 + count * 4;
+  const out = Buffer.alloc(header + data.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, header + data.length + 9000, true);
+  view.setUint16(4, count, true);
+  let p = 6;
+  for (let i = 0; i < count; i++) {
+    out.write(String(startTag + i).padStart(4, '0'), p, 4, 'ascii');
+    p += 4;
+  }
+  for (const off of offsets) {
+    view.setUint32(p, off, true);
+    p += 4;
+  }
+  data.copy(out, p);
+  return out;
+}
+
 const packedBank = Buffer.concat([
   Buffer.from([0x10, 0xFB, 0x00, 0x00, 0x2C, 0xEA]),
   shapeBank('0000', rawSpit),
@@ -922,10 +951,28 @@ for (const spf of pc94Catalog.spfs) {
   pc94cursor = spf.end + 1;
 }
 assert.strictEqual(pc94cursor, 877);
-assert.strictEqual(pc94Catalog.anims.length, 0);
+assert.ok(pc94Catalog.anims.length >= 90, 'pc94 SPA interim catalog');
+assert.strictEqual(pc94Catalog.anims.find((a) => a.name === 'SPAskate').directions[0].steps[0].frame, 42);
+assert.ok(!pc94Catalog.anims.some((a) => a.name === 'SPAgoalie95'));
 const pc94empty = pc95.openSpriteBundle(Buffer.alloc(0), 'nhl94pc');
 assert.strictEqual(pc94empty.numFrames, 876);
 assert.strictEqual(pc95.playerFrameCount('nhl94pc'), 876);
+
+const gfx94 = gfxPakBank(0, 3, rawSpit);
+assert.ok(pc95.isGfxPakPack(gfx94));
+const gfx94opened = pc95.openBytes(gfx94);
+assert.strictEqual(gfx94opened.shapes.length, 3);
+assert.strictEqual(gfx94opened.shapes[1].tag, '0001');
+assert.deepStrictEqual(Array.from(gfx94opened.shapes[0].pixels), [1, 2, 3, 4]);
+const gfx94sheet = pc95.openSpriteBundle(gfxPakBank(0, 2, rawSpit), 'nhl94pc');
+assert.deepStrictEqual(Array.from(gfx94sheet.renderFrame(1).pixels), [1, 2, 3, 4]);
+assert.deepStrictEqual(Array.from(gfx94sheet.renderFrame(2).pixels), [1, 2, 3, 4]);
+const retail94Ppv = path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94', '000_049.PPV');
+if (fs.existsSync(retail94Ppv)) {
+  const retailOpened = pc95.openBytes(fs.readFileSync(retail94Ppv));
+  assert.strictEqual(retailOpened.shapes.length, 50);
+  assert.strictEqual(retailOpened.shapes[0].width, 8);
+}
 assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
