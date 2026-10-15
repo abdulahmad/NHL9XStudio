@@ -124,14 +124,25 @@ async function playAudioEntry() {
     renderCaption();
     return;
   }
+  if (typeof NhlGenesis92Sequence === 'undefined' || !NhlGenesis92Sequence.parseChannelSequence) {
+    audioLoadError = 'Audio parser failed to load (refresh the page).';
+    renderCaption();
+    return;
+  }
   NhlAudioEngine.stopAll();
   let schedule = null;
   const rom = await ensureRom();
+  audioLoadError = 'Building preview…';
+  renderCaption();
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
   if (rom && typeof NhlGenesisAudio !== 'undefined') {
     try {
       schedule = NhlGenesisAudio.previewEntry(rom, entry, meta);
     } catch (err) {
       schedule = null;
+      audioLoadError = err && err.message ? err.message : 'Preview parser error.';
+      renderCaption();
+      return;
     }
   }
   if ((!schedule || !schedule.events || !schedule.events.length) && useApi) {
@@ -368,7 +379,7 @@ function bitmapFor(frame, colors) {
     if (!own && frame.dynamic === false && colors && colors.game) palette = colors.game;
     const opaque = override === false || (override == null && Boolean(frame.opaque));
     const skip = frame.transparent == null ? 0 : frame.transparent;
-    const byRow = (override === true || (override == null && Boolean(frame.rowTransparent))) && !opaque;
+    const byRow = !opaque && Boolean(frame.rowTransparent);
     for (let i = 0; i < frame.pixels.length; i++) {
       const index = frame.pixels[i];
       const o = i * 4;
@@ -1495,7 +1506,12 @@ function wire() {
         state.playing = false;
         NhlAudioEngine.stopAll();
       } else {
-        playAudioEntry().catch(() => {});
+        playAudioEntry().catch((err) => {
+          audioLoadError = (err && err.message) ? err.message : 'Audio playback failed.';
+          state.playing = false;
+          renderCaption();
+          renderTransport();
+        });
       }
       renderTransport();
       return;
@@ -1530,6 +1546,7 @@ function wire() {
   });
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
+    bitmaps.clear();
     paintStage();
   });
   function setSort(sort) {
@@ -1852,8 +1869,11 @@ async function ensureImage(id) {
     if (!parts.length) return null;
     let donor = null;
     if (image.palette) {
-      const pal = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/file?path=' + encodeURIComponent(image.palette)));
-      if (pal.ok) donor = new Uint8Array(await pal.arrayBuffer());
+      if (clientPc && clientPc.map.has(image.palette)) donor = clientPc.map.get(image.palette);
+      else if (useApi) {
+        const pal = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/file?path=' + encodeURIComponent(image.palette)));
+        if (pal.ok) donor = new Uint8Array(await pal.arrayBuffer());
+      }
     }
     parsed = Nhl95Pc.openImageParts(parts, donor);
   } else if (image.kind && image.kind.indexOf('snes') === 0) {
@@ -1869,24 +1889,66 @@ async function ensureImage(id) {
   return parsed;
 }
 
+function clientPcRinkColors() {
+  if (!clientPc || !clientPc.catalog) return null;
+  const rel = clientPc.catalog.rinkFile;
+  if (!rel || !clientPc.map.has(rel)) return null;
+  const bytes = clientPc.map.get(rel);
+  return Nhl95Pc.paletteFrom(bytes) || Nhl95Pc.decodeRinkFile(bytes);
+}
+
+function clientPcPaletteBytes(name) {
+  const parsed = Nhl95Pc.parseTeamFile(name);
+  if (!parsed || !clientPc || !clientPc.catalog) return null;
+  const rel = parsed.side === 'away' ? clientPc.catalog.awayFile : clientPc.catalog.homeFile;
+  if (!rel || !clientPc.map.has(rel)) return null;
+  const bin = clientPc.map.get(rel);
+  const start = parsed.index * Nhl95Pc.TEAM_BYTES;
+  if (start + Nhl95Pc.TEAM_BYTES > bin.length) return null;
+  const colors = Nhl95Pc.buildTeamPalette(bin.subarray(start, start + Nhl95Pc.TEAM_BYTES), clientPcRinkColors());
+  if (!colors) return null;
+  const out = new Uint8Array(1536);
+  out.set(Nhl95Pc.colorsToAct(colors), 0);
+  out.set(Nhl95Pc.colorsToAct(colors.game || colors), 768);
+  return out;
+}
+
+async function loadClientPcPalettes() {
+  if (!clientPc || !gameInfo || gameInfo.paletteKind !== 'pc') return;
+  const names = clientPc.catalog.paletteNames || [];
+  for (const name of names) {
+    if (paletteFiles.has(name)) continue;
+    const bytes = clientPcPaletteBytes(name);
+    if (!bytes) continue;
+    const colors = Nhl95Pc.decodeAct(bytes.subarray(0, 768));
+    if (bytes.length >= 1536) colors.game = Nhl95Pc.decodeAct(bytes.subarray(768, 1536));
+    paletteFiles.set(name, colors);
+  }
+}
+
 async function ensurePalette(name) {
   if (!name || paletteFiles.has(name) || !gameInfo) return;
-  let response;
-  if (!useApi && gameInfo.paletteKind === 'snes') {
-    response = await fetch(resolveUrl('/data/pals/snes/' + encodeURIComponent(name)));
-  } else if (useApi) {
-    response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent(name)));
-  } else {
-    return;
+  let bytes = null;
+  if (clientPc && gameInfo.paletteKind === 'pc') {
+    bytes = clientPcPaletteBytes(name);
   }
-  if (!response.ok) return;
-  const buf = await response.arrayBuffer();
-  const bytes = new Uint8Array(buf);
+  if (!bytes) {
+    let response;
+    if (!useApi && gameInfo.paletteKind === 'snes') {
+      response = await fetch(resolveUrl('/data/pals/snes/' + encodeURIComponent(name)));
+    } else if (useApi) {
+      response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent(name)));
+    } else {
+      return;
+    }
+    if (!response.ok) return;
+    bytes = new Uint8Array(await response.arrayBuffer());
+  }
   const colors = gameInfo.paletteKind === 'pc'
     ? Nhl95Pc.decodeAct(bytes)
     : gameInfo.paletteKind === 'snes'
-      ? Nhl92Snes.decodeTeamPalette(buf)
-      : Nhl92Anim.decodePaletteFile(buf);
+      ? Nhl92Snes.decodeTeamPalette(bytes)
+      : Nhl92Anim.decodePaletteFile(bytes);
   if (gameInfo.paletteKind === 'pc' && bytes.length >= 1536) {
     colors.game = Nhl95Pc.decodeAct(bytes.subarray(768, 1536));
   }
@@ -1947,6 +2009,10 @@ async function loadGame(id, keepSelection) {
   let pals = [];
   if (useApi) {
     pals = await fetch(resolveUrl('/api/games/' + info.id + '/palettes')).then((response) => response.json());
+  } else if (clientPc && clientPc.catalog && clientPc.catalog.paletteNames && clientPc.catalog.paletteNames.length
+    && (info.id === 'nhl94pc' || info.id === 'nhl95pc')) {
+    pals = clientPc.catalog.paletteNames;
+    await loadClientPcPalettes();
   } else if (info.paletteFiles) {
     pals = info.paletteFiles;
   }
@@ -2083,10 +2149,12 @@ async function ingestDroppedFiles(fileList) {
     entry = Object.assign({}, entry, {
       pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,
       rom: true,
-      images: clientPc.catalog.images
+      images: clientPc.catalog.images,
+      paletteFiles: clientPc.catalog.paletteNames
     });
     games = games.map((game) => (game.id === pcId ? entry : game));
     await loadGame(pcId);
+    await loadClientPcPalettes();
     return;
   }
   if (files.length !== 1) {

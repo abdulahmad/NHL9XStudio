@@ -46,10 +46,12 @@ function send(res, status, body, type, extra) {
   res.end(body);
 }
 
-function safeFile(dir, name) {
-  const base = path.basename(name);
-  const full = path.join(dir, base);
-  if (path.dirname(full) !== dir) return null;
+function safeFile(dir, rel) {
+  const cleaned = String(rel || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!cleaned || cleaned.split('/').some((part) => part === '..' || part === '')) return null;
+  const full = path.resolve(dir, cleaned);
+  const root = path.resolve(dir);
+  if (full !== root && !full.startsWith(root + path.sep)) return null;
   return full;
 }
 
