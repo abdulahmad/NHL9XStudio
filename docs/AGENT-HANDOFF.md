@@ -1,6 +1,6 @@
 # NHL9X Studio — agent handoff
 
-**Last updated:** 2026-10-15 (Genesis audio AUD-1 v1: catalog + FM preview for NHL 92)  
+**Last updated:** 2026-10-15 (NHL '92 sound steps 6–7 on main; see sound handoff below)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
 **Design / roadmap:** `docs/DESIGN.md`  
 **Upstream sync runbook:** `docs/sync.md` — use when aligning with disasm / EA-NHL-Tools (“sync per sync.md”).
@@ -21,7 +21,7 @@ Bundled regression fixtures live in `test/fixtures/` (ANIM/JIM/PAL). Full golden
 
 **92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC**
 
-Audio: **AUD-1 in progress** — Genesis **92G** catalog (`data/audio/*.json`), **Audio** tab, FM cmdstream preview via `node server.js` + `roms/` (square-wave sketch, not YM2612). **93G–95G** catalogs are region-only until offsets are pinned. See `lib/audio/README.md`. Do not depend on MID94-Tools.
+Audio: **NHL '92 retail chain (steps 6–7) on `main`** — full 68k→Z80→ymfm path, tests, **Sound test** tab; **`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md`** for git context, siren/SngEOP bug, UI cleanup (remove Audio + Sound data tabs), chip lab vs chain, gaps, step 8. Legacy **Audio** tab still present (AUD-1 FM sketch, not YM2612). **93G–95G** catalogs region-only. See `lib/audio/README.md`, `docs/NHL92-SOUND-CHAIN.md`. Do not depend on MID94-Tools.
 
 ---
 
