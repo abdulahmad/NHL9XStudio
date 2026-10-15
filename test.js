@@ -1186,3 +1186,4 @@ require('./test/chip-audio');
 require('./test/nhl92-z80-driver');
 require('./test/nhl92-z80-audio');
 require('./test/nhl92-sound-data');
+require('./test/m68k-cpu');
