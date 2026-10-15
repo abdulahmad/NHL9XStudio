@@ -32,6 +32,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 - SNES **94S** `SPAcelebrate` / `SPApump` named in `frames94snes.asm` (was SPAextra42/43)
 - Self-contained `test/fixtures/` for CI
 - SPA/SPF/image search aliases (celebrate vs bench-check); Pages deploy to `gh-pages` branch
+- GAP-4 retail Crowd/FaceOff slice checks vs `genesis-images.js`; GAP-8 `nhl94pc` stub + QPP RefPack (`30 FB`) + `pc94/` server routes
 
 ---
 
@@ -41,9 +42,10 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 |----|--------|------|
 | **GAP-2** | 93G | JIM inventory polish optional |
 | **GAP-3** | 94G | SPA/SPF/image search terms for celebrate vs bench-check (done); optional doc polish |
-| **GAP-4** | 95G | 27 `ArenaGfx*` team screens on catalog; full extract audit vs retail still optional |
+| **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
-| **GAP-7–8** | 95PC / 94PC | DOS catalog + `nhl94pc` profile |
+| **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
+| **GAP-8** | 94PC | Stub profile + QPP decode; legacy PPV gfxpak port + full `frames94pc.asm` from `HOCKEY.EXE` still open |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
 | **AUD-*** | Audio | After graphics queue |

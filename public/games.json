@@ -5791,5 +5791,35 @@
     "sheet": null,
     "snes": null,
     "romHint": "Drop PC95 folder or files"
+  },
+  {
+    "app": "NHL9X Studio",
+    "id": "nhl94pc",
+    "title": "NHL 94 (PC)",
+    "source": "NHL94PC",
+    "platform": "pc",
+    "kind": "pc94",
+    "paletteKind": "pc",
+    "jerseyRow": 9,
+    "paletteLabel": "Team colors",
+    "tagline": "DOS install under pc94/ — QPP pictures and legacy PPV banks (decode in progress)",
+    "hint": "Copy the NHL 94 PC install into pc94/ (PPV, QPP, HOMEPALS.BIN, AWAYPALS.BIN, HOCKEY.EXE). QPP pictures use RefPack 30 FB. Player PPV uses the older gfxpak layout — browsing full sprite sheets is not ready yet; loose QPP/QFS pictures can preview when the server sees them. Restart the server after adding files.",
+    "frames": "frames94pc.asm",
+    "banks": [
+      {
+        "id": "sprites",
+        "label": "Players"
+      },
+      {
+        "id": "rink",
+        "label": "Rink and crowd"
+      }
+    ],
+    "images": [],
+    "pixels": false,
+    "rom": false,
+    "sheet": null,
+    "snes": null,
+    "romHint": "Drop PC94 folder or files"
   }
 ]

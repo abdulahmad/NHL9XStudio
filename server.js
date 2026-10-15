@@ -19,7 +19,14 @@ const PAL_DIRS = {
 };
 const PAL_DIR = PAL_DIRS['92'];
 const ROM_DIR = path.join(ROOT, 'roms');
-const PC_DIR = path.join(ROOT, 'pc95');
+const PC_DIRS = {
+  pc95: path.join(ROOT, 'pc95'),
+  pc94: path.join(ROOT, 'pc94')
+};
+
+function isPcKind(kind) {
+  return kind === 'pc95' || kind === 'pc94';
+}
 const BANKS = new Set(['Sprites.anim', 'Puck.anim', 'Crowd.anim', 'Zam.anim']);
 
 const MIME = {
@@ -81,8 +88,8 @@ function readRom(file, game) {
   return buf;
 }
 
-let pcCatalog = null;
-let pcStamp = '';
+const pcCatalogCache = { pc95: null, pc94: null };
+const pcStampCache = { pc95: '', pc94: '' };
 
 function treeStamp(dir) {
   if (!fs.existsSync(dir)) return 'missing';
@@ -100,44 +107,48 @@ function treeStamp(dir) {
   return stamp || 'empty';
 }
 
-function pcFiles() {
-  const stamp = treeStamp(PC_DIR);
-  if (!pcCatalog || pcStamp !== stamp) {
-    pcCatalog = pc95.catalogDirectory(PC_DIR);
-    pcStamp = stamp;
+function pcFiles(game) {
+  const kind = game && isPcKind(game.kind) ? game.kind : 'pc95';
+  const dir = PC_DIRS[kind];
+  const stamp = treeStamp(dir);
+  if (!pcCatalogCache[kind] || pcStampCache[kind] !== stamp) {
+    pcCatalogCache[kind] = pc95.catalogDirectory(dir);
+    pcStampCache[kind] = stamp;
   }
-  return pcCatalog;
+  return pcCatalogCache[kind];
 }
 
-function pcPath(rel) {
+function pcPath(game, rel) {
+  const kind = game && isPcKind(game.kind) ? game.kind : 'pc95';
   const cleaned = String(rel || '').replace(/\\/g, '/').replace(/^\/+/, '');
   if (!cleaned || cleaned.split('/').some((part) => part === '..' || part === '')) return null;
-  const full = path.resolve(PC_DIR, cleaned);
-  const root = path.resolve(PC_DIR);
+  const pcRoot = PC_DIRS[kind];
+  const full = path.resolve(pcRoot, cleaned);
+  const root = path.resolve(pcRoot);
   if (full !== root && !full.startsWith(root + path.sep)) return null;
   return full;
 }
 
-function loadRinkColors() {
-  const catalog = pcFiles();
+function loadRinkColors(game) {
+  const catalog = pcFiles(game);
   if (!catalog.rinkFile) return null;
-  const file = pcPath(catalog.rinkFile);
+  const file = pcPath(game, catalog.rinkFile);
   if (!file || !fs.existsSync(file)) return null;
   const bytes = fs.readFileSync(file);
   return pc95.paletteFrom(bytes) || pc95.decodeRinkFile(bytes);
 }
 
-function pcPaletteBytes(name) {
+function pcPaletteBytes(game, name) {
   const parsed = pc95.parseTeamFile(name);
   if (!parsed) return null;
-  const catalog = pcFiles();
+  const catalog = pcFiles(game);
   const rel = parsed.side === 'away' ? catalog.awayFile : catalog.homeFile;
-  const file = rel && pcPath(rel);
+  const file = rel && pcPath(game, rel);
   if (!file || !fs.existsSync(file)) return null;
   const bin = fs.readFileSync(file);
   const start = parsed.index * pc95.TEAM_BYTES;
   if (start + pc95.TEAM_BYTES > bin.length) return null;
-  const colors = pc95.buildTeamPalette(bin.subarray(start, start + pc95.TEAM_BYTES), loadRinkColors());
+  const colors = pc95.buildTeamPalette(bin.subarray(start, start + pc95.TEAM_BYTES), loadRinkColors(game));
   if (!colors) return null;
   return Buffer.concat([
     Buffer.from(pc95.colorsToAct(colors)),
@@ -145,10 +156,10 @@ function pcPaletteBytes(name) {
   ]);
 }
 
-function pcBundle(rels) {
+function pcBundle(game, rels) {
   const files = [];
   for (const rel of rels) {
-    const file = pcPath(rel);
+    const file = pcPath(game, rel);
     if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
     files.push({ name: rel, data: fs.readFileSync(file) });
   }
@@ -156,7 +167,7 @@ function pcBundle(rels) {
 }
 
 function placedAssets(game, romFile) {
-  if (game.kind === 'pc95') return { images: pcFiles().images, sheet: null };
+  if (isPcKind(game.kind)) return { images: pcFiles(game).images, sheet: null };
   if (game.id !== 'nhlpa93' || !romFile) return { images: game.images || [], sheet: game.sheet || null };
   try {
     const buf = readRom(romFile, game);
@@ -170,15 +181,15 @@ function placedAssets(game, romFile) {
 function gameStatus(game) {
   const rom = findRom(game);
   const hasRom = Boolean(rom);
-  const pc = game.kind === 'pc95' ? pcFiles() : null;
+  const pc = isPcKind(game.kind) ? pcFiles(game) : null;
   const placed = placedAssets(game, rom);
-  const pixels = game.kind === 'pc95'
-    ? pc.spriteFiles.length > 0 || pc.rinkFiles.length > 0
+  const pixels = isPcKind(game.kind)
+    ? pc.spriteFiles.length > 0 || pc.rinkFiles.length > 0 || pc.images.length > 0
     : (game.kind === 'anim' || hasRom);
   let banks = game.banks;
   if (game.kind === 'sheet') {
     banks = sheetGameBanks(placed.images);
-  } else if (game.kind === 'pc95') {
+  } else if (isPcKind(game.kind)) {
     banks = [];
     if (pc.spriteFiles.length || !pc.rinkFiles.length) banks.push({ id: 'sprites', label: 'Players' });
     if (pc.rinkFiles.length) banks.push({ id: 'rink', label: 'Rink and crowd' });
@@ -202,7 +213,7 @@ function gameStatus(game) {
     rom: hasRom,
     sheet: placed.sheet,
     snes: game.snes || null,
-    romHint: game.kind === 'pc95' ? 'pc95/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null)
+    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))
   };
 }
 
@@ -232,8 +243,8 @@ const server = http.createServer((req, res) => {
   if (gamePals) {
     const game = gameById(gamePals[1]);
     if (!game) { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
-    if (game.kind === 'pc95') {
-      send(res, 200, JSON.stringify(pcFiles().paletteNames), MIME['.json']);
+    if (isPcKind(game.kind)) {
+      send(res, 200, JSON.stringify(pcFiles(game).paletteNames), MIME['.json']);
       return;
     }
     send(res, 200, JSON.stringify(listPals(PAL_DIRS[game.palettes])), MIME['.json']);
@@ -243,8 +254,8 @@ const server = http.createServer((req, res) => {
   const gamePal = /^\/api\/games\/([a-z0-9]+)\/palettes\/([^/]+)$/.exec(pathname);
   if (gamePal) {
     const game = gameById(gamePal[1]);
-    if (game && game.kind === 'pc95') {
-      const body = pcPaletteBytes(gamePal[2]);
+    if (game && isPcKind(game.kind)) {
+      const body = pcPaletteBytes(game, gamePal[2]);
       if (!body) { send(res, 404, 'Unknown palette', 'text/plain; charset=utf-8'); return; }
       send(res, 200, body, 'application/octet-stream');
       return;
@@ -261,19 +272,19 @@ const server = http.createServer((req, res) => {
   const pcSprites = /^\/api\/games\/([a-z0-9]+)\/sprites$/.exec(pathname);
   if (pcSprites) {
     const game = gameById(pcSprites[1]);
-    if (!game || game.kind !== 'pc95') { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
-    const catalog = pcFiles();
+    if (!game || !isPcKind(game.kind)) { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
+    const catalog = pcFiles(game);
     const bank = url.searchParams.get('bank') || 'sprites';
     const files = bank === 'rink' ? catalog.rinkFiles : catalog.spriteFiles;
     if (!files.length) { send(res, 404, 'No PC sprites', 'text/plain; charset=utf-8'); return; }
-    send(res, 200, pcBundle(files), 'application/octet-stream');
+    send(res, 200, pcBundle(game, files), 'application/octet-stream');
     return;
   }
 
   const pcFile = /^\/api\/games\/([a-z0-9]+)\/file$/.exec(pathname);
   if (pcFile) {
     const game = gameById(pcFile[1]);
-    const file = game && game.kind === 'pc95' ? pcPath(url.searchParams.get('path')) : null;
+    const file = game && isPcKind(game.kind) ? pcPath(game, url.searchParams.get('path')) : null;
     if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
       send(res, 404, 'Not found', 'text/plain; charset=utf-8');
       return;
