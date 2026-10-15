@@ -379,7 +379,7 @@ function bitmapFor(frame, colors) {
     if (!own && frame.dynamic === false && colors && colors.game) palette = colors.game;
     const opaque = override === false || (override == null && Boolean(frame.opaque));
     const skip = frame.transparent == null ? 0 : frame.transparent;
-    const byRow = (override === true || (override == null && Boolean(frame.rowTransparent))) && !opaque;
+    const byRow = !opaque && Boolean(frame.rowTransparent);
     for (let i = 0; i < frame.pixels.length; i++) {
       const index = frame.pixels[i];
       const o = i * 4;
@@ -1546,6 +1546,7 @@ function wire() {
   });
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
+    bitmaps.clear();
     paintStage();
   });
   function setSort(sort) {
