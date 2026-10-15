@@ -76,3 +76,33 @@
 .chip-lab a.back {
   color: var(--ice-2);
 }
+
+.nhl92-card {
+  margin-top: 1.25rem;
+}
+
+.chip-card .hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  margin: 0 0 0.85rem;
+}
+
+.chip-card label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chip-card select {
+  background: var(--raise-2);
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  max-width: 100%;
+}
+
+.chip-card a.download {
+  color: var(--ice-2);
+}

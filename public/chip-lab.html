@@ -20,7 +20,7 @@
   <main>
     <p><a class="back" href="index.html">← NHL9X Studio</a></p>
     <h1>Chip lab</h1>
-    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy).</p>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy). Below, pick an NHL '92 instrument or SFX to hear it through the game's own driver.</p>
     <div class="chip-grid">
       <section class="chip-card" aria-labelledby="ym-title">
         <h2 id="ym-title">YM2612 (Genesis FM)</h2>
@@ -40,6 +40,22 @@
         <p class="meter" id="psg-meter">Engine idle</p>
       </section>
     </div>
+    <section class="chip-card nhl92-card" aria-labelledby="nhl92-title">
+      <h2 id="nhl92-title">NHL '92 instruments · retail Z80 driver → YM2612</h2>
+      <p class="hint">The game's own Z80 sound driver runs on the emulated Z80 and drives the YM2612 core. Patches are the 22 instruments at Z80 <code>$02A5</code>; SFX are the DAC samples the 68k can trigger. Rendered offline, then played.</p>
+      <div class="row">
+        <label>Patch <select id="nhl92-patch"></select></label>
+        <button type="button" class="primary" id="nhl92-play-patch">Play scale</button>
+      </div>
+      <div class="row">
+        <label>DAC SFX <select id="nhl92-sfx"></select></label>
+        <button type="button" id="nhl92-play-sfx">Play SFX</button>
+      </div>
+      <div class="row">
+        <a id="nhl92-download" class="download" hidden>Download WAV</a>
+      </div>
+      <p class="meter" id="nhl92-meter">Loading driver…</p>
+    </section>
     <div class="transport">
       <button type="button" class="primary" id="play">Play</button>
       <button type="button" id="stop">Stop</button>
@@ -49,6 +65,13 @@
   <script src="lib/audio/sn76489.js"></script>
   <script src="lib/audio/chip-lab-presets.js"></script>
   <script src="lib/audio/chip-resampler.js"></script>
+  <script src="lib/audio/z80-cpu.js"></script>
+  <script src="lib/audio/z80-cpu-core.js"></script>
+  <script src="lib/audio/nhl92-z80.js"></script>
+  <script src="lib/audio/nhl92-sound-fixture.js"></script>
+  <script src="lib/audio/nhl92-z80-harness.js"></script>
+  <script src="lib/audio/nhl92-z80-audio.js"></script>
+  <script src="lib/audio/wav.js"></script>
   <script type="module" src="chip-lab.js"></script>
 </body>
 </html>
