@@ -312,3 +312,120 @@ for (const [field, value] of [['key', 0x00], ['key', 0x7e], ['key', 0x7f], ['key
 }
 
 console.log('nhl92 z80 driver: snapshot decode OK');
+
+// --- Main loop, update flag, SFX params ------------------------------------------
+
+{
+  // Reset: jp $0038 -> di; ld sp,$1FFF; im 0. Interrupts stay disabled (vblank INT ignored).
+  const z = machine();
+  z.runUntilPc(0x38, 100);
+  z.runUntilPc(0x3e, 100);
+  assert.strictEqual(z.cpu.regs.sp, 0x1fff);
+  assert.ok(!z.cpu.ctl.iff1, 'DI at boot, never re-enabled');
+  // First pass sees the retail $02A3 = 0, runs an update over the shipped slots
+  // (all flags set), writes nothing and leaves $02A3 = 1.
+  z.run(FRAME * 2);
+  assert.deepStrictEqual(z.log, []);
+  assert.deepStrictEqual([z.ram[0x2a3], z.ram[0x2a4], z.ram[0xc0], z.ram[0xc4]], [1, 0xff, 0xff, 0xff]);
+  assert.ok(!z.cpu.ctl.iff1);
+}
+{
+  // Idle pass $003E->$003E: 80 + 17*n T-states, n = djnz count at $007A (retail $19).
+  const z = booted();
+  const a = z.runUntilPc(0x3e);
+  const b = z.runUntilPc(0x3e);
+  assert.strictEqual(b - a, 80 + 17 * 0x19);
+}
+{
+  // $02A3 == 1 means "no update"; any other value runs one update and is set back to 1.
+  const z = booted();
+  const buf = channels([{ key: 0x01 }]);
+  for (let i = 0; i < 48; i++) z.busWrite(SLOT_BASE + i, buf[i]);
+  z.busWrite(0x2a3, 1);
+  z.run(FRAME);
+  assert.deepStrictEqual(regLog(z), []);
+  for (const flag of [0x00, 0x02, 0x80, 0xff]) {
+    z.clearLogs();
+    for (let i = 0; i < 48; i++) z.busWrite(SLOT_BASE + i, buf[i]);
+    z.busWrite(0x2a3, flag);
+    z.run(FRAME);
+    assert.deepStrictEqual(regLog(z), ['0:$28=$0', '0:$28=$F0'], 'flag ' + hex(flag));
+    assert.strictEqual(z.ram[0x2a3], 1);
+  }
+}
+{
+  // vblank with the 68k flag at 1 and nothing pending: buffer not copied, flag stays 1.
+  const z = booted();
+  const before = Array.from(z.ram.subarray(SLOT_BASE, SLOT_BASE + 48));
+  frame(z, { flag: 1, channels: channels([{ key: 1 }]), pending: 0 });
+  assert.deepStrictEqual(Array.from(z.ram.subarray(SLOT_BASE, SLOT_BASE + 48)), before);
+  assert.deepStrictEqual(regLog(z), []);
+  // Pending SFX: $FFE6..$FFEB land at $BF,$BE,$C0,$C1,$C2,$C3 and the flag byte becomes 0.
+  z.vblank({ flag: 1, channels: channels(), pending: 1, sfx: [0x11, 0x22, 0x33, 0x44, 0x55, 0x66] });
+  assert.deepStrictEqual(Array.from(z.ram.subarray(0xbe, 0xc4)), [0x22, 0x11, 0x33, 0x44, 0x55, 0x66]);
+  assert.strictEqual(z.ram[0x2a3], 0);
+  assert.deepStrictEqual(Array.from(z.ram.subarray(SLOT_BASE, SLOT_BASE + 48)), before, 'still not copied');
+}
+{
+  // SFX params are only read inside an update: $C0 = 0 alone does nothing.
+  const z = booted(SAMPLE_ROM);
+  z.busWrite(0xc0, 0x00);
+  z.run(FRAME);
+  assert.deepStrictEqual(regLog(z), []);
+  assert.strictEqual(z.ram[0xc0], 0x00);
+  // $C0 != 0 in an update: ignored and left as-is.
+  z.vblank({ flag: 0, channels: channels(), pending: 0 });
+  z.busWrite(0xc0, 0x07);
+  z.run(FRAME);
+  assert.deepStrictEqual(regLog(z), []);
+  assert.strictEqual(z.ram[0xc0], 0x07);
+}
+{
+  // Accept: $C4 <- $C3, $02A4 <- 0, $C0 <- $FF, and the self-modified immediates
+  // $00A8 <- $C2 (bank), $00B2 <- $BE, $00B0 <- $BF (HL), $007A <- $C1 (rate).
+  // The DAC start follows the six music slots of the same update.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 0, channels: channels([{ key: 1 }]), pending: 1, sfx: sfx(0xbfff, 0x30, 0x02, 0x05) });
+  assert.deepStrictEqual(
+    [z.ram[0xc4], z.ram[0xc0], z.ram[0xa8], z.ram[0xb2], z.ram[0xb0], z.ram[0x7a]],
+    [0x05, 0xff, 0x02, 0xff, 0xbf, 0x30]
+  );
+  assert.deepStrictEqual(regLog(z).slice(0, 4), ['0:$28=$0', '0:$28=$F0', '0:$2B=$80', '0:$2A=$81']);
+
+  // Lower priority (higher number) while playing: rejected, $C0 <- $FF, nothing else changes.
+  z.clearLogs();
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xa344, 0x10, 0x07, 0x06) });
+  assert.deepStrictEqual(
+    [z.ram[0xc4], z.ram[0xc0], z.ram[0xa8], z.ram[0xb2], z.ram[0xb0], z.ram[0x7a]],
+    [0x05, 0xff, 0x02, 0xff, 0xbf, 0x30]
+  );
+  assert.ok(!regLog(z).includes('0:$2A=$80'), 'old sample keeps playing');
+
+}
+for (const pri of [0x05, 0x03]) {
+  // Equal or higher priority (lower number) interrupts the playing loop; once the
+  // one-shot ends, $C4 is released to $FF.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xbfff, 0x30, 0x02, 0x05) });
+  z.clearLogs();
+  z.vblank({ flag: 1, channels: channels(), pending: 1, sfx: sfx(0xa344, 0x10, 0x02, pri) });
+  z.runUntilPc(0x12e);
+  assert.strictEqual(z.ram[0xc4], pri, 'priority ' + pri + ' accepted');
+  z.run(FRAME);
+  const log = regLog(z);
+  assert.deepStrictEqual(log.slice(log.indexOf('0:$2A=$80') - 1), [
+    '0:$2B=$80', '0:$2A=$80', '0:$2A=$90', '0:$2A=$70', '0:$2A=$60', '0:$2A=$50', '0:$2B=$0'
+  ]);
+  assert.strictEqual(z.ram[0xc4], 0xff);
+}
+{
+  // The rate immediate at $007A persists after the SFX: the idle loop runs at the new speed.
+  const z = booted(SAMPLE_ROM);
+  frame(z, { flag: 1, channels: channels(), pending: 1, sfx: sfx(0xa344, 0x40, 0x02, 0x05) });
+  assert.strictEqual(z.ram[0x2a4], 0xff);
+  const a = z.runUntilPc(0x3e);
+  const b = z.runUntilPc(0x3e);
+  assert.strictEqual(b - a, 80 + 17 * 0x40);
+}
+
+console.log('nhl92 z80 driver: main loop, update flag, SFX params OK');
