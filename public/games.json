@@ -5773,7 +5773,7 @@
     "jerseyRow": 2,
     "paletteLabel": null,
     "tagline": "Z80 CPU, NHL 92 driver blob, and YM2612 register harness",
-    "hint": "Load NHL 92 Genesis ROM (Open file… or roms/nhl92.bin). Use the Z80 tab for built-in patterns; Audio tab plays FM/SFX via the driver stack when a ROM is loaded.",
+    "hint": "Sound driver + FM/SFX tables are bundled in the repo (not the full game ROM). Z80 and Audio tabs work without a file. Optional: load your own NHL Hockey (Genesis) ROM via Open file… for a full 512KB image.",
     "frames": "frames92.asm",
     "banks": [
       {
