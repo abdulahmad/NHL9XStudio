@@ -18,7 +18,7 @@ The retail 68k sound driver runs from the ROM bytes on `lib/audio/m68k-cpu.js` (
 - **Songs and SFX:** `move.w #n,-(a7)` then the `song` or `sfx` wrapper, as in `middle.asm`. Each wrapper saves all registers, reads its argument at `16*4(a7)`, calls `p_initune`/`p_initfx`, then removes the argument.
 - **Each vblank:** `jsr p_music_vblank`, which is what `video.asm` `VBlank` calls after its own work.
 
-**The wrappers.** The wrappers are game code, and the bundled slice holds only the sound module. So they're re-assembled instruction for instruction from `middle.asm` (`H.wrapperBytes`). The `sfx` wrapper stores the ID to the game variable `lastsfx`. Its address isn't recoverable from the disassembly (RS-counted), so it lives at a scratch address; only the game reads it. When `roms/nhl92.bin` is present, the test checks that the re-assembled `song` wrapper's bytes appear in the retail ROM.
+**The wrappers.** The wrappers are game code, and the bundled slice holds only the sound module. So they're re-assembled instruction for instruction from `middle.asm` (`H.wrapperBytes`). The `sfx` wrapper stores the ID to the game variable `lastsfx`, whose address is RS-counted in the disassembly. The retail ROM's wrappers (at $8D94 and $8DB8) fix the remaining encodings: `bmi .none` is a word branch, and `lastsfx` is `($D53C).w`, i.e. $FFFFD53C; only the game reads it. When `roms/nhl92.bin` is present, the test checks that both re-assembled wrappers appear byte for byte in the retail ROM. (Step 6 first used `bmi.s` and a scratch `lastsfx`; the switch didn't change any pinned log, since the logs name the write `lastsfx` rather than print its address.)
 
 **Guards.** Every call must return to its trampoline within an instruction budget (default 2,000,000). The PC must stay inside the sound code or the stubs, the stack must balance and the CPU must stay in supervisor mode. Otherwise the call throws `DriverError`.
 
@@ -146,5 +146,5 @@ The IDs are what the game passes to `sfx`. Names come from the EA sound list and
 ## Not verified here
 
 - How any of this sounds: that's step 7, when these logs drive the Z80 driver and the YM2612.
-- The `sfx` wrapper's exact bytes, because `lastsfx`'s address is unknown. The `song` wrapper is checked against the retail ROM only when `roms/nhl92.bin` is present.
+- The wrappers' bytes are checked against the retail ROM only when `roms/nhl92.bin` is present (CI has no ROM).
 - The game's own sound calls: when it plays which song or SFX, `SFXskatestop = -1`, and so on. Each SFX is run on its own after boot.

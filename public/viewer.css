@@ -445,3 +445,5 @@ select:focus, input:focus, button:focus-visible {
 .sd-events tr.ev-end td:nth-child(3), .sd-events tr.ev-stop td:nth-child(3) { color: var(--amber); }
 .sd-events tr.ev-instrument td:nth-child(3) { color: var(--good); }
 .stage-panel.is-sounddata .transport { display: none; }
+.st-buttons { display: flex; gap: 8px; margin: 12px 0 8px; }
+.st-status { margin: 4px 0; color: var(--muted); font-size: 12px; }

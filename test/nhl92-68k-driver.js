@@ -198,8 +198,10 @@ console.log('nhl92 68k driver: tempo, order-list commands, transpose and SFX han
   const romPath = path.join(__dirname, '..', 'roms', 'nhl92.bin');
   if (fs.existsSync(romPath)) {
     const full = fs.readFileSync(romPath);
-    const song = Buffer.from(H.wrapperBytes('song'));
-    assert.ok(full.indexOf(song) >= 0, 'song wrapper bytes found in the retail ROM');
+    for (const kind of ['sfx', 'song']) {
+      const bytes = Buffer.from(H.wrapperBytes(kind));
+      assert.ok(full.indexOf(bytes) >= 0, kind + ' wrapper bytes found in the retail ROM');
+    }
   } else {
     console.log('nhl92 68k driver: SKIP wrapper-vs-retail check (no roms/nhl92.bin)');
   }
