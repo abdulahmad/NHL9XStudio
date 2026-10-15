@@ -1,0 +1,288 @@
+{
+  "note": "SHA-256 of WAV/log output from tools/render-nhl92-chip-tests.js. Regenerate with --update only when the chain intentionally changes.",
+  "sampleRate": 53267,
+  "patches": [
+    {
+      "index": 0,
+      "z80": "$2A5",
+      "file": "patch-00.wav",
+      "wav": "cf373b35d5b3aad9c03e5bf446f3877651f2dbe22b8ce0528a1bf9400a80ee12",
+      "log": "c6e1ac51fa6426a3f2e960677bfbec921e9a72021178a4f4d5ec943065663750"
+    },
+    {
+      "index": 1,
+      "z80": "$2C5",
+      "file": "patch-01.wav",
+      "wav": "514829614acae9bb99a3096cc7c98ef71f50dd3a0ef00ab93b55c0bed84a575d",
+      "log": "99e526fc40a13e0ea8913c4f1b1a33b6855c8efc69bebaea229dd123dfa7a647"
+    },
+    {
+      "index": 2,
+      "z80": "$2E5",
+      "file": "patch-02.wav",
+      "wav": "77eb5244b39883fc12ef6545f2f32f45a7251374bbde2410a97b542dec1d478c",
+      "log": "46dd869be0e9ae84a147dbe71bf1ff4f334e6d54f9cf967795dc1ad816c5dad7"
+    },
+    {
+      "index": 3,
+      "z80": "$305",
+      "file": "patch-03.wav",
+      "wav": "e96f1319f61854297a6937314426ab606a36a948077a146699e80a640ea31a1f",
+      "log": "e638e514273709caa9d9c4ced47f49a8969c098462d5b470a01db6c9be632c7b"
+    },
+    {
+      "index": 4,
+      "z80": "$325",
+      "file": "patch-04.wav",
+      "wav": "c29cdbc34884605c34474a1a7407b8d5fff7f793b7a58458c000e87e4591aec8",
+      "log": "6f0c7594c3e84bf7106d165b35242ecef5366011d5ff553ca49e2e714c283c73"
+    },
+    {
+      "index": 5,
+      "z80": "$345",
+      "file": "patch-05.wav",
+      "wav": "45079019256a190701de7558fedcf6a54b24a670949a36b80888adfb1a93445d",
+      "log": "2b9743e41d61c9fb9ebe4d51984c877889b6590b699002002e7bbce76c61cd57"
+    },
+    {
+      "index": 6,
+      "z80": "$365",
+      "file": "patch-06.wav",
+      "wav": "b7240a38d7ca94d45ad19c295d716002214c25b69f3523281210e29b45455704",
+      "log": "4093c6c939449c936f630a8fb8d473023c46ac28edd3b12d03a6300ad4c312de"
+    },
+    {
+      "index": 7,
+      "z80": "$385",
+      "file": "patch-07.wav",
+      "wav": "63a68a501dc747699240546341c52671288de0761d2021864e168382b269eb2d",
+      "log": "278a101db9bf0ffb059f885d4fbcc9d520f552f4866e8cbb7e3bbd68beb5d296"
+    },
+    {
+      "index": 8,
+      "z80": "$3A5",
+      "file": "patch-08.wav",
+      "wav": "394931a6984552857c8a3f7206b1f318834a11deb273c2b897ce0487f8b7c8a1",
+      "log": "774df1579b0ea49454dd0aea1ef7e0e4b3f15da9331358b6b15cb07bf70344a5"
+    },
+    {
+      "index": 9,
+      "z80": "$3C5",
+      "file": "patch-09.wav",
+      "wav": "c8e6d13e4ae02cbc6c3144c582c9a637f158ba05456f8b6286dc9998450cb7e9",
+      "log": "d33e31ffc61cb2ddfa558a57a37b459727d4b08a70511f4e3ddec134f5212a02"
+    },
+    {
+      "index": 10,
+      "z80": "$3E5",
+      "file": "patch-10.wav",
+      "wav": "59f9f9c9e8e88bf371bd3af95b9fe8341515b6bb19ad77f4314fa98fb4596ad2",
+      "log": "47df3bb2e8453de6d6d678debe649fe7d4faa8cd0b22602a587f062d08155596"
+    },
+    {
+      "index": 11,
+      "z80": "$405",
+      "file": "patch-11.wav",
+      "wav": "f56e5a3d9ed0f7e121d6e1d3691a26b49b28e2c22741f844be44f671659dc44e",
+      "log": "8c7d39bb8528ff2cc6ec60e46ad4dd9845781310e3be70ab4e9dd3498981e0ea"
+    },
+    {
+      "index": 12,
+      "z80": "$425",
+      "file": "patch-12.wav",
+      "wav": "360447c83848e7669e20d080d7d2b37c2052bc8117c2f3edcb16096885174c34",
+      "log": "bab0fbb62fc0b7c167e720ebe7bad5503e2242b155a7bad790fe40119833536e"
+    },
+    {
+      "index": 13,
+      "z80": "$445",
+      "file": "patch-13.wav",
+      "wav": "9504e1c61cb3955394bd8ae2fe11450e70fe2f47cc10f04a1c17bfa49a32e391",
+      "log": "c5bf4711d4f09cdc16a2f3a694f8cd967c063c4dd96932e836258b3a75cad3db"
+    },
+    {
+      "index": 14,
+      "z80": "$465",
+      "file": "patch-14.wav",
+      "wav": "8adfba58f07698456944ead32f77e04c7ef9d23efecf6b246fcdceb41f78594a",
+      "log": "0d57f0f8b4666c9517dd54044073a33f936ce56c35af5b9081a7c47f34763c9f"
+    },
+    {
+      "index": 15,
+      "z80": "$485",
+      "file": "patch-15.wav",
+      "wav": "8f7cae5affff2006ae994cf19abdf4205decfe232bce2566d39e942f931883b1",
+      "log": "30194a4f5f54ddc96265ef6f6d896393ed0c769c7a1115a31e336fcd426d949b"
+    },
+    {
+      "index": 16,
+      "z80": "$4A5",
+      "file": "patch-16.wav",
+      "wav": "1e8ecc8511521cdac343af4eff1b3f3e6ce5232af113bcec044ab1db85a89803",
+      "log": "6606ded9f3439119aea38af56bbb06f3b4dffff5153f74b3ae9d1b712d2eb19c"
+    },
+    {
+      "index": 17,
+      "z80": "$4C5",
+      "file": "patch-17.wav",
+      "wav": "c217ae3ecf2923f738cbfffa04b295bff72d4272f375deebca4f475d218f2773",
+      "log": "544eef7fd319dd3fae411fc870a7878aa658cd5f0aca2cee9fc926526f856bc8"
+    },
+    {
+      "index": 18,
+      "z80": "$4E5",
+      "file": "patch-18.wav",
+      "wav": "667b5c1bdd32505dcde72f6beb689d05cb67b0535cc43c0abecf29a904e63703",
+      "log": "69c1a69eca1f4b5ac80d3ac6bafdbf75919b21a89a39caf2ca0d2e8b840b9656"
+    },
+    {
+      "index": 19,
+      "z80": "$505",
+      "file": "patch-19.wav",
+      "wav": "275938c86db77f7aca37106da7810dda52f74a58aa92839a618da1045b261e6d",
+      "log": "8196797cb09fbee884b7fc2ff542505d7f565b1b744a0fc43b0a6b70a3188d10"
+    },
+    {
+      "index": 20,
+      "z80": "$525",
+      "file": "patch-20.wav",
+      "wav": "8ef5ffbed80fec4a99a93822c8a87e6347d057c94d85fb3d63c152a5abd80592",
+      "log": "0b0d7e191cab2cfc90ae26e6768925bad98092ebfa5c5f37a94bf07976361abe"
+    },
+    {
+      "index": 21,
+      "z80": "$545",
+      "file": "patch-21.wav",
+      "wav": "c64570c3e1650f893b6738265f399ecf8906a13163082c89e39caf96111d035a",
+      "log": "299dd9f00e0fc276b921c8f2aed4e1a4857cea11a7cb1b11ceddb0e7cb7ae87b"
+    }
+  ],
+  "sfx": [
+    {
+      "rom": "$FD1C",
+      "name": "puckwall3",
+      "file": "sfx-fd1c-puckwall3.wav",
+      "wav": "1bdec5aa422bee251454335a6750e09527122ab2686e968bfe9b050267fa8443",
+      "log": "5815f312e0748a1a583fb3f6f0e3053933759c2659f2e506a2961a4d51cddeff"
+    },
+    {
+      "rom": "$FD32",
+      "name": "id_3",
+      "file": "sfx-fd32-id_3.wav",
+      "wav": "ff68aab2c391813d89b1c9f2b429ae29b8839a08078cd68f4123f2613f711eec",
+      "log": "50d9cecb37307b88dd8b24255c9dd047334c9dfba5eda642f8d04da80c50a800"
+    },
+    {
+      "rom": "$FD44",
+      "name": "stop (configure_ym2612)",
+      "file": "sfx-fd44-stop.wav",
+      "wav": "a2ce93c99bb62e6e6105aeca83f6289baa8660ced363b512c5d763ad220cc688",
+      "log": "ff004330fe4f89f8b64b89de9d75b2063e4c9155b16152dd9af9c34dec7d8100"
+    },
+    {
+      "rom": "$FD56",
+      "name": "whistle",
+      "file": "sfx-fd56-whistle.wav",
+      "wav": "3d1fe33e1feb96a2d61aea10c2fef81b8fab994f844d83f91aaccb9cc9b9ac50",
+      "log": "dec9c8920777c2ba39fc167e6bdeaef86b2e67efcf9581cb89a31621e1f7f1e5"
+    },
+    {
+      "rom": "$FD6A",
+      "name": "puckpost",
+      "file": "sfx-fd6a-puckpost.wav",
+      "wav": "15597a0eb5f2f004908f0d7ecd3221e2b2bbbf70d49b4e80ee14091c40a7914e",
+      "log": "d87104caffe22be81808f24b9e647831b9ccc1f820f367d7e2aef88bd6cf42f9"
+    },
+    {
+      "rom": "$FD82",
+      "name": "puckice",
+      "file": "sfx-fd82-puckice.wav",
+      "wav": "28088ff8b11404eb7e448d4874c5681337ffda252ecb8057fb2d3eee40adb4ea",
+      "log": "3780082a762692f2c8ab5763e257453179c035692fe7e806866831cfefe1416b"
+    },
+    {
+      "rom": "$FD9A",
+      "name": "playerwall",
+      "file": "sfx-fd9a-playerwall.wav",
+      "wav": "69fbb87c5184867ba0fa8f436e1183fc57732d594e38fbbe3f9bc14c9516249c",
+      "log": "ed67bdf4f4590ab5f617df16264ccb5f80e45e6ede3ba39317f5e403e0ca16f0"
+    },
+    {
+      "rom": "$FDAE",
+      "name": "check",
+      "file": "sfx-fdae-check.wav",
+      "wav": "18451e87e748525d46a70f371ae7dafcfc289857c9f4620a9882d774005ab152",
+      "log": "c106d793bfb8f7c5d39c97dd5cdbe67a021543804ad95ef44622a0ac45479a68"
+    },
+    {
+      "rom": "$FDC2",
+      "name": "check2",
+      "file": "sfx-fdc2-check2.wav",
+      "wav": "8fa69561ea0dd1760ec0da767dcc32fe867031674f7711b75a23436b10ea9028",
+      "log": "f890a81bdcd03d6acd016c3e9735dcf82983b8b4f67cce2fd571795e3e68c7f8"
+    },
+    {
+      "rom": "$FDD6",
+      "name": "puckget",
+      "file": "sfx-fdd6-puckget.wav",
+      "wav": "358b604f5650ba98224ed8d2b89fc97d3e413b9d98586596e4c426fff835fc7f",
+      "log": "c53c9a23ab3297fb75175fba2aec0866dc7c95cc08e53d85741c831d7016272e"
+    },
+    {
+      "rom": "$FDEA",
+      "name": "puckbody",
+      "file": "sfx-fdea-puckbody.wav",
+      "wav": "7c3f8e353fee71bc05362bad49fb05c11187e057a4fd44b2f8ab8bb5b7d9f114",
+      "log": "c9fbb43f8e8f7f68881c433f032104039b56e1da426eff470501aa79f8cd2ce7"
+    },
+    {
+      "rom": "$FDFE",
+      "name": "puckwall1",
+      "file": "sfx-fdfe-puckwall1.wav",
+      "wav": "65768b35d03f4d1d5b495d823be5c8c978c0ee8497a48c1d6c9526d0700e1d89",
+      "log": "6616e8c23ee97f727bd356ed9c588399823ba04b96a8892013171d70d4687646"
+    },
+    {
+      "rom": "$FE12",
+      "name": "hithigh",
+      "file": "sfx-fe12-hithigh.wav",
+      "wav": "a8d4d957e36bdd615f58ed4883c56bcbfd20f01d5e575b3a53766b2a13c0c5b9",
+      "log": "b28b66a56cf7bcde33fa849c5e227745a80c5a603e1628988965423f4106142d"
+    },
+    {
+      "rom": "$FE26",
+      "name": "id_23",
+      "file": "sfx-fe26-id_23.wav",
+      "wav": "3c6181bf25f874cc9df25b3212acd3efe0129b0798bbda3fc975df3b586c84d3",
+      "log": "1d07ba58e71c9824c8a55e67bc7fb8f792e462dee2fcce6632540afd1ed1f254"
+    },
+    {
+      "rom": "$FE3A",
+      "name": "hitlow",
+      "file": "sfx-fe3a-hitlow.wav",
+      "wav": "88e60a6d489ad9acf42e44537a8eae31aee63f0ba2aed37a4f5c90f5d208a009",
+      "log": "975ac1e6034e52c61983513ed63658c25bbfac4bb44369b24cbd24a8b52ceded"
+    },
+    {
+      "rom": "$FE4E",
+      "name": "crowdboo",
+      "file": "sfx-fe4e-crowdboo.wav",
+      "wav": "49565e3e9a11aac6bd247fecb975ebdfd367684deea22900d26da1867ce05864",
+      "log": "6b788af19e9d582b721ccc982d68999ab33e578680f15458495fbd967678a5c7"
+    },
+    {
+      "rom": "$FE62",
+      "name": "oooh",
+      "file": "sfx-fe62-oooh.wav",
+      "wav": "92ad1dcd4bcd24baa25d4794f90d06b98cf0754848ec62db2139c83526adbf59",
+      "log": "cf5f84b4f96bfafd0220d89f7cea72c87326978e1b47ea3840e834159841563d"
+    },
+    {
+      "rom": "$FE76",
+      "name": "id_31",
+      "file": "sfx-fe76-id_31.wav",
+      "wav": "ece135d2b9c1719a3a913103f5bcb5020d0e2af00a5a28d7deda806b7d633afb",
+      "log": "51f015255bd0b4dd5a7ff90255672e3051662e3fd58bb51814c1f721920093a9"
+    }
+  ]
+}

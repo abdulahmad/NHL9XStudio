@@ -11,7 +11,11 @@ Genesis (AUD-0 / AUD-1):
 - `sn76489.js` — SN76489 PSG latch/data + sample generator.
 - `chip-lab-presets.js` — demo register sequences for `public/chip-lab.html`.
 - `z80-machine.js` — Genesis 8K RAM + YM2612 bus + I/O stubs.
-- `nhl92-z80-harness.js` — full Genesis Z80 bus (RAM mirror, YM 4000–5FFF, bank 6000, PSG 7F11, 68k window) with a YM stub that logs register writes and T-states; `vblank()` applies the 68k `p_music_vblank_fn` write order. Driven by `test/nhl92-z80-driver.js`.
+- `nhl92-z80-harness.js` — full Genesis Z80 bus (RAM mirror, YM 4000–5FFF, bank 6000, PSG 7F11, 68k window) that logs every YM register write with its T-state (optional `onYmWrite` / `onPsgWrite` hooks forward the writes to real chips without changing the log); `vblank()` applies the 68k `p_music_vblank_fn` write order. Driven by `test/nhl92-z80-driver.js`.
+- `nhl92-z80-audio.js` — step 4: the same harness with every YM2612 write forwarded at its T-state to the real ymfm core (and PSG writes to `sn76489.js`), PCM at 53267 Hz (write at T-state `t` lands before sample `floor(t*15/1008)`). Also the 68k vblank input builders, the game's note tables, the 22 patches at Z80 `$02A5` and the DAC SFX list read from the retail handler bytes. UMD, used by Node and `public/chip-lab.js`.
+- `nhl92-chip-renders.js` + `tools/render-nhl92-chip-tests.js` — one WAV per patch scale (`patch-00.wav`…`patch-21.wav`) and per DAC SFX, with YM logs, to `out/nhl92-chip-tests/`; `--update` rewrites the pinned hashes in `data/audio/nhl92-chip-tests.json`. Checked by `test/nhl92-z80-audio.js`.
+- `wav.js` — deterministic 16-bit PCM WAV writer.
+- ymfm `reset()` does not rewind every internal counter, so a reused chip drifts from a fresh one; restore `chip.saveState()` taken at creation (`loadState`) for reproducible renders, or use `ym2612-wasm.createChip()`.
 - `nhl92-z80-golden.js` — replay recorded vblank inputs (`data/captures/nhl92/*.json`) and compare to a retail YM log or VGM.
 - `nhl92-z80.js` — extract/load `Z80_Program_Code` (`0x116A6`, `0x598` bytes).
 - `nhl92-sound-system.js` — NHL 92 68k↔Z80 vblank hooks + FM/SFX preview schedules.

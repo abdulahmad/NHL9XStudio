@@ -1184,3 +1184,4 @@ if (genesis94Rom) {
 
 require('./test/chip-audio');
 require('./test/nhl92-z80-driver');
+require('./test/nhl92-z80-audio');
