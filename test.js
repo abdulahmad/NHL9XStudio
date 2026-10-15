@@ -425,6 +425,17 @@ for (const slice of EXTRACT93_SLICES) {
   assert.strictEqual(img.start, slice.start + slice.startTrim, slice.id + ' start');
   assert.strictEqual(img.end, slice.end - slice.endTrim, slice.id + ' end');
 }
+// Retail NHL 95 Genesis slices in genesis-images.js (not dev extractAssets95.js 0x7216C crowd).
+const EXTRACT95_RETAIL = [
+  { id: 'Crowd.anim', start: 1619496, end: 1628840 },
+  { id: 'FaceOff.anim', start: 1352848, end: 1360200 }
+];
+for (const slice of EXTRACT95_RETAIL) {
+  const img = g95.images.find((image) => image.id === slice.id);
+  assert.ok(img, slice.id);
+  assert.strictEqual(img.start, slice.start, slice.id + ' start');
+  assert.strictEqual(img.end, slice.end, slice.id + ' end');
+}
 assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
 assert.ok(g94.banks.some((bank) => bank.id === 'PlayoffSprite.bin'));
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
@@ -723,6 +734,10 @@ const shortPack = Buffer.from([
   0xFC
 ]);
 assert.strictEqual(Buffer.from(pc95.decompressRefPack(shortPack)).toString('ascii'), 'abcabc');
+const qppPack = Buffer.from(shortPack);
+qppPack[0] = 0x30;
+assert.ok(pc95.isRefPack(qppPack));
+assert.strictEqual(Buffer.from(pc95.decompressRefPack(qppPack)).toString('ascii'), 'abcabc');
 
 const sizedPack = Buffer.from([
   0x11, 0xFB, 0x00, 0x00, 0x00,
@@ -886,6 +901,12 @@ const pcGame = GAMES.find((game) => game.id === 'nhl95pc');
 assert.strictEqual(pcGame.kind, 'pc95');
 assert.strictEqual(pcGame.paletteKind, 'pc');
 assert.strictEqual(pcGame.jerseyRow, 9);
+const pc94Game = GAMES.find((game) => game.id === 'nhl94pc');
+assert.strictEqual(pc94Game.kind, 'pc94');
+assert.strictEqual(pc94Game.frames, 'frames94pc.asm');
+const pc94Catalog = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames94pc.asm'), 'utf8'));
+assert.strictEqual(pc94Catalog.spfs.length, 1);
+assert.strictEqual(pc94Catalog.spfs[0].name, 'SPFskaters');
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
 const pcDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc95-'));

@@ -6,6 +6,9 @@ const SPA_ORDER = ['Skating', 'Shooting', 'Checking', 'Falls', 'Fight', 'Celebra
 const SPF_ORDER = ['Players', 'Goalies', 'Ice', 'Other'];
 
 const el = (id) => document.getElementById(id);
+function isPcGame(kind) {
+  return kind === 'pc95' || kind === 'pc94';
+}
 const state = {
   mode: 'spa',
   bank: 'Sprites.anim',
@@ -570,7 +573,12 @@ const IMAGE_SEARCH_EXTRA = {
   'faceoff.anim': 'faceoff face off referee',
   'zam.anim': 'zamboni zam ice',
   'playoffsprite.bin': 'playoff arrows stanley',
-  'stanley.anim': 'stanley cup easn spin'
+  'stanley.anim': 'stanley cup easn spin',
+  easports: 'ea sports intro logo',
+  ronbarr: 'ron barr interview',
+  cards: 'player card portrait headshot',
+  titlegoalie: 'title screen goalie',
+  logos: 'team logo centre ice center'
 };
 const imageMemory = new Map();
 
@@ -580,7 +588,7 @@ function renderImageList(box, q) {
     const note = document.createElement('p');
     note.className = 'empty-note';
     note.textContent = gameInfo && gameInfo.hint
-      ? 'No picture files in Sprite-Viewer/pc95/ yet.'
+      ? (isPcGame(gameInfo.kind) ? 'No picture files in the pc95/ or pc94/ folder yet.' : gameInfo.hint)
       : 'This game has no extra pictures in the viewer yet.';
     box.appendChild(note);
     return;
@@ -1483,7 +1491,7 @@ async function bytesFor(spec) {
     }
   }
   if (spec.file) {
-    const response = await fetch('/anim/' + encodeURIComponent(spec.id));
+    const response = await fetch(resolveUrl('/anim/' + encodeURIComponent(spec.id)));
     if (!response.ok) throw new Error('Could not load ' + spec.id);
     return new Uint8Array(await response.arrayBuffer());
   }
@@ -1514,7 +1522,7 @@ async function ensureBank(name) {
     } else {
       parsed = Nhl92Sheet.parseSheet(rom, gameInfo.sheet);
     }
-  } else if (gameInfo.kind === 'pc95') {
+  } else if (isPcGame(gameInfo.kind)) {
     if (!gameInfo.pixels) return null;
     let bundle;
     if (clientPc) {
@@ -1582,7 +1590,7 @@ async function ensureImage(id) {
     const missing = bytes.length >= 4 && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
     const frameOpts = gameInfo.sheet && gameInfo.sheet.record === '95' ? { record: '95' } : null;
     parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await icePaletteBytes() : null, frameOpts);
-  } else if (image.kind === 'pc95') {
+  } else if (isPcGame(gameInfo.kind) || image.kind === 'pc95') {
     const paths = image.files && image.files.length ? image.files : [image.id];
     const parts = [];
     for (const rel of paths) {
@@ -1802,14 +1810,16 @@ async function ingestDroppedFiles(fileList) {
     const map = new Map(entries.map((entry) => [entry.rel, entry.bytes]));
     const paths = [...map.keys()];
     clientPc = { map, catalog: Nhl95Pc.catalogFromPaths(paths, (rel) => map.get(rel)) };
-    let entry = games.find((game) => game.id === 'nhl95pc') || { id: 'nhl95pc', kind: 'pc95' };
+    const pcId = paths.some((rel) => /\.qpp$/i.test(rel)) ? 'nhl94pc' : 'nhl95pc';
+    const pcKind = pcId === 'nhl94pc' ? 'pc94' : 'pc95';
+    let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
     entry = Object.assign({}, entry, {
       pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,
       rom: true,
       images: clientPc.catalog.images
     });
-    games = games.map((game) => (game.id === 'nhl95pc' ? entry : game));
-    await loadGame('nhl95pc');
+    games = games.map((game) => (game.id === pcId ? entry : game));
+    await loadGame(pcId);
     return;
   }
   if (files.length !== 1) {
@@ -1836,10 +1846,17 @@ async function ingestDroppedFiles(fileList) {
     if (entry) {
       entry = Object.assign({}, entry, { rom: true, pixels: true });
       games = games.map((game) => (game.id === id ? entry : game));
+    } else {
+      loadError = 'Unknown game profile for this ROM (' + id + ').';
+      refreshAll();
+      return;
     }
+    loadError = '';
     state.game = id;
     el('game').value = id;
     await loadGame(id);
+    gameInfo = games.find((game) => game.id === id) || gameInfo;
+    refreshAll();
     return;
   }
   const decoded = NhlOpenAsset.decodeLoose(classified, {
@@ -1867,33 +1884,55 @@ async function ingestDroppedFiles(fileList) {
   refreshAll();
 }
 
-function wireDropTarget() {
+function dropOverlayHasFiles(event) {
+  const types = event.dataTransfer && event.dataTransfer.types;
+  if (!types) return false;
+  return Array.from(types).includes('Files');
+}
+
+function setDropOverlayVisible(on) {
   const overlay = el('drop-overlay');
-  const show = (on) => {
-    overlay.hidden = !on;
-    overlay.setAttribute('aria-hidden', on ? 'false' : 'true');
+  if (!overlay) return;
+  overlay.hidden = !on;
+  overlay.setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+
+function wireDropTarget() {
+  let draggingFiles = false;
+
+  const endDrag = () => {
+    draggingFiles = false;
+    setDropOverlayVisible(false);
   };
-  let depth = 0;
+
   window.addEventListener('dragenter', (event) => {
+    if (!dropOverlayHasFiles(event)) return;
     event.preventDefault();
-    depth += 1;
-    show(true);
+    draggingFiles = true;
+    setDropOverlayVisible(true);
   });
-  window.addEventListener('dragleave', () => {
-    depth = Math.max(0, depth - 1);
-    if (!depth) show(false);
+  window.addEventListener('dragover', (event) => {
+    if (!dropOverlayHasFiles(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
   });
-  window.addEventListener('dragover', (event) => event.preventDefault());
+  window.addEventListener('dragleave', (event) => {
+    if (!draggingFiles) return;
+    // Leaving the document (not moving between child nodes).
+    if (event.relatedTarget == null) endDrag();
+  });
+  window.addEventListener('dragend', endDrag);
   window.addEventListener('drop', async (event) => {
     event.preventDefault();
-    depth = 0;
-    show(false);
+    endDrag();
     loadError = '';
     try {
       await ingestDroppedFiles(event.dataTransfer.files);
+      endDrag();
     } catch (err) {
       loadError = err.message || String(err);
       refreshAll();
+      endDrag();
     }
   });
 }
