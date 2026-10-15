@@ -81,7 +81,7 @@ PR #28 played `song(0)` for one vblank and then `sfx(0)`, so SngEOP's first note
 Written up with numbers in `docs/NHL92-SOUND-CHAIN.md` § Not verified:
 
 - Ear match against the retail game (no MAME/BlastEm capture allowed).
-- 68k timing within the frame: the copy's offset after vblank isn't measured; the bus hold is about 510–630 Z80 T-states from textbook 68000 timings; the Z80 stall isn't modelled.
+- 68k timing within the frame: the copy's offset after vblank isn't measured; the bus hold is about 560–630 Z80 T-states from textbook 68000 timings; the Z80 stall isn't modelled.
 - YM busy flag: the driver never reads it; the open question is hardware write acceptance at 62-T-state spacing.
 - ymfm vs a real YM2612: prebuilt WASM, chip class and options unchecked; idle output +504.
 - Deployed GitHub Pages: a static `_site` built like the workflow passed under a subpath; the live site wasn't loaded.
