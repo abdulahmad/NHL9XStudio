@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/abdulahmad/NHL9XStudio#readme",
   "dependencies": {
-    "@dcorp80/z80cpu": "^0.2.1"
+    "@dcorp80/z80cpu": "^0.2.1",
+    "tetorica-fm2612": "^0.2.0"
   }
 }
