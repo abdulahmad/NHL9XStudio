@@ -77,8 +77,12 @@
   function planFor(id) {
     const n = Number(id.split('-')[1]);
     if (id.startsWith('song-')) return Chain().songPlan(n, Infinity);
-    // Siren (instrument 0) needs one song-init vblank after boot; see sfxPlanAfterSongInit.
-    if (n === 0) return Chain().sfxPlanAfterSongInit(0, SFX_VBLANKS, 0);
+    // Siren uses instrument 0, which equals every channel's $41 after a bare boot, so it
+    // would skip its patch load. Play it the way the game reaches it: music initialised,
+    // then p_turnoff, then the SFX (sfxPlanAfterMusicOff). No song note is ever parsed.
+    // Other SFX use instruments != 0, so their output is the same either way; they keep
+    // sfxPlan, which matches the pinned offline renders.
+    if (n === 0) return Chain().sfxPlanAfterMusicOff(0, SFX_VBLANKS, 0);
     return Chain().sfxPlan(n, SFX_VBLANKS);
   }
 
