@@ -34,6 +34,10 @@ button { cursor: pointer; }
 }
 .mono { font-family: var(--mono); }
 
+.drop-overlay[hidden] {
+  display: none !important;
+}
+
 .drop-overlay {
   position: fixed;
   inset: 0;

@@ -221,7 +221,7 @@
         "end": 523914
       }
     ],
-    "pixels": true,
+    "pixels": false,
     "rom": false,
     "sheet": null,
     "snes": null,

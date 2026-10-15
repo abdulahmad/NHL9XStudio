@@ -1491,7 +1491,7 @@ async function bytesFor(spec) {
     }
   }
   if (spec.file) {
-    const response = await fetch('/anim/' + encodeURIComponent(spec.id));
+    const response = await fetch(resolveUrl('/anim/' + encodeURIComponent(spec.id)));
     if (!response.ok) throw new Error('Could not load ' + spec.id);
     return new Uint8Array(await response.arrayBuffer());
   }
@@ -1846,10 +1846,17 @@ async function ingestDroppedFiles(fileList) {
     if (entry) {
       entry = Object.assign({}, entry, { rom: true, pixels: true });
       games = games.map((game) => (game.id === id ? entry : game));
+    } else {
+      loadError = 'Unknown game profile for this ROM (' + id + ').';
+      refreshAll();
+      return;
     }
+    loadError = '';
     state.game = id;
     el('game').value = id;
     await loadGame(id);
+    gameInfo = games.find((game) => game.id === id) || gameInfo;
+    refreshAll();
     return;
   }
   const decoded = NhlOpenAsset.decodeLoose(classified, {
@@ -1877,33 +1884,55 @@ async function ingestDroppedFiles(fileList) {
   refreshAll();
 }
 
-function wireDropTarget() {
+function dropOverlayHasFiles(event) {
+  const types = event.dataTransfer && event.dataTransfer.types;
+  if (!types) return false;
+  return Array.from(types).includes('Files');
+}
+
+function setDropOverlayVisible(on) {
   const overlay = el('drop-overlay');
-  const show = (on) => {
-    overlay.hidden = !on;
-    overlay.setAttribute('aria-hidden', on ? 'false' : 'true');
+  if (!overlay) return;
+  overlay.hidden = !on;
+  overlay.setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+
+function wireDropTarget() {
+  let draggingFiles = false;
+
+  const endDrag = () => {
+    draggingFiles = false;
+    setDropOverlayVisible(false);
   };
-  let depth = 0;
+
   window.addEventListener('dragenter', (event) => {
+    if (!dropOverlayHasFiles(event)) return;
     event.preventDefault();
-    depth += 1;
-    show(true);
+    draggingFiles = true;
+    setDropOverlayVisible(true);
   });
-  window.addEventListener('dragleave', () => {
-    depth = Math.max(0, depth - 1);
-    if (!depth) show(false);
+  window.addEventListener('dragover', (event) => {
+    if (!dropOverlayHasFiles(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
   });
-  window.addEventListener('dragover', (event) => event.preventDefault());
+  window.addEventListener('dragleave', (event) => {
+    if (!draggingFiles) return;
+    // Leaving the document (not moving between child nodes).
+    if (event.relatedTarget == null) endDrag();
+  });
+  window.addEventListener('dragend', endDrag);
   window.addEventListener('drop', async (event) => {
     event.preventDefault();
-    depth = 0;
-    show(false);
+    endDrag();
     loadError = '';
     try {
       await ingestDroppedFiles(event.dataTransfer.files);
+      endDrag();
     } catch (err) {
       loadError = err.message || String(err);
       refreshAll();
+      endDrag();
     }
   });
 }
