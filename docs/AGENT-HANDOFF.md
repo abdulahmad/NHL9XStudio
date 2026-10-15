@@ -33,6 +33,7 @@ Audio: `AUD-*` in DESIGN.md. Do not depend on MID94-Tools.
 - Self-contained `test/fixtures/` for CI
 - SPA/SPF/image search aliases (celebrate vs bench-check); Pages deploy to `gh-pages` branch
 - GAP-4 retail Crowd/FaceOff slice checks vs `genesis-images.js`; GAP-8 `nhl94pc` stub + QPP RefPack (`30 FB`) + `pc94/` server routes
+- GitHub Pages: ROM drop overlay fix, `pixels` unlock after ingest, **Open file / Open folder** in header (PR #5+)
 
 ---
 
