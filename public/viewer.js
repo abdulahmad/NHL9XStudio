@@ -194,8 +194,8 @@ async function playZ80Pattern() {
   z80LastResult = 'Running pattern…';
   renderCaption();
   await new Promise((resolve) => window.setTimeout(resolve, 0));
-  const rom = await ensureRom();
   try {
+    const rom = await ensureRom();
     const out = NhlZ80TestPatterns.run(state.z80Pattern, rom);
     z80LastResult = out.detail || (out.ok ? 'OK' : 'Failed');
     if (out.schedule && out.schedule.events && out.schedule.events.length) {
@@ -239,7 +239,7 @@ function renderZ80List(box, q) {
     name.textContent = pat.label;
     const sub = document.createElement('span');
     sub.className = 'sub';
-    sub.textContent = pat.needsRom ? 'needs ROM' : 'no ROM';
+    sub.textContent = pat.needsRom ? 'needs data' : 'bundled OK';
     button.append(name, sub);
     button.addEventListener('click', () => {
       state.z80Pattern = pat.id;
@@ -1880,6 +1880,17 @@ async function icePaletteBytes() {
 
 async function ensureRom() {
   if (!gameInfo) return null;
+  if (isZ80TestGame() && typeof Nhl92SoundFixture !== 'undefined') {
+    try {
+      const base = resolveUrl('').replace(/\/?$/, '');
+      const rom = await Nhl92SoundFixture.ensureSyntheticRom({ baseUrl: base });
+      roms.set(gameInfo.id, rom);
+      return rom;
+    } catch (err) {
+      roms.set(gameInfo.id, null);
+      return null;
+    }
+  }
   if (roms.has(gameInfo.id)) {
     const cached = roms.get(gameInfo.id);
     return cached || null;

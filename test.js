@@ -1111,8 +1111,13 @@ const nhl92Z80 = require('./lib/audio/nhl92-z80');
 const z80Machine = require('./lib/audio/z80-machine');
 const z80Patterns = require('./lib/audio/z80-test-patterns');
 const soundSystem = require('./lib/audio/nhl92-sound-system');
+const soundFixture = require('./lib/audio/nhl92-sound-fixture');
 
 const ramWalk = z80Patterns.run('ram_walk');
+const fixtureRom = soundFixture.resolveRom(null);
+assert.ok(fixtureRom && fixtureRom.length >= 0x11800, 'bundled sound fixture should load in Node');
+const fixtureBoot = z80Patterns.run('nhl_driver_boot', null);
+assert.ok(fixtureBoot.ok, fixtureBoot.detail);
 assert.ok(ramWalk.ok, ramWalk.detail);
 
 if (audioRom) {
