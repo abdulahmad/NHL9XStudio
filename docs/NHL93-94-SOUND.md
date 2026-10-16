@@ -85,9 +85,14 @@ What is specific to NHLPA 93 / NHL 94:
   the patch in force and clamps what does not fit. In the editor, set **Click: pitch bends** to edit them: the
   channel's bends are drawn as a stepped line across the roll, a click adds a bend whose height is the click's height
   (middle = no bend, top/bottom = the full range) and a click near an existing bend removes it.
-- **Instrument editor.** The YM2612 editor (operators, envelopes, algorithm, feedback, pan, AMS/FMS and the note offset
-  at +26) edits FM patches 0-31. The edits are written into the slice copy at `table - 1024 + 32 * id` before
-  `host.playEditor`. The PCM patches (`$60` and up, 96+) are DAC samples and cannot be edited.
+- **Instrument editor.** The YM2612 editor (operators, envelopes, algorithm, feedback, pan, AMS/FMS) edits FM patches
+  0-31. The edits are written into the slice copy at `table - 1024 + 32 * id` before `host.playEditor`. There is no
+  note-offset field: these drivers do not read byte 26. The PCM patches (`$60` and up, 96+) are DAC samples and
+  cannot be edited.
+- **Edits in the exports.** Native MIDI carries each edited patch in a marker (`NHL9X patch id=11 bytes=…`), restored
+  on import. The `.asm` appends a `dc.b` block per patch with its ROM address. The `.bin` appends a `PTCH` block after
+  the stream. GM uses the edited bank (bend range). Unedited songs export exactly as before. See
+  [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md#ym2612-instrument-editor-genesis-only).
 - **Seeking** the editor song (scrub bar, ruler) runs the 68k + Z80 drivers ahead silently; see
   [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md#playhead-seconds-ruler-and-scrub-bar). The playhead and scrub bar fold
   the run time onto the song's loop point after the first pass.
