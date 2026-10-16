@@ -6,6 +6,7 @@ const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
 const audio = require('./lib/audio');
+const httpCache = require('./lib/http-cache');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
@@ -55,13 +56,25 @@ function safeFile(dir, rel) {
   return full;
 }
 
-function serveFile(res, file) {
-  fs.readFile(file, (err, buf) => {
-    if (err) {
-      send(res, err.code === 'ENOENT' ? 404 : 500, err.code === 'ENOENT' ? 'Not found' : 'Read failed', 'text/plain; charset=utf-8');
+function serveFile(res, file, req) {
+  fs.stat(file, (statErr, stat) => {
+    if (statErr || !stat.isFile()) {
+      send(res, statErr && statErr.code !== 'ENOENT' ? 500 : 404, statErr && statErr.code !== 'ENOENT' ? 'Read failed' : 'Not found', 'text/plain; charset=utf-8');
       return;
     }
-    send(res, 200, buf, MIME[path.extname(file).toLowerCase()] || 'application/octet-stream');
+    const etag = httpCache.etagFor(stat);
+    if (req && httpCache.notModified(req.headers['if-none-match'], etag)) {
+      res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' });
+      res.end();
+      return;
+    }
+    fs.readFile(file, (err, buf) => {
+      if (err) {
+        send(res, err.code === 'ENOENT' ? 404 : 500, err.code === 'ENOENT' ? 'Not found' : 'Read failed', 'text/plain; charset=utf-8');
+        return;
+      }
+      send(res, 200, buf, MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', { ETag: etag });
+    });
   });
 }
 
@@ -238,7 +251,7 @@ const server = http.createServer((req, res) => {
   if (gameFrames) {
     const game = gameById(gameFrames[1]);
     if (!game) { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
-    serveFile(res, path.join(DATA, game.frames));
+    serveFile(res, path.join(DATA, game.frames), req);
     return;
   }
 
@@ -268,7 +281,7 @@ const server = http.createServer((req, res) => {
       send(res, 404, 'Unknown palette', 'text/plain; charset=utf-8');
       return;
     }
-    serveFile(res, file);
+    serveFile(res, file, req);
     return;
   }
 
@@ -292,7 +305,7 @@ const server = http.createServer((req, res) => {
       send(res, 404, 'Not found', 'text/plain; charset=utf-8');
       return;
     }
-    serveFile(res, file);
+    serveFile(res, file, req);
     return;
   }
 
@@ -377,33 +390,33 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === '/games.json') {
-    serveFile(res, path.join(PUBLIC, 'games.json'));
+    serveFile(res, path.join(PUBLIC, 'games.json'), req);
     return;
   }
   if (pathname.startsWith('/data/')) {
     const file = safeFile(DATA, pathname.slice('/data/'.length));
     if (!file) { send(res, 400, 'Bad path', 'text/plain; charset=utf-8'); return; }
-    serveFile(res, file);
+    serveFile(res, file, req);
     return;
   }
   if (pathname === '/' || pathname === '/index.html') {
-    serveFile(res, path.join(PUBLIC, 'index.html'));
+    serveFile(res, path.join(PUBLIC, 'index.html'), req);
     return;
   }
   if (pathname === '/data/frames.asm') {
-    serveFile(res, path.join(DATA, 'frames.asm'));
+    serveFile(res, path.join(DATA, 'frames.asm'), req);
     return;
   }
   if (pathname.startsWith('/lib/')) {
     const file = safeFile(LIB, pathname.slice('/lib/'.length));
     if (!file) { send(res, 400, 'Bad path', 'text/plain; charset=utf-8'); return; }
-    serveFile(res, file);
+    serveFile(res, file, req);
     return;
   }
   if (pathname.startsWith('/anim/')) {
     const name = path.basename(pathname);
     if (!BANKS.has(name)) { send(res, 404, 'Unknown ANIM bank', 'text/plain; charset=utf-8'); return; }
-    serveFile(res, path.join(ANIM_DIR, name));
+    serveFile(res, path.join(ANIM_DIR, name), req);
     return;
   }
   if (pathname.startsWith('/palettes/')) {
@@ -412,13 +425,13 @@ const server = http.createServer((req, res) => {
       send(res, 404, 'Unknown palette', 'text/plain; charset=utf-8');
       return;
     }
-    serveFile(res, file);
+    serveFile(res, file, req);
     return;
   }
   if (pathname === '/viewer.js' || pathname === '/viewer.css' || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
       pathname === '/sound-test-view.js' || pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js') {
-    serveFile(res, path.join(PUBLIC, pathname.slice(1)));
+    serveFile(res, path.join(PUBLIC, pathname.slice(1)), req);
     return;
   }
   send(res, 404, 'Not found', 'text/plain; charset=utf-8');
