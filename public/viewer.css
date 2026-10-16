@@ -488,6 +488,16 @@ select:focus, input:focus, button:focus-visible {
 .se-out { max-width: 920px; }
 .se-playbtn { min-width: 96px; font-weight: 600; }
 
+/* Editor scrub bar (public/sound-editor-extras.js): the padding makes a finger-sized target around the thin rail. */
+.se-scrub-row { display: flex; align-items: center; gap: 10px; max-width: 920px; margin: 6px 0 0; }
+.se-scrub { flex: 1 1 auto; min-width: 0; padding: 9px 0; cursor: pointer; touch-action: none; outline: none; }
+.se-scrub:focus-visible .se-scrub-rail { outline: 2px solid var(--amber); outline-offset: 3px; }
+.se-scrub-rail { position: relative; height: 8px; background: var(--raise-2); border: 1px solid var(--line); border-radius: 5px; pointer-events: none; }
+.se-scrub-fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: var(--amber); opacity: .45; border-radius: 4px; }
+.se-scrub.is-playing .se-scrub-fill { opacity: 1; }
+.se-scrub-knob { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--bg); }
+.se-scrub-time { flex: 0 0 auto; min-width: 17ch; font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.se-playhead.is-cue { opacity: .5; box-shadow: none; }
 .se-ruler { max-width: 920px; margin-top: 6px; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; overflow: hidden; background: var(--raise-2); }
 .se-ruler canvas { display: block; width: 100%; height: 20px; }
 .se-scroll.has-ruler { margin-top: 0; border-radius: 0 0 6px 6px; }

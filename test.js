@@ -1198,3 +1198,4 @@ require('./test/ym-note-tracker');
 require('./test/nhl92-gm-map');
 require('./test/nhl92-sequencer');
 require('./test/fingerprint-site');
+require('./test/editor-extras');

@@ -444,7 +444,7 @@
     if (ctx.state === 'suspended') await ctx.resume();
     const session = snesApi().startSession(snesData, songName, sm ? { set: sm[1], n: Number(sm[2]) } : null, imp ? { set: imp.set, bytes: imp.bytes, base: imp.base } : null);
     const pullFn = (n) => snesApi().pull(session, n);
-    live = { id, snes: true, session, blocks: [], done: false, message: '', seeking: null };
+    live = { id, snes: true, session, pullFn, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
     startPrefetch(live);
     if (startSec > 0) seekSnes(startSec);
@@ -452,16 +452,61 @@
     if (onChange) onChange();
   }
 
+  /**
+   * Move the live SNES run to `sec` song seconds. Forward runs the sound unit ahead in short slices (the samples it
+   * makes are thrown away but counted, so heardSeconds() lands on the new position); backward starts a new run.
+   */
   function seekSnes(sec) {
     const s = live;
     if (!s || !s.snes) return;
-    const target = Math.round(sec * snesApi().frameRate());
-    while (s.session.frames < target && !s.session.done) {
-      s.session.player.runFrame();
-      s.session.player.spc.drainRecording();
-      s.session.frames = s.session.player.stats.frames;
-      if (!s.session.player.musicOn) s.session.done = true;
+    const target = Math.max(0, Math.round(sec * snesApi().frameRate()));
+    if (target < s.session.frames) {
+      restart(s.id, sec);
+      return;
     }
+    if (s.seeking) {
+      s.seeking.target = target;
+      return;
+    }
+    if (target === s.session.frames) return;
+    s.seeking = { from: s.session.frames, target };
+    const sess = s.session;
+    const slice = () => {
+      if (s.dead || live !== s) return;
+      const p = sess.player;
+      const t0 = root.performance.now();
+      while (sess.frames < s.seeking.target && !sess.done && root.performance.now() - t0 < 25) {
+        p.runFrame();
+        sess.delivered = (sess.delivered || 0) + p.spc.drainRecording().length / 2;
+        sess.frames = p.stats.frames;
+        // NHLPA 93's flag comes up a few frames after the cue (the same guard as its fill()).
+        if (!p.musicOn && sess.frames > 20 && (!p.idle || p.idle())) sess.done = true;
+      }
+      if (sess.frames < s.seeking.target && !sess.done) {
+        status(true);
+        setTimeout(slice, 0);
+        return;
+      }
+      // The audio queued before the seek is dropped; count it as passed so the clock stays on song time.
+      sess.delivered = (sess.delivered || 0) + sess.queued;
+      sess.chunks = [];
+      sess.offset = 0;
+      sess.queued = 0;
+      s.blocks = [];
+      s.lastSec = snesApi().heardSeconds(sess);
+      s.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, s.pullFn);
+      s.seeking = null;
+      status(true);
+    };
+    setTimeout(slice, 0);
+  }
+
+  /** Start item `id` over from `sec` seconds, staying paused if playback was paused. */
+  function restart(id, sec) {
+    const wasPaused = paused;
+    return play(id, sec)
+      .then(() => { if (wasPaused) pause(); })
+      .catch((err) => { if (panel) { const st = panel.querySelector('.st-status'); if (st) st.textContent = 'Seek failed: ' + (err && err.message ? err.message : String(err)); } });
   }
 
   async function play(id, startSec) {
@@ -540,14 +585,14 @@
   /** Move the live run to `sec` seconds of chain time (forward: fast-forward; backward: start over and fast-forward). */
   function seekLive(sec) {
     const s = live;
-    if (!s || s.id === TOOL_EDITOR) return;
+    if (!s) return;
     const target = framesOf(sec);
-    if (s.seeking) {
-      if (target > s.seeking.target) s.seeking.target = target;
+    if (s.seeking && target >= s.chain.frame) {
+      s.seeking.target = Math.min(target, s.plan.frames === Infinity ? Infinity : s.plan.frames - 1);
       return;
     }
     if (target > s.chain.frame) beginSeek(s, target);
-    else play(s.id, sec).catch((err) => { if (panel) { const st = panel.querySelector('.st-status'); if (st) st.textContent = 'Seek failed: ' + (err && err.message ? err.message : String(err)); } });
+    else restart(s.id, sec);
   }
 
   function toggle(id) {
@@ -769,7 +814,8 @@
       get slice() { return nxSlice; },
       get bank() { if (!nxBank && nxSlice) nxBank = root.Nhl9xSong.patches(nxNumber(), nxSlice); return nxBank; },
       get bufferId() { return gmPlay ? gmPlay.id : ''; },
-      playEditor(romCopy) { customRom = romCopy; return play(TOOL_EDITOR); },
+      /** Play the sequencer's song (a ROM copy with it in place) from `startSec` song seconds. */
+      playEditor(romCopy, startSec) { customRom = romCopy; return play(TOOL_EDITOR, startSec > 0 ? startSec + secondsOf(LEAD_FRAMES) : 0); },
       stopLive: () => stop(),
       /** Select another Sound test list entry (a click on its row), e.g. after a conversion. */
       openItem(item) {
@@ -781,14 +827,33 @@
       get game() { return game; },
       get snesData() { return snesData; },
       /** The SNES sequencer plays its converted song like an import. */
-      playSnesEditor(imp) { snesImport = imp; return playSnes(TOOL_EDITOR, 0); },
+      playSnesEditor(imp, startSec) { snesImport = imp; return playSnes(TOOL_EDITOR, startSec || 0); },
       get paused() { return paused; },
       togglePause,
-      /** Seconds into the editor song that are audible now (null when the editor song is not playing). */
+      /**
+       * Seconds of the editor song's run that are audible now, counted from its first note (null when the editor
+       * song is not playing). Past the end of a pass this keeps counting; the editor folds it back onto the loop.
+       */
       editorSeconds() {
-        if (ctx && live && live.id === TOOL_EDITOR && live.snes) return snesSeconds(live);
-        if (!ctx || !live || live.id !== TOOL_EDITOR || live.seeking) return null;
-        return (live.blocks.length ? audibleSource(live) : Math.max(0, live.chain.rendered - live.queued)) / Chain().SAMPLE_RATE;
+        if (!ctx || !live || live.id !== TOOL_EDITOR) return null;
+        if (live.snes) return snesSeconds(live);
+        const lead = secondsOf(LEAD_FRAMES);
+        if (live.seeking) return Math.max(0, secondsOf(live.seeking.target) - lead);
+        return Math.max(0, (live.blocks.length ? audibleSource(live) : Math.max(0, live.chain.rendered - live.queued)) / Chain().SAMPLE_RATE - lead);
+      },
+      /** How far a seek of the editor song has got (0..1), or null when it is not seeking. */
+      editorSeekProgress() {
+        if (!live || live.id !== TOOL_EDITOR || !live.seeking) return null;
+        const sk = live.seeking;
+        const at = live.snes ? live.session.frames : live.chain.frame;
+        return Math.max(0, Math.min(1, (at - sk.from) / Math.max(1, sk.target - sk.from)));
+      },
+      /** Jump the playing editor song to `sec` seconds of its run (the same clock as editorSeconds). */
+      seekEditor(sec) {
+        if (!live || live.id !== TOOL_EDITOR) return;
+        sec = Math.max(0, sec);
+        if (live.snes) seekSnes(sec);
+        else seekLive(sec + secondsOf(LEAD_FRAMES));
       },
       mountRoll(container) {
         if (roll) roll.destroy();
@@ -845,9 +910,11 @@
    * read the speaker clock between them.
    */
   function snesSeconds(s) {
+    if (s.seeking) return s.seeking.target / snesApi().frameRate();
     const raw = snesApi().heardSeconds(s.session);
     const bl = s.blocks;
-    if (!bl.length || !ctx) return raw;
+    // No audio block since the start or a seek (e.g. paused): hold the seek target, which the prefetch would pull back.
+    if (!bl.length || !ctx) return Math.max(raw, s.lastSec || 0);
     const rate = snesApi().RATE;
     const newest = bl[bl.length - 1].src / rate - bl[bl.length - 1].ctxTime;
     let sum = 0;
@@ -1096,6 +1163,11 @@
         time.textContent = text;
       }
       const keyOns = shown.session.player.stats.keyOns;
+      if (shown.seeking) {
+        const sk = shown.seeking;
+        box.textContent = 'Seeking… ' + Math.max(0, Math.min(100, ((shown.session.frames - sk.from) / Math.max(1, sk.target - sk.from)) * 100)).toFixed(0) + '% (the sound program runs forward at full speed, silently)';
+        return;
+      }
       box.textContent = (message || 'Playing') + ' · video frame ' + shown.session.frames + ' · ' +
         (keyOns != null ? keyOns + ' key-ons · ' : '') + 'SPC700 + S-DSP';
       return;
