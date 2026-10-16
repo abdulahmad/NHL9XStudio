@@ -30,6 +30,8 @@
   let rom = null;
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
+  let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
+  let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
   let gmPlay = null; // { id, source, startedAt, total }: a reference-synth playback in progress
   let toggles = {}; // id -> () => Promise, set by the tools panels (Space / Enter / double-click)
@@ -82,12 +84,15 @@
     rom = null;
     data = null;
     gmMap = null;
+    nxSlice = null;
+    nxMap = null;
     customRom = null;
     loading = null;
     error = '';
     gmCache.clear();
     sfxGmCache.clear();
     passCache.clear();
+    infoCache.clear();
     if (onChange) onChange();
   }
 
@@ -101,10 +106,17 @@
     const res = await fetch(new URL('data/audio/' + c.catalog, document.baseURI).href);
     if (!res.ok) throw new Error(c.label + ' sound catalog missing (' + res.status + ')');
     const cat = await res.json();
+    let map = null;
+    try {
+      const m = await fetch(new URL('data/audio/nhl9x-gm-map.json', document.baseURI).href);
+      map = m.ok ? await m.json() : null;
+    } catch (err) { map = null; }
     const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
     return {
       rom: image,
+      slice: image.subarray(c.start),
+      map,
       data: {
         songs: sounds.filter((e) => e.soundId >= 0x30).map((e) => ({ id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb })),
         sfx: sounds.filter((e) => e.soundId < 0x30).map((e) => ({ id: e.soundId, name: nice(e), blurb: e.blurb }))
@@ -123,6 +135,8 @@
         rom = g.rom;
         data = g.data;
         gmMap = null;
+        nxSlice = g.slice;
+        nxMap = g.map;
       } else {
         const image = await root.Nhl92SoundFixture.ensureSyntheticRom({ baseUrl });
         if (game !== forGame) return false;
@@ -502,6 +516,29 @@
     return buf;
   }
 
+  /** NHL 93 / 94: a song or sound effect through the stream -> GM table and the plain reference synth (cached). */
+  function nxGm(id) {
+    if (!nxMap || !nxSlice || !root.Nhl9xSong) throw new Error('data/audio/nhl9x-gm-map.json did not load');
+    const key = (id.startsWith('song-') ? 's' : 'f') + Number(id.split('-')[1]);
+    if (gmCache.has(key)) return gmCache.get(key);
+    const g = root.Nhl9xSong.toGm(game === 'nhlpa93' ? 93 : 94, nxSlice, Number(id.split('-')[1]), nxMap);
+    const out = { notes: g.notes, song: g.song, seconds: g.seconds, buf: null };
+    if (g.notes) out.buf = root.Nhl92GmReference.renderEvents(root.Nhl92SongGm.gmEvents(g.song));
+    gmCache.set(key, out);
+    return out;
+  }
+
+  async function exportNxMidi(id) {
+    await new Promise((r) => setTimeout(r, 20));
+    const r = nxGm(id);
+    if (!r.notes) throw new Error('This sound has no notes to export');
+    const smf = root.Nhl92SongGm.toSmfSong(r.song);
+    const name = NX[game].short === '93' ? 'nhlpa93' : 'nhl94';
+    const tag = (id.startsWith('song-') ? 'song-' : 'sfx-') + Number(id.split('-')[1]).toString(16);
+    smf.name = name + '-' + tag;
+    root.NhlSoundTools.download(name + '-' + tag + '-gm.mid', root.Nhl92Smf.write(smf), 'audio/midi');
+  }
+
   /** True when every part of this SFX is a DAC sample: there are no FM notes for General MIDI to play. */
   const sfxIsDacOnly = (n) => data.sfx[n].actions.every((a) => a.type === 'dac');
 
@@ -534,6 +571,16 @@
     const n = Number(id.split('-')[1]);
     const box = panel && panel.querySelector('.st-status');
     const isSong = id.startsWith('song-');
+    if (isNx()) {
+      await new Promise((r) => setTimeout(r, 20));
+      const r = nxGm(id);
+      if (!r.notes) {
+        if (box) box.textContent = 'This sound has no notes to play as General MIDI.';
+        return;
+      }
+      await playBuffer(id, r.buf, root.Nhl92GmReference.SAMPLE_RATE, { rom, plan: planFor(id) });
+      return;
+    }
     if (box && !(isSong ? gmCache.has(n) : sfxGmCache.has(n))) {
       box.textContent = isSong ? 'Rendering the song with the General MIDI reference sounds…' : 'Running the sound effect and converting its FM notes to General MIDI…';
     }
@@ -670,6 +717,38 @@
     return passCache.get(n);
   }
 
+  /**
+   * One pass of a song: { total, loopStart, loops } in seconds. NHL 92 songs repeat from the start; an NHL 93 / 94
+   * stream plays to its end event or jumps back to a loop point (Nhl9xSong.parse), so after the first pass it
+   * repeats only from the loop point. null when the stream cannot be read.
+   */
+  const infoCache = new Map();
+  function passInfo(n) {
+    if (!isNx()) return { total: passSecs(n), loopStart: 0, loops: true };
+    if (!infoCache.has(n)) {
+      let info = null;
+      if (nxSlice && root.Nhl9xSong) {
+        const g = game === 'nhlpa93' ? 93 : 94;
+        const r = root.Nhl9xSong.parse(g, nxSlice, root.Nhl9xSong.streamAddr(g, nxSlice, n));
+        if (r.end !== 'bad' && r.ticks > 0) {
+          const looped = r.end === 'loop' && r.loopTick != null;
+          info = { total: secondsOf(r.ticks), loopStart: looped ? secondsOf(r.loopTick) : 0, loops: looped && r.ticks > r.loopTick };
+        }
+      }
+      infoCache.set(n, info);
+    }
+    return infoCache.get(n);
+  }
+
+  /** Where `pos` seconds into a song run falls: the position inside the bar and the pass number (0-based). */
+  function posIn(info, pos) {
+    if (pos < info.total) return { within: pos, pass: 0 };
+    if (!info.loops) return { within: info.total, pass: 0, ended: true };
+    const len = info.total - info.loopStart;
+    const k = Math.floor((pos - info.total) / len) + 1;
+    return { within: info.loopStart + ((pos - info.total) % len), pass: k };
+  }
+
   let drag = null; // fraction while the progress bar is being dragged
   let lastFraction = 0;
 
@@ -682,15 +761,19 @@
     }
     if (!live || live.id !== id) return;
     const n = Number(id.split('-')[1]);
-    if (isNx() && id.startsWith('song-')) return;
     if (id.startsWith('sfx-')) {
       seekLive(f * secondsOf(planFor(id).frames));
       return;
     }
-    const pass = passSecs(n);
+    const info = passInfo(n);
+    if (!info) return;
     const lead = secondsOf(LEAD_FRAMES);
-    const base = Math.floor(Math.max(0, heard(live) - lead) / pass) * pass;
-    seekLive(lead + base + f * pass);
+    const pos = Math.max(0, heard(live) - lead);
+    const cur = posIn(info, pos);
+    // The start of the pass being heard on the run clock: 0 for the first pass, the loop repeat after that.
+    const passStart = cur.pass === 0 ? 0 : info.total + (cur.pass - 1) * (info.total - info.loopStart) - info.loopStart;
+    const want = f * info.total;
+    seekLive(lead + (cur.pass === 0 ? want : passStart + Math.max(info.loopStart, want)));
   }
 
   function status(force, message, ended) {
@@ -734,11 +817,12 @@
     const isSong = id.startsWith('song-');
     const n = Number(id.split('-')[1]);
     // Length of the bar: one pass of an NHL 92 song, the whole run of an SFX; NHL 94 songs have no known length.
-    const total = isSong ? (isNx() ? null : passSecs(n)) : secondsOf(planFor(id).frames);
+    const info = isSong ? passInfo(n) : null;
+    const total = isSong ? (info ? info.total : null) : secondsOf(planFor(id).frames);
     bar.classList.remove('is-loop');
     if (!shown) {
       setBar(0, clock(0));
-      time.textContent = total == null ? 'Plays until Stop' : clock(0) + ' / ' + clock(total) + (isSong ? ' · one pass, loops until Stop' : '');
+      time.textContent = total == null ? 'Plays until Stop' : clock(0) + ' / ' + clock(total) + (isSong ? (info.loops ? ' · one pass, loops until Stop' : ' · plays once') : '');
       box.textContent = message || 'Stopped';
       return;
     }
@@ -754,7 +838,7 @@
       const to = shown.seeking.target;
       const pct = Math.max(0, Math.min(100, ((shown.chain.frame - shown.seeking.from) / Math.max(1, to - shown.seeking.from)) * 100));
       const secs = to * secondsOf(1);
-      const within = isSong ? Math.max(0, secs - secondsOf(LEAD_FRAMES)) % total : secs;
+      const within = isSong ? posIn(info, Math.max(0, secs - secondsOf(LEAD_FRAMES))).within : secs;
       setBar(within / total, clock(within));
       time.textContent = clock(within) + ' / ' + clock(total);
       box.textContent = 'Seeking… ' + pct.toFixed(0) + '% (the driver runs forward at full speed, silently)';
@@ -764,14 +848,16 @@
     if (!playing && message === 'Finished' && !isSong) secs = total;
     let within = secs;
     let pass = 0;
+    let done = false;
     if (isSong) {
-      const pos = Math.max(0, secs - secondsOf(LEAD_FRAMES));
-      pass = Math.floor(pos / total);
-      within = pos - pass * total;
+      const at = posIn(info, Math.max(0, secs - secondsOf(LEAD_FRAMES)));
+      pass = at.pass;
+      within = at.within;
+      done = !!at.ended;
     }
-    const text = clock(within) + ' / ' + clock(total) + (isSong ? ' · pass ' + (pass + 1) : '');
+    const text = clock(within) + ' / ' + clock(total) + (isSong && info.loops ? ' · pass ' + (pass + 1) : '');
     setBar(Math.min(1, within / total), text);
-    time.textContent = text + (isSong ? ' · loops until Stop' : '');
+    time.textContent = text + (isSong ? (info.loops ? ' · loops until Stop' : done ? ' · ended' : ' · plays once') : '');
     box.textContent = (message || 'Playing') + ' · frame ' + Math.max(0, shown.chain.frame - 1) + ' · ' +
       shown.chain.ymWrites + ' YM writes · ' + shown.chain.psgWrites + ' PSG writes';
   }
@@ -848,6 +934,14 @@
       const st = box.querySelector('.st-status');
       if (st) st.textContent = what + ' failed: ' + (err && err.message ? err.message : String(err));
     };
+    if (isNx() && nxMap && root.Nhl9xSong && root.Nhl92SongGm && root.Nhl92GmReference) {
+      const gmBtn = make('button', 'ghost-btn st-gm', '▶ Play as GM');
+      gmBtn.type = 'button';
+      gmBtn.setAttribute('aria-pressed', 'false');
+      gmBtn.title = 'Play the notes of this ' + (id.startsWith('song-') ? 'song' : 'sound') + ' through the ' + NX[game].label + ' → General MIDI table and the plain reference synth (one pass; pitch bends are not converted)';
+      gmBtn.addEventListener('click', () => { playGm(id).catch(fail('GM playback')); });
+      controls.append(gmBtn);
+    }
     if (!isNx() && gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
       const isSong = id.startsWith('song-');
       const gmBtn = make('button', 'ghost-btn st-gm', '▶ Play as GM');
@@ -863,6 +957,16 @@
     }
     controls.append(vol);
     box.appendChild(controls);
+
+    if (isNx() && nxMap && root.Nhl9xSong && root.NhlSoundTools && root.Nhl92Smf) {
+      const ex = make('div', 'st-controls st-exports');
+      const b = make('button', 'ghost-btn', 'Export MIDI (GM)');
+      b.type = 'button';
+      b.title = 'Standard MIDI file with General MIDI sounds chosen by the ' + NX[game].label + ' → GM table';
+      b.addEventListener('click', () => { exportNxMidi(id).catch(fail('Export MIDI')); });
+      ex.appendChild(b);
+      box.appendChild(ex);
+    }
 
     // Edit / export: the same conversions the sequencer uses, straight from this entry.
     if (!isNx() && root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
