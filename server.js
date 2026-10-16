@@ -12,7 +12,9 @@ const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const LIB = path.join(ROOT, 'lib');
 const DATA = path.join(ROOT, 'data');
-const ANIM_DIR = path.join(ROOT, '..', 'ANIM-To-BMP');
+// The ANIM-To-BMP checkout next to this one, else the copies bundled in test/fixtures (what GitHub Pages serves).
+const ANIM_DIR = [path.join(ROOT, '..', 'ANIM-To-BMP'), path.join(ROOT, 'test', 'fixtures', 'ANIM-To-BMP')]
+  .find((dir) => fs.existsSync(path.join(dir, 'Sprites.anim'))) || path.join(ROOT, '..', 'ANIM-To-BMP');
 const PAL_DIRS = {
   '92': path.join(ANIM_DIR, 'Palettes'),
   '94': path.join(ROOT, '..', 'ANIM94-To-BMP', 'Palettes'),
