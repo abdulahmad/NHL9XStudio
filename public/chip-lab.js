@@ -132,6 +132,10 @@ async function initNhl92(Ym2612) {
     sfxSel.appendChild(opt);
   });
   el('nhl92-meter').textContent = 'Ready — pick a patch or SFX';
+  initAudition().catch((err) => {
+    el('aud-meter').textContent = 'Audition unavailable: ' + (err && err.message ? err.message : String(err));
+    console.error(err);
+  });
 }
 
 function sfxFrames(entry) {
@@ -316,6 +320,119 @@ for (const [id, kind] of [['nhl92-play-patch', 'patch'], ['nhl92-play-sfx', 'sfx
     });
   });
 }
+
+// Mapping audition: an NHL '92 sound next to a plain GM-style reference (lib/audio/nhl92-gm-audition.js).
+const aud = { map: null, source: null };
+
+function audText(t) {
+  if (!t) return 'none';
+  if (t.kind === 'program') return 'GM ' + t.program + ' ' + t.name;
+  if (t.kind === 'drum') return 'drum ' + t.note + ' ' + t.name;
+  if (t.kind === 'patch') return 'patch ' + t.patch + (t.midi != null ? ' @ MIDI ' + t.midi : '');
+  return 'DAC SFX ' + t.sfx + (t.label ? ' (' + t.label + ')' : '');
+}
+
+function audFillPicks() {
+  const sel = el('aud-pick');
+  const dir = el('aud-dir').value;
+  sel.textContent = '';
+  const groups = {};
+  Nhl92GmAudition.picks(aud.map, dir).forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = String(p.value);
+    opt.textContent = p.label;
+    let parent = sel;
+    if (p.group) {
+      if (!groups[p.group]) {
+        groups[p.group] = document.createElement('optgroup');
+        groups[p.group].label = p.group;
+        sel.appendChild(groups[p.group]);
+      }
+      parent = groups[p.group];
+    }
+    parent.appendChild(opt);
+  });
+  audShowInfo();
+}
+
+function audPlan(runnerUp) {
+  return Nhl92GmAudition.plan(aud.map, el('aud-dir').value, Number(el('aud-pick').value), runnerUp);
+}
+
+function audShowInfo() {
+  const pl = audPlan(false);
+  const i = pl.info;
+  const bits = ['Match: ' + audText(i.match), 'runner-up: ' + audText(i.runnerUp)];
+  if (i.confidence) bits.push('sure: ' + i.confidence);
+  if (i.fit) bits.push('fit: ' + i.fit);
+  bits.push('from ' + i.source);
+  el('aud-info').textContent = bits.join(' · ') + '. ' + (i.reason || '');
+}
+
+async function audRender(sides) {
+  const A = window.Nhl92Z80Audio;
+  const env = {
+    rom: nhl.rom,
+    renderScript: (script) => {
+      nhl.chip.loadState(nhl.pristine);
+      return A.create({ program: nhl.program, rom: nhl.rom, chip: nhl.chip }).play(script);
+    }
+  };
+  const out = [];
+  for (const side of sides) out.push(await Nhl92GmAudition.renderSide(side, env));
+  return out;
+}
+
+async function audPlay(mode) {
+  const meter = el('aud-meter');
+  if (!aud.map || !nhl.chip) {
+    meter.textContent = 'Still loading…';
+    return;
+  }
+  if (!ctx) ensureAudioGraph();
+  if (ctx.state === 'suspended') await ctx.resume();
+  stopAudition();
+  const pl = audPlan(mode === 'ru');
+  const sides = mode === 'a' ? [pl.picked] : mode === 'b' || mode === 'ru' ? [pl.mapped] : [pl.picked, pl.mapped];
+  meter.textContent = 'Rendering…';
+  const bufs = await audRender(sides);
+  const mono = bufs.length === 2 ? Nhl92GmAudition.join(bufs[0], bufs[1], 0.5) : bufs[0];
+  const rate = Nhl92GmAudition.SAMPLE_RATE;
+  const buf = ctx.createBuffer(1, mono.length, rate);
+  buf.getChannelData(0).set(mono);
+  aud.source = ctx.createBufferSource();
+  aud.source.buffer = buf;
+  aud.source.connect(ctx.destination);
+  aud.source.start();
+  meter.textContent = sides.map(Nhl92GmAudition.sideLabel).join('  →  ') + ' · ' + (mono.length / rate).toFixed(1) + ' s';
+}
+
+function stopAudition() {
+  if (aud.source) {
+    try { aud.source.stop(); } catch (e) { /* already stopped */ }
+    aud.source = null;
+  }
+}
+
+async function initAudition() {
+  const res = await fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href);
+  if (!res.ok) throw new Error('mapping JSON missing (' + res.status + ')');
+  aud.map = await res.json();
+  audFillPicks();
+  el('aud-meter').textContent = 'Ready — pick something and press Play';
+}
+
+el('aud-dir').addEventListener('change', () => aud.map && audFillPicks());
+el('aud-pick').addEventListener('change', () => aud.map && audShowInfo());
+for (const [id, mode] of [['aud-both', 'both'], ['aud-a', 'a'], ['aud-b', 'b'], ['aud-ru', 'ru']]) {
+  el(id).addEventListener('click', () => {
+    audPlay(mode).catch((err) => {
+      el('aud-meter').textContent = err && err.message ? err.message : 'Render failed';
+      console.error(err);
+    });
+  });
+}
+el('aud-stop').addEventListener('click', stopAudition);
 
 initEngine().catch((err) => {
   engineReady = false;
