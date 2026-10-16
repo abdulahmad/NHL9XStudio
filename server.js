@@ -417,7 +417,7 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/viewer.js' || pathname === '/viewer.css' || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
-      pathname === '/sound-test-view.js' || pathname === '/sound-roll.js') {
+      pathname === '/sound-test-view.js' || pathname === '/sound-roll.js' || pathname === '/sound-tools.js') {
     serveFile(res, path.join(PUBLIC, pathname.slice(1)));
     return;
   }
