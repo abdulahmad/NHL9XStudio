@@ -50,8 +50,12 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
 - **Song length and seeking:** a stream's length is known, so the song bar shows it and can be scrubbed; a looping
   stream repeats from its loop point after the first pass.
 - **Lane labels:** a patch burst is matched to the bank (24 operator bytes + `$B0`) and labelled `P11 · Rock Organ`.
-- **The map is a guess** from register values and how songs use each patch; nothing was auditioned. Each entry has a
-  confidence. Edit by ear; `node test/nhl9x-song-gm.js` checks the file.
+- **How the map was chosen:** `node tools/build-nhl9x-patch-analysis.js` renders one note of each of the 32 FM patches
+  through the retail drivers and ymfm (sound $0 of a copy of the NHL 94 slice replaced by a patch select, key on at the
+  pitch the songs use, key off after 40 vblanks) and measures envelope, brightness and noisiness like the NHL 92
+  analysis; results in `data/audio/nhl9x-patch-analysis.json`. The picks follow those numbers and the patch's role in the
+  songs; nothing was auditioned, so every entry carries a confidence and the file is meant to be edited by ear.
+  `node test/nhl9x-song-gm.js` checks it.
 
 ## Not done yet
 

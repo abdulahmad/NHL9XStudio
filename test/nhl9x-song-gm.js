@@ -114,4 +114,11 @@ for (const g of [93, 94]) {
   assert.strictEqual(Song.identify(bank, new Map(), 0), -1);
 }
 
+// 7. The stored patch measurements cover all 32 FM patches (regenerate: node tools/build-nhl9x-patch-analysis.js).
+{
+  const an = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'audio', 'nhl9x-patch-analysis.json'), 'utf8'));
+  assert.strictEqual(an.patches.length, 32);
+  an.patches.forEach((p, i) => { assert.strictEqual(p.id, i); assert.ok(p.measured && p.measured.shape, 'patch ' + i + ' measured'); });
+}
+
 console.log('nhl9x-song-gm: ok');
