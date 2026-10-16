@@ -14,9 +14,9 @@ function isZ80TestGame() {
   return gameInfo && gameInfo.kind === 'z80test';
 }
 
-/** The Sound test tab plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93 and NHL 94 Genesis. */
+/** The Sound test tab plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, and NHL 94 SNES songs. */
 function hasSoundTest(info) {
-  return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94') && typeof NhlSoundTestView !== 'undefined');
+  return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl94snes') && typeof NhlSoundTestView !== 'undefined');
 }
 
 /**
