@@ -106,3 +106,7 @@
 .chip-card a.download {
   color: var(--ice-2);
 }
+
+#aud-info {
+  min-height: 3.2em;
+}
