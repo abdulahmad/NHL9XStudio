@@ -83,6 +83,14 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
 - **Loop timing:** when a stream loops, its target event fires the moment the end event is reached (its own delay is
   not waited again); `parse()` reports the target event's time as `loopTick`.
 
+## DAC drums and the PCM samples
+
+`tools/build-nhl9x-dac-analysis.js` writes `data/audio/nhl9x-dac-analysis.json`: each of the 13 PCM patches (`$60`-`$6E`) is played through the retail drivers and the `$2A` writes are the waveform, so rate (30.6 kHz here), length, peak, spectrum split and a **fingerprint** (the first 10 values) are measured, not guessed. The same samples are in both games. `$67` and `$6A` are one sample, the "hithigh" body hit.
+
+What the songs do with them: the menu and title songs (NHL 94 `$78`, `$79`, `$7A`, NHL 93 `$35`-`$37`) use **one** PCM sample, `$6A` played at note 76 (note 82 in 93 `$37`), as their snare, and the fixed-pitch FM patch 20 (note 21) as their kick. The PCM hit falls exactly between two kicks (`kickSnarePairs`: median phase 0.5 in NHL 94 `$7A` and NHL 93 `$37`), and in `$78` a run of `$6A` hits with velocity 88, 99, 111, 121, 127 is a snare roll. The long DAC bar the roll used to draw was only `$2B` bit 7 (DAC switched on), which these drivers set for the whole song. A sample's length depends on the note: it is gated by the note's duration, and a higher note plays it faster (1,366 bytes last 0.28 s at note 60 and 0.11 s at note 76).
+
+- **Roll.** The FM6 lane now draws every real PCM hit as a solid block (brightness = peak) over a faint hatch that only says the DAC is on, labelled with the sample (`$6A · Acoustic Snare`) matched by fingerprint, up to the volume scale (`ym-note-tracker` `dacHits`). The Events view lists `PCM hit` lines.
+- **GM map.** Patch 20 is now **Bass Drum 1** (was Low Floor Tom); patch 17 (pitched thump) is the Low Floor Tom; `$6A`/103 stay Acoustic Snare. Importing a MIDI kick uses patch 20 at note 21, toms use patch 17, snares and claps use `$6A` at note 76 (the retail pitch, was 70).
 - **Instruments and selection.** Every note carries its own instrument, so a channel can switch instruments as often as
   a song wants (13 retail 93/94 songs do, e.g. the intermission song `$79` / `$36`; the encoder writes a patch event
   wherever a channel's instrument changes, checked on every retail song). **Shift-click** notes to select them, change

@@ -146,6 +146,35 @@ for (const g of [93, 94]) {
   assert.strictEqual(Song.identify(Song.patches(g, slices[g]), burst.regs, burst.ch), 11);
 }
 
+// 7. DAC (PCM) drums: the roll sees real sample hits, and the kick / snare roles follow the songs' own use.
+{
+  const Tracker = require('../lib/audio/ym-note-tracker');
+  const ym = require('../lib/audio/ym2612-wasm');
+  const analysis = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'audio', 'nhl9x-dac-analysis.json'), 'utf8'));
+  assert.strictEqual(analysis.samples.length, 13, 'every PCM patch is analysed');
+  assert.ok(analysis.kickSnarePairs.some((p) => p.game === 94 && p.sound === '$7A' && Math.abs(p.medianPhase - 0.5) < 0.1), 'in NHL 94 $7A the PCM hit sits between two kicks');
+  const byPatch = (n) => map.patches.find((e) => e.patch === n);
+  assert.strictEqual(byPatch(20).target.name, 'Bass Drum 1', 'patch 20 is the kick');
+  assert.strictEqual(byPatch(106).target.name, 'Acoustic Snare', 'the hithigh sample is the snare');
+  assert.strictEqual(map.gmToNhl.drums.find((d) => d.notes.includes(36)).patch, 20, 'importing a kick uses patch 20');
+  assert.strictEqual(map.gmToNhl.drums.find((d) => d.notes.includes(38)).note, 76, 'importing a snare plays the sample at the retail pitch');
+  (async () => {
+    const chip = await ym.createChip();
+    const tr = Tracker.create();
+    const chain = Chain.create({ rom: roms[94], driver: DRIVER[94], chip, keepLogs: false, onYmWrite: (t, p, v) => tr.writePort(t, p, v), onPsgWrite: (t, v) => tr.psgWrite(t, v), onYmReset: (t) => tr.reset(t) });
+    chain.step(null);
+    chain.step([{ song: 0x78 }]);
+    for (let f = 2; f < 400; f++) chain.step(null);
+    chip.dispose();
+    assert.ok(tr.dacHits.length >= 8, 'PCM hits are tracked as runs of non-centre $2A writes (' + tr.dacHits.length + ')');
+    const ref = byPatch(106).sig;
+    const full = tr.dacHits.filter((h) => h.sig.length === 10 && h.sig.every((v, i) => v === ref[i]));
+    assert.ok(full.length >= 4, 'full-volume hits carry the $6A fingerprint (' + full.length + ')');
+    assert.ok(tr.dacHits.every((h) => h.t1 >= h.t0 && h.writes > 0));
+    console.log('nhl9x-stream: DAC hits are tracked and fingerprinted; patch 20 = kick, $6A = snare, import uses both OK');
+  })().catch((e) => { console.error(e); process.exit(1); });
+}
+
 // 6. Per-channel mute (the roll's lane click): the taps still see every write, the chip makes no sound.
 (async () => {
   const ym = require('../lib/audio/ym2612-wasm');
