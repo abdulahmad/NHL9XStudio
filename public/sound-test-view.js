@@ -26,6 +26,8 @@
   let gmPlay = null; // { id, source, startedAt, total }: a reference-synth playback in progress
   let toggles = {}; // id -> () => Promise, set by the tools panels (Space / Enter / double-click)
   const gmCache = new Map(); // song id -> rendered Float32Array
+  const sfxGmCache = new Map(); // sfx number -> { buf, song, tracker, notes } (see renderGmSfx)
+  const LEAD_FRAMES = 2; // the retail driver's first note sounds this many frames after unit 0
   let Ym = null; // { Chip, module, api }
   let error = '';
   let loading = null;
@@ -91,14 +93,15 @@
   function entries() {
     if (!data) return [];
     const out = [];
+    // Tools first, so the sequencer and the MIDI import are the first thing in the list.
+    if (root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools) {
+      out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
+      out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
+    }
     for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: s.id + ' · ' + s.name, sub: 'song ' + s.id + ' · loops until Stop' });
     for (const s of data.sfx) {
       const kinds = s.actions.map((a) => (a.type === 'dac' ? 'DAC' : 'FM ch' + a.channel)).join(' + ');
       out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: kinds + ' · ' + SFX_VBLANKS + ' vblanks' });
-    }
-    if (root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools) {
-      out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
-      out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
     }
     return out;
   }
@@ -141,6 +144,12 @@
       // Where this block starts in the chip's output stream (chain samples handed to the resampler,
       // one behind: its lookahead) and when the context will play it: the sequencer's clock.
       const s = live;
+      if (s.seeking) {
+        L.fill(0);
+        R.fill(0);
+        status();
+        return;
+      }
       const taken = s.chain.rendered - s.queued;
       s.blocks.push({ ctxTime: typeof ev.playbackTime === 'number' && ev.playbackTime > 0 ? ev.playbackTime : ctx.currentTime, src: taken - 1 });
       if (s.blocks.length > 8) s.blocks.shift();
@@ -164,6 +173,7 @@
   /** Run chain frames until `n` source samples are queued (or the plan ends). */
   function pull(n) {
     const s = live;
+    if (s.seeking) return { left: new Float32Array(n), right: new Float32Array(n) };
     while (s.queued < n && !s.done) {
       const f = s.chain.frame;
       s.chain.step(s.plan.calls[f] || null);
@@ -197,24 +207,44 @@
     return { left, right };
   }
 
-  async function play(id) {
+  const taps = (tracker) => ({
+    onYmWrite: (t, port, value) => tracker.writePort(t, port, value),
+    onPsgWrite: (t, value) => tracker.psgWrite(t, value),
+    onYmReset: (t) => tracker.reset(t)
+  });
+
+  /** A chain and its note tracker over `romImage`. withChip=false makes no audio: only the register writes (for the roll). */
+  function newSession(romImage, withChip) {
+    let chip;
+    if (withChip) {
+      chip = new Ym.Chip(Ym.module, Ym.api.create(), Ym.api);
+      chip.reset();
+    }
+    const tracker = root.YmNoteTracker.create();
+    // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
+    const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false }, taps(tracker)));
+    return { chip, chain, tracker, held: new Array(6).fill(null) };
+  }
+
+  /** Latest patch load per lane at or before source sample `src`, kept for the roll's instrument tags (the tracker forgets old ones). */
+  function updateHeld(s, src) {
+    for (const p of s.tracker.patches) {
+      if (p.kind !== 'patch' || Chain().sampleAt(p.t0) > src) continue;
+      const h = s.held[p.ch];
+      if (!h || p.t0 >= h.t0) s.held[p.ch] = p;
+    }
+  }
+
+  async function play(id, startSec) {
     if (!rom || !Ym) throw new Error(error || 'Sound test still loading');
     stop();
     stopBuffer();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const chip = new Ym.Chip(Ym.module, Ym.api.create(), Ym.api);
-    chip.reset();
-    const tracker = root.YmNoteTracker.create();
-    // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
-    const chain = Chain().create({
-      rom: id === TOOL_EDITOR && customRom ? customRom : rom, chip, psg: root.NhlSn76489.create(), keepLogs: false,
-      onYmWrite: (t, port, value) => tracker.writePort(t, port, value),
-      onPsgWrite: (t, value) => tracker.psgWrite(t, value),
-      onYmReset: (t) => tracker.reset(t)
-    });
-    live = { id, chip, chain, tracker, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '' };
+    const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : rom, true);
+    live = Object.assign(sess, { id, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '', seeking: null, frozen: 0 });
     live.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
+    if (startSec > 0) beginSeek(live, framesOf(startSec));
     status(true);
     if (onChange) onChange();
   }
@@ -223,9 +253,67 @@
     if (!live) return;
     const s = live;
     live = null;
-    s.chip.dispose();
+    s.dead = true;
+    if (s.chip) s.chip.dispose();
     status(true, message || 'Stopped', s);
     if (onChange) onChange();
+  }
+
+  // --- Seeking the live chain -----------------------------------------------------------------------------
+  // The retail driver can only run forward, so a forward seek fast-forwards the running chain with sample
+  // generation switched off (register writes still reach the chips, so the sound state is right when it
+  // resumes), in short slices so the page stays responsive. A backward seek starts a new run and does the same.
+
+  const framesOf = (sec) => Math.max(0, Math.round(sec / secondsOf(1)));
+
+  function beginSeek(s, targetFrame) {
+    const last = s.plan.frames === Infinity ? Infinity : s.plan.frames - 1;
+    targetFrame = Math.min(targetFrame, last);
+    if (targetFrame <= s.chain.frame) return;
+    s.frozen = Math.max(0, s.chain.rendered - s.queued);
+    s.seeking = { from: s.chain.frame, target: targetFrame };
+    s.chain.setMute(true);
+    const slice = () => {
+      if (s.dead || live !== s) return;
+      const t0 = root.performance.now();
+      while (s.chain.frame < s.seeking.target && root.performance.now() - t0 < 25) {
+        s.chain.step(s.plan.calls[s.chain.frame] || null);
+        s.chain.take();
+      }
+      if (s.chain.frame < s.seeking.target) {
+        status(true);
+        setTimeout(slice, 0);
+        return;
+      }
+      endSeek(s);
+    };
+    setTimeout(slice, 0);
+  }
+
+  function endSeek(s) {
+    s.chain.setMute(false);
+    s.chunks = [];
+    s.offset = 0;
+    s.queued = 0;
+    s.blocks = [];
+    s.done = s.chain.frame >= s.plan.frames;
+    s.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
+    updateHeld(s, s.chain.rendered);
+    s.seeking = null;
+    status(true);
+  }
+
+  /** Move the live run to `sec` seconds of chain time (forward: fast-forward; backward: start over and fast-forward). */
+  function seekLive(sec) {
+    const s = live;
+    if (!s || s.id === TOOL_EDITOR) return;
+    const target = framesOf(sec);
+    if (s.seeking) {
+      if (target > s.seeking.target) s.seeking.target = target;
+      return;
+    }
+    if (target > s.chain.frame) beginSeek(s, target);
+    else play(s.id, sec).catch((err) => { if (panel) { const st = panel.querySelector('.st-status'); if (st) st.textContent = 'Seek failed: ' + (err && err.message ? err.message : String(err)); } });
   }
 
   function toggle(id) {
@@ -239,37 +327,94 @@
 
   // --- Reference-synth (General MIDI) playback of a rendered buffer ------------------------------------------
 
-  /** Play a mono Float32Array at `rate` Hz as item `id`; stops the live chain session first. */
-  async function playBuffer(id, mono, rate) {
+  /**
+   * Play a mono Float32Array at `rate` Hz as item `id`; stops the live chain session first.
+   * `viz` (optional) drives the sequencer view while it plays:
+   *   { tracker }      a finished tracker (the SFX), drawn as it stands, or
+   *   { rom, plan }    a silent run of the retail chain over `rom`, kept level with the audio.
+   */
+  async function playBuffer(id, mono, rate, viz) {
     stop();
     stopBuffer();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const buf = ctx.createBuffer(1, mono.length, rate);
-    buf.getChannelData(0).set(mono);
+    const audioBuf = ctx.createBuffer(1, mono.length, rate);
+    audioBuf.getChannelData(0).set(mono);
+    const g = { id, source: null, audioBuf, startedAt: 0, total: mono.length / rate, viz: makeViz(viz) };
+    gmPlay = g;
+    g.timer = setInterval(() => status(), 250);
+    startSource(g, 0);
+    status(true);
+    if (onChange) onChange();
+  }
+
+  function startSource(g, sec) {
     const source = ctx.createBufferSource();
-    source.buffer = buf;
+    source.buffer = g.audioBuf;
     source.connect(gain);
-    const g = { id, source, startedAt: ctx.currentTime, total: mono.length / rate };
     source.onended = () => {
-      if (gmPlay !== g) return;
+      if (gmPlay !== g || g.source !== source) return;
+      clearInterval(g.timer);
       gmPlay = null;
       status(true, 'Finished');
       if (onChange) onChange();
     };
-    gmPlay = g;
-    source.start();
+    g.source = source;
+    g.startedAt = ctx.currentTime - sec;
+    source.start(0, sec);
+  }
+
+  /** Jump the General MIDI playback to `sec` (the buffer is whole, so this is immediate). */
+  function seekGm(sec) {
+    const g = gmPlay;
+    if (!g) return;
+    const old = g.source;
+    old.onended = null;
+    try { old.stop(); } catch (err) { /* already stopped */ }
+    startSource(g, Math.max(0, Math.min(g.total - 0.05, sec)));
     status(true);
-    if (onChange) onChange();
   }
 
   function stopBuffer() {
     if (!gmPlay) return;
     const g = gmPlay;
+    clearInterval(g.timer);
     gmPlay = null;
+    g.source.onended = null;
     try { g.source.stop(); } catch (err) { /* already stopped */ }
     status(true, 'Stopped');
     if (onChange) onChange();
+  }
+
+  function makeViz(spec) {
+    if (!spec || !root.YmNoteTracker || !root.NhlSn76489) return null;
+    if (spec.tracker) return { fixed: true, spec, tracker: spec.tracker, held: new Array(6).fill(null) };
+    return Object.assign({ fixed: false, spec, plan: spec.plan, minSrc: 0 }, newSession(spec.rom, false));
+  }
+
+  /** The roll's state during General MIDI playback: chain time follows the audio clock (plus the driver's start-up lead). */
+  function vizState(g) {
+    let v = g.viz;
+    const rate = Chain().SAMPLE_RATE;
+    const t = Math.max(0, Math.min(g.total, audibleContextTime() - g.startedAt));
+    if (v.fixed) {
+      updateHeld(v, t * rate);
+      return { tracker: v.tracker, src: t * rate, held: v.held };
+    }
+    const target = (t + secondsOf(LEAD_FRAMES)) * rate;
+    if (target < v.minSrc) { // seeked back past what the view still holds: run the driver again from the start
+      g.viz = v = makeViz(v.spec);
+    }
+    const t0 = root.performance.now();
+    while (v.chain.rendered < target && v.chain.frame < v.plan.frames && root.performance.now() - t0 < 14) {
+      v.chain.step(v.plan.calls[v.chain.frame] || null);
+      v.chain.take();
+    }
+    const src = Math.min(target, v.chain.rendered);
+    updateHeld(v, src);
+    v.minSrc = Math.max(0, src - KEEP_SECONDS * rate);
+    v.tracker.trim(v.minSrc * T_PER_SAMPLE);
+    return { tracker: v.tracker, src, held: v.held };
   }
 
   /** A retail song through the NHL 92 -> GM table and the plain reference synth (cached). */
@@ -283,13 +428,62 @@
     return buf;
   }
 
+  /** True when every part of this SFX is a DAC sample: there are no FM notes for General MIDI to play. */
+  const sfxIsDacOnly = (n) => data.sfx[n].actions.every((a) => a.type === 'dac');
+
+  /**
+   * An SFX as General MIDI: the whole plan is run once without audio, the notes the YM2612 was asked for
+   * (tracker) become GM notes, and the result goes through the reference synth. DAC samples have no
+   * notes and are left out, so a DAC-only SFX gives { notes: 0 }. Cached; the tracker is reused for the view.
+   */
+  function renderGmSfx(n) {
+    if (!gmMap) throw new Error('data/audio/nhl92-gm-map.json did not load');
+    if (sfxGmCache.has(n)) return sfxGmCache.get(n);
+    const id = 'sfx-' + n;
+    const plan = planFor(id);
+    const sess = newSession(rom, false);
+    for (let f = 0; f < plan.frames; f++) {
+      sess.chain.step(plan.calls[f] || null);
+      sess.chain.take();
+    }
+    const g = root.Nhl92SongGm.gmFromTracker(sess.tracker, {
+      map: gmMap, sampleAt: Chain().sampleAt, rate: Chain().SAMPLE_RATE, endT: plan.frames * Chain().FRAME_TSTATES, patches: data.patches
+    });
+    const out = { notes: g.notes, song: g.song, tracker: sess.tracker, buf: null };
+    if (g.notes) out.buf = root.Nhl92GmReference.renderEvents(root.Nhl92SongGm.gmEvents(g.song));
+    sfxGmCache.set(n, out);
+    return out;
+  }
+
   async function playGm(id) {
     if (gmPlay && gmPlay.id === id) { stopBuffer(); return; }
     const n = Number(id.split('-')[1]);
     const box = panel && panel.querySelector('.st-status');
-    if (box && !gmCache.has(n)) box.textContent = 'Rendering the song with the General MIDI reference sounds…';
+    const isSong = id.startsWith('song-');
+    if (box && !(isSong ? gmCache.has(n) : sfxGmCache.has(n))) {
+      box.textContent = isSong ? 'Rendering the song with the General MIDI reference sounds…' : 'Running the sound effect and converting its FM notes to General MIDI…';
+    }
     await new Promise((r) => setTimeout(r, 20));
-    await playBuffer(id, renderGmSong(n), root.Nhl92GmReference.SAMPLE_RATE);
+    if (isSong) {
+      await playBuffer(id, renderGmSong(n), root.Nhl92GmReference.SAMPLE_RATE, { rom, plan: Chain().songPlan(n, Infinity) });
+      return;
+    }
+    const r = renderGmSfx(n);
+    if (!r.notes) {
+      if (box) box.textContent = 'This sound effect has no FM notes to play as General MIDI (it is a DAC sample).';
+      return;
+    }
+    await playBuffer(id, r.buf, root.Nhl92GmReference.SAMPLE_RATE, { tracker: r.tracker });
+  }
+
+  /** Download an SFX's General MIDI conversion (same notes as Play as GM). */
+  async function exportSfxMidi(n) {
+    await new Promise((r) => setTimeout(r, 20));
+    const r = renderGmSfx(n);
+    if (!r.notes) throw new Error('This sound effect has no FM notes (it is a DAC sample)');
+    const smf = root.Nhl92SongGm.toSmfSong(r.song);
+    smf.name = 'nhl92-sfx-' + n;
+    root.NhlSoundTools.download('nhl92-sfx-' + n + '-gm.mid', root.Nhl92Smf.write(smf), 'audio/midi');
   }
 
   /** What the Sound test hands to the tools panels (public/sound-tools.js). */
@@ -298,6 +492,8 @@
       rom, data, map: gmMap, Chain: Chain(),
       toggles,
       playBuffer, stopBuffer,
+      /** Viz spec for playBuffer: the retail drivers playing the sequencer's song (a ROM copy from Nhl92Song.romWithSong). */
+      songViz: (romCopy) => ({ rom: romCopy, plan: Chain().songPlan(root.Nhl92Song.CUSTOM_SONG, Infinity) }),
       get bufferId() { return gmPlay ? gmPlay.id : ''; },
       playEditor(romCopy) { customRom = romCopy; return play(TOOL_EDITOR); },
       stopLive: () => stop(),
@@ -354,8 +550,18 @@
 
   /** What the sequencer view draws: the running session's tracker and the audible position, or null. */
   function seqState() {
-    if (!live || !ctx) return null;
-    return { tracker: live.tracker, src: audibleSource(live) };
+    if (!ctx) return null;
+    if (live) {
+      const s = live;
+      const src = s.seeking ? s.frozen : s.blocks.length ? audibleSource(s) : Math.max(0, s.chain.rendered - s.queued);
+      updateHeld(s, src);
+      return { tracker: s.tracker, src, held: s.held };
+    }
+    if (gmPlay && gmPlay.viz) {
+      status(); // the roll's frame loop also keeps the clock and bar moving
+      return vizState(gmPlay);
+    }
+    return null;
   }
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
@@ -376,7 +582,40 @@
 
   /** Seconds of output that have left the queue (what the listener has heard, give or take a block). */
   function heard(s) {
+    if (s.seeking) return s.frozen / Chain().SAMPLE_RATE;
     return Math.max(0, (s.chain.rendered - s.queued) / Chain().SAMPLE_RATE);
+  }
+
+  /** Seconds one pass of a retail song lasts (units x tempo frames), or null. */
+  const passCache = new Map();
+  function passSecs(n) {
+    if (!passCache.has(n)) {
+      const song = root.Nhl92Song.fromParsed(data, n);
+      passCache.set(n, secondsOf(song.units * song.tempo));
+    }
+    return passCache.get(n);
+  }
+
+  let drag = null; // fraction while the progress bar is being dragged
+  let lastFraction = 0;
+
+  /** Seek item `id` to a fraction of its bar (one pass for a song, the whole run for an SFX). */
+  function seekFraction(id, f) {
+    f = Math.max(0, Math.min(1, f));
+    if (gmPlay && gmPlay.id === id) {
+      seekGm(f * gmPlay.total);
+      return;
+    }
+    if (!live || live.id !== id) return;
+    const n = Number(id.split('-')[1]);
+    if (id.startsWith('sfx-')) {
+      seekLive(f * secondsOf(planFor(id).frames));
+      return;
+    }
+    const pass = passSecs(n);
+    const lead = secondsOf(LEAD_FRAMES);
+    const base = Math.floor(Math.max(0, heard(live) - lead) / pass) * pass;
+    seekLive(lead + base + f * pass);
   }
 
   function status(force, message, ended) {
@@ -384,42 +623,71 @@
     if (!force && now - lastStatus < 250) return;
     lastStatus = now;
     if (!panel) return;
+    const bar = panel.querySelector('.st-bar');
+    const time = panel.querySelector('.st-time');
+    const box = panel.querySelector('.st-status');
+    const slider = panel.querySelector('.st-progress');
+    const setBar = (f, text) => {
+      lastFraction = f;
+      if (drag == null) bar.style.width = (f * 100).toFixed(1) + '%';
+      if (slider) slider.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+      if (slider) slider.setAttribute('aria-valuetext', text);
+    };
     const gmBtn = panel.querySelector('.st-gm');
-    if (gmBtn) {
+    if (gmBtn && bar && time && box) {
       const gmOn = !!(gmPlay && gmPlay.id === panel.dataset.item);
       gmBtn.textContent = gmOn ? '■ Stop GM' : '▶ Play as GM';
       gmBtn.setAttribute('aria-pressed', gmOn ? 'true' : 'false');
       if (gmOn) {
-        const secs = Math.min(gmPlay.total, ctx.currentTime - gmPlay.startedAt);
-        panel.querySelector('.st-bar').style.width = (secs / gmPlay.total * 100).toFixed(1) + '%';
-        panel.querySelector('.st-bar').classList.remove('is-loop');
-        panel.querySelector('.st-time').textContent = clock(secs) + ' / ' + clock(gmPlay.total);
-        panel.querySelector('.st-status').textContent = 'Playing as General MIDI · NHL 92 → GM table · plain reference synth, one pass';
+        const secs = Math.max(0, Math.min(gmPlay.total, ctx.currentTime - gmPlay.startedAt));
+        const text = clock(secs) + ' / ' + clock(gmPlay.total);
+        bar.classList.remove('is-loop');
+        setBar(secs / gmPlay.total, text);
+        time.textContent = text;
+        box.textContent = 'Playing as General MIDI · NHL 92 → GM table · plain reference synth, one pass' + (gmPlay.viz ? '' : ' · no sequencer view');
         return;
       }
     }
     const s = live || ended;
     const shown = s && s.id === panel.dataset.item ? s : null;
     const btn = panel.querySelector('.st-toggle');
-    const bar = panel.querySelector('.st-bar');
-    const time = panel.querySelector('.st-time');
-    const box = panel.querySelector('.st-status');
     if (!btn || !box || !bar || !time) return;
     const playing = !!(live && live.id === panel.dataset.item);
     btn.textContent = playing ? '■ Stop' : '▶ Play';
     btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
     const id = panel.dataset.item;
-    const total = id.startsWith('sfx-') ? secondsOf(planFor(id).frames) : null;
+    const isSong = id.startsWith('song-');
+    const n = Number(id.split('-')[1]);
+    const total = isSong ? passSecs(n) : secondsOf(planFor(id).frames); // length of the bar
+    bar.classList.remove('is-loop');
     if (!shown) {
-      bar.style.width = '0%';
-      time.textContent = total != null ? clock(0) + ' / ' + clock(total) : 'Loops until Stop';
+      setBar(0, clock(0));
+      time.textContent = clock(0) + ' / ' + clock(total) + (isSong ? ' · one pass, loops until Stop' : '');
       box.textContent = message || 'Stopped';
       return;
     }
-    const secs = playing ? heard(shown) : (message === 'Finished' && total != null ? total : heard(shown));
-    bar.style.width = total != null ? Math.min(100, (secs / total) * 100).toFixed(1) + '%' : (playing ? '100%' : '0%');
-    bar.classList.toggle('is-loop', total == null && playing);
-    time.textContent = total != null ? clock(secs) + ' / ' + clock(total) : clock(secs) + ' · loops until Stop';
+    if (shown.seeking) {
+      const to = shown.seeking.target;
+      const pct = Math.max(0, Math.min(100, ((shown.chain.frame - shown.seeking.from) / Math.max(1, to - shown.seeking.from)) * 100));
+      const secs = to * secondsOf(1);
+      const within = isSong ? Math.max(0, secs - secondsOf(LEAD_FRAMES)) % total : secs;
+      setBar(within / total, clock(within));
+      time.textContent = clock(within) + ' / ' + clock(total);
+      box.textContent = 'Seeking… ' + pct.toFixed(0) + '% (the driver runs forward at full speed, silently)';
+      return;
+    }
+    let secs = heard(shown);
+    if (!playing && message === 'Finished' && !isSong) secs = total;
+    let within = secs;
+    let pass = 0;
+    if (isSong) {
+      const pos = Math.max(0, secs - secondsOf(LEAD_FRAMES));
+      pass = Math.floor(pos / total);
+      within = pos - pass * total;
+    }
+    const text = clock(within) + ' / ' + clock(total) + (isSong ? ' · pass ' + (pass + 1) : '');
+    setBar(Math.min(1, within / total), text);
+    time.textContent = text + (isSong ? ' · loops until Stop' : '');
     box.textContent = (message || 'Playing') + ' · frame ' + Math.max(0, shown.chain.frame - 1) + ' · ' +
       shown.chain.ymWrites + ' YM writes · ' + shown.chain.psgWrites + ' PSG writes';
   }
@@ -480,24 +748,92 @@
     range.addEventListener('input', () => setVolume(Number(range.value) / 100));
     vol.appendChild(range);
     controls.append(btn);
-    if (id.startsWith('song-') && gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
+    const fail = (what) => (err) => {
+      const st = box.querySelector('.st-status');
+      if (st) st.textContent = what + ' failed: ' + (err && err.message ? err.message : String(err));
+    };
+    if (gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
+      const isSong = id.startsWith('song-');
       const gmBtn = make('button', 'ghost-btn st-gm', '▶ Play as GM');
       gmBtn.type = 'button';
-      gmBtn.title = 'Play this song through the NHL 92 → General MIDI table and the plain reference synth (one pass)';
       gmBtn.setAttribute('aria-pressed', 'false');
-      gmBtn.addEventListener('click', () => {
-        playGm(id).catch((err) => {
-          const st = box.querySelector('.st-status');
-          if (st) st.textContent = 'GM playback failed: ' + (err && err.message ? err.message : String(err));
-        });
-      });
+      if (isSong) gmBtn.title = 'Play this song through the NHL 92 → General MIDI table and the plain reference synth (one pass)';
+      else if (sfxIsDacOnly(n)) {
+        gmBtn.disabled = true;
+        gmBtn.title = 'This sound effect is a DAC sample only: there are no FM notes to play as General MIDI';
+      } else gmBtn.title = 'Play the FM notes of this sound effect through the NHL 92 → General MIDI table and the plain reference synth (DAC samples are left out)';
+      gmBtn.addEventListener('click', () => { playGm(id).catch(fail('GM playback')); });
       controls.append(gmBtn);
     }
     controls.append(vol);
     box.appendChild(controls);
 
+    // Edit / export: the same conversions the sequencer uses, straight from this entry.
+    if (root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
+      const ex = make('div', 'st-controls st-exports');
+      const add = (label, title, fn) => {
+        const b = make('button', 'ghost-btn', label);
+        b.type = 'button';
+        b.title = title;
+        b.addEventListener('click', () => { try { Promise.resolve(fn()).catch(fail(label)); } catch (err) { fail(label)(err); } });
+        ex.appendChild(b);
+        return b;
+      };
+      if (id.startsWith('song-')) {
+        const name = 'nhl92-song-' + n;
+        const song = () => root.Nhl92Song.fromParsed(data, n);
+        add('Edit in sequencer', 'Copy this song into the sequencer to change it (Undo there returns to your previous song)', () => {
+          root.NhlSoundTools.loadSong(song(), name);
+          host().openItem(TOOL_EDITOR);
+        });
+        add('Export MIDI (GM)', 'Standard MIDI file with General MIDI sounds chosen by the NHL 92 → GM table', () => root.NhlSoundTools.exportSong(song(), name, 'midi-gm', gmMap));
+        add('Export MIDI (FM tracks)', 'Standard MIDI file with one track per FM channel and the NHL 92 patch numbers as program changes', () => root.NhlSoundTools.exportSong(song(), name, 'midi-fm', gmMap));
+        add('Export cmdstream (.asm)', 'The song rebuilt as NHL 92 cmdstream source (see docs/NHL92-SEQUENCER.md)', () => root.NhlSoundTools.exportSong(song(), name, 'asm', gmMap));
+        add('Export cmdstream (.bin)', 'The song rebuilt as NHL 92 cmdstream bytes', () => root.NhlSoundTools.exportSong(song(), name, 'bin', gmMap));
+      } else if (gmMap && !sfxIsDacOnly(n)) {
+        add('Export MIDI (GM)', 'The FM notes of this sound effect as a General MIDI file', () => exportSfxMidi(n));
+      }
+      if (ex.children.length) box.appendChild(ex);
+    }
+
     const progress = make('div', 'st-progress');
     progress.appendChild(make('div', 'st-bar'));
+    progress.tabIndex = 0;
+    progress.setAttribute('role', 'slider');
+    progress.setAttribute('aria-label', 'Playback position (click or drag to seek while playing)');
+    progress.setAttribute('aria-valuemin', '0');
+    progress.setAttribute('aria-valuemax', '100');
+    progress.setAttribute('aria-valuenow', '0');
+    const fractionOf = (ev) => {
+      const r = progress.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (ev.clientX - r.left) / Math.max(1, r.width)));
+    };
+    progress.addEventListener('pointerdown', (ev) => {
+      drag = fractionOf(ev);
+      progress.setPointerCapture(ev.pointerId);
+      progress.querySelector('.st-bar').style.width = (drag * 100).toFixed(1) + '%';
+    });
+    progress.addEventListener('pointermove', (ev) => {
+      if (drag == null) return;
+      drag = fractionOf(ev);
+      progress.querySelector('.st-bar').style.width = (drag * 100).toFixed(1) + '%';
+    });
+    const release = (ev) => {
+      if (drag == null) return;
+      const f = ev.type === 'pointercancel' ? null : fractionOf(ev);
+      drag = null;
+      if (f != null) seekFraction(id, f);
+      status(true);
+    };
+    progress.addEventListener('pointerup', release);
+    progress.addEventListener('pointercancel', release);
+    progress.addEventListener('keydown', (ev) => {
+      const step = ev.key === 'ArrowRight' ? 0.05 : ev.key === 'ArrowLeft' ? -0.05 : 0;
+      if (!step) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      seekFraction(id, lastFraction + step);
+    });
     box.appendChild(progress);
     box.appendChild(make('p', 'st-time mono'));
     box.appendChild(make('p', 'st-status mono'));

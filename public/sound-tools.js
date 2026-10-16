@@ -557,7 +557,10 @@
       await nextFrame();
       const gm = SongGm().nhlToGm(model.song, map).song;
       const buf = Ref().renderEvents(SongGm().gmEvents(gm));
-      await host.playBuffer(id, buf, Ref().SAMPLE_RATE);
+      // The sequencer view follows the retail drivers playing the same song, level with the GM audio.
+      let viz = null;
+      try { viz = host.songViz(S.romWithSong(host.rom, S.build(model.song))); } catch (err) { /* too long for the driver: no view */ }
+      await host.playBuffer(id, buf, Ref().SAMPLE_RATE, viz);
       refreshTools();
     }
     const guard = (fn) => () => fn().catch((err) => { info.textContent = String(err && err.message ? err.message : err); });
@@ -602,5 +605,29 @@
     else renderEditor(box, id, host);
   }
 
-  root.NhlSoundTools = { render, model, readMidiFile };
+  /** Put a song (e.g. a retail one) into the sequencer as the song being edited; undo returns to the previous one. */
+  function loadSong(nhlSong, name) {
+    ensureModel();
+    model.undo.push(clone(model.song));
+    if (model.undo.length > 50) model.undo.shift();
+    model.song = clone(nhlSong);
+    model.name = safeName(name);
+    model.gmReport = [];
+    store();
+  }
+
+  /** Download a song as 'midi-gm', 'midi-fm', 'asm' or 'bin' (the same files as the sequencer's Export buttons). */
+  function exportSong(nhlSong, name, kind, map) {
+    const base = safeName(name);
+    const S = Song();
+    if (kind === 'midi-gm' || kind === 'midi-fm') {
+      const mapped = kind === 'midi-gm';
+      const smf = mapped ? SongGm().toSmfSong(SongGm().nhlToGm(nhlSong, map).song) : SongGm().nhlToSmfSong(nhlSong, base);
+      if (mapped) smf.name = base;
+      download(base + (mapped ? '-gm' : '-fm') + '.mid', Smf().write(smf), 'audio/midi');
+    } else if (kind === 'asm') download(base + '.asm', S.toAsm(S.build(nhlSong), base), 'text/plain');
+    else download(base + '.nhl92song.bin', S.toBinary(S.build(nhlSong)), 'application/octet-stream');
+  }
+
+  root.NhlSoundTools = { render, model, readMidiFile, loadSong, exportSong, download };
 })(typeof self !== 'undefined' ? self : this);
