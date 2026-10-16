@@ -73,6 +73,7 @@
     song: null, // NhlSong
     name: 'my-song',
     undo: [],
+    mode: 'notes',
     channel: 0,
     patch: 6,
     len: 4,
@@ -360,7 +361,12 @@
       edit(() => { model.song.channels = model.song.channels.map((c) => c.filter((n) => !dead.has(n))); model.sel = []; });
     });
     selDel.id = 'se-sel-delete';
-    rowFx.append(make('span', 'se-dim', 'Effects:'), lab('Modulation delay', modDelay), lab('delta', modDelta), lab('Pitch envelope', envSel), lab('speed', envSpeed), lab('Legato', legatoCb), lab('No key-off', keyCb), applyFx, selChan, selPatch, selNone, selDel);
+    const modeSel = make('select');
+    modeSel.id = 'se-mode';
+    modeSel.setAttribute('aria-label', 'What a click does');
+    [['notes', 'Click: draw notes'], ['select', 'Click: select / move']].forEach(([v, t]) => modeSel.appendChild(Object.assign(make('option', null, t), { value: v })));
+    modeSel.addEventListener('change', () => { model.mode = modeSel.value; refreshTools(); draw(); });
+    rowFx.append(lab('Mode', modeSel), make('span', 'se-dim', 'Effects:'), lab('Modulation delay', modDelay), lab('delta', modDelta), lab('Pitch envelope', envSel), lab('speed', envSpeed), lab('Legato', legatoCb), lab('No key-off', keyCb), applyFx, selChan, selPatch, selNone, selDel);
     box.appendChild(rowFx);
     const selInfo = make('p', 'st-status mono se-sel');
     selInfo.id = 'se-selinfo';
@@ -450,12 +456,13 @@
       envSpeed.value = String(model.fx.envSpeed);
       legatoCb.checked = model.fx.legato;
       keyCb.checked = model.fx.noKeyOff;
+      modeSel.value = model.mode;
       applyFx.disabled = !model.sel.length;
       selDel.disabled = !model.sel.length;
       const used = {};
       model.song.channels[model.channel].forEach((n) => { used[n.patch] = (used[n.patch] || 0) + 1; });
       const legend = Object.keys(used).map((p) => 'P' + p + '×' + used[p]).join(' ');
-      selInfo.textContent = 'FM' + (model.channel + 1) + ' instruments: ' + (legend || 'none') + ' · ' + model.sel.length + ' selected (shift-click a note to select; changing the Instrument or pressing Apply changes the selection)';
+      selInfo.textContent = 'FM' + (model.channel + 1) + ' instruments: ' + (legend || 'none') + ' · ' + model.sel.length + ' selected (' + (model.mode === 'select' ? 'click or drag a box to select, drag a selected note to move it, arrows nudge, Delete removes, Esc clears' : 'shift-click a note to select, or use Click: select / move') + '; changing the Instrument or pressing Apply changes the selection)';
       undoBtn.disabled = !model.undo.length;
       const notes = model.song.channels.reduce((n, c) => n + c.length, 0);
       let text = notes + ' notes · ' + model.song.units + ' units · ' + (model.song.units * S.secondsPerUnit(model.song.tempo)).toFixed(1) + ' s per pass';
@@ -481,6 +488,7 @@
       return { units, w, h };
     }
     const BLACK = new Set([1, 3, 6, 8, 10]);
+    let drag = null;
     function draw() {
       const { units, w, h } = geometry();
       const dpr = Math.min(2, root.devicePixelRatio || 1);
@@ -555,6 +563,20 @@
       g.lineWidth = 1.5;
       model.sel.forEach((n) => g.strokeRect(GUTTER + n.unit * model.zoom + 0.5, (MIDI_HI - (n.index + 12)) * ROW_H + 0.5, Math.max(2, n.len * model.zoom - 1), ROW_H - 1));
       g.lineWidth = 1;
+      if (drag && drag.kind === 'move' && (drag.dt || drag.dn)) {
+        g.strokeStyle = '#fff';
+        g.setLineDash([3, 2]);
+        model.sel.forEach((n) => g.strokeRect(GUTTER + (n.unit + drag.dt) * model.zoom + 0.5, (MIDI_HI - (n.index + 12 + drag.dn)) * ROW_H + 0.5, Math.max(2, n.len * model.zoom - 1), ROW_H - 1));
+        g.setLineDash([]);
+      }
+      if (drag && drag.kind === 'band') {
+        const bw = Math.abs(drag.x1 - drag.x0);
+        const bh = Math.abs(drag.y1 - drag.y0);
+        g.fillStyle = 'rgba(255,255,255,0.12)';
+        g.fillRect(Math.min(drag.x0, drag.x1), Math.min(drag.y0, drag.y1), bw, bh);
+        g.strokeStyle = '#fff';
+        g.strokeRect(Math.min(drag.x0, drag.x1) + 0.5, Math.min(drag.y0, drag.y1) + 0.5, bw, bh);
+      }
     }
 
     function cellAt(ev) {
@@ -570,7 +592,132 @@
     scroller.addEventListener('scroll', () => {
       if (!scrollDraw) scrollDraw = root.requestAnimationFrame(() => { scrollDraw = 0; draw(); });
     });
+    const secs = (units) => (units * model.song.tempo / 60).toFixed(2) + ' s';
+    const tip = make('div', 'se-tip');
+    tip.hidden = true;
+    box.style.position = 'relative';
+    box.appendChild(tip);
+    const pos = (ev) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: ev.clientX - r.left + (parseFloat(canvas.style.left) || 0), y: ev.clientY - r.top };
+    };
+    const noteAtXY = (x, y) => {
+      const unit = Math.floor((x - GUTTER) / model.zoom);
+      const index = MIDI_HI - Math.floor(y / ROW_H) - 12;
+      return model.song.channels[model.channel].find((n) => n.index === index && unit >= n.unit && unit < n.unit + n.len) || null;
+    };
+    function showTip(n, ev) {
+      if (!n) { tip.hidden = true; return; }
+      const e = map && map.nhl92ToGm.patches[n.patch];
+      const lines = [
+        S.noteName(n.index + 12) + ' (MIDI ' + (n.index + 12) + ') · FM' + (model.channel + 1),
+        'Instrument ' + n.patch + (e ? ' · ≈ ' + e.target.name : ''),
+        'Starts bar ' + (Math.floor(n.unit / BAR) + 1) + ' beat ' + (Math.floor((n.unit % BAR) / 4) + 1) + ' (' + secs(n.unit) + ')',
+        'Length ' + n.len + ' units (' + secs(n.len) + ')',
+        'Modulation: ' + (n.mod ? 'after ' + n.mod.delay + ' units, delta ' + n.mod.delta : 'none'),
+        'Pitch envelope: ' + (n.env ? 'envelope ' + n.env.id + ', speed ' + n.env.speed : 'none'),
+        'Legato: ' + (n.legato ? 'yes' : 'no') + ' · key-off: ' + (n.noKeyOff ? 'none' : 'at the end')
+      ];
+      tip.textContent = lines.join('\n');
+      tip.hidden = false;
+      const br = box.getBoundingClientRect();
+      tip.style.left = Math.min(ev.clientX - br.left + 14, Math.max(0, br.width - 260)) + 'px';
+      tip.style.top = (ev.clientY - br.top + 18) + 'px';
+    }
+    canvas.addEventListener('pointerleave', () => { tip.hidden = true; });
+    canvas.addEventListener('pointerdown', (ev) => {
+      if (model.mode !== 'select' || ev.button !== 0) return;
+      const p = pos(ev);
+      const hit = noteAtXY(p.x, p.y);
+      scroller.focus({ preventScroll: true });
+      canvas.setPointerCapture(ev.pointerId);
+      tip.hidden = true;
+      if (hit) {
+        if (ev.shiftKey) {
+          const at = model.sel.indexOf(hit);
+          if (at >= 0) model.sel.splice(at, 1); else model.sel.push(hit);
+          drag = null;
+        } else {
+          if (model.sel.indexOf(hit) < 0) model.sel = [hit];
+          model.patch = hit.patch;
+          drag = { kind: 'move', x0: p.x, y0: p.y, dt: 0, dn: 0 };
+        }
+      } else {
+        drag = { kind: 'band', x0: p.x, y0: p.y, x1: p.x, y1: p.y, base: ev.shiftKey ? model.sel.slice() : [] };
+        if (!ev.shiftKey) model.sel = [];
+      }
+      refreshTools();
+      draw();
+    });
+    const clampMove = (dt, dn) => {
+      dt = Math.max(dt, -Math.min.apply(null, model.sel.map((n) => n.unit)));
+      dn = Math.max(MIDI_LO - 12 - Math.min.apply(null, model.sel.map((n) => n.index)), Math.min(MIDI_HI - 12 - Math.max.apply(null, model.sel.map((n) => n.index)), dn));
+      return [dt, dn];
+    };
+    function dragMove(ev) {
+      const p = pos(ev);
+      if (drag.kind === 'move') {
+        const m = clampMove(Math.round((p.x - drag.x0) / model.zoom), Math.round(-(p.y - drag.y0) / ROW_H));
+        drag.dt = m[0];
+        drag.dn = m[1];
+      } else {
+        drag.x1 = p.x;
+        drag.y1 = p.y;
+        const x0 = Math.min(drag.x0, drag.x1);
+        const x1 = Math.max(drag.x0, drag.x1);
+        const y0 = Math.min(drag.y0, drag.y1);
+        const y1 = Math.max(drag.y0, drag.y1);
+        const inside = model.song.channels[model.channel].filter((n) => {
+          const nx = GUTTER + n.unit * model.zoom;
+          const ny = (MIDI_HI - (n.index + 12)) * ROW_H;
+          return nx < x1 && nx + n.len * model.zoom > x0 && ny < y1 && ny + ROW_H > y0;
+        });
+        model.sel = drag.base.concat(inside.filter((n) => drag.base.indexOf(n) < 0));
+      }
+      draw();
+    }
+    /** Move the selection; a channel plays one note at a time, so a note the moved ones run into is cut, and one they cover is dropped. */
+    function nudge(dt, dn) {
+      if (!model.sel.length) return;
+      const m = clampMove(dt, dn);
+      if (!m[0] && !m[1]) return;
+      edit(() => {
+        const moved = new Set(model.sel);
+        model.sel.forEach((n) => { n.unit += m[0]; n.index += m[1]; });
+        const ch = model.song.channels[model.channel];
+        const covered = (n) => !moved.has(n) && model.sel.some((q) => n.unit >= q.unit && n.unit < q.unit + q.len);
+        const keep = ch.filter((n) => !covered(n)).sort((a, b) => a.unit - b.unit || (moved.has(a) ? -1 : 1));
+        keep.forEach((n, i) => { const nx = keep[i + 1]; if (nx && n.unit + n.len > nx.unit) n.len = Math.max(1, nx.unit - n.unit); });
+        model.song.channels[model.channel] = keep;
+        model.song.units = Math.max(model.song.units, Math.ceil(Math.max.apply(null, keep.map((n) => n.unit + n.len)) / BAR) * BAR);
+      });
+    }
+    const endDrag = () => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      if (d.kind === 'move' && (d.dt || d.dn)) nudge(d.dt, d.dn);
+      else { refreshTools(); draw(); }
+    };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', () => { drag = null; draw(); });
+    scroller.tabIndex = 0;
+    scroller.addEventListener('keydown', (ev) => {
+      if (model.mode !== 'select') return;
+      const k = ev.key;
+      if ((k === 'Delete' || k === 'Backspace') && model.sel.length) { ev.preventDefault(); selDel.click(); }
+      else if (k === 'Escape') { model.sel = []; refreshTools(); draw(); }
+      else if ((k === 'a' || k === 'A') && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); selChan.click(); }
+      else if (model.sel.length && /^Arrow/.test(k)) {
+        ev.preventDefault();
+        nudge(k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, k === 'ArrowUp' ? (ev.shiftKey ? 12 : 1) : k === 'ArrowDown' ? (ev.shiftKey ? -12 : -1) : 0);
+      }
+    });
     canvas.addEventListener('pointermove', (ev) => {
+      if (drag) { dragMove(ev); return; }
+      const hitNote = noteAtXY(pos(ev).x, pos(ev).y);
+      showTip(hitNote, ev);
+      canvas.style.cursor = model.mode === 'select' ? (hitNote ? (model.sel.indexOf(hitNote) >= 0 ? 'move' : 'pointer') : 'default') : hitNote ? 'pointer' : 'crosshair';
       const c = cellAt(ev);
       hover.textContent = c.unit >= 0 && c.midi >= MIDI_LO && c.midi <= MIDI_HI
         ? 'FM' + (model.channel + 1) + ' · ' + S.noteName(c.midi) + ' · bar ' + (Math.floor(c.unit / BAR) + 1) + ' beat ' + (Math.floor((c.unit % BAR) / 4) + 1) + ' · unit ' + c.unit
@@ -578,6 +725,7 @@
     });
     canvas.addEventListener('click', (ev) => {
       const { unit, midi } = cellAt(ev);
+      if (model.mode === 'select') return;
       if (unit < 0 || midi < MIDI_LO || midi > MIDI_HI) return;
       if (ev.shiftKey) { toggleSelect(unit, midi); return; }
       addOrRemove(unit, midi);

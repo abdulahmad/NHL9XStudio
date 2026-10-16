@@ -476,6 +476,9 @@ select:focus, input:focus, button:focus-visible {
 .se-chans { display: flex; gap: 4px; flex-wrap: wrap; }
 .se-chan { padding: 3px 9px; font-size: 12px; border-left: 3px solid var(--ch, var(--line)); }
 .se-chan.is-on { border-color: var(--amber); color: var(--amber); border-left-color: var(--ch); }
+.se-tip { position: absolute; z-index: 20; pointer-events: none; white-space: pre; background: var(--raise-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font: 12px/1.45 var(--mono, ui-monospace, monospace); box-shadow: 0 4px 14px rgba(0,0,0,.4); max-width: 420px; }
+.se-tip[hidden] { display: none; }
+.se-scroll { outline: none; }
 .se-scroll { max-height: 380px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0 12px; max-width: 920px; }
 .se-inner { position: relative; }
 .se-canvas { display: block; position: absolute; top: 0; left: 0; cursor: crosshair; }
