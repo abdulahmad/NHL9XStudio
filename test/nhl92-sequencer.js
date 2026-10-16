@@ -256,3 +256,42 @@ let patchBursts = 0;
   assert.ok(Math.abs(peak - 0.5) < 1e-6 && a.length > 6 * Ref.SAMPLE_RATE);
   console.log('nhl92 sequencer: the reference synth mixes a song deterministically and audibly OK');
 }
+
+// --- SFX as General MIDI, and fast-forward (mute) leaves the chip writes alone --------------------------
+{
+  const run = (planFn, muteUntil) => {
+    const tr = Tracker.create();
+    const chain = Chain.create({
+      rom, keepLogs: false,
+      onYmWrite: (t, port, v) => tr.writePort(t, port, v),
+      onPsgWrite: (t, v) => tr.psgWrite(t, v),
+      onYmReset: (t) => tr.reset(t)
+    });
+    const plan = planFn();
+    for (let f = 0; f < plan.frames; f++) {
+      if (muteUntil) chain.setMute(f < muteUntil);
+      chain.step(plan.calls[f] || null);
+      chain.take();
+    }
+    return { tr, chain, plan };
+  };
+  const conv = (r) => SongGm.gmFromTracker(r.tr, { map, sampleAt: Chain.sampleAt, rate: Chain.SAMPLE_RATE, endT: r.plan.frames * F, patches: data.patches });
+
+  const siren = run(() => Chain.sfxPlanAfterMusicOff(0, 600, 0));
+  const g0 = conv(siren);
+  assert.ok(g0.notes > 10, 'the siren has FM notes');
+  assert.ok(g0.song.notes.every((n) => n.tick >= 0 && n.dur >= 1 && n.pitch >= 0 && n.pitch <= 127));
+  assert.ok(SongGm.gmEvents(g0.song).length === g0.notes);
+  const dac = run(() => Chain.sfxPlan(3, 600));
+  assert.strictEqual(conv(dac).notes, 0, 'a DAC-only SFX has no notes to convert');
+  assert.ok(data.sfx[3].actions.every((a) => a.type === 'dac'));
+
+  // Muting only skips sample generation: the same register writes, notes and counts come out.
+  const plain = run(() => Chain.sfxPlan(24, 200));
+  const fast = run(() => Chain.sfxPlan(24, 200), 120);
+  assert.strictEqual(fast.chain.ymWrites, plain.chain.ymWrites);
+  assert.strictEqual(fast.chain.psgWrites, plain.chain.psgWrites);
+  assert.strictEqual(fast.chain.rendered, plain.chain.rendered);
+  assert.deepStrictEqual(fast.tr.notes.map((n) => [n.ch, n.t0, n.t1]), plain.tr.notes.map((n) => [n.ch, n.t0, n.t1]));
+  console.log('nhl92 sequencer: FM SFX convert to GM notes, DAC-only SFX give none, muting changes no chip writes OK');
+}
