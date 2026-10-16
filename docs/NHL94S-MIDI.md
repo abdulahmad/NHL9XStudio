@@ -42,6 +42,16 @@ Every retail track ends with a stop or a loop, and the retail tool leaves paddin
 
 `lib/audio/snes-sfx-midi.js` plays a sound entry through the SPC700 program, logs the S-DSP voice writes and writes them as a MIDI file (notes, pitch bends, drum entries on channel 10). The six streamed game-set effects (22-27) are not exported. Same method as '93: see [NHL93S-SOUND.md](NHL93S-SOUND.md#effects-as-midi).
 
+## Song editor
+
+**Sequencer · new NHL 94 (SNES) song** (`public/sound-tools-snes.js`, shared with NHLPA 93) edits a song as plain notes on eight tracks, with a GM program per track, an optional drums track, tempo, bars, the sound set (`menu` or `game`) and a loop flag. **Play** writes the notes as a Standard MIDI file (`Nhl92Smf.write`), converts it with `NhlNhl94sMidi.fromSmf` (the import above) and plays the result on the ported sequencer and the game's SPC700 program (`snesImport` → `playSnes`). The conversion's warnings are listed under the roll. **Edit in sequencer** on a retail song starts from its GM export. **Export song (.bin)** writes the converted song bytes.
+
+- **Pitch bends.** NHL 94 is the SNES game with a pitch-wheel event. **Click: pitch bends** draws each track's bends as a stepped line; a click's height sets the bend, top and bottom being ±2 semitones. The bends are written to the MIDI file and converted with the sound entry's bend range. Drum tracks have no bends.
+- There is no instrument (BRR / ADSR) editor yet.
+- The rest is shared with the other games: select / move, arrow-key nudge, Delete, hover tooltips, cursors, Pause, the scrolling playhead, the seconds ruler and the scrub bar. A seek runs the sound unit ahead silently, or starts the run again for a backward seek.
+
+See [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md).
+
 ## Not done
 
-Volume controller and pan from the MIDI file (`$DE` / `$DF` are written only by native import), several sound entries per GM program with panning, and editing songs in a sequencer view.
+Volume controller and pan from the MIDI file (`$DE` / `$DF` are written only by native import), several sound entries per GM program with panning, and instrument (sample / ADSR) editing.

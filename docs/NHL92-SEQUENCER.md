@@ -104,6 +104,15 @@ The result is a first draft to edit, not a transcription: a piano arrangement wi
 
 ## Editing instruments and effects
 
+The controls shared with the other games are in [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md): the Mode menu (draw
+notes, select / move; NHL 92 has no pitch-bend mode because its driver has no bend), box select, dragging, arrow-key
+nudge, Delete, hover tooltips, cursors, Pause, the scrolling playhead, the seconds ruler and the scrub bar. A NHL 92
+channel plays one note at a time, so a moved note cuts the note it runs into and drops one it covers.
+
+**Instrument editor.** *Instrument editor (YM2612 operators, envelopes)* edits the 22 retail FM patches (32 bytes each,
+at `host.data.patches[id].rom`; the note offset is at +26). The edits are saved with the song and written into the ROM
+copy before `host.playEditor`, so the retail drivers play them.
+
 Every note carries its own instrument, so a channel can change instrument as often as the song wants (the retail songs do). In the sequencer: **shift-click** notes to select them (the note's instrument and effects load into the toolbar); changing the **Instrument** menu re-instruments the selection; **Apply to selected** writes the toolbar's modulation, envelope, legato and no-key-off fields to it; *Select channel*, *Select this instrument*, *Select none* and *Delete selected* help with bigger changes. New notes get the instrument and effects currently in the toolbar. Notes with effects show a tag (`7~EL` = instrument 7, modulation, envelope, legato; `K` = no key-off), the selection is outlined, and the line under the toolbar lists the instruments the channel uses.
 
 ## Lane labels
@@ -116,6 +125,8 @@ Labels are held per lane: the tracker keeps only the last 8 s of writes, so the 
 
 - **Visualizer during Play as GM.** Retail songs run the retail drivers silently (a chain with no chip, so about 3 ms a frame) next to the GM audio and feed the same tracker; chain time is the audio clock plus 2 frames (the driver's first note sounds 2 frames after unit 0; checked on songs 0, 2 and 4). SFX run their whole plan once, the tracker is converted to GM notes (`gmFromTracker`) and the same finished tracker is drawn. The sequencer's Play as GM shows the retail drivers playing the same song.
 - **SFX as GM.** Only the FM notes the YM2612 was asked for are converted. A patch that the mapping calls a drum becomes one GM drum hit; DAC samples have no notes and are left out, so a DAC-only SFX has the button disabled.
+- **Editor scrub bar.** The sequencer has its own scrub bar and seekable seconds ruler. Stopped, it sets where Play
+  starts. The editor clock subtracts the driver's 2-frame lead. See [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md).
 - **Progress bar.** An SFX bar is its 600 vblanks; a song bar is one pass (`units × tempo` frames, checked equal to the repeat period of songs 0, 2 and 4) and the clock shows the pass number. Click or drag the bar, or use ← →, to seek while playing.
 - **Seeking the live chain.** The 68k and Z80 drivers only run forward, so a forward seek fast-forwards the running chain with `chain.setMute(true)`: no samples are generated but every register write still reaches the chips, in 25 ms slices. A backward seek starts a new run and fast-forwards. At about 3 ms a frame a seek 60 s into a song takes about 12 s ("Seeking… N%"). GM playback seeks immediately.
 - **Muting lanes.** Click an FM lane in the Roll to mute or unmute that channel (all three games, live playback only). The chain keeps running and every register write still happens; the key-on write of a muted channel is masked and a muted FM6 skips its DAC writes, so the lane keeps drawing but the channel is silent (dimmed, labelled *muted*). Mutes are kept when a new play starts.
@@ -132,7 +143,7 @@ Labels are held per lane: the tracker keeps only the last 8 s of writes, so the 
 - GM conversions of every retail song keep every note, stay within six channels and the drum kit, and give identical results on repeat; chords, the six-line limit, kick/snare priority, tempo and the normalisation rules have their own cases.
 - The reference synth mixes a song deterministically.
 
-The pages (Play as GM, lane labels, import, the editor, every export button) were driven in headless Chromium: they load, the lanes name the right patches, the editor plays an imported file on the retail drivers and its exports download. The pages have no automated test in the repo.
+The pages (Play as GM, lane labels, import, the editor, every export button) were driven in headless Chromium: they load, the lanes name the right patches, the editor plays an imported file on the retail drivers and its exports download. `test/browser/editor-scrub.js` drives the editor's scrub bar, and `test/browser/load-errors.js` loads every page.
 
 ## Not verified
 

@@ -59,6 +59,11 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
 
 ## Sequencer, MIDI import and pitch bends
 
+The editor's controls are shared by all five games. [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md) covers them: the
+**Mode** menu (draw notes, select / move, pitch bends), box select, dragging, arrow-key nudge, Delete, hover
+tooltips, cursors, Pause, the scrolling playhead, the seconds ruler, the scrub bar and the speaker-synced clock.
+What is specific to NHLPA 93 / NHL 94:
+
 - **Sequencer · new NHL 93/94 song** and **MIDI import → NHL 93/94** are the first two entries of the Sound test list
   (`public/sound-tools-nx.js`, model and encoder in `lib/audio/nhl9x-stream.js`). A song is up to eight channels
   (the driver keeps eight per song) of notes on a grid of vblanks, each note with a patch (32 FM patches or the PCM
@@ -80,6 +85,12 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
   the patch in force and clamps what does not fit. In the editor, set **Click: pitch bends** to edit them: the
   channel's bends are drawn as a stepped line across the roll, a click adds a bend whose height is the click's height
   (middle = no bend, top/bottom = the full range) and a click near an existing bend removes it.
+- **Instrument editor.** The YM2612 editor (operators, envelopes, algorithm, feedback, pan, AMS/FMS and the note offset
+  at +26) edits FM patches 0-31. The edits are written into the slice copy at `table - 1024 + 32 * id` before
+  `host.playEditor`. The PCM patches (`$60` and up, 96+) are DAC samples and cannot be edited.
+- **Seeking** the editor song (scrub bar, ruler) runs the 68k + Z80 drivers ahead silently; see
+  [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md#playhead-seconds-ruler-and-scrub-bar). The playhead and scrub bar fold
+  the run time onto the song's loop point after the first pass.
 - **Loop timing:** when a stream loops, its target event fires the moment the end event is reached (its own delay is
   not waited again); `parse()` reports the target event's time as `loopTick`.
 
@@ -96,7 +107,8 @@ What the songs do with them: the menu and title songs (NHL 94 `$78`, `$79`, `$7A
   wherever a channel's instrument changes, checked on every retail song). **Shift-click** notes to select them, change
   the Instrument menu to re-instrument the selection; *Select channel*, *Select this instrument*, *Select none*,
   *Delete selected* and *Set velocity of selected* are next to it, and a line under the toolbar lists the
-  instruments each channel uses.
+  instruments each channel uses. In **Click: select / move** you can box-select, drag the selection, nudge it with the
+  arrow keys (Shift + ↑ ↓ for an octave) and delete it with Delete.
 - **Native MIDI.** *Export MIDI (native)* writes one MIDI tick per vblank, one track per channel, and puts each note's
   patch and every raw bend value into marker events (`NHL c=1 p=17`, `NHL c=1 b=-512`, header `NHL9X v1 game=94 ...`).
   The sequencer's import (and the MIDI import tool) recognises the header and restores the song exactly: tested on
