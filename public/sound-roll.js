@@ -29,8 +29,9 @@
 
   /**
    * @param {HTMLElement} container empty element to fill
-   * @param {{ chain: {SAMPLE_RATE:number, sampleAt:function}, state: function }} opts
+   * @param {{ chain: {SAMPLE_RATE:number, sampleAt:function}, state: function, patchLabel?: function }} opts
    *   state() -> null (nothing playing) or { tracker, src } with src the audible source sample
+   *   patchLabel(burst) -> text or null: names the patch a lane loaded last (tagged in the lane's corner)
    */
   function mount(container, opts) {
     const rate = opts.chain.SAMPLE_RATE;
@@ -225,6 +226,16 @@
         }
       }
 
+      // The instrument in each lane: the latest patch load before the playhead, named by the caller
+      // (retail patch number and the GM sound the mapping gives it). Drawn after the notes, below.
+      const instrument = new Array(6).fill(null);
+      if (opts.patchLabel) {
+        for (const p of tr.patches) {
+          if (p.kind !== 'patch' || sampleAt(p.t0) > src) continue;
+          instrument[p.ch] = p;
+        }
+      }
+
       // Notes.
       const barH = L.small ? 5 : 6;
       const pad = 8;
@@ -252,6 +263,25 @@
           g.fillText(b.seg.name, x0 + 2, ty);
           labelRight[b.ch] = x0 + 2 + g.measureText(b.seg.name).width + 2;
         }
+      }
+
+      // Instrument labels: a small tag at the lane's left edge, over the notes.
+      g.font = '600 ' + (L.small ? 9 : 10) + 'px ' + mono;
+      g.textBaseline = 'alphabetic';
+      for (let i = 0; i < 6; i++) {
+        if (!instrument[i]) continue;
+        let lab = opts.patchLabel(instrument[i]);
+        if (!lab) continue;
+        const room = Math.max(40, Math.min(G.x1 - G.x0 - 10, (G.x1 - G.x0) * 0.45));
+        while (lab.length > 4 && g.measureText(lab).width > room) lab = lab.slice(0, -2) + '…';
+        const w = g.measureText(lab).width + 8;
+        const top = G.laneTop(i);
+        g.globalAlpha = 0.82;
+        g.fillStyle = C.bg;
+        g.fillRect(G.x0 + 2, top + 2, w, 13);
+        g.globalAlpha = 1;
+        g.fillStyle = COLORS[i];
+        g.fillText(lab, G.x0 + 6, top + 12);
       }
 
       // DAC: while $2B bit 7 is set FM6 isn't what you hear, so the band hides FM6's notes.
@@ -307,7 +337,7 @@
         const ln = lanes[i];
         const dac = i === 5 && dacNow;
         const name = dac ? 'DAC' : ln.keyed && ln.seg && ln.seg.name ? ln.seg.name : '—';
-        readout.push({ ch: i, name, keyed: ln.keyed, dac });
+        readout.push({ ch: i, name, keyed: ln.keyed, dac, instrument: instrument[i] && opts.patchLabel ? opts.patchLabel(instrument[i]) : null });
         gutterText(L, G, i, name, ln.keyed, dac);
       }
       gutterText(L, G, 6, tr.stats.psgWrites ? tr.stats.psgWrites + ' w' : 'unused', false, false);
