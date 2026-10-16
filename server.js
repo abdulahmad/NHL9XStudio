@@ -431,7 +431,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/viewer.js' || pathname === '/viewer.css' || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
       pathname === '/sound-test-view.js' || pathname === '/sound-roll-snes.js' || pathname === '/sound-test-snes.js' || pathname === '/sound-test-snes93.js' ||
-      pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js' || pathname === '/sound-editor-extras.js' || pathname === '/sound-patch-editor.js') {
+      pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js' || pathname === '/sound-editor-extras.js' || pathname === '/sound-patch-editor.js' || pathname === '/sound-tools-snes.js') {
     serveFile(res, path.join(PUBLIC, pathname.slice(1)), req);
     return;
   }
