@@ -136,6 +136,10 @@ function readBmpIndices(file) {
 function compareBank(fileName) {
   const anim = parseAnim(fs.readFileSync(path.join(toolsRoot, 'ANIM-To-BMP', fileName)));
   const extracted = path.join(toolsRoot, 'ANIM-To-BMP', 'Extracted', fileName);
+  // The reference BMPs are not committed: make them with the original tool the first time (they are git-ignored).
+  if (!fs.existsSync(extracted)) {
+    require('child_process').execFileSync(process.execPath, ['animToBmp.js', fileName], { cwd: path.join(toolsRoot, 'ANIM-To-BMP'), stdio: 'ignore' });
+  }
   const bmps = fs.readdirSync(extracted).filter((f) => f.endsWith('.bmp'));
   assert.strictEqual(bmps.length, anim.numFrames, fileName + ' frame count');
   for (let n = 1; n <= anim.numFrames; n++) {
