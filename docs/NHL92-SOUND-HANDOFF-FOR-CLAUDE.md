@@ -45,11 +45,11 @@ Optional local ROM: `roms/nhl92.bin` (524288-byte Genesis ROM). Enables wrapper-
 | 2 | Done | YM2612 + SN76489 cores (chip lab) |
 | 2b | Done | Sound data parser |
 | 3 | Done | Z80 driver harness + tests |
-| 4 | Done | Z80 → chips; chip lab NHL '92 patch scales (its DAC SFX player was removed in step 8) |
+| 4 | Done | Z80 → chips; chip lab NHL '92 patch/SFX section |
 | 5 | Done | Sound data ownership / parser pins |
 | 6 | Done | 68k driver alone; `docs/NHL92-68K-DRIVER.md` |
 | 7 | Done | Full chain; `docs/NHL92-SOUND-CHAIN.md` |
-| 8 | In review | Sound test is NHL 92's only audio tab, polished; Sound data tab removed; chip lab keeps patch scales only (see below) |
+| 8 | Done | Sound test is NHL 92's only audio tab, polished; Sound data tab removed; chip lab unchanged (see below) |
 
 **Retail accuracy rule:** Do not change drivers, patches, or sound data to “sound better.” Fixes belong in cores with their own test suites, or in documented harness/plan choices that match retail *when the game would actually be in that state*.
 
@@ -69,7 +69,7 @@ PR #28 played `song(0)` for one vblank and then `sfx(0)`, so SngEOP's first note
 | **Sound data** tab | Removed, along with `public/sound-data-view.js`. The parser (`lib/audio/nhl92-sound-data.js`) stays and feeds the Sound test details. |
 | **Audio** tab (AUD-1 sketch) | Hidden for NHL 92 (`hasAudioTab`). Kept for NHLPA 93–95 and the Z80 test profile. Old NHL 92 `mode=audio` / `mode=sounddata` links open the Sound test. |
 | **Z80** tab | Unchanged (Z80 test profile only). |
-| **Chip lab** | Keeps the YM/PSG presets and the NHL '92 patch scales (each instrument alone through the Z80 driver; nothing else does that). The DAC SFX player was dropped, since the Sound test plays them through the 68k path. Links to the Sound test. |
+| **Chip lab** | Unchanged: YM/PSG presets, NHL '92 patch scales and DAC SFX through the Z80 driver alone. (Step 8 briefly dropped the DAC SFX player; restored at the user's request.) |
 | Default view | NHL 92 + SPA, unchanged. |
 
 **Cleanup kept deliberately** (all still have users): `audio-engine.js`, `genesis*.js` (NHLPA 93–95 Audio tab, `test.js` catalog tests, `/api/games/:id/audio`), `nhl92-sound-system.js`, `z80-machine.js`, `nhl92-z80.js`, `z80-test-patterns.js` (Z80 test profile), `nhl92-z80-audio.js` + chip-test pins (chip lab, `test/nhl92-z80-audio.js`), `nhl92-z80-golden.js` (`test/nhl92-z80-driver.js`), `data/audio/nhl92.json` (server API and tests).

@@ -111,7 +111,7 @@ For NHL 92, the **Sound test** is the only audio tab. The Sound data tab and its
 - **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, `song 0` (one init vblank, no notes), `p_turnoff`, then the siren (`sfxPlanAfterMusicOff`), the same as `sfx-00-siren-SFXsiren-after-music-off.wav`. Before this, PR #28's plan (song 0, then the siren on the next vblank) let SngEOP's first notes play under it. Other SFX keep step 6's boot, idle vblank, SFX.
 - **Leaving:** picking another item or leaving the tab stops playback.
 
-**Chip lab.** It keeps the YM/PSG presets and the NHL '92 patch scales: each of the 22 retail instruments played alone through the Z80 driver, the same renders as `patch-NN.wav`. Nothing else in the UI does that. Its DAC SFX player was removed, because the Sound test plays every SFX, DAC ones included, through the 68k request path. It links to the Sound test.
+**Chip lab.** Unchanged: YM/PSG presets, plus the NHL '92 patch scales and DAC SFX played through the Z80 driver alone (no 68k driver).
 
 Checked in headless Chromium against `node server.js`, with YM writes hooked in the page:
 
