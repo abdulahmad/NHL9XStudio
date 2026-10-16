@@ -31,6 +31,7 @@
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
   let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
+  let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
   let gmPlay = null; // { id, source, startedAt, total }: a reference-synth playback in progress
@@ -85,6 +86,7 @@
     data = null;
     gmMap = null;
     nxSlice = null;
+    nxBank = null;
     nxMap = null;
     customRom = null;
     loading = null;
@@ -687,7 +689,17 @@
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
   function patchLabel(burst) {
-    if (!data || !root.Nhl92Song || isNx()) return null;
+    if (isNx()) {
+      if (!nxSlice || !root.Nhl9xSong) return null;
+      const g = game === 'nhlpa93' ? 93 : 94;
+      if (!nxBank) nxBank = root.Nhl9xSong.patches(g, nxSlice);
+      const pid = root.Nhl9xSong.identify(nxBank, burst.regs, burst.ch);
+      if (pid < 0) return null;
+      const m = nxMap && nxMap.patches.find((x) => x.patch === pid);
+      const tn = m && m.target ? (m.target.kind === 'drum' ? m.target.name : m.target.name) : '';
+      return tn ? 'P' + pid + ' · ' + tn : 'P' + pid;
+    }
+    if (!data || !root.Nhl92Song) return null;
     const id = root.Nhl92Song.identifyPatch(data.patches, burst.regs, burst.ch);
     if (id < 0) return null;
     const e = gmMap && gmMap.nhl92ToGm.patches[id];
@@ -802,7 +814,7 @@
         bar.classList.remove('is-loop');
         setBar(secs / gmPlay.total, text);
         time.textContent = text;
-        box.textContent = 'Playing as General MIDI · NHL 92 → GM table · plain reference synth, one pass' + (gmPlay.viz ? '' : ' · no sequencer view');
+        box.textContent = 'Playing as General MIDI · ' + (isNx() ? NX[game].label : 'NHL 92') + ' → GM table · plain reference synth, one pass' + (gmPlay.viz ? '' : ' · no sequencer view');
         return;
       }
     }

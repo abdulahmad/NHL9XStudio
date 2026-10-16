@@ -101,4 +101,17 @@ for (const g of [93, 94]) {
   assert.strictEqual(t.end, 'loop');
 }
 
+// 6. identify() finds a patch from the register burst the Z80 writes for it.
+{
+  const bank = Song.patches(94, slices[94]);
+  for (let i = 0; i < 32; i++) {
+    const regs = new Map();
+    for (let k = 0; k < 24; k++) regs.set(0x30 + (k >> 2) * 0x10 + (k & 3) * 4 + 1, bank[i][k]);
+    regs.set(0xb1, bank[i][28]);
+    const got = Song.identify(bank, regs, 1);
+    assert.strictEqual(Buffer.compare(Buffer.from(bank[got]), Buffer.from(bank[i])), 0, 'identify patch ' + i);
+  }
+  assert.strictEqual(Song.identify(bank, new Map(), 0), -1);
+}
+
 console.log('nhl9x-song-gm: ok');
