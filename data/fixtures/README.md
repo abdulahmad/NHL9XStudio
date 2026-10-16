@@ -16,3 +16,5 @@ node tools/extract-nhl92-sound-fixture.js
 ```
 
 For sprites, pictures, and the main **NHL 92** game mode you still need the full ROM (your own dump). Typical names: `nhl92.bin`, `NHL Hockey (USA, Europe).md`.
+
+NHLPA 93 and NHL 94 (`nhl93-sound-slice.bin`, `nhl94-sound-slice.bin`) are the same kind of slice: the sound segment of each retail ROM at its ROM offsets. Refresh with `node tools/extract-nhl9x-sound-fixture.js [93|94]`. See `docs/NHL93-94-SOUND.md`.

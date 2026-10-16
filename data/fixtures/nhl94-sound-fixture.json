@@ -1,0 +1,10 @@
+{
+  "source": "NHL 94 (Genesis, retail) sound segment",
+  "romSha1": "7b1489ab501258133bf03e5f0892b77d04312580",
+  "soundSlice": {
+    "romOffset": 107108,
+    "length": 201564
+  },
+  "syntheticRomSize": 308672,
+  "note": "Bundled for the Sound test only. Not a full game ROM."
+}

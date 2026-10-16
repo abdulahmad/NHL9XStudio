@@ -1,0 +1,20 @@
+{
+  "note": "SHA-1 prefix of the YM2612 write log (Chain.ymLogText) of 300 frames of each sound on the retail 68k + Z80 drivers. Self-consistency pins, not emulator captures. Regenerate with NHL9X_PIN_PRINT=1 node test/nhl9x-sound-chain.js.",
+  "ymLogHashes": {
+    "nhlpa93": {
+      "song 30": "f9baa65b187c8109",
+      "song 35": "b81b68cef72c721f",
+      "sfx 0": "ade3e10d41c6e88e",
+      "sfx a": "e6963965057269dd",
+      "sfx 1e": "9931ec5c004ab7ff"
+    },
+    "nhl94": {
+      "song 30": "232ab1156a2e6dcf",
+      "song 5a": "6509520b163b2d5d",
+      "song 78": "abb33892c2af14ec",
+      "sfx 0": "ff4fdaa808b7a9da",
+      "sfx 5": "46d006ced30e0eb1",
+      "sfx 1f": "571ab152124c6efb"
+    }
+  }
+}

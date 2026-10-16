@@ -19,6 +19,14 @@
   const TOOL_EDITOR = 'tool-editor';
   const isTool = (id) => id === TOOL_IMPORT || id === TOOL_EDITOR;
 
+  // 'nhl92' | 'nhlpa93' | 'nhl94': which retail driver the chain runs (setGame). 93 and 94 share one driver
+  // family (nhl9x-68k-harness.js); each has its bundled sound segment placed at its ROM offsets.
+  let game = 'nhl92';
+  const NX = {
+    nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2efa2, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
+    nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' }
+  };
+  const isNx = () => !!NX[game];
   let rom = null;
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
@@ -62,17 +70,70 @@
     return { Chip: Ym2612, module: shared.module, api: shared.api };
   }
 
+  /** Select the game whose sound chain this view runs. Stops playback and drops the other game's data. */
+  function setGame(id) {
+    const want = NX[id] ? id : 'nhl92';
+    if (want === game) return;
+    stop();
+    stopBuffer();
+    if (roll) roll.destroy();
+    roll = null;
+    game = want;
+    rom = null;
+    data = null;
+    gmMap = null;
+    customRom = null;
+    loading = null;
+    error = '';
+    gmCache.clear();
+    sfxGmCache.clear();
+    passCache.clear();
+    if (onChange) onChange();
+  }
+
+  /** NHL 93 / 94: the bundled sound segment and the catalog's names, shaped like the NHL 92 parse (songs / sfx). */
+  async function loadNx() {
+    const c = NX[game];
+    const slice = await fetch(new URL('data/fixtures/' + c.slice, document.baseURI).href);
+    if (!slice.ok) throw new Error(c.label + ' sound fixture missing (' + slice.status + ')');
+    const image = new Uint8Array(c.size);
+    image.set(new Uint8Array(await slice.arrayBuffer()), c.start);
+    const res = await fetch(new URL('data/audio/' + c.catalog, document.baseURI).href);
+    if (!res.ok) throw new Error(c.label + ' sound catalog missing (' + res.status + ')');
+    const cat = await res.json();
+    const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
+    const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
+    return {
+      rom: image,
+      data: {
+        songs: sounds.filter((e) => e.soundId >= 0x30).map((e) => ({ id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb })),
+        sfx: sounds.filter((e) => e.soundId < 0x30).map((e) => ({ id: e.soundId, name: nice(e), blurb: e.blurb }))
+      }
+    };
+  }
+
   async function ensure(baseUrl) {
     if (rom && Ym) return true;
     if (loading) return loading;
+    const forGame = game;
     loading = (async () => {
-      rom = await root.Nhl92SoundFixture.ensureSyntheticRom({ baseUrl });
-      data = SD().parse(rom);
-      try {
-        const res = await fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href);
-        gmMap = res.ok ? await res.json() : null;
-      } catch (err) { gmMap = null; }
-      Ym = await loadYm();
+      if (NX[forGame]) {
+        const g = await loadNx();
+        if (game !== forGame) return false;
+        rom = g.rom;
+        data = g.data;
+        gmMap = null;
+      } else {
+        const image = await root.Nhl92SoundFixture.ensureSyntheticRom({ baseUrl });
+        if (game !== forGame) return false;
+        rom = image;
+        data = SD().parse(rom);
+        try {
+          const res = await fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href);
+          gmMap = res.ok ? await res.json() : null;
+        } catch (err) { gmMap = null; }
+      }
+      if (!Ym) Ym = await loadYm();
       error = '';
       return true;
     })().catch((err) => {
@@ -93,6 +154,13 @@
   function entries() {
     if (!data) return [];
     const out = [];
+    if (isNx()) {
+      for (const s of data.songs) {
+        out.push({ id: 'song-' + s.id, group: s.group === 'Music — Team' ? 'Team songs' : 'Songs', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: 'song $' + s.id.toString(16).toUpperCase() });
+      }
+      for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: SFX_VBLANKS + ' vblanks' });
+      return out;
+    }
     // Tools first, so the sequencer and the MIDI import are the first thing in the list.
     if (root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools) {
       out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
@@ -106,10 +174,15 @@
     return out;
   }
 
+  /** Sound id -> record of the loaded game's list (NHL 94 ids are not array positions). */
+  const song94 = (n) => data.songs.find((s) => s.id === n);
+  const sfx94 = (n) => data.sfx.find((s) => s.id === n);
+
   function title(id) {
     if (id === TOOL_IMPORT) return 'MIDI import → NHL 92';
     if (id === TOOL_EDITOR) return 'Sequencer · new NHL 92 song';
     const n = Number(id.split('-')[1]);
+    if (isNx()) return (id.startsWith('song-') ? 'Song $' + n.toString(16).toUpperCase() + ' · ' + song94(n).name : 'SFX $' + n.toString(16).toUpperCase() + ' · ' + sfx94(n).name);
     return id.startsWith('song-') ? 'Song ' + n + ' · ' + data.songs[n].name : 'SFX ' + NAMES().name(n);
   }
 
@@ -118,6 +191,7 @@
     if (id === TOOL_EDITOR) return Chain().songPlan(root.Nhl92Song.CUSTOM_SONG, Infinity);
     const n = Number(id.split('-')[1]);
     if (id.startsWith('song-')) return Chain().songPlan(n, Infinity);
+    if (isNx()) return Chain().sfxPlan(n, SFX_VBLANKS);
     // Siren uses instrument 0, which equals every channel's $41 after a bare boot, so it
     // would skip its patch load. Play it the way the game reaches it: music initialised,
     // then p_turnoff, then the SFX (sfxPlanAfterMusicOff). No song note is ever parsed.
@@ -222,7 +296,7 @@
     }
     const tracker = root.YmNoteTracker.create();
     // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
-    const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false }, taps(tracker)));
+    const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false, driver: isNx() ? root[NX[game].driver] : undefined }, taps(tracker)));
     return { chip, chain, tracker, held: new Array(6).fill(null) };
   }
 
@@ -566,7 +640,7 @@
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
   function patchLabel(burst) {
-    if (!data || !root.Nhl92Song) return null;
+    if (!data || !root.Nhl92Song || isNx()) return null;
     const id = root.Nhl92Song.identifyPatch(data.patches, burst.regs, burst.ch);
     if (id < 0) return null;
     const e = gmMap && gmMap.nhl92ToGm.patches[id];
@@ -608,6 +682,7 @@
     }
     if (!live || live.id !== id) return;
     const n = Number(id.split('-')[1]);
+    if (isNx() && id.startsWith('song-')) return;
     if (id.startsWith('sfx-')) {
       seekLive(f * secondsOf(planFor(id).frames));
       return;
@@ -658,12 +733,21 @@
     const id = panel.dataset.item;
     const isSong = id.startsWith('song-');
     const n = Number(id.split('-')[1]);
-    const total = isSong ? passSecs(n) : secondsOf(planFor(id).frames); // length of the bar
+    // Length of the bar: one pass of an NHL 92 song, the whole run of an SFX; NHL 94 songs have no known length.
+    const total = isSong ? (isNx() ? null : passSecs(n)) : secondsOf(planFor(id).frames);
     bar.classList.remove('is-loop');
     if (!shown) {
       setBar(0, clock(0));
-      time.textContent = clock(0) + ' / ' + clock(total) + (isSong ? ' · one pass, loops until Stop' : '');
+      time.textContent = total == null ? 'Plays until Stop' : clock(0) + ' / ' + clock(total) + (isSong ? ' · one pass, loops until Stop' : '');
       box.textContent = message || 'Stopped';
+      return;
+    }
+    if (total == null) { // no known length: elapsed time and a moving stripe
+      bar.classList.toggle('is-loop', playing);
+      setBar(playing ? 1 : 0, clock(heard(shown)));
+      time.textContent = clock(heard(shown)) + ' · plays until Stop';
+      box.textContent = (message || 'Playing') + ' · frame ' + Math.max(0, shown.chain.frame - 1) + ' · ' +
+        shown.chain.ymWrites + ' YM writes · ' + shown.chain.psgWrites + ' PSG writes';
       return;
     }
     if (shown.seeking) {
@@ -693,6 +777,12 @@
   }
 
   function describe(id) {
+    if (isNx()) {
+      const n = Number(id.split('-')[1]);
+      return id.startsWith('song-')
+        ? 'Boot (p_initialZ80, p_turnoff, p_music_vblank), then the game\'s song wrapper with $' + n.toString(16).toUpperCase() + ' (play_sfx_or_music_track) and p_music_vblank every vblank, until Stop.'
+        : 'Boot, one vblank, then the game\'s sfx wrapper with $' + n.toString(16).toUpperCase() + ' and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.';
+    }
     const n = id.slice(id.indexOf('-') + 1);
     if (id.startsWith('song-')) {
       return 'Boot (p_initialZ80, p_turnoff, p_music_vblank), then song(' + n + ') and p_music_vblank every vblank, until Stop.';
@@ -723,8 +813,14 @@
       return;
     }
     const n = Number(id.split('-')[1]);
-    box.appendChild(make('p', 'st-kind', id.startsWith('song-') ? 'Song ' + n : 'SFX ' + n));
-    box.appendChild(make('h3', null, id.startsWith('song-') ? data.songs[n].name : NAMES().name(n)));
+    if (isNx()) {
+      const rec = id.startsWith('song-') ? song94(n) : sfx94(n);
+      box.appendChild(make('p', 'st-kind', (id.startsWith('song-') ? NX[game].label + ' song $' : NX[game].label + ' SFX $') + n.toString(16).toUpperCase()));
+      box.appendChild(make('h3', null, rec.name));
+    } else {
+      box.appendChild(make('p', 'st-kind', id.startsWith('song-') ? 'Song ' + n : 'SFX ' + n));
+      box.appendChild(make('h3', null, id.startsWith('song-') ? data.songs[n].name : NAMES().name(n)));
+    }
 
     const controls = make('div', 'st-controls');
     const btn = make('button', 'ghost-btn st-toggle', '▶ Play');
@@ -752,7 +848,7 @@
       const st = box.querySelector('.st-status');
       if (st) st.textContent = what + ' failed: ' + (err && err.message ? err.message : String(err));
     };
-    if (gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
+    if (!isNx() && gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
       const isSong = id.startsWith('song-');
       const gmBtn = make('button', 'ghost-btn st-gm', '▶ Play as GM');
       gmBtn.type = 'button';
@@ -769,7 +865,7 @@
     box.appendChild(controls);
 
     // Edit / export: the same conversions the sequencer uses, straight from this entry.
-    if (root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
+    if (!isNx() && root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
       const ex = make('div', 'st-controls st-exports');
       const add = (label, title, fn) => {
         const b = make('button', 'ghost-btn', label);
@@ -860,6 +956,18 @@
     }
     const n = Number(id.split('-')[1]);
     const rows = [['Plays', title(id)]];
+    if (isNx()) {
+      const rec = id.startsWith('song-') ? song94(n) : sfx94(n);
+      rows.push(['Sound id', '$' + n.toString(16).toUpperCase() + (id.startsWith('song-') ? ' (song)' : ' (SFX)')]);
+      if (rec.blurb) rows.push(['Used by', rec.blurb]);
+      rows.push(['Length', id.startsWith('song-') ? 'until Stop' : SFX_VBLANKS + ' vblanks']);
+      rows.push(['Path', '68k driver → Z80 driver → YM2612 + SN76489']);
+      rows.push(['Frame', '59,736 Z80 T-states (59.92 Hz)']);
+      rows.push(['Output', '53,267 Hz, live']);
+      rows.push(['Source', 'Bundled ' + NX[game].label + ' sound segment ($' + NX[game].start.toString(16).toUpperCase() + '–$' + NX[game].size.toString(16).toUpperCase() + ')']);
+      rows.push(['Notes', 'docs/NHL93-94-SOUND.md']);
+      return rows;
+    }
     if (id.startsWith('song-')) {
       const song = data.songs[n];
       rows.push(['Channels', song.channels.length + ' FM · tempo ' + song.tempo]);
@@ -885,6 +993,8 @@
     renderPanel,
     metaRows,
     play,
+    setGame,
+    get game() { return game; },
     stop() { stop(); stopBuffer(); },
     toggle,
     get playing() { return !!live || !!gmPlay; },
