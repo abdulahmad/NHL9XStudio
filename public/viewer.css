@@ -443,6 +443,18 @@ select:focus, input:focus, button:focus-visible {
 .sound-panel .st-time { margin: 6px 0 0; font-size: 13px; }
 .st-status { margin: 2px 0 14px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .item.is-playing .name { color: var(--amber); }
+/* Sound test sequencer: piano roll of the YM2612 channels (public/sound-roll.js). */
+.st-seq { margin: 0 0 12px; max-width: 920px; }
+.st-seq-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.st-seq-title { color: var(--muted); font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.st-seq-tabs { display: flex; gap: 4px; }
+.st-seq-tab { padding: 3px 10px; font-size: 12px; }
+.st-seq-tab[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+.st-roll { width: 100%; }
+.st-roll canvas { display: block; width: 100%; max-width: 100%; border-radius: 6px; }
+.st-events { margin: 0; padding: 8px 10px; max-height: 280px; overflow: auto; background: var(--raise); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: 11px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.st-events[hidden], .st-roll[hidden] { display: none; }
+.sound-panel .st-seq-note { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
 /* Sound test: hide the sprite-only controls (bank, pin, scale, list order, sprite help). */
 .app.is-sound .sprite-only { display: none; }
 .order.is-hidden { display: none; }

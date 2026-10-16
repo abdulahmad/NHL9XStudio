@@ -1,0 +1,413 @@
+/**
+ * Sound test sequencer view: what each YM2612 channel is doing, drawn from the
+ * register writes the Z80 driver actually makes (lib/audio/ym-note-tracker.js), never
+ * from song data. Seven lanes (FM1-FM6 and PSG) of a scrolling piano roll, newest on the
+ * right at the playhead, plus a text event list as a second view.
+ *
+ * Everything is placed at the *audible* position the caller gives (source samples at
+ * 53,267 Hz, already corrected for the resampler queue and the output latency), so a note
+ * appears when you hear it. The roll draws on requestAnimationFrame only while mounted.
+ */
+(function (root) {
+  const WINDOW_S = 6;
+  const COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a'];
+  const DAC_COLOR = '#ff9f5a';
+  const NAMES = ['FM1', 'FM2', 'FM3', 'FM4', 'FM5', 'FM6', 'PSG'];
+  const EVENT_LINES = 16;
+
+  const make = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const clock = (secs) => {
+    const m = Math.floor(secs / 60);
+    const r = secs - m * 60;
+    return m + ':' + (r < 10 ? '0' : '') + r.toFixed(2);
+  };
+
+  /**
+   * @param {HTMLElement} container empty element to fill
+   * @param {{ chain: {SAMPLE_RATE:number, sampleAt:function}, state: function }} opts
+   *   state() -> null (nothing playing) or { tracker, src } with src the audible source sample
+   */
+  function mount(container, opts) {
+    const rate = opts.chain.SAMPLE_RATE;
+    const sampleAt = opts.chain.sampleAt;
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => (css.getPropertyValue(name) || '').trim() || fallback;
+    const C = { bg: v('--bg', '#101418'), panel: v('--raise', '#1a2129'), line: v('--line', '#33414d'), text: v('--text', '#e8eef3'), muted: v('--muted', '#8ea0b0'), amber: v('--amber', '#f0b429') };
+    const mono = v('--mono', 'ui-monospace, monospace');
+
+    container.replaceChildren();
+    const head = make('div', 'st-seq-head');
+    head.appendChild(make('span', 'st-seq-title', 'Channels'));
+    const tabs = make('div', 'st-seq-tabs');
+    const tabRoll = make('button', 'ghost-btn st-seq-tab', 'Roll');
+    const tabEvents = make('button', 'ghost-btn st-seq-tab', 'Events');
+    for (const b of [tabRoll, tabEvents]) b.type = 'button';
+    tabs.append(tabRoll, tabEvents);
+    head.appendChild(tabs);
+    const wrap = make('div', 'st-roll');
+    const canvas = make('canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', 'Piano roll of the six FM channels and the PSG, drawn from the YM2612 writes');
+    wrap.appendChild(canvas);
+    const events = make('pre', 'st-events');
+    events.hidden = true;
+    events.setAttribute('aria-live', 'off');
+    const note = make('p', 'st-seq-note', 'From the YM2612 writes the Z80 driver makes, at the position you hear (right edge). ' +
+      'FM6 shows DAC while $2B bit 7 is set. The PSG lane stays empty: this driver never writes it.');
+    container.append(head, wrap, events, note);
+
+    let mode = 'roll';
+    let raf = 0;
+    let cssW = 0;
+    let cssH = 0;
+    let dpr = 1;
+    let idleDrawn = false;
+    let lastEvents = 0;
+    let lastText = '';
+    let last = null; // readout of the last live frame, for debugging and tests
+    const range = NAMES.map(() => ({ lo: 48, hi: 72 }));
+    const g = canvas.getContext('2d');
+
+    function setMode(m) {
+      mode = m;
+      wrap.hidden = m !== 'roll';
+      events.hidden = m !== 'events';
+      tabRoll.setAttribute('aria-pressed', String(m === 'roll'));
+      tabEvents.setAttribute('aria-pressed', String(m === 'events'));
+      idleDrawn = false;
+      lastEvents = 0;
+    }
+    tabRoll.addEventListener('click', () => setMode('roll'));
+    tabEvents.addEventListener('click', () => setMode('events'));
+    setMode('roll');
+
+    function size() {
+      const w = Math.max(240, Math.floor(wrap.clientWidth || container.clientWidth || 320));
+      const ratio = Math.min(2, root.devicePixelRatio || 1);
+      const laneH = w < 460 ? 30 : 34;
+      const h = 16 + NAMES.length * (laneH + 2) + 2;
+      if (w !== cssW || h !== cssH || ratio !== dpr) {
+        cssW = w;
+        cssH = h;
+        dpr = ratio;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        canvas.style.height = h + 'px';
+        idleDrawn = false;
+      }
+      return { w, h, laneH, small: w < 460 };
+    }
+
+    function geometry(L) {
+      const gutter = L.small ? 54 : 70;
+      return { gutter, x0: gutter, x1: L.w - 4, axis: 16, laneTop: (i) => 16 + i * (L.laneH + 2) };
+    }
+
+    function frameBase(L, G) {
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.clearRect(0, 0, L.w, L.h);
+      g.fillStyle = C.bg;
+      g.fillRect(0, 0, L.w, L.h);
+      for (let i = 0; i < NAMES.length; i++) {
+        const top = G.laneTop(i);
+        g.fillStyle = C.panel;
+        g.fillRect(G.x0, top, G.x1 - G.x0, L.laneH);
+        g.strokeStyle = C.line;
+        g.lineWidth = 1;
+        g.strokeRect(G.x0 + 0.5, top + 0.5, G.x1 - G.x0 - 1, L.laneH - 1);
+      }
+    }
+
+    function gutterText(L, G, i, readout, keyed, dac) {
+      const top = G.laneTop(i);
+      g.textBaseline = 'alphabetic';
+      g.font = '600 ' + (L.small ? 10 : 11) + 'px ' + mono;
+      g.fillStyle = i < 6 ? COLORS[i] : C.muted;
+      g.fillText(NAMES[i], 6, top + 13);
+      g.font = (L.small ? 10 : 11) + 'px ' + mono;
+      g.fillStyle = dac ? DAC_COLOR : keyed ? C.text : C.muted;
+      g.fillText(readout, 6, top + L.laneH - 5);
+      if (i < 6) {
+        g.beginPath();
+        g.arc(G.gutter - 9, top + 9, 3, 0, Math.PI * 2);
+        if (keyed || dac) { g.fillStyle = dac ? DAC_COLOR : COLORS[i]; g.fill(); }
+        else { g.strokeStyle = C.line; g.lineWidth = 1; g.stroke(); }
+      }
+    }
+
+    function drawIdle() {
+      const L = size();
+      const G = geometry(L);
+      frameBase(L, G);
+      for (let i = 0; i < NAMES.length; i++) gutterText(L, G, i, i === 6 ? 'unused' : '—', false, false);
+      g.fillStyle = C.muted;
+      g.font = '12px ' + mono;
+      g.textAlign = 'center';
+      g.fillText('Press Play to see what each channel does', (G.x0 + G.x1) / 2, G.laneTop(2) + L.laneH / 2 + 4);
+      g.textAlign = 'left';
+    }
+
+    function drawLive(st) {
+      const L = size();
+      const G = geometry(L);
+      const tr = st.tracker;
+      const src = st.src;
+      const pps = (G.x1 - G.x0 - 2) / WINDOW_S;
+      const left = src - WINDOW_S * rate;
+      const xOf = (s) => G.x1 - 1 - ((src - s) / rate) * pps;
+      frameBase(L, G);
+
+      // Pass 1: what is visible and what is sounding now.
+      const lanes = NAMES.map(() => ({ keyed: false, seg: null, lo: Infinity, hi: -Infinity }));
+      const bars = [];
+      for (const n of tr.notes) {
+        if (sampleAt(n.t0) > src) continue;
+        const ne = n.t1 == null ? Infinity : sampleAt(n.t1);
+        if (ne < left) continue;
+        for (const seg of n.segs) {
+          const s0 = sampleAt(seg.t0);
+          if (s0 > src) break;
+          const s1 = seg.t1 == null ? Infinity : sampleAt(seg.t1);
+          if (s1 < left) continue;
+          const ln = lanes[n.ch];
+          if (seg.midi != null) {
+            if (seg.midi < ln.lo) ln.lo = seg.midi;
+            if (seg.midi > ln.hi) ln.hi = seg.midi;
+            bars.push({ ch: n.ch, s0, s1, seg, live: s1 > src && ne > src });
+          }
+          if (s1 > src && ne > src) { ln.keyed = true; ln.seg = seg; }
+        }
+      }
+      let dacNow = false;
+      for (const d of tr.dacSpans) {
+        if (sampleAt(d.t0) <= src && (d.t1 == null || sampleAt(d.t1) > src)) dacNow = true;
+      }
+
+      // Each lane scales to its own visible pitches (at least an octave), eased so it doesn't jump.
+      for (let i = 0; i < 6; i++) {
+        const ln = lanes[i];
+        if (ln.lo === Infinity) continue;
+        let lo = ln.lo - 1;
+        let hi = ln.hi + 1;
+        if (hi - lo < 12) { const mid = (hi + lo) / 2; lo = mid - 6; hi = mid + 6; }
+        const r = range[i];
+        r.lo += (lo - r.lo) * 0.15;
+        r.hi += (hi - r.hi) * 0.15;
+      }
+
+      // Patch loads and parameter writes.
+      for (const p of tr.patches) {
+        const s = sampleAt(p.t0);
+        if (s > src || sampleAt(p.t1) < left) continue;
+        const top = G.laneTop(p.ch);
+        const x = Math.round(xOf(s)) + 0.5;
+        if (x < G.x0) continue;
+        g.fillStyle = COLORS[p.ch];
+        if (p.kind === 'patch') {
+          g.globalAlpha = 0.4;
+          g.fillRect(x, top + 1, 1, L.laneH - 2);
+          g.globalAlpha = 1;
+          g.beginPath();
+          g.moveTo(x - 3, top + 1);
+          g.lineTo(x + 4, top + 1);
+          g.lineTo(x + 0.5, top + 6);
+          g.closePath();
+          g.fill();
+        } else {
+          g.globalAlpha = 0.5;
+          g.fillRect(x - 1, top + L.laneH - 4, 3, 2);
+          g.globalAlpha = 1;
+        }
+      }
+
+      // Notes.
+      const barH = L.small ? 5 : 6;
+      const pad = 8;
+      const yOf = (ch, midi) => {
+        const r = range[ch];
+        const f = Math.max(0, Math.min(1, (midi - r.lo) / (r.hi - r.lo)));
+        return G.laneTop(ch) + pad + (1 - f) * (L.laneH - 2 * pad - barH);
+      };
+      g.font = (L.small ? 9 : 10) + 'px ' + mono;
+      g.textBaseline = 'alphabetic';
+      const labelRight = new Array(6).fill(-1e9);
+      for (const b of bars) {
+        const x0 = Math.max(G.x0 + 1, xOf(b.s0));
+        const x1 = Math.min(G.x1 - 1, b.s1 === Infinity ? G.x1 - 1 : xOf(Math.min(b.s1, src)));
+        if (x1 <= x0 - 0.01) continue;
+        const y = yOf(b.ch, b.seg.midi);
+        g.fillStyle = COLORS[b.ch];
+        g.globalAlpha = b.live ? 1 : 0.8;
+        g.fillRect(x0, y, Math.max(1, x1 - x0), barH);
+        g.globalAlpha = 1;
+        if (x1 - x0 >= 24 && x0 + 2 > labelRight[b.ch]) {
+          const top = G.laneTop(b.ch);
+          const ty = y - 2 >= top + 9 ? y - 2 : y + barH + 9;
+          g.fillStyle = C.text;
+          g.fillText(b.seg.name, x0 + 2, ty);
+          labelRight[b.ch] = x0 + 2 + g.measureText(b.seg.name).width + 2;
+        }
+      }
+
+      // DAC: while $2B bit 7 is set FM6 isn't what you hear, so the band hides FM6's notes.
+      const dacTop = G.laneTop(5);
+      for (const d of tr.dacSpans) {
+        const s0 = sampleAt(d.t0);
+        if (s0 > src) continue;
+        const s1 = d.t1 == null ? src : Math.min(sampleAt(d.t1), src);
+        if (s1 < left) continue;
+        const x0 = Math.max(G.x0 + 1, xOf(s0));
+        const x1 = Math.min(G.x1 - 1, xOf(s1));
+        if (x1 - x0 < 1) continue;
+        g.fillStyle = C.panel;
+        g.fillRect(x0, dacTop + 1, x1 - x0, L.laneH - 2);
+        g.save();
+        g.beginPath();
+        g.rect(x0, dacTop + 1, x1 - x0, L.laneH - 2);
+        g.clip();
+        g.strokeStyle = DAC_COLOR;
+        g.globalAlpha = 0.55;
+        g.lineWidth = 1;
+        g.beginPath();
+        for (let x = x0 - L.laneH; x < x1; x += 5) { g.moveTo(x, dacTop + L.laneH); g.lineTo(x + L.laneH, dacTop); }
+        g.stroke();
+        g.restore();
+        if (x1 - x0 >= 22) {
+          g.fillStyle = DAC_COLOR;
+          g.font = '600 10px ' + mono;
+          g.fillText('DAC', x0 + 4, dacTop + 14);
+        }
+      }
+
+      // PSG: every write would be a tick; the NHL '92 driver never writes it.
+      const psgTop = G.laneTop(6);
+      g.font = (L.small ? 10 : 11) + 'px ' + mono;
+      if (tr.stats.psgWrites === 0) {
+        g.fillStyle = C.muted;
+        g.fillText('never written by the driver', G.x0 + 8, psgTop + L.laneH / 2 + 4);
+      } else {
+        g.fillStyle = C.text;
+        for (const w of tr.psg) {
+          const s = sampleAt(w.t);
+          if (s > src || s < left) continue;
+          g.fillRect(Math.round(xOf(s)), psgTop + 4, 1, L.laneH - 8);
+        }
+        g.fillStyle = C.muted;
+        g.fillText(tr.stats.psgWrites + ' writes', G.x0 + 8, psgTop + 12);
+      }
+
+      // Gutter readouts.
+      const readout = [];
+      for (let i = 0; i < 6; i++) {
+        const ln = lanes[i];
+        const dac = i === 5 && dacNow;
+        const name = dac ? 'DAC' : ln.keyed && ln.seg && ln.seg.name ? ln.seg.name : '—';
+        readout.push({ ch: i, name, keyed: ln.keyed, dac });
+        gutterText(L, G, i, name, ln.keyed, dac);
+      }
+      gutterText(L, G, 6, tr.stats.psgWrites ? tr.stats.psgWrites + ' w' : 'unused', false, false);
+
+      // Time axis (song time, whole seconds scroll with the notes) and the playhead.
+      g.font = (L.small ? 9 : 10) + 'px ' + mono;
+      g.fillStyle = C.muted;
+      g.strokeStyle = C.line;
+      g.lineWidth = 1;
+      const firstSec = Math.max(0, Math.ceil(left / rate));
+      for (let m = firstSec; m * rate <= src; m++) {
+        const x = Math.round(xOf(m * rate)) + 0.5;
+        if (x < G.x0 + 14) continue;
+        g.globalAlpha = 0.35;
+        g.beginPath();
+        g.moveTo(x, G.axis - 3);
+        g.lineTo(x, G.laneTop(6) + L.laneH);
+        g.stroke();
+        g.globalAlpha = 1;
+        const lab = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+        if (x + g.measureText(lab).width < G.x1) g.fillText(lab, x + 2, 10);
+      }
+      g.fillStyle = C.amber;
+      g.fillRect(G.x1 - 1.5, G.axis - 3, 1.5, G.laneTop(6) + L.laneH - G.axis + 3);
+
+      last = { src, seconds: src / rate, notes: tr.notes.length, bars: bars.length, lanes: readout, dac: dacNow, psgWrites: tr.stats.psgWrites };
+    }
+
+    function updateEvents(st) {
+      const tr = st.tracker;
+      const src = st.src;
+      const ev = [];
+      for (const n of tr.notes) {
+        const s0 = sampleAt(n.t0);
+        if (s0 > src) continue;
+        const name = n.segs[0].name || '?';
+        ev.push([s0, n.ch, 1, 'key on  ' + name]);
+        if (n.t1 != null && sampleAt(n.t1) <= src) ev.push([sampleAt(n.t1), n.ch, 0, 'key off']);
+      }
+      for (const p of tr.patches) {
+        const s = sampleAt(p.t0);
+        if (p.kind !== 'patch' || s > src) continue;
+        ev.push([s, p.ch, 2, 'patch   A' + p.algorithm + ' FB' + p.feedback + ' #' + p.sig.slice(0, 4)]);
+      }
+      for (const d of tr.dacSpans) {
+        const s0 = sampleAt(d.t0);
+        if (s0 > src || (d.writes === 0 && d.t1 != null)) continue;
+        ev.push([s0, 5, 1, 'DAC on']);
+        if (d.t1 != null && sampleAt(d.t1) <= src) ev.push([sampleAt(d.t1), 5, 0, 'DAC off (' + d.writes + ' samples)']);
+      }
+      ev.sort((a, b) => b[0] - a[0] || a[2] - b[2]);
+      const text = ev.slice(0, EVENT_LINES).map((e) => clock(e[0] / rate) + '  ' + NAMES[e[1]] + '  ' + e[3]).join('\n') || 'No events yet.';
+      if (text !== lastText) {
+        lastText = text;
+        events.textContent = text;
+      }
+    }
+
+    function tick(now) {
+      raf = root.requestAnimationFrame(tick);
+      if (!container.isConnected) { destroy(); return; }
+      if (root.document.hidden) return;
+      const st = opts.state();
+      if (!st) {
+        if (mode === 'roll') {
+          const L = size();
+          if (!idleDrawn || L.w !== cssW) { drawIdle(); idleDrawn = true; }
+        } else if (lastText !== 'Not playing.') {
+          lastText = 'Not playing.';
+          events.textContent = lastText;
+        }
+        last = null;
+        return;
+      }
+      idleDrawn = false;
+      if (mode === 'roll') drawLive(st);
+      else if (now - lastEvents > 120) {
+        lastEvents = now;
+        updateEvents(st);
+      }
+    }
+
+    function destroy() {
+      if (raf) root.cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    size();
+    drawIdle();
+    idleDrawn = true;
+    raf = root.requestAnimationFrame(tick);
+
+    return {
+      destroy,
+      setMode,
+      get mode() { return mode; },
+      /** What the last live frame showed (per-lane current note, key state, DAC), or null when idle. */
+      get readout() { return last; }
+    };
+  }
+
+  root.NhlSoundRoll = { mount, WINDOW_S };
+})(typeof self !== 'undefined' ? self : this);

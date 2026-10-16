@@ -12,6 +12,8 @@
   const SFX_VBLANKS = 600;
   const BLOCK = 4096;
   const Z80_HZ = 3579545;
+  const KEEP_SECONDS = 8; // sequencer history kept (the roll shows 6 s)
+  const T_PER_SAMPLE = 1008 / 15; // Z80 T-states per 53,267 Hz output sample (chain.sampleAt inverse)
 
   let rom = null;
   let data = null;
@@ -22,6 +24,7 @@
   let node = null;
   let live = null;
   let panel = null;
+  let roll = null;
   let lastStatus = 0;
   const VOLUME_KEY = 'nhl9x.soundTest.volume';
   let gain = null;
@@ -115,6 +118,13 @@
         R.fill(0);
         return;
       }
+      // Where this block starts in the chip's output stream (chain samples handed to the resampler,
+      // one behind: its lookahead) and when the context will play it: the sequencer's clock.
+      const s = live;
+      const taken = s.chain.rendered - s.queued;
+      s.blocks.push({ ctxTime: typeof ev.playbackTime === 'number' && ev.playbackTime > 0 ? ev.playbackTime : ctx.currentTime, src: taken - 1 });
+      if (s.blocks.length > 8) s.blocks.shift();
+      s.tracker.trim(Math.max(0, taken / Chain().SAMPLE_RATE - KEEP_SECONDS) * Chain().SAMPLE_RATE * T_PER_SAMPLE);
       const out = live.resampler.process(L.length);
       L.set(out.left);
       R.set(out.right);
@@ -174,8 +184,15 @@
     if (ctx.state === 'suspended') await ctx.resume();
     const chip = new Ym.Chip(Ym.module, Ym.api.create(), Ym.api);
     chip.reset();
-    const chain = Chain().create({ rom, chip, psg: root.NhlSn76489.create(), keepLogs: false });
-    live = { id, chip, chain, plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '' };
+    const tracker = root.YmNoteTracker.create();
+    // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
+    const chain = Chain().create({
+      rom, chip, psg: root.NhlSn76489.create(), keepLogs: false,
+      onYmWrite: (t, port, value) => tracker.writePort(t, port, value),
+      onPsgWrite: (t, value) => tracker.psgWrite(t, value),
+      onYmReset: (t) => tracker.reset(t)
+    });
+    live = { id, chip, chain, tracker, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '' };
     live.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
     status(true);
     if (onChange) onChange();
@@ -196,6 +213,46 @@
       return Promise.resolve();
     }
     return play(id);
+  }
+
+  /** Context time of the sample at the speaker right now (the browser's own output timestamp). */
+  function audibleContextTime() {
+    if (ctx.getOutputTimestamp) {
+      const ts = ctx.getOutputTimestamp();
+      if (ts && ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (root.performance.now() - ts.performanceTime) / 1000;
+    }
+    return ctx.currentTime - (ctx.outputLatency || 0);
+  }
+
+  /**
+   * Chip output sample (53,267 Hz, from the start of the run) that is audible at context time `T`.
+   * Each audio block is stamped with its playback time and stream position, and the stream is
+   * contiguous: sample = offset + T * 53,267. The offset is the mean over the recent contiguous
+   * blocks (playbackTime is only good to a render quantum or two; a jump over 30 ms means a
+   * glitch, and older blocks are dropped). This accounts for the samples queued ahead, the
+   * ScriptProcessor block and the device latency, which `heard()` doesn't.
+   */
+  function audibleSource(s, T) {
+    const bl = s.blocks;
+    if (!bl.length) return 0;
+    const rate = Chain().SAMPLE_RATE;
+    const newest = bl[bl.length - 1].src - bl[bl.length - 1].ctxTime * rate;
+    let sum = 0;
+    let n = 0;
+    for (let i = bl.length - 1; i >= 0; i--) {
+      const o = bl[i].src - bl[i].ctxTime * rate;
+      if (Math.abs(o - newest) > 0.03 * rate) break;
+      sum += o;
+      n += 1;
+    }
+    const src = sum / n + (T == null ? audibleContextTime() : T) * rate;
+    return Math.max(0, Math.min(src, s.chain.rendered));
+  }
+
+  /** What the sequencer view draws: the running session's tracker and the audible position, or null. */
+  function seqState() {
+    if (!live || !ctx) return null;
+    return { tracker: live.tracker, src: audibleSource(live) };
   }
 
   const secondsOf = (frames) => frames * Chain().FRAME_TSTATES / Z80_HZ;
@@ -256,6 +313,8 @@
 
   function renderPanel(box, id) {
     panel = box;
+    if (roll) roll.destroy();
+    roll = null;
     box.replaceChildren();
     box.dataset.item = id;
     if (!rom || !Ym) {
@@ -297,6 +356,12 @@
     box.appendChild(make('p', 'st-time mono'));
     box.appendChild(make('p', 'st-status mono'));
 
+    if (root.NhlSoundRoll && root.YmNoteTracker) {
+      const seq = make('div', 'st-seq');
+      box.appendChild(seq);
+      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState });
+    }
+
     box.appendChild(make('p', 'st-note', describe(id)));
     box.appendChild(make('p', 'st-note', 'Rendered live from the retail code: 68k driver → Z80 RAM → Z80 driver → YM2612 (ymfm) + SN76489, ' +
       'one frame (59,736 Z80 T-states) at a time at 53,267 Hz, resampled to ' + (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '. ' +
@@ -336,6 +401,10 @@
     stop,
     toggle,
     get playing() { return !!live; },
+    /** The mounted sequencer view (readout of the last drawn frame, mode), or null. */
+    get sequencer() { return roll; },
+    /** Audible chip sample of the running session (see audibleSource), or null. */
+    audibleSample() { return live && ctx ? audibleSource(live) : null; },
     get playingId() { return live ? live.id : ''; },
     get ready() { return !!(rom && Ym); },
     get error() { return error; },
