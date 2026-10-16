@@ -13,6 +13,7 @@ put('index.html', '<html><head><link rel="stylesheet" href="a.css"><script src="
 put('a.css', 'body{}');
 put('lib/x.js', 'var x=1');
 put('data/m.json', '{"a":1}');
+put('lib/generated/rt.js', 'export const a = 1;');
 
 // --- 1. references get ?v=<hash of the file>, remote ones are left alone ---
 const s1 = fingerprint(dir);
@@ -59,6 +60,23 @@ fs.unlinkSync(path.join(dir, 'bad.html'));
     'https://h.example/app/data/other.json',
     'https://elsewhere.example/data/m.json'
   ]);
+}
+
+// --- 4b. a script imported by a computed URL gets its hash from window.assetUrl; others and unknown paths do not ---
+{
+  const code = /<script data-asset-versions>([\s\S]*?)<\/script>/.exec(html)[1];
+  const win = { fetch: () => Promise.resolve() };
+  vm.runInNewContext(code, { window: win, location: { href: 'https://h.example/app/index.html' }, document: { baseURI: 'https://h.example/app/' }, URL, String });
+  const h = hashOf(path.join(dir, 'lib/generated/rt.js'));
+  assert.strictEqual(win.assetUrl('lib/generated/rt.js'), 'https://h.example/app/lib/generated/rt.js?v=' + h);
+  assert.strictEqual(win.assetUrl('lib/other.js'), 'https://h.example/app/lib/other.js');
+  put('lib/generated/rt.js', 'export const a = 2;');
+  fingerprint(dir);
+  const code2 = /<script data-asset-versions>([\s\S]*?)<\/script>/.exec(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'))[1];
+  const win2 = { fetch: () => Promise.resolve() };
+  vm.runInNewContext(code2, { window: win2, location: { href: 'https://h.example/app/index.html' }, document: { baseURI: 'https://h.example/app/' }, URL, String });
+  assert.notStrictEqual(win2.assetUrl('lib/generated/rt.js'), win.assetUrl('lib/generated/rt.js'), 'a changed runtime gets a new URL');
+  html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
 }
 
 // --- 5. ETags: stable for the same file state, different when it changes, If-None-Match honoured ---

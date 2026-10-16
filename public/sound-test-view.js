@@ -78,10 +78,11 @@
   }
 
   async function loadYm() {
-    const base = new URL('lib/audio/generated/', document.baseURI).href;
-    const { Ym2612 } = await import(new URL('ym2612-runtime.js', base).href);
-    const { default: moduleFactory } = await import(new URL('ym2612_wasm.js', base).href);
-    const res = await fetch(new URL('ym2612_wasm.wasm', base).href);
+    // assetUrl (tools/fingerprint-site.js) adds the file's content hash, so a changed runtime is never mixed with a cached old one
+    const at = (name) => (root.assetUrl ? root.assetUrl('lib/audio/generated/' + name) : new URL('lib/audio/generated/' + name, document.baseURI).href);
+    const { Ym2612 } = await import(at('ym2612-runtime.js'));
+    const { default: moduleFactory } = await import(at('ym2612_wasm.js'));
+    const res = await fetch(at('ym2612_wasm.wasm'));
     if (!res.ok) throw new Error('YM2612 WASM fetch failed (' + res.status + ')');
     const shared = await Ym2612.create({ moduleFactory, moduleOptions: { wasmBinary: new Uint8Array(await res.arrayBuffer()) } });
     return { Chip: Ym2612, module: shared.module, api: shared.api };
