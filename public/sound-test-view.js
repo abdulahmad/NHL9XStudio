@@ -35,6 +35,7 @@
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
   let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
+  const chMuted = [false, false, false, false, false, false]; // roll lanes the listener muted (click a lane); kept across plays
   let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
@@ -320,6 +321,7 @@
     const tracker = root.YmNoteTracker.create();
     // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
     const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false, driver: isNx() ? root[NX[game].driver] : undefined }, taps(tracker)));
+    chMuted.forEach((m, i) => { if (m) chain.setChannelMute(i, true); });
     return { chip, chain, tracker, held: new Array(6).fill(null) };
   }
 
@@ -642,7 +644,7 @@
       mountRoll(container) {
         if (roll) roll.destroy();
         roll = root.NhlSoundRoll && root.YmNoteTracker
-          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel })
+          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel, isMuted: (i) => chMuted[i], onToggle: toggleChannel })
           : null;
         return roll;
       }
@@ -697,6 +699,12 @@
       return vizState(gmPlay);
     }
     return null;
+  }
+
+  /** Click on a roll lane: mute or unmute that FM channel in the live chain (and in later plays). */
+  function toggleChannel(i) {
+    chMuted[i] = !chMuted[i];
+    if (live && live.chain && live.chain.setChannelMute) live.chain.setChannelMute(i, chMuted[i]);
   }
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
@@ -1084,7 +1092,7 @@
     if (root.NhlSoundRoll && root.YmNoteTracker) {
       const seq = make('div', 'st-seq');
       box.appendChild(seq);
-      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel });
+      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel, isMuted: (i) => chMuted[i], onToggle: toggleChannel });
     }
 
     box.appendChild(make('p', 'st-note', describe(id)));

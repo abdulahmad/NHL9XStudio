@@ -32,6 +32,7 @@
    * @param {{ chain: {SAMPLE_RATE:number, sampleAt:function}, state: function, patchLabel?: function }} opts
    *   state() -> null (nothing playing) or { tracker, src } with src the audible source sample
    *   patchLabel(burst) -> text or null: names the patch a lane loaded last (tagged in the lane's corner)
+   *   isMuted(i) / onToggle(i): optional; a click on an FM lane (0-5) calls onToggle, and muted lanes are drawn dimmed
    */
   function mount(container, opts) {
     const rate = opts.chain.SAMPLE_RATE;
@@ -61,6 +62,11 @@
     const note = make('p', 'st-seq-note', 'From the YM2612 writes the Z80 driver makes, at the position you hear (right edge). ' +
       'FM6 shows DAC while $2B bit 7 is set. The PSG lane stays empty: this driver never writes it.');
     container.append(head, wrap, events, note);
+    const mutable = !!(opts.onToggle && opts.isMuted);
+    if (mutable) {
+      note.textContent += ' Click a lane to mute or unmute that channel.';
+      canvas.style.cursor = 'pointer';
+    }
 
     let mode = 'roll';
     let raf = 0;
@@ -126,6 +132,7 @@
 
     function gutterText(L, G, i, readout, keyed, dac) {
       const top = G.laneTop(i);
+      if (mutable && i < 6 && opts.isMuted(i)) { keyed = false; dac = false; readout = 'muted'; }
       g.textBaseline = 'alphabetic';
       g.font = '600 ' + (L.small ? 10 : 11) + 'px ' + mono;
       g.fillStyle = i < 6 ? COLORS[i] : C.muted;
@@ -144,6 +151,22 @@
     const held = new Array(6).fill(null);
     let heldSrc = 0;
 
+    /** Muted FM lanes are covered so they read as off (their notes are still tracked). */
+    function dimMuted(L, G) {
+      if (!mutable) return;
+      for (let i = 0; i < 6; i++) {
+        if (!opts.isMuted(i)) continue;
+        g.fillStyle = 'rgba(16,20,24,0.72)';
+        g.fillRect(G.x0, G.laneTop(i), G.x1 - G.x0, L.laneH);
+        g.strokeStyle = C.muted;
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(G.x0 + 6, G.laneTop(i) + L.laneH / 2 + 0.5);
+        g.lineTo(G.x1 - 6, G.laneTop(i) + L.laneH / 2 + 0.5);
+        g.stroke();
+      }
+    }
+
     function drawIdle() {
       const L = size();
       const G = geometry(L);
@@ -154,6 +177,7 @@
       g.textAlign = 'center';
       g.fillText('Press Play to see what each channel does', (G.x0 + G.x1) / 2, G.laneTop(2) + L.laneH / 2 + 4);
       g.textAlign = 'left';
+      dimMuted(L, G);
     }
 
     function drawLive(st) {
@@ -370,6 +394,7 @@
       g.fillStyle = C.amber;
       g.fillRect(G.x1 - 1.5, G.axis - 3, 1.5, G.laneTop(6) + L.laneH - G.axis + 3);
 
+      dimMuted(L, G);
       last = { src, seconds: src / rate, notes: tr.notes.length, bars: bars.length, lanes: readout, dac: dacNow, psgWrites: tr.stats.psgWrites };
     }
 
@@ -433,6 +458,21 @@
       if (raf) root.cancelAnimationFrame(raf);
       raf = 0;
     }
+
+    canvas.addEventListener('click', (ev) => {
+      if (!mutable) return;
+      const r = canvas.getBoundingClientRect();
+      const y = ev.clientY - r.top;
+      const L = size();
+      const G = geometry(L);
+      for (let i = 0; i < 6; i++) {
+        if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) {
+          opts.onToggle(i);
+          idleDrawn = false;
+          return;
+        }
+      }
+    });
 
     size();
     drawIdle();
