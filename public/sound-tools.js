@@ -417,15 +417,18 @@
     scroller.appendChild(inner);
     box.appendChild(scroller);
 
+    let extras = null;
     if (root.NhlEditorExtras) {
       const secPerUnit = () => model.song.tempo / 60; // the tempo is video frames per grid unit
-      root.NhlEditorExtras.attach({
+      extras = root.NhlEditorExtras.attach({
         scroller, inner, gutter: GUTTER,
         pxPerSec: () => model.zoom / secPerUnit(),
         totalSec: () => model.song.units * secPerUnit(),
         loopSec: () => 0,
         hostSec: () => host.editorSeconds(),
-        paused: () => host.paused
+        paused: () => host.paused,
+        seek: (sec) => host.seekEditor(sec),
+        seeking: () => host.editorSeekProgress()
       });
     }
     const messages = make('div', 'se-out');
@@ -870,7 +873,7 @@
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       const built = buildOrExplain();
       const rom = withEdits(S.romWithSong(host.rom, built));
-      await host.playEditor(rom);
+      await host.playEditor(rom, extras ? extras.cue() : 0);
       refreshTools();
     }
     async function toggleGm() {

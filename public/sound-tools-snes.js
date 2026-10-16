@@ -274,14 +274,17 @@
     box.appendChild(seq);
     host.mountRoll(seq);
 
+    let extras = null;
     if (root.NhlEditorExtras) {
-      root.NhlEditorExtras.attach({
+      extras = root.NhlEditorExtras.attach({
         scroller, inner, gutter: GUTTER,
         pxPerSec: () => px() / (UNIT * secPerTick()),
         totalSec: () => song().ticks * secPerTick(),
         loopSec: () => (song().loop ? 0 : null),
         hostSec: () => host.editorSeconds(),
-        paused: () => host.paused
+        paused: () => host.paused,
+        seek: (sec) => host.seekEditor(sec),
+        seeking: () => host.editorSeekProgress()
       });
     }
 
@@ -318,7 +321,7 @@
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       const r = convert();
       model.report = r.report.warnings || [];
-      await host.playSnesEditor({ name: song().name, bytes: r.bytes, base: r.base, block: r.block, set: r.report.set || song().set, report: r.report });
+      await host.playSnesEditor({ name: song().name, bytes: r.bytes, base: r.base, block: r.block, set: r.report.set || song().set, report: r.report }, extras ? extras.cue() : 0);
       refreshTools();
     }
     playBtn.onclick = () => play().catch((err) => { info.textContent = String(err && err.message ? err.message : err); });

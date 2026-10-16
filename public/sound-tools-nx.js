@@ -281,14 +281,17 @@
     inner.appendChild(canvas);
     scroller.appendChild(inner);
     box.appendChild(scroller);
+    let extras = null;
     if (root.NhlEditorExtras) {
-      root.NhlEditorExtras.attach({
+      extras = root.NhlEditorExtras.attach({
         scroller, inner, gutter: GUTTER,
         pxPerSec: () => px() / (unitTicks() / SongLib().VBLANK_HZ),
         totalSec: () => song().ticks / SongLib().VBLANK_HZ,
         loopSec: () => (song().loopTick == null ? null : song().loopTick / SongLib().VBLANK_HZ),
         hostSec: () => host.editorSeconds(),
-        paused: () => host.paused
+        paused: () => host.paused,
+        seek: (sec) => host.seekEditor(sec),
+        seeking: () => host.editorSeekProgress()
       });
     }
     const messages = make('div', 'se-out');
@@ -753,7 +756,7 @@
     async function toggleNhl() {
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       needNotes();
-      await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, song()).rom));
+      await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, song()).rom), extras ? extras.cue() : 0);
       refreshTools();
     }
     async function toggleGm() {
