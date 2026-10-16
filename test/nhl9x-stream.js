@@ -147,3 +147,28 @@ for (const g of [93, 94]) {
 }
 
 console.log('nhl9x-stream: ok');
+
+// --- Native MIDI: every retail song of both games survives export and import -----------------------
+{
+  const Smf = require('../lib/audio/smf');
+  const key = (s) => JSON.stringify([s.ticks, s.loopTick, s.notes.map((x) => [x.t, x.dur, x.ch, x.note, x.vel, x.patch].join()).sort(), s.bends.map((x) => [x.t, x.ch, x.value].join()).sort()]);
+  let songs = 0;
+  let mixed = 0;
+  for (const g of [93, 94]) {
+    for (let id = 0; id < Song.GAMES[g].count; id++) {
+      const a = Stream.fromStream(g, slices[g], id);
+      if (!a.notes.length) continue;
+      const b = Stream.fromSmfNative(Smf.parse(Smf.write(Stream.toSmfNative(a))));
+      assert.ok(b, 'native header');
+      assert.strictEqual(b.song.game, g);
+      assert.strictEqual(key(b.song), key(a), g + ' $' + id.toString(16) + ' survives the native MIDI round trip');
+      songs++;
+      const per = {};
+      a.notes.forEach((n) => { (per[n.ch] = per[n.ch] || new Set()).add(n.patch); });
+      if (Object.keys(per).some((c) => per[c].size > 1)) mixed++;
+    }
+  }
+  assert.ok(songs > 150 && mixed >= 1, 'songs ' + songs + ', with several instruments on one channel ' + mixed);
+  assert.strictEqual(Stream.fromSmfNative(Smf.parse(Smf.write(SongGm.toSmfSong(Stream.toGm(Stream.emptySong(94), map, Song.patches(94, slices[94])).song)))), null, 'a GM file has no native header');
+  console.log('nhl9x-stream: native MIDI round trip of ' + songs + ' retail songs OK (' + mixed + ' with several instruments on one channel)');
+}
