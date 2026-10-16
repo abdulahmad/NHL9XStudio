@@ -66,6 +66,7 @@ PR #28 played `song(0)` for one vblank and then `sfx(0)`, so SngEOP's first note
 | Surface | Now |
 |---------|-----|
 | **Sound test** (`public/sound-test-view.js`) | NHL 92's only audio tab. Play/Stop toggle, Space/Enter/double-click, ▶ marker in the list, progress + clock, volume (output gain only), song/SFX details from the parser. Hides the sprite-only controls. |
+| **Sound test sequencer** | Channels view under the clock: FM1–FM6 + PSG piano roll and an Events list, derived from the Z80's YM writes (`lib/audio/ym-note-tracker.js`, `public/sound-roll.js`), placed at the audible position. Read-only `onYmWrite` / `onPsgWrite` / `onYmReset` taps on `Nhl92SoundChain.create`; no pinned hash changed. Tests: `test/ym-note-tracker.js`. See `docs/NHL92-SOUND-CHAIN.md`. |
 | **Sound data** tab | Removed, along with `public/sound-data-view.js`. The parser (`lib/audio/nhl92-sound-data.js`) stays and feeds the Sound test details. |
 | **Audio** tab (AUD-1 sketch) | Hidden for NHL 92 (`hasAudioTab`). Kept for NHLPA 93–95 and the Z80 test profile. Old NHL 92 `mode=audio` / `mode=sounddata` links open the Sound test. |
 | **Z80** tab | Unchanged (Z80 test profile only). |
