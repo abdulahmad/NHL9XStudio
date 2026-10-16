@@ -437,8 +437,11 @@ select:focus, input:focus, button:focus-visible {
 .st-toggle[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
 .st-volume { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
 .st-volume input { width: 140px; accent-color: var(--amber); }
-.st-progress { height: 6px; max-width: 520px; background: var(--raise-2); border-radius: 3px; overflow: hidden; }
-.st-bar { height: 100%; width: 0; background: var(--amber); transition: width 0.25s linear; }
+.st-progress { height: 10px; max-width: 520px; background: var(--raise-2); border-radius: 5px; overflow: hidden; cursor: pointer; touch-action: none; }
+.st-progress:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.st-exports { flex-wrap: wrap; margin: 0 0 12px; }
+.st-exports .ghost-btn { font-size: 12px; }
+.st-bar { height: 100%; width: 0; background: var(--amber); transition: width 0.25s linear; pointer-events: none; }
 .st-bar.is-loop { background: repeating-linear-gradient(90deg, var(--amber) 0 12px, #b8861f 12px 24px); }
 .sound-panel .st-time { margin: 6px 0 0; font-size: 13px; }
 .st-status { margin: 2px 0 14px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }

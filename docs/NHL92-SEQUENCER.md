@@ -95,6 +95,16 @@ The result is a first draft to edit, not a transcription: a piano arrangement wi
 
 The Roll view names each lane's instrument from the YM2612 writes, not from the song data. `identifyPatch` compares the 24 operator registers and `$B0` of each patch load with the 22 retail patches (`$B4` is skipped: the driver ORs the pan bits in). The label is the patch number and the GM sound the mapping gives it. Every patch load in the five retail songs and in all the tests is one of the 22.
 
+Labels are held per lane: the tracker keeps only the last 8 s of writes, so the view remembers the latest patch load seen at or before the playhead until a newer one replaces it. A seek keeps this correct because the held loads are updated before the old history is dropped.
+
+## Playback position, seeking and Play as GM
+
+- **Visualizer during Play as GM.** Retail songs run the retail drivers silently (a chain with no chip, so about 3 ms a frame) next to the GM audio and feed the same tracker; chain time is the audio clock plus 2 frames (the driver's first note sounds 2 frames after unit 0; checked on songs 0, 2 and 4). SFX run their whole plan once, the tracker is converted to GM notes (`gmFromTracker`) and the same finished tracker is drawn. The sequencer's Play as GM shows the retail drivers playing the same song.
+- **SFX as GM.** Only the FM notes the YM2612 was asked for are converted. A patch that the mapping calls a drum becomes one GM drum hit; DAC samples have no notes and are left out, so a DAC-only SFX has the button disabled.
+- **Progress bar.** An SFX bar is its 600 vblanks; a song bar is one pass (`units × tempo` frames, checked equal to the repeat period of songs 0, 2 and 4) and the clock shows the pass number. Click or drag the bar, or use ← →, to seek while playing.
+- **Seeking the live chain.** The 68k and Z80 drivers only run forward, so a forward seek fast-forwards the running chain with `chain.setMute(true)`: no samples are generated but every register write still reaches the chips, in 25 ms slices. A backward seek starts a new run and fast-forwards. At about 3 ms a frame a seek 60 s into a song takes about 12 s ("Seeking… N%"). GM playback seeks immediately.
+- **Export** is on every song panel (MIDI GM, MIDI FM tracks, cmdstream `.asm` and `.bin`, rebuilt from the decoded song, not the retail bytes) and on FM SFX panels (MIDI GM). "Edit in sequencer" copies a song into the editor.
+
 ## What was checked
 
 `test/nhl92-sequencer.js`:
