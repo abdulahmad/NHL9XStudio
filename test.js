@@ -1196,6 +1196,7 @@ require('./test/nhl94s-midi');
 require('./test/nhl93s-sound-data');
 require('./test/nhl93s-player');
 require('./test/nhl93s-midi');
+require('./test/snes-gm-analysis');
 require('./test/nhl92-68k-driver');
 require('./test/nhl92-sound-chain');
 require('./test/nhl9x-sound-chain');

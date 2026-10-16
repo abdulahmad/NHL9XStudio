@@ -36,7 +36,7 @@ Every retail track ends with a stop or a loop, and the retail tool leaves paddin
 
 ## The map
 
-`data/audio/nhl94s-gm-map.json` is hand-made from the sample names and how the retail songs use each sound entry (with a reason for each). Change it to change both export and import. It does not touch the game's data.
+`data/audio/nhl94s-gm-map.json` is built from measured probe notes, the sample names and how the retail songs use each sound entry, with a reason, confidence and runner-up for each (see [SNES-GM-MAP.md](SNES-GM-MAP.md)). Change it to change both export and import. It does not touch the game's data.
 
 ## Not done
 
