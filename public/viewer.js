@@ -14,7 +14,7 @@ function isZ80TestGame() {
   return gameInfo && gameInfo.kind === 'z80test';
 }
 
-/** The Sound test tab plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 94 SNES, and NHLPA 93 SNES. */
+/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 94 SNES, and NHLPA 93 SNES. */
 function hasSoundTest(info) {
   return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined');
 }
@@ -28,7 +28,7 @@ function hasAudioTab(info) {
 }
 
 /** The Sound test panel replaces the sprite stage: its view module and selection key in state. */
-const SOUND_TEST = { view: () => NhlSoundTestView, key: 'soundTestItem', title: 'Sound test', available: hasSoundTest };
+const SOUND_TEST = { view: () => NhlSoundTestView, key: 'soundTestItem', title: 'Audio', available: hasSoundTest };
 const soundPanel = (mode) => ((mode || state.mode) === 'soundtest' ? SOUND_TEST : null);
 
 function renderSoundPanel() {

@@ -254,19 +254,16 @@
     barsIn.max = '64';
     barsIn.id = 'se-bars';
     barsIn.setAttribute('aria-label', 'Bars');
-    const copy = make('select');
-    copy.id = 'se-copy';
-    copy.setAttribute('aria-label', 'Start from a retail song');
-    copy.appendChild(Object.assign(make('option', null, 'Start from…'), { value: '' }));
-    host.data.songs.forEach((s) => copy.appendChild(Object.assign(make('option', null, 'Retail song ' + s.id + ' · ' + s.name), { value: String(s.id) })));
-    copy.appendChild(Object.assign(make('option', null, 'Empty song'), { value: 'empty' }));
+    const fresh = make('button', 'ghost-btn', 'New empty song');
+    fresh.type = 'button';
+    fresh.title = 'Clear the sequencer (Undo brings the song back)';
     const lab = (text, el) => { const l = make('label', 'st-volume'); l.append(make('span', null, text), el); return l; };
     const importBtn = make('input');
     importBtn.type = 'file';
     importBtn.accept = '.mid,.midi,audio/midi,audio/x-midi';
     importBtn.id = 'se-import';
     importBtn.setAttribute('aria-label', 'Import MIDI');
-    row1.append(lab('Name', nameIn), lab('Tempo', tempoIn), tempoNote, lab('Bars', barsIn), copy, lab('Import MIDI', importBtn));
+    row1.append(lab('Name', nameIn), lab('Tempo', tempoIn), tempoNote, lab('Bars', barsIn), fresh, lab('Import MIDI', importBtn));
     box.appendChild(row1);
 
     // Toolbar: what a click adds
@@ -639,16 +636,11 @@
         model.song.channels = model.song.channels.map((ch) => ch.filter((n) => n.unit < units).map((n) => (n.unit + n.len > units ? Object.assign({}, n, { len: units - n.unit }) : n)));
       });
     });
-    copy.addEventListener('change', () => {
-      const v = copy.value;
-      copy.value = '';
-      if (!v) return;
+    fresh.addEventListener('click', () => {
       edit(() => {
-        if (v === 'empty') { model.song = newSong(); model.name = 'my-song'; } else {
-          model.sel = [];
-          model.song = S.fromParsed(host.data, Number(v));
-          model.name = safeName(host.data.songs[Number(v)].name);
-        }
+        model.sel = [];
+        model.song = newSong();
+        model.name = 'my-song';
         model.gmReport = [];
       });
     });
