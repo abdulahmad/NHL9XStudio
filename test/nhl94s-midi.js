@@ -101,6 +101,24 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
   const drum = song.tracks[9].events.filter((e) => e.type === 'note');
   assert.strictEqual(drum[0].code, 0x2f + 1, 'kick = sound entry 1');
   assert.strictEqual(song.tracks[0].events.slice(-1)[0].type, 'stop');
+  // play it: the first record's delay is dropped by the player, so every track must open with a name for the notes to keep their time
+  {
+    const pl = Player.create({ data: d });
+    pl.boot();
+    pl.loadSet('menu');
+    pl.logCommands(true);
+    pl.startSongBytes(r.bytes);
+    pl.record();
+    pl.runFrames(75);
+    const keys = pl.commands.filter((c) => c.name === 'keyOn');
+    assert.strictEqual(keys.length, 3, 'two brass notes and the kick sound');
+    const lead2 = keys.filter((k) => k.args.sample !== 0 && k.frame > 5);
+    assert.ok(lead2.length === 1 && Math.abs(lead2[0].frame - 30.5) <= 2, 'the second brass note starts at 0.5 s (frame ~30): ' + JSON.stringify(keys.map((k) => k.frame)));
+    let peak = 0;
+    const pcm = pl.stopRecording();
+    for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+    assert.ok(peak > 3000, 'audible: ' + peak);
+  }
   // loop: a mark at the start, a loop jump at the end
   const looped = SoundData.parseSong(Midi.fromSmf(smf, d, gm, { set: 'menu', loop: true }).bytes);
   assert.strictEqual(looped.tracks[0].events[0].type, 'mark');
