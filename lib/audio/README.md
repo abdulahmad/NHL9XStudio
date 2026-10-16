@@ -30,7 +30,6 @@ Genesis (AUD-0 / AUD-1):
 - `nhl92-z80-golden.js` — replay recorded vblank inputs (`data/captures/nhl92/*.json`) and compare to a retail YM log or VGM.
 - `nhl92-z80.js` — extract/load `Z80_Program_Code` (`0x116A6`, `0x598` bytes).
 - `nhl92-sound-system.js` — NHL 92 68k↔Z80 vblank hooks + FM/SFX preview schedules (Z80 test profile's Audio/Z80 tabs, `test.js`).
-- `z80-test-patterns.js` — built-in harness tests (viewer **Z80 test** game).
 - `nhl92-sound-fixture.js` + `data/fixtures/nhl92-sound-slice.bin` — bundled sound region (not a full ROM).
 - `z80-cpu.js` — legacy minimal CPU (superseded by `z80-cpu-core.js`).
 - `genesis.js` — builds preview schedules; 93/94 use `genesis-events.js`.

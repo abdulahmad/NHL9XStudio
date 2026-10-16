@@ -386,9 +386,9 @@ assert.strictEqual(snes94frame.pixels[0], 1);
 
 assert.strictEqual(APP_NAME, 'NHL9X Studio');
 
-assert.strictEqual(GAMES.length, 9);
+assert.strictEqual(GAMES.length, 8);
 const staticManifest = buildManifest();
-assert.strictEqual(staticManifest.length, 9);
+assert.strictEqual(staticManifest.length, 8);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
 
@@ -1113,22 +1113,11 @@ const audioRom = retail92
 const previewRender = require('./lib/audio/preview-render');
 const nhl92Z80 = require('./lib/audio/nhl92-z80');
 const z80Machine = require('./lib/audio/z80-machine');
-const z80Patterns = require('./lib/audio/z80-test-patterns');
 const soundSystem = require('./lib/audio/nhl92-sound-system');
 const soundFixture = require('./lib/audio/nhl92-sound-fixture');
 
-const ramWalk = z80Patterns.run('ram_walk');
-const ymPing = z80Patterns.run('ym_ping');
 const fixtureRom = soundFixture.resolveRom(null);
 assert.ok(fixtureRom && fixtureRom.length >= 0x11800, 'bundled sound fixture should load in Node');
-const fixtureBoot = z80Patterns.run('nhl_driver_boot', null);
-const fixtureTitle = z80Patterns.run('nhl_fmtune_title', null);
-const fixtureSfx = z80Patterns.run('nhl_sfx_beep', null);
-assert.ok(fixtureBoot.ok, fixtureBoot.detail);
-assert.ok(ramWalk.ok, ramWalk.detail);
-assert.ok(ymPing.ok, ymPing.detail);
-assert.ok(fixtureTitle.ok, fixtureTitle.detail);
-assert.ok(fixtureSfx.ok, fixtureSfx.detail);
 
 if (audioRom) {
   const rom = audioRom;
@@ -1139,8 +1128,6 @@ if (audioRom) {
   machine.loadProgram(blob, 0);
   const boot = machine.runInstructions(3000);
   assert.ok(boot.instructions > 200, 'NHL Z80 program should run many instructions');
-  const driverPat = z80Patterns.run('nhl_driver_boot', rom);
-  assert.ok(driverPat.ok, driverPat.detail);
   const sys = soundSystem.create(rom);
   sys.initialZ80();
   sys.initTune(1);
