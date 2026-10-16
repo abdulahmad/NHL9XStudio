@@ -53,6 +53,7 @@
     const note = make('p', 'st-seq-note', 'From the main CPU sequencer commands the ported player sends to the SPC700 program (right edge = now). SFX and ducking are not ported.');
     container.append(head, wrap, events, note);
 
+    const pitchRange = { lo: -6, hi: 6, init: false };
     let mode = 'roll';
     let raf = 0;
     let cssW = 0;
@@ -140,25 +141,56 @@
       const pps = (G.x1 - G.x0 - 2) / WINDOW_S;
       const xOf = (t) => G.x1 - 1 - (timeSec - t) * pps;
 
-      const keyOns = st.commands.filter((c) => c.name === 'keyOn');
+      // Pitch of a key-on in semitones: MIDI key when the song gives one ('93), else the S-DSP pitch register
+      // relative to the sample's native rate ($1000 = 1.0x), which is how effects and '94 notes are known.
+      const semis = (a) => (a && a.midi != null ? a.midi : a && a.pitch > 0 ? 12 * Math.log2(a.pitch / 4096) : null);
+      const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const noteName = (a) => (a.midi != null ? NN[a.midi % 12] + (Math.floor(a.midi / 12) - 1) : (semis(a) >= 0 ? '+' : '') + semis(a).toFixed(1) + 'st');
+      const keyOns = st.commands.filter((c) => c.name === 'keyOn' && c.frame / frameRate <= timeSec && c.frame / frameRate >= leftT);
+      // One shared pitch range for all voices, eased so the view does not jump (at least an octave tall).
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const c of keyOns) {
+        const s = semis(c.args);
+        if (s == null) continue;
+        lo = Math.min(lo, s);
+        hi = Math.max(hi, s);
+      }
+      if (lo <= hi) {
+        if (hi - lo < 12) { const mid = (lo + hi) / 2; lo = mid - 6; hi = mid + 6; }
+        const k = pitchRange.init ? 0.12 : 1;
+        pitchRange.lo += (lo - pitchRange.lo) * k;
+        pitchRange.hi += (hi - pitchRange.hi) * k;
+        pitchRange.init = true;
+      }
+      const barH = 5;
+      // Key-ons without a known length ('94 notes, effects) run until the voice's next key-on, at most one second.
+      const nextOn = new Map();
+      for (let i = keyOns.length - 1; i >= 0; i--) {
+        const vi = keyOns[i].args && keyOns[i].args.voice;
+        if (nextOn.has(vi)) keyOns[i].gapFrames = nextOn.get(vi) - keyOns[i].frame;
+        nextOn.set(vi, keyOns[i].frame);
+      }
       for (const c of keyOns) {
         const t = c.frame / frameRate;
-        if (t > timeSec || t < leftT) continue;
         const voice = c.args && c.args.voice != null ? c.args.voice : 0;
         const top = G.laneTop(voice);
         const x = Math.round(xOf(t)) + 0.5;
         if (x < G.x0) continue;
+        const s = semis(c.args);
+        const f = s == null ? 0.5 : Math.min(1, Math.max(0, (s - pitchRange.lo) / (pitchRange.hi - pitchRange.lo)));
+        const y = top + 3 + (1 - f) * (L.laneH - 6 - barH);
+        const lenF = c.args && c.args.frames ? c.args.frames : c.gapFrames ? Math.min(c.gapFrames, frameRate) : 0;
+        const w = lenF ? Math.max(4, Math.min(G.x1 - x, (lenF / frameRate) * pps)) : 4;
         g.fillStyle = COLORS[voice % COLORS.length];
         g.globalAlpha = 0.85;
-        g.fillRect(x - 2, top + 4, 4, L.laneH - 8);
+        g.fillRect(x, y, w, barH);
         g.globalAlpha = 1;
-        if (opts.voiceLabel) {
-          const lab = opts.voiceLabel(c);
-          if (lab) {
-            g.font = '9px ' + mono;
-            g.fillStyle = C.text;
-            g.fillText(lab, Math.max(G.x0 + 2, x - 20), top + L.laneH - 4);
-          }
+        const lab = s != null && w > 22 ? noteName(c.args) : (opts.voiceLabel && opts.voiceLabel(c)) || '';
+        if (lab) {
+          g.font = '9px ' + mono;
+          g.fillStyle = C.text;
+          g.fillText(lab, Math.max(G.x0 + 2, x), y < top + L.laneH / 2 ? y + barH + 9 : y - 2);
         }
       }
 

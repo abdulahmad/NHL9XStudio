@@ -80,6 +80,7 @@
     let lastText = '';
     let last = null; // readout of the last live frame, for debugging and tests
     const range = NAMES.map(() => ({ lo: 48, hi: 72 }));
+    const dacRange = { lo: -6, hi: 6 }; // PCM playback rate in semitones around 8 kHz
     const g = canvas.getContext('2d');
 
     function setMode(m) {
@@ -353,7 +354,31 @@
           g.fillText('DAC', x0 + 4, dacTop + 14);
         }
       }
-      // Each PCM sample that actually plays: a solid block from its first to its last non-centre write.
+      // Each PCM sample that actually plays: a bar from its first to its last non-centre write. Its height is the pitch:
+      // the playback rate (writes per second) in semitones, so a sample driven faster than the last one sounds higher.
+      // The lane scales to the visible hits like the FM lanes (at least an octave), eased.
+      const hitSemis = (h) => {
+        const dur = (sampleAt(h.t1) - sampleAt(h.t0)) / rate;
+        return h.writes >= 4 && dur > 0 ? 12 * Math.log2(h.writes / dur / 8000) : null;
+      };
+      {
+        let lo = Infinity;
+        let hi = -Infinity;
+        for (const h of tr.dacHits) {
+          if (sampleAt(h.t0) > src || sampleAt(h.t1) < left) continue;
+          const m = hitSemis(h);
+          if (m == null) continue;
+          lo = Math.min(lo, m);
+          hi = Math.max(hi, m);
+        }
+        if (lo !== Infinity) {
+          lo -= 1;
+          hi += 1;
+          if (hi - lo < 12) { const mid = (hi + lo) / 2; lo = mid - 6; hi = mid + 6; }
+          dacRange.lo += (lo - dacRange.lo) * 0.15;
+          dacRange.hi += (hi - dacRange.hi) * 0.15;
+        }
+      }
       for (const h of tr.dacHits) {
         const s0 = sampleAt(h.t0);
         if (s0 > src) continue;
@@ -362,15 +387,19 @@
         const x0 = Math.max(G.x0 + 1, xOf(s0));
         const x1 = Math.min(G.x1 - 1, Math.max(xOf(s1), xOf(s0) + 2));
         if (x1 - x0 < 1) continue;
+        const semis = hitSemis(h);
+        const f = semis == null ? 0.5 : Math.max(0, Math.min(1, (semis - dacRange.lo) / (dacRange.hi - dacRange.lo)));
+        const y = dacTop + pad + (1 - f) * (L.laneH - 2 * pad - barH);
         g.globalAlpha = 0.35 + 0.6 * Math.min(1, h.peak / 127);
         g.fillStyle = DAC_COLOR;
-        g.fillRect(x0, dacTop + 2, x1 - x0, L.laneH - 4);
+        g.fillRect(x0, y, x1 - x0, barH);
         g.globalAlpha = 1;
-        const text = hitName(h);
+        const text = hitName(h) + (semis == null ? '' : ' ' + (h.writes / ((sampleAt(h.t1) - sampleAt(h.t0)) / rate) / 1000).toFixed(1) + 'k');
         g.font = '600 9px ' + mono;
         if (x1 - x0 >= text.length * 5.6 + 6) {
-          g.fillStyle = '#111';
-          g.fillText(text, x0 + 3, dacTop + L.laneH / 2 + 3);
+          g.fillStyle = C.text;
+          const ty = y - 2 >= dacTop + 9 ? y - 2 : y + barH + 9;
+          g.fillText(text, x0 + 3, ty);
         }
       }
 

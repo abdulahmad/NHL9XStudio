@@ -73,7 +73,11 @@
     for (const e of timeline.events) {
       if (e.type !== 'note' && e.type !== 'percussion') continue;
       const sec = data.secondsAt(timeline.tempoTrack, e.tick) + START_LAG;
-      out.push({ frame: Math.round(sec * FRAME_RATE), name: 'keyOn', args: { voice: e.ch, sample: e.instrument, inst: e.instrument } });
+      const args = { voice: e.ch, sample: e.instrument, inst: e.instrument };
+      if (e.type === 'note' && e.midi != null) args.midi = e.midi;
+      const len = e.length != null ? e.length : e.duration;
+      if (len) args.frames = Math.round((data.secondsAt(timeline.tempoTrack, e.tick + len) - data.secondsAt(timeline.tempoTrack, e.tick)) * FRAME_RATE);
+      out.push({ frame: Math.round(sec * FRAME_RATE), name: 'keyOn', args });
     }
     return out;
   }
