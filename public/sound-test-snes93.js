@@ -126,10 +126,11 @@
     session.queued += n;
   }
 
-  /** Run the player until at least `n` stereo samples are queued (or the sound ends). */
-  function pull(session, n) {
+  /** Run the player until at least `n` stereo samples are queued (or the sound ends), at most `maxFrames` video frames. */
+  function fill(session, n, maxFrames) {
     const p = session.player;
-    while (session.queued < n && !session.done) {
+    let frames = maxFrames || Infinity;
+    while (session.queued < n && !session.done && frames-- > 0) {
       p.runFrame();
       session.frames = p.stats.frames;
       appendPcm(session, p.spc.drainRecording());
@@ -139,6 +140,10 @@
         if (!looping && ((p.idle() && session.frames > 20) || session.frames > 1500)) session.done = true;
       } else if (!p.musicOn && session.frames > 20 && p.idle()) session.done = true;
     }
+  }
+
+  function pull(session, n) {
+    fill(session, n);
     const left = new Float32Array(n);
     const right = new Float32Array(n);
     let at = 0;
@@ -180,6 +185,7 @@
     loadPack,
     startSession,
     pull,
+    fill,
     heardSeconds,
     trackDelivered,
     dispose,

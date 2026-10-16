@@ -371,6 +371,9 @@
     const selInfo = make('p', 'st-status mono se-sel');
     selInfo.id = 'se-selinfo';
     box.appendChild(selInfo);
+    let pe = null;
+    const peHost = make('div', 'pe-host');
+    box.appendChild(peHost);
 
     // Toolbar: play / export
     const row3 = make('div', 'st-controls se-bar');
@@ -390,7 +393,10 @@
     exAsm.id = 'se-export-asm';
     const exBin = button('Export cmdstream (.bin)', () => exportCmd('bin'));
     exBin.id = 'se-export-bin';
-    row3.append(playBtn, gmBtn, undoBtn, clearBtn, exMidi, exRaw, exAsm, exBin);
+    const pauseBtn = button('⏸ Pause', () => { host.togglePause(); }, 'se-pausebtn');
+    pauseBtn.id = 'se-pause';
+    pauseBtn.disabled = true;
+    row3.append(playBtn, pauseBtn, gmBtn, undoBtn, clearBtn, exMidi, exRaw, exAsm, exBin);
     box.appendChild(row3);
 
     const info = make('p', 'st-status mono se-info');
@@ -411,6 +417,17 @@
     scroller.appendChild(inner);
     box.appendChild(scroller);
 
+    if (root.NhlEditorExtras) {
+      const secPerUnit = () => model.song.tempo / 60; // the tempo is video frames per grid unit
+      root.NhlEditorExtras.attach({
+        scroller, inner, gutter: GUTTER,
+        pxPerSec: () => model.zoom / secPerUnit(),
+        totalSec: () => model.song.units * secPerUnit(),
+        loopSec: () => 0,
+        hostSec: () => host.editorSeconds(),
+        paused: () => host.paused
+      });
+    }
     const messages = make('div', 'se-out');
     messages.id = 'se-messages';
     box.appendChild(messages);
@@ -457,6 +474,7 @@
       legatoCb.checked = model.fx.legato;
       keyCb.checked = model.fx.noKeyOff;
       modeSel.value = model.mode;
+      if (pe) pe.refresh();
       applyFx.disabled = !model.sel.length;
       selDel.disabled = !model.sel.length;
       const used = {};
@@ -478,6 +496,8 @@
       info.textContent = text;
       messages.replaceChildren(...(problems.length ? [reportList(problems)] : []), ...(model.gmReport.length ? [make('p', 'st-kind', 'Last import'), reportList(model.gmReport)] : []));
       playBtn.textContent = host.editorPlaying ? '■ Stop' : '▶ Play';
+      pauseBtn.disabled = !host.editorPlaying;
+      pauseBtn.textContent = host.editorPlaying && host.paused ? '▶ Resume' : '⏸ Pause';
       gmBtn.textContent = host.bufferId === id ? '■ Stop GM' : '▶ Play as GM';
     }
 
@@ -810,6 +830,39 @@
       }
     });
 
+    // --- Instrument editor: each patch is 32 bytes inside the Z80 program in the ROM; edits are kept with the song
+    // and written into the ROM copy the retail driver plays.
+    const patchAddr = (id) => host.data.patches[id].rom;
+    const retailPatch = (id) => host.rom.slice(patchAddr(id), patchAddr(id) + 32);
+    const withEdits = (rom) => {
+      const e = model.song.patchEdits || {};
+      Object.keys(e).forEach((k) => rom.set(e[k], patchAddr(Number(k))));
+      return rom;
+    };
+    if (root.NhlPatchEditor && host.rom && host.data && host.data.patches) {
+      const ids = host.data.patches.map((p) => p.id);
+      pe = root.NhlPatchEditor.mount(peHost, {
+        ids,
+        current: () => model.patch,
+        setCurrent: (id) => { model.patch = id; if (model.sel.length) edit(() => model.sel.forEach((n) => { n.patch = id; })); else refreshTools(); },
+        get: (id) => (model.song.patchEdits && model.song.patchEdits[id] ? Uint8Array.from(model.song.patchEdits[id]) : retailPatch(id)),
+        retail: retailPatch,
+        set: (id, bytes) => edit(() => { model.song.patchEdits = model.song.patchEdits || {}; model.song.patchEdits[id] = Array.from(bytes); }),
+        reset: (id) => edit(() => { if (model.song.patchEdits) delete model.song.patchEdits[id]; }),
+        edited: (id) => !!(model.song.patchEdits && model.song.patchEdits[id]),
+        label: (id) => 'FM ' + id + (map && map.nhl92ToGm.patches[id] ? ' · ≈ ' + map.nhl92ToGm.patches[id].target.name : ''),
+        hasNoteOffset: true,
+        audition: async (id) => {
+          const demo = newSong();
+          demo.channels[0] = [{ unit: 0, len: 8, index: 48, patch: id }, { unit: 10, len: 8, index: 60, patch: id }];
+          demo.units = 32;
+          if (host.editorPlaying) host.stopLive();
+          await host.playEditor(withEdits(S.romWithSong(host.rom, S.build(demo))));
+          refreshTools();
+        }
+      });
+    }
+
     function buildOrExplain() {
       const notes = model.song.channels.reduce((n, c) => n + c.length, 0);
       if (!notes) throw new Error('Add some notes first');
@@ -818,7 +871,7 @@
     async function toggleNhl() {
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       const built = buildOrExplain();
-      const rom = S.romWithSong(host.rom, built);
+      const rom = withEdits(S.romWithSong(host.rom, built));
       await host.playEditor(rom);
       refreshTools();
     }
@@ -879,6 +932,9 @@
       if (!box.isConnected) { clearInterval(timer); return; }
       const label = host.editorPlaying ? '■ Stop' : '▶ Play';
       if (playBtn.textContent !== label) playBtn.textContent = label;
+      const pl = host.editorPlaying && host.paused ? '▶ Resume' : '⏸ Pause';
+      if (pauseBtn.textContent !== pl) pauseBtn.textContent = pl;
+      pauseBtn.disabled = !host.editorPlaying;
       const gl = host.bufferId === id ? '■ Stop GM' : '▶ Play as GM';
       if (gmBtn.textContent !== gl) gmBtn.textContent = gl;
     }, 300);

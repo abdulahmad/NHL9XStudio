@@ -96,8 +96,17 @@
     tabEvents.addEventListener('click', () => setMode('events'));
     setMode('roll');
 
+    // Reading clientWidth every frame forces a layout of the whole page; a ResizeObserver tells us when it changes.
+    let measured = wrap.clientWidth || container.clientWidth || 0;
+    let ro = null;
+    if (root.ResizeObserver) {
+      ro = new root.ResizeObserver(() => { measured = wrap.clientWidth || container.clientWidth || measured; });
+      ro.observe(wrap);
+    }
+    else root.addEventListener('resize', () => { measured = wrap.clientWidth || container.clientWidth || measured; });
+
     function size() {
-      const w = Math.max(240, Math.floor(wrap.clientWidth || container.clientWidth || 320));
+      const w = Math.max(240, Math.floor(measured || 320));
       const ratio = Math.min(2, root.devicePixelRatio || 1);
       const laneH = w < 460 ? 30 : 34;
       const h = 16 + NAMES.length * (laneH + 2) + 2;
@@ -520,6 +529,7 @@
     function destroy() {
       if (raf) root.cancelAnimationFrame(raf);
       raf = 0;
+      if (ro) ro.disconnect();
     }
 
     canvas.addEventListener('mousemove', (ev) => {

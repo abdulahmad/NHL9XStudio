@@ -163,6 +163,23 @@ let patchBursts = 0;
   assert.deepStrictEqual(Song.NOTE_OFFSETS, data.patches.map((p) => p.noteOffset), 'note offsets match the retail patches');
   console.log('nhl92 sequencer: a hand-made 3-channel song plays its notes, instruments and timing on the retail drivers OK');
 
+  // Instrument edits (public/sound-patch-editor.js): the patch bytes in the ROM copy are what the driver loads into the chip.
+  // Patch 6 byte 7 is operator 4's total level (register $4C); byte 4 is operator 1's (register $40).
+  {
+    const edited = Uint8Array.from(Song.romWithSong(rom, built));
+    const at = data.patches[6].rom;
+    edited[at + 7] = 99;
+    edited[at + 20] = 0x5a; // operator 1 sustain level 5, release rate 10 (register $80)
+    const burst6 = (r) => play(r, Song.CUSTOM_SONG).bursts.filter((b) => b.ch === 0)[0];
+    const before = burst6(Song.romWithSong(rom, built)).regs;
+    const after = burst6(edited).regs;
+    assert.strictEqual(before.get(0x4c), data.patches[6].registers[7]);
+    assert.strictEqual(after.get(0x4c), 99, 'the edited total level reaches the chip');
+    assert.strictEqual(after.get(0x80), 0x5a, 'the edited sustain/release reaches the chip');
+    assert.strictEqual(after.get(0x50), before.get(0x50), 'bytes that were not edited are unchanged');
+    console.log('nhl92 sequencer: instrument edits written into the ROM copy are what the driver loads OK');
+  }
+
   // Problems are reported, not hidden.
   const bad = Song.build({ tempo: 6, units: 16, channels: [[{ unit: 0, len: 4, index: 120, patch: 1 }, { unit: 4, len: 120, index: 40, patch: 1 }], [], [], [], [], []] });
   assert.ok(bad.problems.some((p) => /outside the driver/.test(p)) && bad.problems.some((p) => /longest duration/.test(p)));

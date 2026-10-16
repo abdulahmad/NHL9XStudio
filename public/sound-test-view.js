@@ -257,6 +257,49 @@
     return Chain().sfxPlan(n, SFX_VBLANKS);
   }
 
+  /**
+   * The emulators run on the main thread. Left to the audio callback they run in one burst per block (about 90 ms of
+   * sound at once), which stalls the page. A timer tops the queue up one video frame at a time instead, so the audio
+   * callback only copies and the work spreads out. 0.3 s of sound stays queued ahead.
+   */
+  const PREFETCH_S = 0.3;
+  // Pause suspends the audio context: the callbacks stop, so every clock derived from them (heard samples, context
+  // time) freezes with it. The speaker-timestamp clock keeps running on its own, so it is pinned while paused.
+  let paused = false;
+  let pausedAt = 0;
+  const canPause = () => !!(ctx && (live || gmPlay));
+  function pause() {
+    if (!canPause() || paused) return;
+    pausedAt = audibleContextTime();
+    paused = true;
+    ctx.suspend();
+    status(true);
+    if (onChange) onChange();
+  }
+  async function resume() {
+    if (!paused) return;
+    paused = false;
+    await ctx.resume();
+    status(true);
+    if (onChange) onChange();
+  }
+  const togglePause = () => (paused ? resume() : Promise.resolve(pause()));
+  function makePauseButton() {
+    const b = make('button', 'ghost-btn st-pause', '⏸ Pause');
+    b.type = 'button';
+    b.disabled = true;
+    b.addEventListener('click', () => { togglePause(); });
+    return b;
+  }
+
+  function startPrefetch(s) {
+    s.prefetch = setInterval(() => {
+      if (live !== s || s.done || s.seeking) return;
+      if (s.snes) snesApi().fill(s.session, Math.round(snesApi().RATE * PREFETCH_S), 1);
+      else fillChain(s, Math.round(Chain().SAMPLE_RATE * PREFETCH_S), 1);
+    }, 8);
+  }
+
   function ensureContext() {
     if (ctx) return;
     ctx = new (root.AudioContext || root.webkitAudioContext)();
@@ -316,7 +359,14 @@
   function pull(n) {
     const s = live;
     if (s.seeking) return { left: new Float32Array(n), right: new Float32Array(n) };
-    while (s.queued < n && !s.done) {
+    fillChain(s, n, Infinity);
+    return takeChain(s, n);
+  }
+
+  /** Run chain frames until `n` source samples are queued (or the plan ends), at most `maxFrames` of them. */
+  function fillChain(s, n, maxFrames) {
+    let frames = maxFrames;
+    while (s.queued < n && !s.done && frames-- > 0) {
       const f = s.chain.frame;
       s.chain.step(s.plan.calls[f] || null);
       const pcm = s.chain.take();
@@ -330,6 +380,9 @@
       s.queued += L.length;
       if (s.chain.frame >= s.plan.frames) s.done = true;
     }
+  }
+
+  function takeChain(s, n) {
     const left = new Float32Array(n);
     const right = new Float32Array(n);
     let at = 0;
@@ -392,6 +445,7 @@
     const pullFn = (n) => snesApi().pull(session, n);
     live = { id, snes: true, session, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
+    startPrefetch(live);
     if (startSec > 0) seekSnes(startSec);
     status(true);
     if (onChange) onChange();
@@ -419,6 +473,7 @@
     const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : rom, true);
     live = Object.assign(sess, { id, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '', seeking: null, frozen: 0 });
     live.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
+    startPrefetch(live);
     if (startSec > 0) beginSeek(live, framesOf(startSec));
     status(true);
     if (onChange) onChange();
@@ -429,6 +484,8 @@
     const s = live;
     live = null;
     s.dead = true;
+    clearInterval(s.prefetch);
+    if (paused) { paused = false; try { ctx.resume(); } catch (err) { /* ignore */ } }
     if (s.snes && snesApi()) snesApi().dispose(s.session);
     else if (s.chip) s.chip.dispose();
     status(true, message || 'Stopped', s);
@@ -558,6 +615,7 @@
     clearInterval(g.timer);
     gmPlay = null;
     g.source.onended = null;
+    if (paused) { paused = false; try { ctx.resume(); } catch (err) { /* ignore */ } }
     try { g.source.stop(); } catch (err) { /* already stopped */ }
     status(true, 'Stopped');
     if (onChange) onChange();
@@ -719,6 +777,13 @@
         if (row) row.click();
       },
       get editorPlaying() { return !!(live && live.id === TOOL_EDITOR); },
+      get paused() { return paused; },
+      togglePause,
+      /** Seconds into the editor song that are audible now (null when the editor song is not playing). */
+      editorSeconds() {
+        if (!ctx || !live || live.id !== TOOL_EDITOR || live.seeking) return null;
+        return (live.blocks.length ? audibleSource(live) : Math.max(0, live.chain.rendered - live.queued)) / Chain().SAMPLE_RATE;
+      },
       mountRoll(container) {
         if (roll) roll.destroy();
         roll = root.NhlSoundRoll && root.YmNoteTracker
@@ -731,6 +796,7 @@
 
   /** Context time of the sample at the speaker right now (the browser's own output timestamp). */
   function audibleContextTime() {
+    if (paused) return pausedAt;
     if (ctx.getOutputTimestamp) {
       const ts = ctx.getOutputTimestamp();
       if (ts && ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (root.performance.now() - ts.performanceTime) / 1000;
@@ -938,6 +1004,13 @@
       if (slider) slider.setAttribute('aria-valuenow', String(Math.round(f * 100)));
       if (slider) slider.setAttribute('aria-valuetext', text);
     };
+    const pauseBtn = panel.querySelector('.st-pause');
+    if (pauseBtn) {
+      const mine = !!((live && live.id === panel.dataset.item) || (gmPlay && gmPlay.id === panel.dataset.item));
+      pauseBtn.disabled = !mine;
+      pauseBtn.textContent = mine && paused ? '▶ Resume' : '⏸ Pause';
+      pauseBtn.setAttribute('aria-pressed', mine && paused ? 'true' : 'false');
+    }
     const gmBtn = panel.querySelector('.st-gm');
     if (gmBtn && bar && time && box) {
       const gmOn = !!(gmPlay && gmPlay.id === panel.dataset.item);
@@ -1097,7 +1170,7 @@
       ctl.appendChild(b);
       return b;
     };
-    ctl.appendChild(play);
+    ctl.append(play, makePauseButton());
     const saveBin = save('Save song (.bin)', () => root.NhlSoundTools.download(prefix + snesImport.name + '.bin', s93 ? snesImport.block : snesImport.bytes, 'application/octet-stream'));
     box.appendChild(ctl);
     box.appendChild(out);
@@ -1214,7 +1287,7 @@
     range.setAttribute('aria-label', 'Volume');
     range.addEventListener('input', () => setVolume(Number(range.value) / 100));
     vol.appendChild(range);
-    controls.append(btn);
+    controls.append(btn, makePauseButton());
     const fail = (what) => (err) => {
       const st = box.querySelector('.st-status');
       if (st) st.textContent = what + ' failed: ' + (err && err.message ? err.message : String(err));

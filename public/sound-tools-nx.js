@@ -227,6 +227,9 @@
     const selInfo = make('p', 'st-status mono se-sel');
     selInfo.id = 'se-selinfo';
     box.appendChild(selInfo);
+    let pe = null;
+    const peHost = make('div', 'pe-host');
+    box.appendChild(peHost);
 
     const row3 = make('div', 'st-controls se-bar');
     const playBtn = button('▶ Play', () => {}, 'se-playbtn');
@@ -257,7 +260,10 @@
     exAsm.id = 'se-export-asm';
     const exBin = button('Export stream (.bin)', () => exportStream('bin'));
     exBin.id = 'se-export-bin';
-    row3.append(playBtn, gmBtn, undoBtn, clearBtn, clearBends, lab('Loop', loopSel), exMidi, exNative, exAsm, exBin);
+    const pauseBtn = button('⏸ Pause', () => { host.togglePause(); refreshTools(); }, 'se-pausebtn');
+    pauseBtn.id = 'se-pause';
+    pauseBtn.disabled = true;
+    row3.append(playBtn, pauseBtn, gmBtn, undoBtn, clearBtn, clearBends, lab('Loop', loopSel), exMidi, exNative, exAsm, exBin);
     box.appendChild(row3);
 
     const info = make('p', 'st-status mono se-info');
@@ -275,6 +281,16 @@
     inner.appendChild(canvas);
     scroller.appendChild(inner);
     box.appendChild(scroller);
+    if (root.NhlEditorExtras) {
+      root.NhlEditorExtras.attach({
+        scroller, inner, gutter: GUTTER,
+        pxPerSec: () => px() / (unitTicks() / SongLib().VBLANK_HZ),
+        totalSec: () => song().ticks / SongLib().VBLANK_HZ,
+        loopSec: () => (song().loopTick == null ? null : song().loopTick / SongLib().VBLANK_HZ),
+        hostSec: () => host.editorSeconds(),
+        paused: () => host.paused
+      });
+    }
     const messages = make('div', 'se-out');
     messages.id = 'se-messages';
     box.appendChild(messages);
@@ -329,6 +345,7 @@
         b.classList.toggle('is-on', c === model.channel);
       });
       modeSel.value = model.mode;
+      if (pe) pe.refresh();
       selDel.disabled = !model.sel.length;
       selVel.disabled = !model.sel.length;
       const used = {};
@@ -345,6 +362,8 @@
       info.textContent = text;
       messages.replaceChildren(...(problems.length ? [reportList(problems)] : []), ...(model.report.length ? [make('p', 'st-kind', 'Last import'), reportList(model.report)] : []));
       playBtn.textContent = host.editorPlaying ? '■ Stop' : '▶ Play';
+      pauseBtn.disabled = !host.editorPlaying;
+      pauseBtn.textContent = host.editorPlaying && host.paused ? '▶ Resume' : '⏸ Pause';
       gmBtn.textContent = host.bufferId === id ? '■ Stop GM' : '▶ Play as GM';
     }
 
@@ -696,11 +715,47 @@
       }
     });
 
+    // --- Instrument editor: FM patch bytes live in the ROM at table - 1024 + 32 * id; edits are kept with the song and
+    // written into the ROM copy the retail drivers play.
+    const patchAddr = (id) => SongLib().GAMES[host.gameNumber].table - 1024 + id * 32;
+    const retailPatch = (id) => host.rom.slice(patchAddr(id), patchAddr(id) + 32);
+    const withEdits = (rom) => {
+      const e = song().patchEdits || {};
+      Object.keys(e).forEach((id) => rom.set(e[id], patchAddr(Number(id))));
+      return rom;
+    };
+    const FM_IDS = [];
+    for (let i = 0; i < 32; i++) FM_IDS.push(i);
+    if (root.NhlPatchEditor && host.rom) {
+      pe = root.NhlPatchEditor.mount(peHost, {
+        ids: FM_IDS,
+        current: () => model.patch,
+        setCurrent: (id) => { model.patch = id; if (model.sel.length) edit(() => model.sel.forEach((n) => { n.patch = id; })); else refreshTools(); },
+        get: (id) => (song().patchEdits && song().patchEdits[id] ? Uint8Array.from(song().patchEdits[id]) : retailPatch(id)),
+        retail: retailPatch,
+        set: (id, bytes) => edit(() => { song().patchEdits = song().patchEdits || {}; song().patchEdits[id] = Array.from(bytes); }),
+        reset: (id) => edit(() => { if (song().patchEdits) delete song().patchEdits[id]; }),
+        edited: (id) => !!(song().patchEdits && song().patchEdits[id]),
+        label: (id) => 'FM ' + id + (map && map.patches.find((x) => x.patch === id) ? ' · ≈ ' + map.patches.find((x) => x.patch === id).target.name : ''),
+        hasNoteOffset: true,
+        audition: async (id) => {
+          const s = Stream().emptySong(game);
+          const u = s.unit;
+          s.notes.push({ t: 0, dur: 8 * u, ch: 0, note: 60, vel: 110, patch: id }, { t: 10 * u, dur: 8 * u, ch: 0, note: 72, vel: 110, patch: id });
+          s.ticks = 20 * u;
+          s.patchEdits = song().patchEdits;
+          if (host.editorPlaying) host.stopLive();
+          await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, s).rom));
+          refreshTools();
+        }
+      });
+    }
+
     const needNotes = () => { if (!song().notes.length) throw new Error('Add some notes first'); };
     async function toggleNhl() {
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       needNotes();
-      await host.playEditor(Stream().romWithSong(game, host.rom, song()).rom);
+      await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, song()).rom));
       refreshTools();
     }
     async function toggleGm() {
@@ -758,6 +813,9 @@
       if (!box.isConnected) { clearInterval(timer); return; }
       const l1 = host.editorPlaying ? '■ Stop' : '▶ Play';
       if (playBtn.textContent !== l1) playBtn.textContent = l1;
+      const pl = host.editorPlaying && host.paused ? '▶ Resume' : '⏸ Pause';
+      if (pauseBtn.textContent !== pl) pauseBtn.textContent = pl;
+      pauseBtn.disabled = !host.editorPlaying;
       const l2 = host.bufferId === id ? '■ Stop GM' : '▶ Play as GM';
       if (gmBtn.textContent !== l2) gmBtn.textContent = l2;
     }, 300);
