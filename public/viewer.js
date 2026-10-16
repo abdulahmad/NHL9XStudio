@@ -2154,7 +2154,6 @@ async function loadGame(id, keepSelection) {
   if (audioTab) audioTab.hidden = !hasAudioTab(info);
   el('mode-soundtest').hidden = !hasSoundTest(info);
   if (soundPanel() && !soundPanel().available(info)) state.mode = 'spa';
-  syncModeTabs();
   if (!hasAudioTab(info)) {
     audioCatalog = null;
     audioLoadError = '';
@@ -2454,7 +2453,6 @@ async function boot() {
   readHash();
   gameInfo = games.find((game) => game.id === state.game) || games[0];
   el('game').value = state.game;
-  syncModeTabs();
   wire();
   if (typeof NhlSoundTestView !== 'undefined') NhlSoundTestView.onChange = () => { if (soundPanel()) renderList(); };
   await loadGame(state.game, true);
