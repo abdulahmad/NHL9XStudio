@@ -14,9 +14,9 @@ function isZ80TestGame() {
   return gameInfo && gameInfo.kind === 'z80test';
 }
 
-/** The Sound test tab plays the NHL '92 sound chain live (bundled slice), NHL 92 only. */
+/** The Sound test tab plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93 and NHL 94 Genesis. */
 function hasSoundTest(info) {
-  return !!(info && info.id === 'nhl92' && typeof NhlSoundTestView !== 'undefined');
+  return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94') && typeof NhlSoundTestView !== 'undefined');
 }
 
 /**
@@ -24,7 +24,7 @@ function hasSoundTest(info) {
  * games and the Z80 test profile. NHL 92's audio is the Sound test (the retail driver chain).
  */
 function hasAudioTab(info) {
-  return !!(info && info.platform === 'genesis' && info.id !== 'nhl92');
+  return !!(info && info.platform === 'genesis' && info.id !== 'nhl92' && info.id !== 'nhlpa93' && info.id !== 'nhl94');
 }
 
 /** The Sound test panel replaces the sprite stage: its view module and selection key in state. */
@@ -38,8 +38,9 @@ function renderSoundPanel() {
   view.hidden = !panel;
   el('stage').parentElement.parentElement.classList.toggle('is-soundpanel', !!panel);
   if (!panel) return;
+  if (panel.view().setGame) panel.view().setGame(state.game);
   const item = state[panel.key];
-  const key = state.mode + '|' + item + '|' + (panel.view().ready ? 1 : 0);
+  const key = state.game + '|' + state.mode + '|' + item + '|' + (panel.view().ready ? 1 : 0);
   if (view.dataset.key === key) return;
   view.dataset.key = key;
   view.scrollTop = 0;
@@ -50,11 +51,12 @@ async function enterSoundPanel() {
   const mode = state.mode;
   const panel = soundPanel(mode);
   if (!panel) return;
+  if (panel.view().setGame) panel.view().setGame(state.game);
   try {
     await panel.view().ensure(pathPrefix);
   } catch (err) { /* the view's error carries the message */ }
   const ids = panel.view().entries().map((e) => e.id);
-  if (ids.length && !ids.includes(state[panel.key])) state[panel.key] = ids[0];
+  if (ids.length && !ids.includes(state[panel.key])) state[panel.key] = ids.find((id) => !/^tool-/.test(id)) || ids[0];
   if (state.mode === mode) refreshAll();
 }
 
