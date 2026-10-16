@@ -1564,7 +1564,7 @@ function wire() {
     state.step = state.frame - 1;
     state.playing = false;
     el('bank').value = state.bank;
-    await ensureBank(state.bank);
+    await loadBankOrSay(state.bank);
     refreshAll();
   });
   el('mode-spf').addEventListener('click', async () => {
@@ -1611,9 +1611,18 @@ function wire() {
     state.bank = el('bank').value;
     state.frame = 1;
     state.step = 0;
-    await ensureBank(state.bank);
+    await loadBankOrSay(state.bank);
     refreshAll();
   });
+  /** Load a frame bank; a failure goes to the caption (like the Images tab) instead of escaping the click. */
+  async function loadBankOrSay(name) {
+    try {
+      loadError = '';
+      await ensureBank(name);
+    } catch (err) {
+      loadError = err.message || String(err);
+    }
+  }
   function setPin(pin) {
     if (state.pin === pin) return;
     state.pin = pin;
