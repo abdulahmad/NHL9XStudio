@@ -1,0 +1,342 @@
+{
+ "note": "Hand-editable NHLPA 93 / NHL 94 patch -> General MIDI table (both games share the 32 FM patches and the PCM patch numbers). Guesses from register values and how the songs and sounds use each patch, not from listening. Edit any target by ear; node test/nhl9x-gm-map.js checks it.",
+ "schema": 1,
+ "conventions": {
+  "pitch": "MIDI note = the stream note (the driver plays note 60 at about C4).",
+  "program": "GM program numbers are 0-127.",
+  "drum": "Drum targets become channel-10 hits at that GM drum note.",
+  "patchIds": "0-31 are FM patches, 96-110 ($60-$6E) are PCM samples."
+ },
+ "patches": [
+  {
+   "patch": 0,
+   "character": "Default patch (no song or sound effect selects it). 4-operator chain, no feedback.",
+   "target": { "kind": "program", "program": 80, "name": "Lead 1 (square)"
+   },
+   "reason": "Nothing plays it; Lead 1 (square) is a placeholder.",
+   "confidence": "low"
+  },
+  {
+   "patch": 1,
+   "character": "Feedback 7 chain with a slow carrier attack (AR 19), long sustain. Lead and bass in the 94 title tunes, mid-range in the 93 title tune.",
+   "target": { "kind": "program", "program": 62, "name": "Synth Brass 1"
+   },
+   "reason": "Slow swell into a bright sustained tone: Synth Brass 1. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 50, "name": "Synth Strings 1"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 2,
+   "character": "Two pairs, a high-ratio modulator (x12) on the first pair, both carriers decay to silence (SL 15). Mid-high melody in one 93 song.",
+   "target": { "kind": "program", "program": 4, "name": "Electric Piano 1"
+   },
+   "reason": "Bright tine on the attack and a decaying body: Electric Piano 1. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 12, "name": "Marimba"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 3,
+   "character": "Weak modulator (TL 64), fast decay to a low sustain. Mid-high parts in two 94 songs.",
+   "target": { "kind": "program", "program": 27, "name": "Electric Guitar (clean)"
+   },
+   "reason": "Plucked, thin: Electric Guitar (clean). From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 7, "name": "Clavinet"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 4,
+   "character": "Algorithm 5, feedback 7, sustained (SL 0) with a moderate decay; the same family as patch 11 an octave higher in ratio.",
+   "target": { "kind": "program", "program": 16, "name": "Drawbar Organ"
+   },
+   "reason": "Organ-like sustain: Drawbar Organ. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 18, "name": "Rock Organ"
+   },
+   "confidence": "medium"
+  },
+  {
+   "patch": 5,
+   "character": "Serial chain at half ratio on every operator, feedback 6, flat sustain, fast release. Top notes (68-98) of one 94 song.",
+   "target": { "kind": "program", "program": 80, "name": "Lead 1 (square)"
+   },
+   "reason": "Buzzy sustained lead: Lead 1 (square). From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 81, "name": "Lead 2 (sawtooth)"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 7,
+   "character": "Non-harmonic ratios (x14, x10), fast decay to a low sustain. Repeating figure on notes 59-67 in a 93 song.",
+   "target": { "kind": "program", "program": 11, "name": "Vibraphone"
+   },
+   "reason": "Metallic ring that fades: Vibraphone. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 14, "name": "Tubular Bells"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 9,
+   "character": "Algorithm 5, slow attack (AR 14-16), flat sustain, detuned operators. Mid notes in one 94 song.",
+   "target": { "kind": "program", "program": 50, "name": "Synth Strings 1"
+   },
+   "reason": "Slow attack, detuned, sustained: Synth Strings 1. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 49, "name": "String Ensemble 2"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 10,
+   "character": "Serial chain, feedback 7, flat sustain, with LFO vibrato (FMS 1). Melody in a 93 and a 94 song.",
+   "target": { "kind": "program", "program": 81, "name": "Lead 2 (sawtooth)"
+   },
+   "reason": "Sawtooth-like with vibrato: Lead 2 (sawtooth). From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 82, "name": "Lead 3 (calliope)"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 11,
+   "character": "Algorithm 5, feedback 7, three carriers, flat sustain. The lead of 72 NHL 94 team tunes and of five 93 songs (notes 24-91).",
+   "target": { "kind": "program", "program": 18, "name": "Rock Organ"
+   },
+   "reason": "Arena-organ lead: Rock Organ. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 16, "name": "Drawbar Organ"
+   },
+   "confidence": "medium"
+  },
+  {
+   "patch": 12,
+   "character": "All operators at half ratio, decays to silence (SL 15, D1R 8). Bass (notes 39-53) of a 93 song.",
+   "target": { "kind": "program", "program": 38, "name": "Synth Bass 1"
+   },
+   "reason": "Plucked synth bass: Synth Bass 1. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 39, "name": "Synth Bass 2"
+   },
+   "confidence": "medium"
+  },
+  {
+   "patch": 13,
+   "character": "Metallic click (x13 modulator), carrier decays to a low level. Bass (notes 28-60) in 93/94 songs.",
+   "target": { "kind": "program", "program": 34, "name": "Electric Bass (pick)"
+   },
+   "reason": "Plucked bass with a bright attack: Electric Bass (pick). From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 36, "name": "Slap Bass 1"
+   },
+   "confidence": "medium"
+  },
+  {
+   "patch": 14,
+   "character": "Slow-attack second operator, LFO vibrato (FMS 3), carriers decay away. Notes 53-87 in a 94 song.",
+   "target": { "kind": "program", "program": 85, "name": "Lead 6 (voice)"
+   },
+   "reason": "Breathy voiced lead with vibrato: Lead 6 (voice). From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 73, "name": "Flute"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 17,
+   "character": "No feedback, TL 0 on every operator, quick decay. Always notes 37-40 in a 93 song.",
+   "target": { "kind": "drum", "note": 36, "name": "Bass Drum 1"
+   },
+   "reason": "Short low thump on one pitch: Bass Drum 1. From the register values and the role in the songs; not auditioned.",
+   "confidence": "medium"
+  },
+  {
+   "patch": 20,
+   "character": "Fast decay, noisy ratios; always note 21 (the driver plays it at a fixed pitch) in 93 and 94 songs.",
+   "target": { "kind": "drum", "note": 38, "name": "Acoustic Snare"
+   },
+   "reason": "A fixed-pitch percussive hit: Acoustic Snare. From the register values and the role in the songs; not auditioned.",
+   "confidence": "medium"
+  },
+  {
+   "patch": 22,
+   "character": "Sound effect only (oooh, puck off the post).",
+   "target": { "kind": "program", "program": 112, "name": "Tinkle Bell"
+   },
+   "reason": "Short metallic ping: Tinkle Bell. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 23,
+   "character": "Sound effect only (puck on ice, notes 10-20).",
+   "target": { "kind": "program", "program": 115, "name": "Woodblock"
+   },
+   "reason": "Short click: Woodblock. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 24,
+   "character": "Sound effect only (puck on the boards, player into the wall; notes 20-25).",
+   "target": { "kind": "program", "program": 116, "name": "Taiko Drum"
+   },
+   "reason": "Low thump: Taiko Drum. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 25,
+   "character": "Sound effect only (stick defence, puck on the body).",
+   "target": { "kind": "program", "program": 117, "name": "Melodic Tom"
+   },
+   "reason": "Low tom hit: Melodic Tom. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 26,
+   "character": "Sound effect only (horn).",
+   "target": { "kind": "program", "program": 61, "name": "Brass Section"
+   },
+   "reason": "Horn: Brass Section. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 27,
+   "character": "Sound effect only (stick defence, puck on the body, note 8).",
+   "target": { "kind": "program", "program": 118, "name": "Synth Drum"
+   },
+   "reason": "Low synth hit: Synth Drum. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 28,
+   "character": "Sound effect only (shot wiff).",
+   "target": { "kind": "program", "program": 121, "name": "Breath Noise"
+   },
+   "reason": "Air swish: Breath Noise. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 29,
+   "character": "Sound effect only (beeps).",
+   "target": { "kind": "program", "program": 80, "name": "Lead 1 (square)"
+   },
+   "reason": "Plain beep: Lead 1 (square). From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 30,
+   "character": "Sound effect only (whistle).",
+   "target": { "kind": "program", "program": 78, "name": "Whistle"
+   },
+   "reason": "Whistle. From the register values and the role in the songs; not auditioned.",
+   "confidence": "low"
+  },
+  {
+   "patch": 31,
+   "character": "Sound effect only (siren).",
+   "target": { "kind": "program", "program": 63, "name": "Synth Brass 2"
+   },
+   "reason": "Same choice as the NHL 92 siren: Synth Brass 2. From the register values and the role in the songs; not auditioned.",
+   "runnerUp": { "kind": "program", "program": 81, "name": "Lead 2 (sawtooth)"
+   },
+   "confidence": "low"
+  },
+  {
+   "patch": 96,
+   "character": "PCM sample: puck pickup.",
+   "target": { "kind": "drum", "note": 37, "name": "Side Stick"
+   },
+   "reason": "Short sample hit: Side Stick. Sample character from its name and use.",
+   "confidence": "low"
+  },
+  {
+   "patch": 97,
+   "character": "PCM sample: pass.",
+   "target": { "kind": "drum", "note": 75, "name": "Claves"
+   },
+   "reason": "Short snap: Claves.",
+   "confidence": "low"
+  },
+  {
+   "patch": 98,
+   "character": "PCM sample: backhand shot.",
+   "target": { "kind": "drum", "note": 76, "name": "Hi Wood Block"
+   },
+   "reason": "Slap: Hi Wood Block.",
+   "confidence": "low"
+  },
+  {
+   "patch": 99,
+   "character": "PCM sample: forehand shot.",
+   "target": { "kind": "drum", "note": 77, "name": "Low Wood Block"
+   },
+   "reason": "Slap: Low Wood Block.",
+   "confidence": "low"
+  },
+  {
+   "patch": 100,
+   "character": "PCM sample: check 2.",
+   "target": { "kind": "drum", "note": 35, "name": "Acoustic Bass Drum"
+   },
+   "reason": "Body hit: Acoustic Bass Drum.",
+   "confidence": "low"
+  },
+  {
+   "patch": 101,
+   "character": "PCM sample: check.",
+   "target": { "kind": "drum", "note": 36, "name": "Bass Drum 1"
+   },
+   "reason": "Body hit: Bass Drum 1.",
+   "confidence": "low"
+  },
+  {
+   "patch": 102,
+   "character": "PCM sample: player into the wall.",
+   "target": { "kind": "drum", "note": 41, "name": "Low Floor Tom"
+   },
+   "reason": "Boom: Low Floor Tom.",
+   "confidence": "low"
+  },
+  {
+   "patch": 103,
+   "character": "PCM sample: big hit. Played by 93/94 songs on channel 8 as a drum.",
+   "target": { "kind": "drum", "note": 38, "name": "Acoustic Snare"
+   },
+   "reason": "Hit: Acoustic Snare.",
+   "confidence": "low"
+  },
+  {
+   "patch": 106,
+   "character": "PCM sample 6A (the big hit again). The drum of 17 NHL 94 songs and 4 NHL 93 songs.",
+   "target": { "kind": "drum", "note": 38, "name": "Acoustic Snare"
+   },
+   "reason": "Hit: Acoustic Snare.",
+   "confidence": "low"
+  },
+  {
+   "patch": 107,
+   "character": "PCM sample: crowd boo.",
+   "target": { "kind": "program", "program": 52, "name": "Choir Aahs"
+   },
+   "reason": "Crowd voice: Choir Aahs.",
+   "confidence": "low"
+  },
+  {
+   "patch": 108,
+   "character": "PCM sample: crowd oooh.",
+   "target": { "kind": "program", "program": 53, "name": "Voice Oohs"
+   },
+   "reason": "Crowd voice: Voice Oohs.",
+   "confidence": "low"
+  },
+  {
+   "patch": 109,
+   "character": "PCM sample: crowd cheer.",
+   "target": { "kind": "program", "program": 126, "name": "Applause"
+   },
+   "reason": "Crowd: Applause.",
+   "confidence": "low"
+  },
+  {
+   "patch": 110,
+   "character": "PCM sample: (sound $0E).",
+   "target": { "kind": "program", "program": 126, "name": "Applause"
+   },
+   "reason": "Crowd: Applause.",
+   "confidence": "low"
+  }
+ ]
+}

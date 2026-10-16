@@ -35,13 +35,27 @@ Addresses (retail): NHLPA 93 v1.1 `p_turnoff $165D8`, `play_sfx_or_music_track $
 - **DAC.** The Z80 program writes `$2B = $80` once at boot and never clears it, so FM6 is always shown as DAC in the
   roll (the driver reserves channel 6 for PCM).
 
+## General MIDI (Play as GM, export, labels)
+
+`lib/audio/nhl9x-song.js` reads the driver's event streams straight from the bundled slices. A stream is 4-byte
+events `[delay, status, a, b]` (delay in vblanks before the event; status bits 6-4 select key on/off `$1x`/`$0x`,
+patch `$4x`, controller `$3x` (only 7, volume), pitch bend `$6x`; status 0 ends the stream or, with a non-negative
+long at +2, loops). NHL 94's `SoundStreamTable` holds long ROM addresses (`$2C648`), NHLPA 93's 16-bit offsets from
+the table (`$2870A`); the 32 FM patches sit 1,024 bytes before it. Both games' patch banks are byte-identical, so one
+map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `$60`-`$6E`).
+
+- **Play as GM / Export MIDI (GM):** every song and sound effect, notes taken from the stream (not from a run of the
+  driver), program from the map, PCM patches mapped to drums or crowd voices, velocity = key-on volume x controller 7.
+  Pitch bends and mid-note volume changes are not converted. The roll still shows the retail driver while it plays.
+- **Song length and seeking:** a stream's length is known, so the song bar shows it and can be scrubbed; a looping
+  stream repeats from its loop point after the first pass.
+- **Lane labels:** a patch burst is matched to the bank (24 operator bytes + `$B0`) and labelled `P11 · Rock Organ`.
+- **The map is a guess** from register values and how songs use each patch; nothing was auditioned. Each entry has a
+  confidence. Edit by ear; `node test/nhl9x-song-gm.js` checks the file.
+
 ## Not done yet
 
-- Instrument labels, Play as GM, the NHL → GM tables and the sequencer / export are NHL 92 only. The 93/94 FM patch
-  banks are 32 bytes each (`fm_instrument_patches.bin`, byte `$1E` = pitch-bend scale) against NHL 92's 25-byte patches,
-  and the streams are MIDI-like events rather than NHL 92 cmdstreams.
-- Song length: the NHL 93/94 song bar has no known length, so it shows the elapsed time and cannot be scrubbed.
-  SFX have the 600-vblank bar and scrub like NHL 92's.
+- The sequencer and stream export for 93/94 (the sequencer is NHL 92 only).
 - NHLPA 93 Rev A (`1992.OCT`, runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled; the
   slice is the retail v1.1 ROM. PAL timing is not modelled.
 - The Audio tab (old square-wave sketch) is hidden for these two games, like NHL 92.
