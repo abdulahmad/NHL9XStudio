@@ -786,7 +786,7 @@
       togglePause,
       /** Seconds into the editor song that are audible now (null when the editor song is not playing). */
       editorSeconds() {
-        if (ctx && live && live.id === TOOL_EDITOR && live.snes) return snesApi().heardSeconds(live.session);
+        if (ctx && live && live.id === TOOL_EDITOR && live.snes) return snesSeconds(live);
         if (!ctx || !live || live.id !== TOOL_EDITOR || live.seeking) return null;
         return (live.blocks.length ? audibleSource(live) : Math.max(0, live.chain.rendered - live.queued)) / Chain().SAMPLE_RATE;
       },
@@ -839,11 +839,37 @@
     return Math.max(0, Math.min(src, s.chain.rendered));
   }
 
+  /**
+   * Song seconds audible now for a SNES session. heardSeconds() only moves once per audio block (tens of ms),
+   * which makes the roll step; so, like audibleSource, fit the block stamps (context time -> song time) and
+   * read the speaker clock between them.
+   */
+  function snesSeconds(s) {
+    const raw = snesApi().heardSeconds(s.session);
+    const bl = s.blocks;
+    if (!bl.length || !ctx) return raw;
+    const rate = snesApi().RATE;
+    const newest = bl[bl.length - 1].src / rate - bl[bl.length - 1].ctxTime;
+    let sum = 0;
+    let n = 0;
+    for (let i = bl.length - 1; i >= 0; i--) {
+      const o = bl[i].src / rate - bl[i].ctxTime;
+      if (Math.abs(o - newest) > 0.03) break;
+      sum += o;
+      n += 1;
+    }
+    const sec = sum / n + audibleContextTime();
+    // Never run ahead of what has been delivered, and never step backwards.
+    const out = Math.max(s.lastSec || 0, Math.min(sec, raw + 0.25));
+    s.lastSec = Math.max(0, out);
+    return s.lastSec;
+  }
+
   /** What the sequencer view draws: the running session's tracker and the audible position, or null. */
   function seqState() {
     if (!ctx) return null;
     if (live && live.snes) {
-      const sec = snesApi().heardSeconds(live.session);
+      const sec = snesSeconds(live);
       return {
         frame: live.session.frames,
         commands: live.session.commands || live.session.player.commands || [],
@@ -1057,7 +1083,7 @@
       return;
     }
     if (shown.snes) {
-      const secs = snesApi().heardSeconds(shown.session);
+      const secs = snesSeconds(shown);
       const info = isSong ? passInfo(songKey(id)) : null;
       const total = info ? info.total : null;
       if (total == null) {
