@@ -122,3 +122,16 @@ for (const g of [93, 94]) {
 }
 
 console.log('nhl9x-song-gm: ok');
+
+// The NHL 93 title song's stream is a 17-event intro that jumps into the loop body: it is 49 s, not 1.5 s.
+{
+  const fs2 = require('fs');
+  const S = require('../lib/audio/nhl9x-song');
+  const sl = fs2.readFileSync(require('path').join(__dirname, '..', 'data', 'fixtures', 'nhl93-sound-slice.bin'));
+  const p = S.parse(93, sl, S.streamAddr(93, sl, 0x35));
+  assert.ok(p.ticks > 2500 && p.ticks < 3500, 'NHL 93 $35 runs through its loop body (' + p.ticks + ' vblanks)');
+  assert.strictEqual(p.end, 'loop');
+  assert.strictEqual(p.loopTick, 89, 'and loops back into the body, not to the start');
+  assert.ok(p.events.length > 1000);
+  console.log('nhl9x-song-gm: NHL 93 title song follows its intro-to-body jump OK');
+}
