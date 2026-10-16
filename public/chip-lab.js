@@ -124,7 +124,22 @@ async function initNhl92(Ym2612) {
       ' · alg ' + (algFb & 7) + ' fb ' + ((algFb >> 3) & 7);
     patchSel.appendChild(opt);
   }
-  el('nhl92-meter').textContent = 'Ready — pick a patch';
+  const sfxSel = el('nhl92-sfx');
+  A.DAC_SFX.forEach((entry, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = entry.name + ' · rate $' + entry.rate.toString(16).toUpperCase() + ' · pri ' + entry.priority;
+    sfxSel.appendChild(opt);
+  });
+  el('nhl92-meter').textContent = 'Ready — pick a patch or SFX';
+}
+
+function sfxFrames(entry) {
+  const A = window.Nhl92Z80Audio;
+  let n = 0;
+  const start = A.SOUND_BASE + entry.off + 1;
+  while (nhl.rom[start + n] !== 0) n += 1;
+  return Math.ceil((n * (161 + 17 * (entry.rate || 256))) / A.FRAME_TSTATES) + 30;
 }
 
 function renderNhl92(script, label) {
@@ -139,7 +154,7 @@ function renderNhl92(script, label) {
   return { pcm, label, ms, psgWrites, ymWrites };
 }
 
-async function playNhl92() {
+async function playNhl92(kind) {
   const A = window.Nhl92Z80Audio;
   const meter = el('nhl92-meter');
   if (!nhl.chip) {
@@ -149,9 +164,17 @@ async function playNhl92() {
   if (!ctx) ensureAudioGraph();
   if (ctx.state === 'suspended') await ctx.resume();
   stopNhl92();
-  const i = Number(el('nhl92-patch').value);
-  const script = A.patchScaleScript(nhl.rom, i);
-  const label = 'patch-' + String(i).padStart(2, '0');
+  let script;
+  let label;
+  if (kind === 'patch') {
+    const i = Number(el('nhl92-patch').value);
+    script = A.patchScaleScript(nhl.rom, i);
+    label = 'patch-' + String(i).padStart(2, '0');
+  } else {
+    const entry = A.DAC_SFX[Number(el('nhl92-sfx').value)];
+    script = A.sfxScript(entry, { frames: sfxFrames(entry) });
+    label = 'sfx-' + entry.rom.toString(16) + '-' + entry.name.split(' ')[0];
+  }
   meter.textContent = 'Rendering ' + label + ' through the Z80 driver…';
   await new Promise((r) => setTimeout(r, 20));
   const out = renderNhl92(script, label);
@@ -285,12 +308,14 @@ el('play').addEventListener('click', () => {
 
 el('stop').addEventListener('click', stopAudio);
 
-el('nhl92-play-patch').addEventListener('click', () => {
-  playNhl92().catch((err) => {
-    el('nhl92-meter').textContent = err && err.message ? err.message : 'Render failed';
-    console.error(err);
+for (const [id, kind] of [['nhl92-play-patch', 'patch'], ['nhl92-play-sfx', 'sfx']]) {
+  el(id).addEventListener('click', () => {
+    playNhl92(kind).catch((err) => {
+      el('nhl92-meter').textContent = err && err.message ? err.message : 'Render failed';
+      console.error(err);
+    });
   });
-});
+}
 
 initEngine().catch((err) => {
   engineReady = false;
