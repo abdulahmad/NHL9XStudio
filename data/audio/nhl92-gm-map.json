@@ -150,7 +150,7 @@
       },
       {
         "patch": 17,
-        "character": "Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. SngTitle, Reprise, EOG and PO: FM2 and FM4 as a pair, 1,360 notes cycling 3-7 pitches (A3-A4).",
+        "character": "Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. SngTitle, Reprise, EOG and PO: FM2 paired with FM4 (FM3 in PO), 1,360 notes cycling 3-7 pitches per part (D3-A4).",
         "target": {"kind":"program","program":18,"name":"Rock Organ"},
         "reason": "A bright, sustained, harmonically dense tone playing repeated short figures in the middle register is the rock-organ role. Weak spot: dense and harsh like patch 5, so a guitar is also plausible.",
         "runnerUp": {"kind":"program","program":29,"name":"Overdriven Guitar"},
@@ -158,7 +158,7 @@
       },
       {
         "patch": 18,
-        "character": "Main lead. Bright, tonal, sustained (-2 dB at key-off). Vibrato and pitch envelope on 99% of its notes. Four songs, FM3 and FM5: 2,135 notes (G4-D7, median D#6).",
+        "character": "Main lead. Bright, tonal, sustained (-2 dB at key-off). Vibrato and pitch envelope on 99% of its notes. Four songs, FM3 and FM5 (FM4 and FM5 in PO): 2,135 notes (G4-D7, median D#6).",
         "target": {"kind":"program","program":81,"name":"Lead 2 (sawtooth)"},
         "reason": "The most-used melodic voice. Partials at 1x, 1.5x, 2x and 3x all within 7 dB is saw-like, and vibrato on every note is how a synth lead is played. Same voice family as patches 6 and 21 with different modulator levels.",
         "runnerUp": {"kind":"program","program":80,"name":"Lead 1 (square)"},
