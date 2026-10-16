@@ -21,7 +21,7 @@ Bundled regression fixtures live in `test/fixtures/` (ANIM/JIM/PAL). Full golden
 
 **92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC**
 
-Audio: **NHL '92 retail chain (steps 6–7) on `main`** — full 68k→Z80→ymfm path, tests, **Sound test** tab; **`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md`** for git context, siren/SngEOP bug, UI cleanup (remove Audio + Sound data tabs), chip lab vs chain, gaps, step 8. Legacy **Audio** tab still present (AUD-1 FM sketch, not YM2612). **93G–95G** catalogs region-only. See `lib/audio/README.md`, `docs/NHL92-SOUND-CHAIN.md`. Do not depend on MID94-Tools.
+Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, tests; the **Sound test** tab is NHL 92's only audio UI (Sound data tab removed, Audio tab hidden for NHL 92). **`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md`** for git context, the siren fix, step 8, chip lab, gaps. Legacy **Audio** tab (AUD-1 FM sketch, not YM2612) remains for NHLPA 93–95 and the Z80 test profile. **93G–95G** catalogs region-only. See `lib/audio/README.md`, `docs/NHL92-SOUND-CHAIN.md`. Do not depend on MID94-Tools.
 
 ---
 
@@ -62,7 +62,7 @@ Audio: **NHL '92 retail chain (steps 6–7) on `main`** — full 68k→Z80→ymf
 | `lib/games.js` | Game profiles, banks |
 | `lib/genesis-images.js` | Genesis ROM image slices |
 | `lib/sheet.js` | Sheets + `openFrames` (94 vs 95) |
-| `public/viewer.js` | UI (includes **Audio** tab for Genesis) |
+| `public/viewer.js` | UI (NHL 92 **Sound test** via `sound-test-view.js`; **Audio** tab for the other Genesis games) |
 | `lib/audio/` | Genesis catalogs + FM preview (`genesis.js`, `data/audio/`) |
 | `test.js` | Regression tests |
 | `tools/build-manifest.js` | Regenerate `public/games.json` |

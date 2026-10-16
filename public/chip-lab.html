@@ -20,7 +20,7 @@
   <main>
     <p><a class="back" href="index.html">← NHL9X Studio</a></p>
     <h1>Chip lab</h1>
-    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy). Below, pick an NHL '92 instrument or SFX to hear it through the game's own driver.</p>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy). Below, pick an NHL '92 instrument to hear it alone through the game's own Z80 driver. For the game's songs and sound effects, use the <a href="index.html#game=nhl92&amp;mode=soundtest">Sound test</a>.</p>
     <div class="chip-grid">
       <section class="chip-card" aria-labelledby="ym-title">
         <h2 id="ym-title">YM2612 (Genesis FM)</h2>
@@ -42,14 +42,11 @@
     </div>
     <section class="chip-card nhl92-card" aria-labelledby="nhl92-title">
       <h2 id="nhl92-title">NHL '92 instruments · retail Z80 driver → YM2612</h2>
-      <p class="hint">The game's own Z80 sound driver runs on the emulated Z80 and drives the YM2612 core. Patches are the 22 instruments at Z80 <code>$02A5</code>; SFX are the DAC samples the 68k can trigger. Rendered offline, then played.</p>
+      <p class="hint">The game's own Z80 sound driver runs on the emulated Z80 and drives the YM2612 core. Patches are the 22 instruments at Z80 <code>$02A5</code>, each played as a scale with no 68k driver involved (the same renders as <code>patch-NN.wav</code> from <code>tools/render-nhl92-chip-tests.js</code>). Rendered offline, then played.</p>
+      <p class="hint">Songs and SFX, including the DAC samples, run through the full chain (68k driver → Z80 driver → YM2612) in the viewer's <a href="index.html#game=nhl92&amp;mode=soundtest">Sound test</a>.</p>
       <div class="row">
         <label>Patch <select id="nhl92-patch"></select></label>
         <button type="button" class="primary" id="nhl92-play-patch">Play scale</button>
-      </div>
-      <div class="row">
-        <label>DAC SFX <select id="nhl92-sfx"></select></label>
-        <button type="button" id="nhl92-play-sfx">Play SFX</button>
       </div>
       <div class="row">
         <a id="nhl92-download" class="download" hidden>Download WAV</a>

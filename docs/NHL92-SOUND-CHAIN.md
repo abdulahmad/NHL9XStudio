@@ -102,24 +102,43 @@ The tool checks every song and SFX run's 68k log against step 6's pinned hash (`
 
 ## Sound test tab
 
-NHL 92 has a **Sound test** tab next to Sound data. Pick song 0–4 or SFX 0–34, then press Play or Stop.
+For NHL 92, the **Sound test** is the only audio tab. The Sound data tab and its view were removed; the parser still feeds the Details pane. The Audio tab, AUD-1's square-wave sketch, is hidden for NHL 92 and stays for NHLPA 93–95 and the Z80 test profile. Old `#mode=sounddata` and `#mode=audio` links for NHL 92 open the Sound test. The default view is still NHL 92 with the SPA tab.
 
+- **Using it:** pick song 0–4 or SFX 0–34 in the list. Play/Stop is one button; Space or Enter also toggles it, and double-clicking an item plays it. ↑ ↓ move through the list. The playing item is marked ▶ in the list.
+- **Display:** a progress bar and clock show elapsed / total for SFX; songs show elapsed time and loop. The status line shows frame, YM writes and PSG writes. Details lists channels, tempo and order-list lengths for a song, or channels/DAC and the handler address for an SFX. The sprite-only controls (bank, pin, scale, list order, sprite help) are hidden.
+- **Volume:** a GainNode after the chain, remembered per browser. It scales the output only; the rendered samples are unchanged.
 - **Rendering:** each ScriptProcessor block (4,096 samples) steps `Nhl92SoundChain` as many frames as it needs (`keepLogs: false`), on a fresh ymfm chip instance and SN76489. The 53,267 Hz output is linearly resampled (`chip-resampler.js`) to the audio device rate.
 - **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, `song 0` (one init vblank, no notes), `p_turnoff`, then the siren (`sfxPlanAfterMusicOff`), the same as `sfx-00-siren-SFXsiren-after-music-off.wav`. Before this, PR #28's plan (song 0, then the siren on the next vblank) let SngEOP's first notes play under it. Other SFX keep step 6's boot, idle vblank, SFX.
 - **Leaving:** picking another item or leaving the tab stops playback.
-- **Default view:** still NHL 92 with the SPA tab.
 
-Checked in headless Chrome against `node server.js`:
+**Chip lab.** It keeps the YM/PSG presets and the NHL '92 patch scales: each of the 22 retail instruments played alone through the Z80 driver, the same renders as `patch-NN.wav`. Nothing else in the UI does that. Its DAC SFX player was removed, because the Sound test plays every SFX, DAC ones included, through the 68k request path. It links to the Sound test.
 
-- Song 4 plays at real time (300 frames in 5.0 s), with RMS 0.079 and peak 0.38. Stop gives exact silence, and SFX 13 plays from the list (7,236 YM writes, as in the offline render). The PSG gets 0 writes, there are no page errors, and the result was the same over five runs.
-- The browser chain's PCM, before resampling, is byte-identical to Node's for SFX 13 (600 vblanks) and song 4 (600 vblanks).
+Checked in headless Chromium against `node server.js`, with YM writes hooked in the page:
+
+- Song 4 plays at real time (350 frames in about 5.9 s) and Stop gives silence. SFX 13 plays from the list with 7,236 YM writes, as in the offline render. The browser chain's PCM, before resampling, is byte-identical to Node's for SFX 13 and song 4 (600 vblanks each; checked for PR #27).
+- Siren: key-ons only on codes 0/1, and the first is on the siren's own vblank (frame 3). Peak 4,999, 0 PSG writes.
+- Space, Enter, double-click, ↑ ↓, the ▶ marker, and the progress/clock all work. SFX 24 reaches "Finished" at 0:10.0 / 0:10.0. Volume survives a reload. Switching to SPA stops playback.
+- Tabs: NHL 92 shows Frame/SPF/SPA/Images/Sound test; NHLPA 93 shows Audio; the Z80 test profile shows Audio/Z80; the SNES games show no audio tab. Switching from NHLPA 93's Audio to NHL 92 lands on the Sound test.
+- At 390 px wide there's no horizontal scroll.
+- There are no page errors. The only failed requests are the expected no-ROM probes (`/api/games/nhl92/rom`, `/anim/Sprites.anim`), plus the Z80 test profile's `frames` request, which 404s on `main` too.
+- **Static hosting (stands in for GitHub Pages):** `_site` was assembled exactly as `.github/workflows/pages.yml` does and served by a plain static server under `/NHL9XStudio/`. All of the above passed the same way there. The WASM loads with `application/wasm`, and the viewer falls back from `/api/games` (404) to `games.json`.
 
 ## Not verified
 
 - **How it sounds against the game.** That's for your ear, with `out/nhl92-sound-chain.zip`. No retail or emulator capture was used.
-- **68k timing within the frame:** how long after vblank the copy happens, and how long the bus hold stalls the Z80 (see the frame model).
-- **The YM2612 busy flag.** The Z80 harness reads it as never busy, as in steps 3–4.
-- **The ymfm core vs a real YM2612:** ladder effect, DAC levels, and the model 1 vs model 2 output stages.
-- **The PSG mix level.** The driver never writes the PSG, so it stays silent.
-- **GitHub Pages.** The Sound test was checked only on `node server.js`. The Pages workflow copies `public/` and `lib/` the same way it does for the Chip lab, but the deployed site wasn't loaded.
-- **Slow machines.** Node renders the chain at about 4× real time on this VM, and headless Chrome kept up with real time; its headroom wasn't measured. On a much slower machine the ScriptProcessor would underrun, which is audible as glitches, not wrong notes.
+- **The deployed GitHub Pages site.** It isn't reachable from the build VM. A static copy built the way the workflow builds it passed (above), so what's left is GitHub's hosting itself: the MIME type for `.wasm` and caching.
+- **68k timing within the frame.** The model runs the 68k vblank work at T-state 0 and doesn't stall the Z80 during the bus hold. What the code shows:
+  - `p_music_vblank` is the last call in the game's vblank handlers (`vb1`/`vb2` in video.asm). On `vb1` it comes after the DMA and game-clock work, which can itself call `sfx`.
+  - Inside it, `Sound_UpdateMusicState` runs before the bus request. So the copy lands at a variable, unmeasured offset after vblank starts. `m68k-cpu.js` doesn't count cycles.
+  - From the 68000 manual's timings, the bus hold itself (bus request to release: the 48-byte `move.b (a1)+,(a0)+`/`dbf` copy, the SFX bytes and the flag) is about 1,200 68k cycles (about 1,350 when an SFX request is copied too), or about 560–630 Z80 T-states (~1% of a frame). That excludes any wait states for 68k accesses to Z80 RAM, which aren't known here.
+  - The driver doesn't wait for BUSACK after requesting the bus.
+  - What changes on hardware: each frame's Z80 response, and so its YM writes, starts later by that variable offset, and a DAC sample playing during the hold is stretched by the hold once per frame. Notes, registers and their order don't change. The tests show the Z80 only acts once it sees the flag.
+- **The YM2612 busy flag.** The retail Z80 driver never reads YM status (`test/nhl92-z80-driver.js` asserts 0 reads), so the flag can't change what the driver does; the harness would report not busy anyway.
+  - The open question is whether a real chip takes every write at the driver's pace. In the chain logs the next port write follows a data write by at least 62 Z80 T-states (17 µs).
+  - Gaps under 90 T-states account for 8,850 of 25,225 data writes in SngPO (3,600 vblanks), 2,332 of 41,254 in mix 2, 728 of 1,533 for the siren after music off, and none for the slap shot (DAC only, minimum 287).
+  - The YM2612's busy time after a data write isn't established here. If it is longer than 62 T-states and the chip drops writes while busy, some of these writes would be lost on hardware. ymfm applies every write.
+- **The ymfm core vs a real YM2612.** The core is a prebuilt WASM build of ymfm (`lib/audio/generated/`, exports `ym2612_*`). Its build options and chip class weren't checked.
+  - All-silent output is a constant +504 rather than 0. That fits a discrete-DAC ("ladder effect") model, but it hasn't been confirmed against ymfm's source.
+  - DAC level relative to FM, model 1 vs model 2 output stages, and the Mega Drive's analog filtering aren't modelled or compared. The PSG mix level is untested because the driver never writes the PSG.
+- **The bare-boot siren WAV.** `sfx-00-siren-SFXsiren.wav` stays pinned as step 6's run (boot, idle vblank, siren). It's a flat line at ymfm's idle level 504: silence, not quiet sound, because no patch loads. The audible siren is `sfx-00-siren-SFXsiren-after-music-off.wav`. Both are in the zip, named so they can't be confused.
+- **Slow machines.** Node renders the chain at about 4× real time on this VM, and headless Chromium kept up with real time; its headroom wasn't measured. On a much slower machine the ScriptProcessor would underrun, which is audible as glitches, not wrong notes.
