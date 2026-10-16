@@ -12,6 +12,7 @@
   const WINDOW_S = 6;
   const COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a'];
   const DAC_COLOR = '#ff9f5a';
+  const HIT_TAIL = 400; // samples (about 8 ms) a hit stays "sounding" after its last non-centre write
   const NAMES = ['FM1', 'FM2', 'FM3', 'FM4', 'FM5', 'FM6', 'PSG'];
   const EVENT_LINES = 16;
 
@@ -32,6 +33,7 @@
    * @param {{ chain: {SAMPLE_RATE:number, sampleAt:function}, state: function, patchLabel?: function }} opts
    *   state() -> null (nothing playing) or { tracker, src } with src the audible source sample
    *   patchLabel(burst) -> text or null: names the patch a lane loaded last (tagged in the lane's corner)
+   *   dacLabel(hit) -> text or null: names the PCM sample a DAC hit ({sig, writes, peak}) plays (shown on the hit and in the gutter)
    */
   function mount(container, opts) {
     const rate = opts.chain.SAMPLE_RATE;
@@ -124,6 +126,8 @@
       }
     }
 
+    const hitName = (h) => (opts.dacLabel && opts.dacLabel(h)) || 'PCM';
+
     function gutterText(L, G, i, readout, keyed, dac) {
       const top = G.laneTop(i);
       g.textBaseline = 'alphabetic';
@@ -190,6 +194,11 @@
       let dacNow = false;
       for (const d of tr.dacSpans) {
         if (sampleAt(d.t0) <= src && (d.t1 == null || sampleAt(d.t1) > src)) dacNow = true;
+      }
+      // A PCM hit is a run of non-centre $2A writes; it is sounding until its last write plus a short tail.
+      let hitNow = null;
+      for (const h of tr.dacHits) {
+        if (sampleAt(h.t0) <= src && sampleAt(h.t1) + HIT_TAIL > src) hitNow = h;
       }
 
       // Each lane scales to its own visible pitches (at least an octave), eased so it doesn't jump.
@@ -308,16 +317,36 @@
         g.rect(x0, dacTop + 1, x1 - x0, L.laneH - 2);
         g.clip();
         g.strokeStyle = DAC_COLOR;
-        g.globalAlpha = 0.55;
+        g.globalAlpha = tr.dacHits.length ? 0.2 : 0.55; // with real hits drawn on top, the hatch only says the DAC is switched on
         g.lineWidth = 1;
         g.beginPath();
         for (let x = x0 - L.laneH; x < x1; x += 5) { g.moveTo(x, dacTop + L.laneH); g.lineTo(x + L.laneH, dacTop); }
         g.stroke();
         g.restore();
-        if (x1 - x0 >= 22) {
+        if (x1 - x0 >= 22 && !tr.dacHits.length) {
           g.fillStyle = DAC_COLOR;
           g.font = '600 10px ' + mono;
           g.fillText('DAC', x0 + 4, dacTop + 14);
+        }
+      }
+      // Each PCM sample that actually plays: a solid block from its first to its last non-centre write.
+      for (const h of tr.dacHits) {
+        const s0 = sampleAt(h.t0);
+        if (s0 > src) continue;
+        const s1 = Math.min(sampleAt(h.t1), src);
+        if (s1 < left) continue;
+        const x0 = Math.max(G.x0 + 1, xOf(s0));
+        const x1 = Math.min(G.x1 - 1, Math.max(xOf(s1), xOf(s0) + 2));
+        if (x1 - x0 < 1) continue;
+        g.globalAlpha = 0.35 + 0.6 * Math.min(1, h.peak / 127);
+        g.fillStyle = DAC_COLOR;
+        g.fillRect(x0, dacTop + 2, x1 - x0, L.laneH - 4);
+        g.globalAlpha = 1;
+        const text = hitName(h);
+        g.font = '600 9px ' + mono;
+        if (x1 - x0 >= text.length * 5.6 + 6) {
+          g.fillStyle = '#111';
+          g.fillText(text, x0 + 3, dacTop + L.laneH / 2 + 3);
         }
       }
 
@@ -343,7 +372,7 @@
       for (let i = 0; i < 6; i++) {
         const ln = lanes[i];
         const dac = i === 5 && dacNow;
-        const name = dac ? 'DAC' : ln.keyed && ln.seg && ln.seg.name ? ln.seg.name : '—';
+        const name = dac ? (hitNow ? hitName(hitNow) : 'DAC idle') : ln.keyed && ln.seg && ln.seg.name ? ln.seg.name : '—';
         readout.push({ ch: i, name, keyed: ln.keyed, dac, instrument: instrument[i] && opts.patchLabel ? opts.patchLabel(instrument[i]) : null });
         gutterText(L, G, i, name, ln.keyed, dac);
       }
@@ -388,6 +417,11 @@
         const s = sampleAt(p.t0);
         if (p.kind !== 'patch' || s > src) continue;
         ev.push([s, p.ch, 2, 'patch   A' + p.algorithm + ' FB' + p.feedback + ' #' + p.sig.slice(0, 4)]);
+      }
+      for (const h of tr.dacHits) {
+        const s0 = sampleAt(h.t0);
+        if (s0 > src) continue;
+        ev.push([s0, 5, 1, 'PCM hit  ' + hitName(h) + '  ' + h.writes + ' samples, ' + ((sampleAt(h.t1) - s0) / rate).toFixed(2) + ' s']);
       }
       for (const d of tr.dacSpans) {
         const s0 = sampleAt(d.t0);

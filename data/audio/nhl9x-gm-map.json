@@ -216,26 +216,31 @@
    "character": "No feedback, TL 0 on every operator, quick decay. Always notes 37-40 in a 93 song.",
    "target": {
     "kind": "drum",
-    "note": 36,
-    "name": "Bass Drum 1"
-   },
-   "reason": "Short low thump on one pitch (33 dB down at key off): Bass Drum 1. Measured at the probe note: plucked, attack 5 ms, -33 dB at key off, centroid 4.8x the note, flatness 0.02.",
-   "confidence": "medium"
-  },
-  {
-   "patch": 20,
-   "character": "Fast decay, noisy ratios; always note 21 (the driver plays it at a fixed pitch) in 93 and 94 songs.",
-   "target": {
-    "kind": "drum",
     "note": 41,
     "name": "Low Floor Tom"
    },
-   "reason": "Tonal, quick decay, always note 21 (about 28 Hz in the driver's tuning, a deep thump): Low Floor Tom. Measured at the probe note: plucked, attack 15 ms, -42 dB at key off, centroid 3x the note, flatness 0.",
+   "reason": "A short low thump that keeps its pitch (notes 37-40 in the one NHL 93 song that uses it) and is the import target for toms: Low Floor Tom. Patch 20, not this one, is the kick the retail songs play on the beat. Measured at the probe note: plucked, attack 5 ms, -33 dB at key off, centroid 4.8x the note, flatness 0.02.",
    "confidence": "low",
    "runnerUp": {
     "kind": "drum",
-    "note": 38,
-    "name": "Acoustic Snare"
+    "note": 36,
+    "name": "Bass Drum 1"
+   }
+  },
+  {
+   "patch": 20,
+   "character": "Fixed-pitch deep thump (note 21): the kick of the 93/94 menu songs.",
+   "target": {
+    "kind": "drum",
+    "note": 36,
+    "name": "Bass Drum 1"
+   },
+   "reason": "The kick of the 93/94 menu and title songs: always note 21 (a fixed deep thump), one hit about every beat, with the PCM big hit (patch 106) exactly between two of them in NHL 93 $37 and NHL 94 $7A (median phase 0.5, data/audio/nhl9x-dac-analysis.json kickSnarePairs): kick on the beat, snare on the backbeat. Bass Drum 1. Measured at the probe note: plucked, attack 15 ms, -42 dB at key off.",
+   "confidence": "medium",
+   "runnerUp": {
+    "kind": "drum",
+    "note": 41,
+    "name": "Low Floor Tom"
    }
   },
   {
@@ -362,7 +367,28 @@
     "name": "Side Stick"
    },
    "reason": "Short sample hit: Side Stick. Sample character from its name and use.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 74,
+    "lengthS": 0.06,
+    "rateHz": 30594,
+    "peakAtS": 0.01,
+    "lowShare": 0.24,
+    "midShare": 0.55,
+    "highShare": 0.21
+   },
+   "sig": [
+    132,
+    112,
+    122,
+    144,
+    143,
+    122,
+    120,
+    136,
+    155,
+    145
+   ]
   },
   {
    "patch": 97,
@@ -373,7 +399,28 @@
     "name": "Claves"
    },
    "reason": "Short snap: Claves.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 69,
+    "lengthS": 0.41,
+    "rateHz": 30594,
+    "peakAtS": 0.05,
+    "lowShare": 0.31,
+    "midShare": 0.55,
+    "highShare": 0.14
+   },
+   "sig": [
+    242,
+    212,
+    176,
+    85,
+    63,
+    145,
+    141,
+    65,
+    87,
+    85
+   ]
   },
   {
    "patch": 98,
@@ -384,7 +431,28 @@
     "name": "Hi Wood Block"
    },
    "reason": "Slap: Hi Wood Block.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 73,
+    "lengthS": 0.38,
+    "rateHz": 30594,
+    "peakAtS": 0.01,
+    "lowShare": 0.4,
+    "midShare": 0.45,
+    "highShare": 0.16
+   },
+   "sig": [
+    127,
+    117,
+    108,
+    118,
+    132,
+    129,
+    124,
+    134,
+    139,
+    141
+   ]
   },
   {
    "patch": 99,
@@ -395,7 +463,28 @@
     "name": "Low Wood Block"
    },
    "reason": "Slap: Low Wood Block.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 73,
+    "lengthS": 0.35,
+    "rateHz": 30594,
+    "peakAtS": 0.09,
+    "lowShare": 0.22,
+    "midShare": 0.6,
+    "highShare": 0.18
+   },
+   "sig": [
+    126,
+    123,
+    132,
+    121,
+    110,
+    121,
+    126,
+    119,
+    123,
+    137
+   ]
   },
   {
    "patch": 100,
@@ -406,7 +495,28 @@
     "name": "Acoustic Bass Drum"
    },
    "reason": "Body hit: Acoustic Bass Drum.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 66,
+    "lengthS": 0.38,
+    "rateHz": 30594,
+    "peakAtS": 0.18,
+    "lowShare": 0.41,
+    "midShare": 0.51,
+    "highShare": 0.07
+   },
+   "sig": [
+    29,
+    61,
+    88,
+    77,
+    98,
+    172,
+    191,
+    132,
+    90,
+    172
+   ]
   },
   {
    "patch": 101,
@@ -417,7 +527,28 @@
     "name": "Bass Drum 1"
    },
    "reason": "Body hit: Bass Drum 1.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 74,
+    "lengthS": 0.74,
+    "rateHz": 30594,
+    "peakAtS": 0.21,
+    "lowShare": 0.27,
+    "midShare": 0.66,
+    "highShare": 0.07
+   },
+   "sig": [
+    129,
+    100,
+    94,
+    131,
+    142,
+    145,
+    176,
+    181,
+    156,
+    107
+   ]
   },
   {
    "patch": 102,
@@ -428,7 +559,28 @@
     "name": "Low Floor Tom"
    },
    "reason": "Boom: Low Floor Tom.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 67,
+    "lengthS": 0.52,
+    "rateHz": 30594,
+    "peakAtS": 0.19,
+    "lowShare": 0.54,
+    "midShare": 0.39,
+    "highShare": 0.07
+   },
+   "sig": [
+    124,
+    119,
+    134,
+    88,
+    164,
+    183,
+    134,
+    84,
+    132,
+    102
+   ]
   },
   {
    "patch": 103,
@@ -438,19 +590,61 @@
     "note": 38,
     "name": "Acoustic Snare"
    },
-   "reason": "Hit: Acoustic Snare.",
-   "confidence": "low"
+   "reason": "Same sample as patch 106 ($67 and $6A are both sfx_hithigh), so the same drum: Acoustic Snare.",
+   "confidence": "medium",
+   "measured": {
+    "noteProbed": 60,
+    "lengthS": 0.28,
+    "rateHz": 30594,
+    "peakAtS": 0.03,
+    "lowShare": 0.84,
+    "midShare": 0.14,
+    "highShare": 0.03
+   },
+   "sig": [
+    158,
+    149,
+    160,
+    103,
+    146,
+    233,
+    133,
+    110,
+    228,
+    184
+   ]
   },
   {
    "patch": 106,
-   "character": "PCM sample 6A (the big hit again). The drum of 17 NHL 94 songs and 4 NHL 93 songs.",
+   "character": "PCM sample 6A (the \"hithigh\" body-hit sample) played as the snare of the 93/94 menu songs; the drum of 17 NHL 94 songs and 4 NHL 93 songs.",
    "target": {
     "kind": "drum",
     "note": 38,
     "name": "Acoustic Snare"
    },
-   "reason": "Hit: Acoustic Snare.",
-   "confidence": "low"
+   "reason": "The backbeat of the same songs, played at note 76 only (the sample's native hit: 1,366 bytes, about 0.11 s at that pitch): between the patch-20 kicks, and in NHL 94 $78 a run of 106 hits whose velocity climbs 88, 99, 111, 121, 127 is a snare roll. Broadband noisy hit that starts with a short low thump: Acoustic Snare.",
+   "confidence": "medium",
+   "measured": {
+    "noteProbed": 76,
+    "lengthS": 0.11,
+    "rateHz": 30594,
+    "peakAtS": 0.01,
+    "lowShare": 0.67,
+    "midShare": 0.22,
+    "highShare": 0.12
+   },
+   "sig": [
+    158,
+    149,
+    160,
+    103,
+    146,
+    233,
+    133,
+    110,
+    228,
+    184
+   ]
   },
   {
    "patch": 107,
@@ -461,7 +655,28 @@
     "name": "Choir Aahs"
    },
    "reason": "Crowd voice: Choir Aahs.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 65,
+    "lengthS": 1.48,
+    "rateHz": 30594,
+    "peakAtS": 0.21,
+    "lowShare": 0.16,
+    "midShare": 0.75,
+    "highShare": 0.09
+   },
+   "sig": [
+    122,
+    124,
+    125,
+    122,
+    125,
+    114,
+    100,
+    160,
+    156,
+    134
+   ]
   },
   {
    "patch": 108,
@@ -472,7 +687,28 @@
     "name": "Voice Oohs"
    },
    "reason": "Crowd voice: Voice Oohs.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 70,
+    "lengthS": 1.5,
+    "rateHz": 30594,
+    "peakAtS": 0.45,
+    "lowShare": 0.1,
+    "midShare": 0.8,
+    "highShare": 0.1
+   },
+   "sig": [
+    127,
+    126,
+    129,
+    127,
+    126,
+    125,
+    126,
+    127,
+    129,
+    126
+   ]
   },
   {
    "patch": 109,
@@ -483,7 +719,28 @@
     "name": "Applause"
    },
    "reason": "Crowd: Applause.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 67,
+    "lengthS": 2.49,
+    "rateHz": 30594,
+    "peakAtS": 0.34,
+    "lowShare": 0.32,
+    "midShare": 0.56,
+    "highShare": 0.13
+   },
+   "sig": [
+    134,
+    148,
+    139,
+    124,
+    107,
+    113,
+    114,
+    103,
+    107,
+    125
+   ]
   },
   {
    "patch": 110,
@@ -494,7 +751,28 @@
     "name": "Applause"
    },
    "reason": "Crowd: Applause.",
-   "confidence": "low"
+   "confidence": "low",
+   "measured": {
+    "noteProbed": 91,
+    "lengthS": 0.51,
+    "rateHz": 30594,
+    "peakAtS": 0.08,
+    "lowShare": 0.21,
+    "midShare": 0.21,
+    "highShare": 0.59
+   },
+   "sig": [
+    157,
+    190,
+    136,
+    79,
+    118,
+    127,
+    138,
+    146,
+    49,
+    10
+   ]
   }
  ],
  "gmToNhl": {
@@ -549,9 +827,9 @@
      35,
      36
     ],
-    "patch": 17,
-    "note": 38,
-    "name": "Bass drum: the short low FM thump (patch 17)"
+    "patch": 20,
+    "note": 21,
+    "name": "Kick: the fixed-pitch FM thump the retail songs use (patch 20 at note 21)"
    },
    {
     "notes": [
@@ -562,9 +840,9 @@
      48,
      50
     ],
-    "patch": 20,
-    "note": 21,
-    "name": "Toms: the fixed-pitch low FM hit (patch 20)"
+    "patch": 17,
+    "note": 38,
+    "name": "Toms: the short pitched FM thump (patch 17)"
    },
    {
     "notes": [
@@ -577,8 +855,8 @@
      70
     ],
     "patch": 106,
-    "note": 70,
-    "name": "Snare and claps: the big-hit PCM sample (patch 106)"
+    "note": 76,
+    "name": "Snare and claps: the big-hit PCM sample (patch 106 at note 76, as the retail songs play it)"
    },
    {
     "notes": [

@@ -642,7 +642,7 @@
       mountRoll(container) {
         if (roll) roll.destroy();
         roll = root.NhlSoundRoll && root.YmNoteTracker
-          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel })
+          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel, dacLabel })
           : null;
         return roll;
       }
@@ -697,6 +697,29 @@
       return vizState(gmPlay);
     }
     return null;
+  }
+
+  /**
+   * Name of the PCM sample a DAC hit plays. The driver scales a sample by the note's volume, so a hit is matched to a
+   * sample's fingerprint (data/audio/nhl9x-gm-map.json, pcm `sig`: its first 10 values) up to a scale factor, and up to
+   * one or two leading values from a hit that began inside the previous one.
+   */
+  function dacLabel(hit) {
+    if (!isNx() || !nxMap || !hit.sig || hit.sig.length < 6) return null;
+    const fits = (ref) => {
+      for (let off = 0; off <= 2 && off + 6 <= hit.sig.length; off++) {
+        const k = (hit.sig[off] - 128) / (ref[0] - 128);
+        if (!(k > 0.05 && k < 1.2)) continue;
+        const n = Math.min(ref.length, hit.sig.length - off);
+        let ok = n >= 6;
+        for (let j = 0; j < n && ok; j++) ok = Math.abs((hit.sig[off + j] - 128) - k * (ref[j] - 128)) <= 3;
+        if (ok) return true;
+      }
+      return false;
+    };
+    const entry = nxMap.patches.find((e) => e.sig && e.patch !== 103 && fits(e.sig));
+    if (!entry) return null;
+    return '$' + entry.patch.toString(16).toUpperCase() + (entry.target ? ' · ' + entry.target.name : '');
   }
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
@@ -1084,7 +1107,7 @@
     if (root.NhlSoundRoll && root.YmNoteTracker) {
       const seq = make('div', 'st-seq');
       box.appendChild(seq);
-      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel });
+      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel, dacLabel });
     }
 
     box.appendChild(make('p', 'st-note', describe(id)));
