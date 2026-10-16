@@ -52,6 +52,8 @@
 .chip-card button.is-selected {
   border-color: var(--amber);
   color: var(--ice);
+  background: rgba(240, 180, 41, 0.18);
+  box-shadow: 0 0 0 1px var(--amber), 0 0 14px rgba(240, 180, 41, 0.35);
 }
 
 .chip-card button.primary {
