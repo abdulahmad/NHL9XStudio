@@ -222,6 +222,43 @@ function checkHandshake(name, chain) {
   console.log('nhl92 sound chain: ' + subset.length + ' renders match pinned WAV/log hashes, byte-identical across runs, PSG silent OK');
 
   {
+    // Siren as the game reaches it (sfxPlanAfterMusicOff): song 0's init vblank sets every
+    // channel's $41 to $FF without parsing a note, p_turnoff's vblank only pauses, then
+    // sfx 0. No music note may sound, and the siren must load both patches.
+    const item = items.find((i) => i.kind === 'sfx-music-off' && i.id === 0);
+    const r = await R.render(item, SRC);
+    const pin = MANIFEST.sfxMusicOff.find((e) => e.id === 0);
+    assert.strictEqual(r.wavSha256, pin.wav, item.file + ': WAV hash');
+    assert.strictEqual(r.logSha256, pin.log, item.file + ': YM log hash');
+    assert.deepStrictEqual(Object.keys(item.plan.calls).map(Number), [1, 2, 3]);
+    let instruments = null;
+    C.runPlan(item.plan, { rom: ROM }, (chain, entry) => {
+      if (entry.frame === 2) instruments = [0, 1, 2, 3, 4, 5].map((ch) => chain.m68k.peek8(0xfffffe02 + ch * 0x48 + 0x41));
+    });
+    assert.deepStrictEqual(instruments, [0xff, 0xff, 0xff, 0xff, 0xff, 0xff], '$41 = $FF on every channel before sfx 0');
+    const ym = r.chain.z.ym;
+    const prelude = ym.filter((w) => w.t < 3 * FRAME);
+    assert.ok(prelude.every((w) => w.part === 0 && ((w.reg === 0x28 && (w.value & 0xf0) === 0) || w.reg === 0x2b)),
+      'boot, song init and p_turnoff vblanks write only key-offs and the empty DAC request');
+    const keyOns = ym.filter((w) => w.part === 0 && w.reg === 0x28 && (w.value & 0xf0));
+    assert.ok(keyOns.length > 0 && keyOns.every((w) => (w.value & 7) === 0 || (w.value & 7) === 1), 'only the siren keys on (YM ch1/ch2)');
+    assert.ok(keyOns.every((w) => w.t >= 3 * FRAME), 'nothing keys on before the siren');
+    const loads = (reg) => ym.filter((w) => w.part === 0 && w.reg === reg).length;
+    assert.deepStrictEqual([loads(0x30), loads(0x31)], [1, 1], 'siren loads its patch on YM ch1 and ch2');
+    // The bare-boot siren is a flat line at ymfm's idle DC level (peak 504, range 0);
+    // compare signal range (max - min), not peak, so the DC offset doesn't count as sound.
+    const range = (pcm) => { let lo = Infinity, hi = -Infinity; for (const v of pcm) { if (v < lo) lo = v; if (v > hi) hi = v; } return hi - lo; };
+    assert.strictEqual(range(done[pick('sfx', 0).file].r.pcm), 0, 'bare-boot siren is silent (flat DC)');
+    assert.ok(range(r.pcm) > 4000, 'audible, unlike the bare-boot siren');
+    assert.deepStrictEqual([r.chain.psgWrites, r.chain.psgPeak], [0, 0]);
+    checkBuffers(item.file, r.chain, framesOf(r.chain));
+    checkDac(item.file, r.chain);
+    checkCalls(item.file, r.chain);
+    checkHandshake(item.file, r.chain);
+  }
+  console.log('nhl92 sound chain: siren after music init + p_turnoff loads its patches with no song note OK');
+
+  {
     // Retail findings the renders show. Siren straight after boot never loads a patch
     // (step 6: instrument 0 == the cleared $41), so channels 0/1 keep the reset YM2612
     // state and it is near silent; on top of a song it loads both patches.

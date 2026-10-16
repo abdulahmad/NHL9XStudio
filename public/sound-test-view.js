@@ -73,12 +73,16 @@
     return id.startsWith('song-') ? 'Song ' + n + ' · ' + data.songs[n].name : 'SFX ' + NAMES().name(n);
   }
 
-  /** Plans for live playback (not the same as tools/render-nhl92-sound-chain.js for siren). */
+  /** Plans for live playback; the siren's matches sfx-00-siren-SFXsiren-after-music-off.wav. */
   function planFor(id) {
     const n = Number(id.split('-')[1]);
     if (id.startsWith('song-')) return Chain().songPlan(n, Infinity);
-    // Siren (instrument 0) needs one song-init vblank after boot; see sfxPlanAfterSongInit.
-    if (n === 0) return Chain().sfxPlanAfterSongInit(0, SFX_VBLANKS, 0);
+    // Siren uses instrument 0, which equals every channel's $41 after a bare boot, so it
+    // would skip its patch load. Play it the way the game reaches it: music initialised,
+    // then p_turnoff, then the SFX (sfxPlanAfterMusicOff). No song note is ever parsed.
+    // Other SFX use instruments != 0, so their output is the same either way; they keep
+    // sfxPlan, which matches the pinned offline renders.
+    if (n === 0) return Chain().sfxPlanAfterMusicOff(0, SFX_VBLANKS, 0);
     return Chain().sfxPlan(n, SFX_VBLANKS);
   }
 
@@ -189,7 +193,7 @@
     box.appendChild(make('p', 'sd-note', id.startsWith('song-')
       ? 'Boot (p_initialZ80, p_turnoff, p_music_vblank), then song(' + id.slice(5) + ') and p_music_vblank every vblank, until Stop.'
       : id === 'sfx-0'
-        ? 'Boot, then song(0) for one vblank (Sound_InitMusicTrack sets each channel\'s instrument to $FF), then sfx(0) and p_music_vblank every vblank for ' + SFX_VBLANKS + ' vblanks. Without that init, siren\'s instrument 0 matches the cleared workspace and the driver skips the patch load (nearly silent), as in step 6\'s runSfx.'
+        ? 'Boot, song(0) for one vblank (Sound_InitMusicTrack sets each channel\'s instrument to $FF; no notes yet), p_turnoff for one vblank (music off, as the game does at setup and on pause), then sfx(0) and p_music_vblank every vblank for ' + SFX_VBLANKS + ' vblanks. Without the init, siren\'s instrument 0 matches the cleared workspace and the driver skips its patch load (silent).'
         : 'Boot, one vblank, then sfx(' + id.slice(4) + ') and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.'));
     box.appendChild(make('p', 'sd-note', 'Rendered live from the retail code: 68k driver → Z80 RAM → Z80 driver → YM2612 (ymfm) + SN76489, ' +
       'one frame (59,736 Z80 T-states) at a time at 53,267 Hz, resampled to ' + (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '.'));

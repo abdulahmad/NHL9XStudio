@@ -55,24 +55,9 @@ Optional local ROM: `roms/nhl92.bin` (524288-byte Genesis ROM). Enables wrapper-
 
 ---
 
-## Known bug: siren + SngEOP bleed (P0)
+## Siren + SngEOP bleed (P0) — fixed
 
-**Symptom:** In **Sound test**, playing **SFX 0 (siren)** also plays **song 0 (SngEOP)** at the start (user report: “SngEOP at the same time”).
-
-**Cause:** PR #28 fixed “silent siren after boot” by replacing the idle settle vblank with **`song(0)` for one frame** before `sfx(0)`. That runs real `p_initune(0)` + one `p_music_vblank`, which starts SngEOP’s order lists and FM output. Instrument bytes become `$FF` (so siren patches load), but you hear End-of-Period music briefly.
-
-**Retail context:** Step 6 `runSfx` (boot → idle vblank → siren) is **correct for that path** and is nearly silent because instrument 0 == cleared `$41`. In-game siren usually runs after music has initialized channels (`$41 = $FF`), not after a cold boot.
-
-**Directions for a proper fix (pick one, verify by ear + tests):**
-
-1. **Init without audible music** — Find a retail 68k sequence that sets `$41` to `$FF` on all channels without starting SngEOP notes on that same vblank (read `Sound_InitMusicTrack`, `p_initune`, `p_turnoff` in NHL92Genesis `sound.asm`). Maybe `song` + immediate `p_turnoff` on the next frame, if turnoff doesn’t zero `$41` again (needs experiment; chain `step()` does not yet expose `turnoff` as a call type).
-2. **Minimal harness call** — If the game has a path that only inits workspace (unlikely without running init tune), wire it in the chain for Sound-test siren only.
-3. **Accept bleed but shorten** — Still wrong for UX; last resort.
-4. **Do not** fake `$41` with a non-retail RAM write.
-
-**Files:** `public/sound-test-view.js` (`planFor`, `sfx-0`), `lib/audio/nhl92-sound-chain.js` (`sfxPlanAfterSongInit`).
-
-**Offline WAV:** `out/nhl92-sound-chain/sfx/sfx-00-siren-*.wav` still uses step 6 `runSfx` (nearly silent); intentional pin. Audible siren preview is not in the zip unless render plan changes with a documented retail prelude.
+PR #28 played `song(0)` for one vblank and then `sfx(0)`, so SngEOP's first notes keyed on under the siren. The Sound test now plays boot → `song 0` (init vblank, no notes) → `p_turnoff` → `sfx 0` (`sfxPlanAfterMusicOff` in `lib/audio/nhl92-sound-chain.js`). The turnoff vblank only pauses (key-offs, empty DAC) and leaves `$41 = $FF`, so the siren loads its patches. The game calls `p_turnoff` at game setup and on pause. No RAM is written by hand. The render is `sfx-00-siren-SFXsiren-after-music-off.wav` (pinned); `sfx-00-siren-SFXsiren.wav` (bare boot, flat DC = silence) stays pinned too. Details: `docs/NHL92-SOUND-CHAIN.md` finding 1.
 
 ---
 
@@ -166,16 +151,16 @@ Documented in `docs/NHL92-SOUND-CHAIN.md` § Not verified:
 
 Additional product gaps:
 
-- **Siren init bleed** (above).
+- ~~Siren init bleed~~ — fixed (above).
 - **Sound test UX** (step 8): list grouping, play/stop state, volume, progress, “now playing”, error surfacing, drop ScriptProcessor for AudioWorklet if needed.
-- **`sfx-00` WAV in zip** nearly silent — document or add second “in-game prelude” render with explicit label.
+- ~~`sfx-00` WAV in zip nearly silent~~ — both renders are in the zip now, labelled.
 - **93G–95G audio** still placeholders (AUD-1); out of scope unless user expands.
 
 ---
 
 ## Next steps (suggested order)
 
-1. **Fix siren without SngEOP** — Retail-correct init path; add chain support for `turnoff` / custom prelude plan; extend test only if pins change with a *documented* retail sequence; re-verify Sound test in browser.
+1. ~~**Fix siren without SngEOP**~~ — done (song 0 init → `p_turnoff` → siren).
 2. **Step 8 UI** — Remove Audio + Sound data tabs for NHL 92; polish Sound test (layout, default selection, keyboard, status line); optionally default hash `#game=nhl92&mode=soundtest`.
 3. **Chip lab decision** — Drop NHL Z80-only player or replace with “open Sound test” / one chain render; keep YM/PSG presets.
 4. **Dead code pass** — After tab removal, prune unused viewer hooks and catalog loading for 92; keep genesis audio if other games still use Audio tab.
