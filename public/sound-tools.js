@@ -76,6 +76,8 @@
     channel: 0,
     patch: 6,
     len: 4,
+    sel: [], // selected notes (objects of the current song)
+    fx: { modDelay: 0, modDelta: 0, env: -1, envSpeed: -128, legato: false, noKeyOff: false }, // effects new notes get
     imported: null, // last file read by the import panel
     gmReport: [],
     zoom: 14
@@ -190,6 +192,20 @@
       try {
         host.stopBuffer();
         const r = await readMidiFile(file);
+        const native = SongGm().nhlFromNativeSmf(r.parsed);
+        if (native) {
+          ensureModel();
+          model.undo.push(clone(model.song));
+          model.song = native.song;
+          model.name = r.name;
+          model.sel = [];
+          model.gmReport = native.report;
+          store();
+          out.replaceChildren(make('p', 'st-kind', r.name + ' (native NHL 92 file)'), reportList(native.report));
+          status.textContent = 'Loaded ' + file.name + ' as a native NHL 92 song; opening the sequencer.';
+          if (host.openItem) host.openItem('tool-editor');
+          return;
+        }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
         model.imported = r;
         status.textContent = 'Loaded ' + file.name;
@@ -275,7 +291,10 @@
       const e = map && map.nhl92ToGm.patches[p];
       patchSel.appendChild(Object.assign(make('option', null, p + (e ? ' · ≈ ' + e.target.name : '')), { value: String(p) }));
     }
-    patchSel.addEventListener('change', () => { model.patch = Number(patchSel.value); });
+    patchSel.addEventListener('change', () => {
+      model.patch = Number(patchSel.value);
+      if (model.sel.length) edit(() => model.sel.forEach((n) => { n.patch = model.patch; }));
+    });
     const lenSel = make('select');
     lenSel.id = 'se-len';
     lenSel.setAttribute('aria-label', 'Note length in units');
@@ -283,6 +302,72 @@
     lenSel.addEventListener('change', () => { model.len = Number(lenSel.value); });
     row2.append(chanBox, lab('Instrument', patchSel), lab('Length', lenSel));
     box.appendChild(row2);
+
+    // Toolbar: effects (what a new note gets; "Apply" writes them to the selected notes). Shift-click selects notes.
+    const rowFx = make('div', 'st-controls se-bar se-fx');
+    const numIn = (id, min, max, label) => {
+      const i = make('input');
+      i.type = 'number';
+      i.min = String(min);
+      i.max = String(max);
+      i.id = id;
+      i.setAttribute('aria-label', label);
+      return i;
+    };
+    const modDelay = numIn('se-mod-delay', 0, 255, 'Modulation delay in frames (0 = off)');
+    const modDelta = numIn('se-mod-delta', -128, 127, 'Modulation delta per frame');
+    const envSel = make('select');
+    envSel.id = 'se-env';
+    envSel.setAttribute('aria-label', 'Pitch envelope');
+    [['-1', 'Off'], ['0', 'Envelope 0'], ['1', 'Envelope 1'], ['2', 'Envelope 2'], ['3', 'Envelope 3']].forEach(([v, t]) => envSel.appendChild(Object.assign(make('option', null, t), { value: v })));
+    const envSpeed = numIn('se-env-speed', -128, 127, 'Pitch envelope speed');
+    const legatoCb = make('input');
+    legatoCb.type = 'checkbox';
+    legatoCb.id = 'se-legato';
+    const keyCb = make('input');
+    keyCb.type = 'checkbox';
+    keyCb.id = 'se-nokey';
+    const readFx = () => {
+      model.fx = {
+        modDelay: Math.max(0, Math.min(255, Math.round(Number(modDelay.value) || 0))),
+        modDelta: Math.max(-128, Math.min(127, Math.round(Number(modDelta.value) || 0))),
+        env: Number(envSel.value),
+        envSpeed: Math.max(-128, Math.min(127, Math.round(Number(envSpeed.value) || 0))),
+        legato: legatoCb.checked,
+        noKeyOff: keyCb.checked
+      };
+    };
+    [modDelay, modDelta, envSel, envSpeed, legatoCb, keyCb].forEach((el) => el.addEventListener('change', readFx));
+    const fxOf = (f) => {
+      const o = {};
+      if (f.modDelay > 0 && f.modDelta !== 0) o.mod = { delay: f.modDelay, delta: f.modDelta };
+      if (f.env >= 0 && f.envSpeed !== 0) o.env = { id: f.env, speed: f.envSpeed };
+      if (f.legato) o.legato = true;
+      if (f.noKeyOff) o.noKeyOff = true;
+      return o;
+    };
+    const applyFx = button('Apply to selected', () => {
+      readFx();
+      if (!model.sel.length) return;
+      edit(() => model.sel.forEach((n) => { delete n.mod; delete n.env; delete n.legato; delete n.noKeyOff; Object.assign(n, fxOf(model.fx)); }));
+    });
+    applyFx.id = 'se-fx-apply';
+    const selChan = button('Select channel', () => { model.sel = model.song.channels[model.channel].slice(); refreshTools(); draw(); });
+    selChan.id = 'se-sel-channel';
+    const selPatch = button('Select this instrument', () => { model.sel = model.song.channels[model.channel].filter((n) => n.patch === model.patch); refreshTools(); draw(); });
+    selPatch.id = 'se-sel-patch';
+    const selNone = button('Select none', () => { model.sel = []; refreshTools(); draw(); });
+    selNone.id = 'se-sel-none';
+    const selDel = button('Delete selected', () => {
+      const dead = new Set(model.sel);
+      edit(() => { model.song.channels = model.song.channels.map((c) => c.filter((n) => !dead.has(n))); model.sel = []; });
+    });
+    selDel.id = 'se-sel-delete';
+    rowFx.append(make('span', 'se-dim', 'Effects:'), lab('Modulation delay', modDelay), lab('delta', modDelta), lab('Pitch envelope', envSel), lab('speed', envSpeed), lab('Legato', legatoCb), lab('No key-off', keyCb), applyFx, selChan, selPatch, selNone, selDel);
+    box.appendChild(rowFx);
+    const selInfo = make('p', 'st-status mono se-sel');
+    selInfo.id = 'se-selinfo';
+    box.appendChild(selInfo);
 
     // Toolbar: play / export
     const row3 = make('div', 'st-controls se-bar');
@@ -296,7 +381,7 @@
     clearBtn.id = 'se-clear';
     const exMidi = button('Export MIDI (GM)', () => exportMidi(true));
     exMidi.id = 'se-export-midi';
-    const exRaw = button('Export MIDI (FM tracks)', () => exportMidi(false));
+    const exRaw = button('Export MIDI (native)', () => exportMidi(false));
     exRaw.id = 'se-export-raw';
     const exAsm = button('Export cmdstream (.asm)', () => exportCmd('asm'));
     exAsm.id = 'se-export-asm';
@@ -341,6 +426,7 @@
     function undo() {
       if (!model.undo.length) return;
       model.song = model.undo.pop();
+      model.sel = [];
       afterChange();
     }
     function totalUnits() { return Math.max(BAR, Math.ceil(S.lengthOf(model.song) / BAR) * BAR); }
@@ -361,6 +447,18 @@
         b.setAttribute('aria-checked', c === model.channel ? 'true' : 'false');
         b.classList.toggle('is-on', c === model.channel);
       });
+      modDelay.value = String(model.fx.modDelay);
+      modDelta.value = String(model.fx.modDelta);
+      envSel.value = String(model.fx.env);
+      envSpeed.value = String(model.fx.envSpeed);
+      legatoCb.checked = model.fx.legato;
+      keyCb.checked = model.fx.noKeyOff;
+      applyFx.disabled = !model.sel.length;
+      selDel.disabled = !model.sel.length;
+      const used = {};
+      model.song.channels[model.channel].forEach((n) => { used[n.patch] = (used[n.patch] || 0) + 1; });
+      const legend = Object.keys(used).map((p) => 'P' + p + '×' + used[p]).join(' ');
+      selInfo.textContent = 'FM' + (model.channel + 1) + ' instruments: ' + (legend || 'none') + ' · ' + model.sel.length + ' selected (shift-click a note to select; changing the Instrument or pressing Apply changes the selection)';
       undoBtn.disabled = !model.undo.length;
       const notes = model.song.channels.reduce((n, c) => n + c.length, 0);
       let text = notes + ' notes · ' + model.song.units + ' units · ' + (model.song.units * S.secondsPerUnit(model.song.tempo)).toFixed(1) + ' s per pass';
@@ -453,8 +551,13 @@
       g.font = '8px ui-monospace, monospace';
       g.fillStyle = '#111';
       model.song.channels[model.channel].forEach((n) => {
-        if (n.len * model.zoom >= 14) g.fillText(String(n.patch), GUTTER + n.unit * model.zoom + 3, (MIDI_HI - (n.index + 12)) * ROW_H + ROW_H - 2);
+        const tag = String(n.patch) + (n.mod ? '~' : '') + (n.env ? 'E' : '') + (n.legato ? 'L' : '') + (n.noKeyOff ? 'K' : '');
+        if (n.len * model.zoom >= 8 * tag.length + 6) g.fillText(tag, GUTTER + n.unit * model.zoom + 3, (MIDI_HI - (n.index + 12)) * ROW_H + ROW_H - 2);
       });
+      g.strokeStyle = '#fff';
+      g.lineWidth = 1.5;
+      model.sel.forEach((n) => g.strokeRect(GUTTER + n.unit * model.zoom + 0.5, (MIDI_HI - (n.index + 12)) * ROW_H + 0.5, Math.max(2, n.len * model.zoom - 1), ROW_H - 1));
+      g.lineWidth = 1;
     }
 
     function cellAt(ev) {
@@ -479,8 +582,22 @@
     canvas.addEventListener('click', (ev) => {
       const { unit, midi } = cellAt(ev);
       if (unit < 0 || midi < MIDI_LO || midi > MIDI_HI) return;
+      if (ev.shiftKey) { toggleSelect(unit, midi); return; }
       addOrRemove(unit, midi);
     });
+    /** Shift-click: add the note under the cell to the selection (or remove it) and load its instrument and effects into the toolbar. */
+    function toggleSelect(unit, midi) {
+      const hit = model.song.channels[model.channel].find((n) => n.index === midi - 12 && unit >= n.unit && unit < n.unit + n.len);
+      if (!hit) return;
+      const at = model.sel.indexOf(hit);
+      if (at >= 0) model.sel.splice(at, 1); else model.sel.push(hit);
+      if (at < 0) {
+        model.patch = hit.patch;
+        model.fx = { modDelay: hit.mod ? hit.mod.delay : 0, modDelta: hit.mod ? hit.mod.delta : 0, env: hit.env ? hit.env.id : -1, envSpeed: hit.env ? hit.env.speed : model.fx.envSpeed, legato: !!hit.legato, noKeyOff: !!hit.noKeyOff };
+      }
+      refreshTools();
+      draw();
+    }
 
     /** Toggle: a note of the selected channel under the cell goes; otherwise one is added there. */
     function addOrRemove(unit, midi) {
@@ -500,7 +617,7 @@
           else if (n.unit >= start && n.unit < start + model.len) { /* replaced */ }
           else keep.push(n);
         });
-        keep.push({ unit: start, len: model.len, index: index, patch: model.patch });
+        keep.push(Object.assign({ unit: start, len: model.len, index: index, patch: model.patch }, fxOf(model.fx)));
         keep.sort((a, b) => a.unit - b.unit);
         // A note that would run into the next one stops at it.
         keep.forEach((n, i) => { const nx = keep[i + 1]; if (nx && n.unit + n.len > nx.unit) n.len = nx.unit - n.unit; });
@@ -528,6 +645,7 @@
       if (!v) return;
       edit(() => {
         if (v === 'empty') { model.song = newSong(); model.name = 'my-song'; } else {
+          model.sel = [];
           model.song = S.fromParsed(host.data, Number(v));
           model.name = safeName(host.data.songs[Number(v)].name);
         }
@@ -540,10 +658,12 @@
       if (!file) return;
       try {
         const r = await readMidiFile(file);
+        const native = SongGm().nhlFromNativeSmf(r.parsed);
+        if (native) { edit(() => { model.song = native.song; model.name = r.name; model.sel = []; model.gmReport = native.report; }); return; }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
         const out = SongGm().gmToNhl(r.gm, map);
         model.imported = r;
-        edit(() => { model.song = out.song; model.name = r.name; model.gmReport = r.report.concat(out.report); });
+        edit(() => { model.song = out.song; model.name = r.name; model.sel = []; model.gmReport = r.report.concat(out.report); });
       } catch (err) {
         model.gmReport = ['Could not import that file: ' + (err && err.message ? err.message : String(err))];
         refreshTools();
@@ -635,6 +755,7 @@
     model.undo.push(clone(model.song));
     if (model.undo.length > 50) model.undo.shift();
     model.song = clone(nhlSong);
+    model.sel = [];
     model.name = safeName(name);
     model.gmReport = [];
     store();

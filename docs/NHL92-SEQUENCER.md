@@ -30,7 +30,16 @@ A song is a tempo plus six FM channels, each a single line of notes. Times are i
 
 (BPM = 60 × 59.92 / (4 × tempo); the game runs at 59.92 Hz.) Each note is `{ unit, len, index, patch }`: a start and length in units, the driver's note-table index (MIDI note − 12, indexes 0–95; the retail songs use 9–90) and one of the 22 patches.
 
-Not in the model: modulation (`$81`), pitch envelopes (`$86`), legato (`$83`), the transpose command (`$88`) and SFX triggers. Retail songs use modulation and envelopes on some notes, so a retail song loaded into the editor loses that vibrato. Every other note (pitch, start, length, instrument) is kept.
+Effects, all optional on a note and all kept from retail songs (the driver's rules, from `sound.asm`):
+
+| Field | Command | Meaning |
+|---|---|---|
+| `mod: {delay, delta}` | `$81 delay delta` | for `delay` frames add `delta` to the note's F-number each frame. Affects **one note**: the driver clears it when the next track data is parsed |
+| `env: {id, speed}` | `$86 id speed` / `$87` | pitch envelope 0-3 and its speed. **Channel state**: it stays until changed, so every note that follows carries it. No `env` means envelope off |
+| `legato` | `$83` | this note does not key on again or restart its envelope (one note) |
+| `noKeyOff` | `$89` | no key-off on this note's last tick (one note) |
+
+The encoder writes the commands in front of the note they belong to, restates the envelope state at the start of a pattern (only in channels that use an envelope), and reports bad values (delay 1-255, delta -128..127, envelope 0-3) instead of writing them. The transpose command (`$88`) is folded into the note index, and the SFX trigger (`$8B`, not used by retail songs) is not modelled. A rebuilt retail song writes the same F-number and key registers as the retail song (tested on songs 0, 1 and 3 over 500 frames, modulation and envelopes included). One known difference: a modulation set before a rest keeps sliding the released note's pitch in the retail song; that is inaudible and is not modelled.
 
 ## Retail song → model (`fromParsed`)
 
@@ -67,11 +76,13 @@ The Sound test then plays song 4 of that copy with the same chain as the retail 
 | Export | Contents |
 |---|---|
 | MIDI (GM) | the song through the NHL 92 → GM table: each FM channel is a MIDI channel with the mapped program; patches the table sends to a drum become channel-10 hits. 96 PPQ, tempo from the song's tempo, a GM System On message |
-| MIDI (FM tracks) | the song's own notes, one track per FM channel, no program mapping; the patch numbers are in the track names |
+| MIDI (native) | the song's own notes, one track per FM channel, no GM mapping. The patch of every note and all effects are in MIDI marker events (`NHL c=2 p=7 e=1,-128 m=8,5 l k`), so **importing the file into the sequencer restores the song exactly** (instruments, modulation, envelopes, legato, no-key-off). Other MIDI players hear the notes and ignore the markers |
 | cmdstream (.asm) | `dc.b` / `dc.w` / `dc.l` source in the disassembly's style: the 26-byte fmtune entry, six order lists with BASE-relative words and `$0000` restart, and the patterns, each with a comment listing its events |
 | cmdstream (.bin) | the same bytes as one binary: the 26-byte header, order lists, patterns; pointers are relative to the start of the file |
 
 ## MIDI import → NHL 92
+
+A file written by **Export MIDI (native)** is recognised by its `NHL92 v1` marker and loaded as is (no GM mapping, nothing lost). Any other file goes through the conversion below.
 
 Choosing a file in the import panel (or the sequencer's own Import MIDI button) converts it to an NHL 92 song and puts it in the sequencer, ready to edit; Undo brings back the previous song. Along the way `smf.js` reads format 0 and 1 files with PPQ timing (SMPTE timing is refused). `normalizeGm` produces the General MIDI song:
 
@@ -90,6 +101,10 @@ The import panel can also play the cleaned-up General MIDI song with the plain r
 5. **Range.** Melodic notes move by whole octaves into note indexes 9–90.
 
 The result is a first draft to edit, not a transcription: a piano arrangement with chords loses most of its notes.
+
+## Editing instruments and effects
+
+Every note carries its own instrument, so a channel can change instrument as often as the song wants (the retail songs do). In the sequencer: **shift-click** notes to select them (the note's instrument and effects load into the toolbar); changing the **Instrument** menu re-instruments the selection; **Apply to selected** writes the toolbar's modulation, envelope, legato and no-key-off fields to it; *Select channel*, *Select this instrument*, *Select none* and *Delete selected* help with bigger changes. New notes get the instrument and effects currently in the toolbar. Notes with effects show a tag (`7~EL` = instrument 7, modulation, envelope, legato; `K` = no key-off), the selection is outlined, and the line under the toolbar lists the instruments the channel uses.
 
 ## Lane labels
 
