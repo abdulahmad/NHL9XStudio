@@ -117,6 +117,10 @@ Sound-effect-only instruments (game set 12-26, unmapped): 12, 13, 14, 15, 16, 17
 | game | 21 | SampleWhistle | program 78 | high | drum 72 long whistle | plucked, att 15 ms, -27 dB, bright 22x, per 0.86 |
 | game | 28 | SampleCrowd2 | program 126 | medium | program 122 seashore | sustained, att 10 ms, -2 dB, bright 3.8x, per 0.19 |
 
+## Sound-effect fallback
+
+Entries that are not instruments (the '93 effect-only instruments, the '94 game-set effects) have no row in `sets`; the SFX MIDI export uses the `sfx` table instead. It is a plain rule on the measurements: a noisy pluck is a gunshot, a tonal pluck a wood block, a sustained tone a square lead, sustained noise a seashore, a swell a reverse cymbal. All rows are low confidence.
+
 ## Limits
 
 Signal measurements describe the render; words like "bright" are read off the numbers. The '94 game-set effects (passes, shots, pucks) and the '93 effect-only instruments are not instruments and are not mapped.

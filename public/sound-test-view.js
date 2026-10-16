@@ -1283,6 +1283,26 @@
     }
 
     // Edit / export: the same conversions the sequencer uses, straight from this entry.
+    if (isSnes() && id.startsWith('sound-') && root.NhlSnesSfxMidi && root.Nhl92Smf && root.NhlSoundTools && snesData.gmMap) {
+      const sm = /^sound-(\w+)-(\d+)$/.exec(id);
+      const cue = Number(sm[2]);
+      const streamed = isSnes94() && sm[1] === 'game' && cue >= 22 && cue <= 27;
+      const crowd = isSnes93() && cue <= 0x88;
+      if (!streamed && !crowd) {
+        const ex = make('div', 'st-controls st-exports');
+        const b = make('button', 'ghost-btn', 'Export MIDI');
+        b.type = 'button';
+        b.title = 'The effect played through the game\'s sound program, every voice written as a MIDI track: notes, pitch bends, GM sounds from the map (low confidence for sounds that are not instruments)';
+        b.addEventListener('click', () => {
+          try {
+            const bytes = isSnes93() ? root.NhlSnesSfxMidi.exportEffect93(snesData, snesData.gmMap, cue) : root.NhlSnesSfxMidi.exportEffect94(snesData, snesData.gmMap, sm[1], cue);
+            root.NhlSoundTools.download((isSnes93() ? 'nhl93s-effect-' : 'nhl94s-effect-' + sm[1] + '-') + cue + '.mid', bytes, 'audio/midi');
+          } catch (err) { fail('Export MIDI')(err); }
+        });
+        ex.appendChild(b);
+        box.appendChild(ex);
+      }
+    }
     if (isSnes93() && id.startsWith('song-') && root.NhlNhl93sMidi && root.Nhl92Smf && root.NhlSoundTools && snesData.gmMap) {
       const ex = make('div', 'st-controls st-exports');
       const cue = Number(id.slice(5));

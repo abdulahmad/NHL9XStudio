@@ -288,5 +288,85 @@
     "key": 36
    }
   }
+ },
+ "sfx": {
+  "boot": {},
+  "game": {
+   "12": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.52, flatness 0.09). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "13": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.49, flatness 0.08). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "14": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.24, flatness 0.28). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "15": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.55, flatness 0.25). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "16": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.21, flatness 0.5). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "17": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.2, flatness 0.44). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "18": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.67, flatness 0.09). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "19": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.19, flatness 0.46). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "20": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0, flatness null). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "21": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0, flatness null). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "22": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0, flatness null). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "23": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0, flatness null). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "24": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.41, flatness 0.08). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "25": {
+    "program": 80,
+    "why": "sound effect, not an instrument: sustained tone: square lead (shape sustained, periodicity 1, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "26": {
+    "program": 80,
+    "why": "sound effect, not an instrument: sustained tone: square lead (shape sustained, periodicity 1, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   }
+  }
  }
 }
