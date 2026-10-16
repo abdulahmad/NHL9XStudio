@@ -10,10 +10,6 @@ const el = (id) => document.getElementById(id);
 function isPcGame(kind) {
   return kind === 'pc95' || kind === 'pc94';
 }
-function isZ80TestGame() {
-  return gameInfo && gameInfo.kind === 'z80test';
-}
-
 /** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 94 SNES, and NHLPA 93 SNES. */
 function hasSoundTest(info) {
   return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined');
@@ -21,7 +17,7 @@ function hasSoundTest(info) {
 
 /**
  * The Audio tab (AUD-1 square-wave sketch of the FM cmdstreams) is for the other Genesis
- * games and the Z80 test profile. NHL 92's audio is the Sound test (the retail driver chain).
+ * games. NHL 92's audio is the Sound test (the retail driver chain).
  */
 function hasAudioTab(info) {
   return !!(info && info.platform === 'genesis' && info.id !== 'nhl92' && info.id !== 'nhlpa93' && info.id !== 'nhl94');
@@ -60,15 +56,6 @@ async function enterSoundPanel() {
   if (state.mode === mode) refreshAll();
 }
 
-function syncModeTabs() {
-  const z80 = isZ80TestGame();
-  for (const mode of ['frame', 'spf', 'spa', 'image']) {
-    const tab = el('mode-' + mode);
-    if (tab) tab.hidden = z80;
-  }
-  const z80Tab = el('mode-z80');
-  if (z80Tab) z80Tab.hidden = !z80;
-}
 const state = {
   mode: 'spa',
   bank: 'Sprites.anim',
@@ -93,7 +80,6 @@ const state = {
   paletteExplicit: false,
   query: '',
   audioId: '',
-  z80Pattern: 'nhl_driver_boot',
   soundTestItem: 'song-0',
   acc: 0,
   holdKey: '',
@@ -196,14 +182,6 @@ async function playAudioEntry() {
   audioLoadError = 'Building preview…';
   renderCaption();
   await new Promise((resolve) => window.setTimeout(resolve, 0));
-  if (rom && typeof Nhl92SoundSystem !== 'undefined' && isZ80TestGame()) {
-    try {
-      const sys = Nhl92SoundSystem.create(rom);
-      schedule = sys.playEntry(entry, meta, entry.type === 'fm-song' ? 90 : 45);
-    } catch (err) {
-      schedule = null;
-    }
-  }
   if ((!schedule || !schedule.events || !schedule.events.length) && rom && typeof NhlGenesisAudio !== 'undefined') {
     try {
       schedule = NhlGenesisAudio.previewEntry(rom, entry, meta);
@@ -235,81 +213,9 @@ async function playAudioEntry() {
   }, Math.ceil((out.duration + 0.4) * 1000));
 }
 
-async function playZ80Pattern() {
-  if (!isZ80TestGame() || typeof NhlZ80TestPatterns === 'undefined') return;
-  NhlAudioEngine.stopAll();
-  z80LastResult = 'Running pattern…';
-  renderCaption();
-  await new Promise((resolve) => window.setTimeout(resolve, 0));
-  try {
-    const rom = await ensureRom();
-    if (!rom) {
-      z80LastResult = 'Bundled sound fixture failed to load (check network / GitHub Pages data path).';
-      renderCaption();
-      renderDetail();
-      return;
-    }
-    const out = NhlZ80TestPatterns.run(state.z80Pattern, rom);
-    z80LastResult = out.ok
-      ? (out.detail || 'OK')
-      : ('Failed: ' + (out.detail || 'pattern returned not ok'));
-    if (out.ok && out.schedule && out.schedule.events && out.schedule.events.length) {
-      audioLoadError = '';
-      const play = await NhlAudioEngine.playSchedule(out.schedule);
-      state.playing = true;
-      renderTransport();
-      window.setTimeout(() => {
-        state.playing = false;
-        renderTransport();
-      }, Math.ceil((play.duration + 0.4) * 1000));
-    }
-  } catch (err) {
-    z80LastResult = err && err.message ? err.message : 'Z80 test failed';
-  }
-  renderCaption();
-  renderDetail();
-}
-
-function renderZ80List(box, q) {
-  if (typeof NhlZ80TestPatterns === 'undefined') {
-    const note = document.createElement('p');
-    note.className = 'empty-note';
-    note.textContent = 'Z80 modules failed to load (refresh the page).';
-    box.appendChild(note);
-    return;
-  }
-  const patterns = NhlZ80TestPatterns.list();
-  for (const pat of patterns) {
-    const hay = (pat.id + ' ' + pat.label + ' ' + (pat.blurb || '')).toLowerCase();
-    if (q && !hay.includes(q)) continue;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'item';
-    button.setAttribute('role', 'option');
-    const selected = pat.id === state.z80Pattern;
-    button.classList.toggle('is-current', selected);
-    button.setAttribute('aria-selected', selected ? 'true' : 'false');
-    const name = document.createElement('span');
-    name.className = 'name';
-    name.textContent = pat.label;
-    const sub = document.createElement('span');
-    sub.className = 'sub';
-    sub.textContent = pat.needsRom ? 'needs data' : 'bundled OK';
-    button.append(name, sub);
-    button.addEventListener('click', () => {
-      state.z80Pattern = pat.id;
-      state.playing = false;
-      NhlAudioEngine.stopAll();
-      refreshAll();
-    });
-    box.appendChild(button);
-  }
-}
-
 let catalog = null;
 let audioCatalog = null;
 let audioLoadError = '';
-let z80LastResult = '';
 let sequenceKey = '';
 const FILMSTRIP_LAZY_THRESHOLD = 48;
 let filmstripPaintQueue = [];
@@ -630,28 +536,6 @@ function paintStage() {
   const cssH = wrap.clientHeight;
   if (!cssW || !cssH) return;
   if (soundPanel()) return;
-  if (state.mode === 'z80') {
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = '#0e1118';
-    ctx.fillRect(0, 0, cssW, cssH);
-    ctx.fillStyle = '#c8d4ef';
-    ctx.font = '600 17px system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Z80 + YM2612 harness', cssW / 2, cssH / 2 - 36);
-    ctx.font = '14px system-ui,sans-serif';
-    ctx.fillStyle = '#8fa3c7';
-    const pat = typeof NhlZ80TestPatterns !== 'undefined'
-      ? NhlZ80TestPatterns.list().find((p) => p.id === state.z80Pattern)
-      : null;
-    ctx.fillText(pat ? pat.label : state.z80Pattern, cssW / 2, cssH / 2 - 8);
-    ctx.fillStyle = '#6b7a99';
-    ctx.fillText(z80LastResult || 'Pick a pattern · Play runs the test', cssW / 2, cssH / 2 + 22);
-    return;
-  }
   if (state.mode === 'audio') {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
@@ -1012,7 +896,6 @@ function toggleSoundTest(id) {
 
 const KEYS_HINT = {
   soundtest: '↑ ↓ pick · Space or Enter play/stop · double-click plays',
-  z80: '↑ ↓ pick · Space run',
   audio: '↑ ↓ pick · Space play/stop'
 };
 let defaultKeysHint = '';
@@ -1024,10 +907,6 @@ function renderList() {
   if (!catalog) return;
   if (state.mode === 'image') {
     renderImageList(box, q);
-    return;
-  }
-  if (state.mode === 'z80') {
-    renderZ80List(box, q);
     return;
   }
   if (soundPanel()) {
@@ -1276,18 +1155,7 @@ function renderMeta() {
   const detail = el('detail');
   detail.replaceChildren();
   const rows = [];
-  if (state.mode === 'z80') {
-    const pat = typeof NhlZ80TestPatterns !== 'undefined'
-      ? NhlZ80TestPatterns.list().find((p) => p.id === state.z80Pattern)
-      : null;
-    if (pat) {
-      rows.push(['Pattern', pat.label]);
-      rows.push(['ID', pat.id]);
-      if (pat.blurb) rows.push(['About', pat.blurb]);
-      rows.push(['ROM', pat.needsRom ? 'required' : 'optional']);
-    }
-    if (z80LastResult) rows.push(['Last run', z80LastResult]);
-  } else if (soundPanel()) {
+  if (soundPanel()) {
     rows.push(...soundPanel().view().metaRows(state[soundPanel().key]));
   } else if (state.mode === 'audio') {
     const entry = audioCatalog && audioCatalog.entries.find((e) => e.id === state.audioId);
@@ -1471,13 +1339,6 @@ async function restoreSpritePalette() {
 
 function renderCaption() {
   const cap = el('caption');
-  if (state.mode === 'z80') {
-    const pat = typeof NhlZ80TestPatterns !== 'undefined'
-      ? NhlZ80TestPatterns.list().find((p) => p.id === state.z80Pattern)
-      : null;
-    cap.textContent = z80LastResult || (pat ? pat.label + ' · Play to run' : 'Z80 test pattern');
-    return;
-  }
   if (soundPanel()) {
     cap.textContent = '';
     cap.hidden = true;
@@ -1586,12 +1447,12 @@ function renderTransport() {
   el('sort-file').setAttribute('aria-pressed', state.sort === 'file' ? 'true' : 'false');
   if ([...el('bank').options].some((option) => option.value === state.bank)) el('bank').value = state.bank;
   el('bank').disabled = state.mode !== 'frame' || !gameInfo || gameInfo.banks.length < 2;
-  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'z80', 'soundtest']) {
+  for (const mode of ['frame', 'spf', 'spa', 'image', 'audio', 'soundtest']) {
     const tab = el('mode-' + mode);
     if (!tab) continue;
     tab.setAttribute('aria-selected', state.mode === mode ? 'true' : 'false');
   }
-  const noFrames = state.mode === 'audio' || state.mode === 'z80' || !!soundPanel();
+  const noFrames = state.mode === 'audio' || !!soundPanel();
   document.querySelector('.app').classList.toggle('is-sound', !!soundPanel());
   const hint = el('keys-hint');
   if (hint) {
@@ -1636,8 +1497,6 @@ function writeHash() {
     params.set('dir', String(state.dir));
   } else if (state.mode === 'audio') {
     params.set('audio', state.audioId);
-  } else if (state.mode === 'z80') {
-    params.set('z80', state.z80Pattern);
   } else if (state.mode === 'soundtest') {
     params.set('sndtest', state.soundTestItem);
   } else {
@@ -1654,7 +1513,7 @@ function writeHash() {
 function readHash() {
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   const mode = params.get('mode');
-  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'z80' || mode === 'soundtest') {
+  if (mode === 'frame' || mode === 'spf' || mode === 'spa' || mode === 'image' || mode === 'audio' || mode === 'soundtest') {
     state.mode = mode;
   }
   // Old links: the Sound data tab is gone; NHL 92 sound is the Sound test (loadGame also
@@ -1671,7 +1530,6 @@ function readHash() {
   if (params.get('frame')) state.frame = Number(params.get('frame')) || 1;
   if (params.get('step')) state.step = Number(params.get('step')) || 0;
   if (params.get('audio')) state.audioId = params.get('audio');
-  if (params.get('z80')) state.z80Pattern = params.get('z80');
   if (params.get('sndtest')) state.soundTestItem = params.get('sndtest');
   if (params.has('pal')) {
     state.paletteExplicit = true;
@@ -1792,21 +1650,6 @@ function wire() {
       toggleSoundTest(state.soundTestItem);
       return;
     }
-    if (state.mode === 'z80') {
-      if (state.playing) {
-        state.playing = false;
-        NhlAudioEngine.stopAll();
-      } else {
-        playZ80Pattern().catch((err) => {
-          z80LastResult = (err && err.message) ? err.message : 'Z80 test failed.';
-          state.playing = false;
-          renderCaption();
-          renderTransport();
-        });
-      }
-      renderTransport();
-      return;
-    }
     if (state.mode === 'audio') {
       if (state.playing) {
         state.playing = false;
@@ -1850,16 +1693,6 @@ function wire() {
     refreshAll();
     await enterSoundPanel();
   });
-  const modeZ80 = el('mode-z80');
-  if (modeZ80) {
-    modeZ80.addEventListener('click', async () => {
-      clearSearch();
-      state.mode = 'z80';
-      state.playing = false;
-      NhlAudioEngine.stopAll();
-      refreshAll();
-    });
-  }
   el('prev').addEventListener('click', (event) => nudge(event.shiftKey ? -filmstripStepJump() : -1));
   el('next').addEventListener('click', (event) => nudge(event.shiftKey ? filmstripStepJump() : 1));
   el('loop').addEventListener('change', () => { state.loop = el('loop').checked; });
@@ -2052,18 +1885,6 @@ async function icePaletteBytes() {
 
 async function ensureRom() {
   if (!gameInfo) return null;
-  if (isZ80TestGame() && typeof Nhl92SoundFixture !== 'undefined') {
-    const cached = roms.get(gameInfo.id);
-    if (cached && cached.length) return cached;
-    try {
-      const rom = await Nhl92SoundFixture.ensureSyntheticRom({ baseUrl: pathPrefix });
-      roms.set(gameInfo.id, rom);
-      return rom;
-    } catch (err) {
-      roms.delete(gameInfo.id);
-      throw err;
-    }
-  }
   if (roms.has(gameInfo.id)) {
     const cached = roms.get(gameInfo.id);
     return cached || null;
@@ -2338,11 +2159,6 @@ async function loadGame(id, keepSelection) {
     audioCatalog = null;
     audioLoadError = '';
   }
-  if (info.platform !== 'genesis' && state.mode === 'z80') state.mode = 'spa';
-  if (info.kind === 'z80test' && !keepSelection) {
-    state.mode = 'z80';
-    state.playing = false;
-  }
   loadToken += 1;
   loadError = '';
   banks.clear();
@@ -2397,10 +2213,10 @@ async function loadGame(id, keepSelection) {
     state.dir = previous.dir;
     state.step = previous.step;
   } else {
-    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image' || previous.mode === 'audio' || previous.mode === 'z80' ||
+    state.mode = previous.mode === 'frame' || previous.mode === 'spf' || previous.mode === 'spa' || previous.mode === 'image' || previous.mode === 'audio' ||
       (soundPanel(previous.mode) && soundPanel(previous.mode).available(info))
       ? previous.mode
-      : (info.kind === 'z80test' ? 'z80' : 'spa');
+      : 'spa';
     state.dir = previous.dir;
     state.step = 0;
     state.frame = previous.frame || 1;
@@ -2455,14 +2271,6 @@ async function loadGame(id, keepSelection) {
     }
   }
   if (soundPanel()) enterSoundPanel();
-  if (info.kind === 'z80test') {
-    z80LastResult = '';
-    try {
-      await ensureRom();
-    } catch (err) {
-      audioLoadError = 'Sound fixture: ' + (err && err.message ? err.message : 'load failed');
-    }
-  }
   if (info.pixels) {
     await ensureBank(spritesBankId());
     if (state.mode === 'frame' && state.bank !== spritesBankId()) await ensureBank(state.bank);

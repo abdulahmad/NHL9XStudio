@@ -119,9 +119,9 @@ Checked in headless Chromium against `node server.js`, with YM writes hooked in 
 - Song 4 plays at real time (350 frames in about 5.9 s) and Stop gives silence. SFX 13 plays from the list with 7,236 YM writes, as in the offline render. The browser chain's PCM, before resampling, is byte-identical to Node's for SFX 13 and song 4 (600 vblanks each; checked for PR #27).
 - Siren: key-ons only on codes 0/1, and the first is on the siren's own vblank (frame 3). Peak 4,999, 0 PSG writes.
 - Space, Enter, double-click, ↑ ↓, the ▶ marker, and the progress/clock all work. SFX 24 reaches "Finished" at 0:10.0 / 0:10.0. Volume survives a reload. Switching to SPA stops playback.
-- Tabs: NHL 92 shows Frame/SPF/SPA/Images/Sound test; NHLPA 93 shows Audio; the Z80 test profile shows Audio/Z80; the SNES games show no audio tab. Switching from NHLPA 93's Audio to NHL 92 lands on the Sound test.
+- Tabs: NHL 92 shows Frame/SPF/SPA/Images/Sound test; NHLPA 93 shows Audio; the SNES games show no audio tab. Switching from NHLPA 93's Audio to NHL 92 lands on the Sound test.
 - At 390 px wide there's no horizontal scroll.
-- There are no page errors. The only failed requests are the expected no-ROM probes (`/api/games/nhl92/rom`, `/anim/Sprites.anim`), plus the Z80 test profile's `frames` request, which 404s on `main` too.
+- There are no page errors. The only failed requests are the expected no-ROM probes (`/api/games/nhl92/rom`, `/anim/Sprites.anim`).
 - **Static hosting (stands in for GitHub Pages):** `_site` was assembled exactly as `.github/workflows/pages.yml` does and served by a plain static server under `/NHL9XStudio/`. All of the above passed the same way there. The WASM loads with `application/wasm`, and the viewer falls back from `/api/games` (404) to `games.json`.
 
 Sequencer checks (headless Chromium, `node server.js`, Playwright):

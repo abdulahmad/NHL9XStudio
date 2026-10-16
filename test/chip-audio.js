@@ -2,7 +2,6 @@ const assert = require('assert');
 const psgApi = require('../lib/audio/sn76489');
 const presets = require('../lib/audio/chip-lab-presets');
 const resamplerApi = require('../lib/audio/chip-resampler');
-const z80Patterns = require('../lib/audio/z80-test-patterns');
 const ymWasm = require('../lib/audio/ym2612-wasm');
 
 function measure(samples, sampleRate) {
@@ -29,9 +28,6 @@ function assertPitch(label, got, want) {
 }
 
 (async () => {
-  const ping = z80Patterns.run('ym_ping');
-  assert.ok(ping.ok, ping.detail);
-
   const psg = psgApi.create();
   presets.psgTonePreset(psg, 440);
   assertPitch('SN76489 440 Hz tone', measure(psg.generateSamples(44100, 44100), 44100), 440);

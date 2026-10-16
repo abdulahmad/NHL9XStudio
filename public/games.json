@@ -5764,32 +5764,6 @@
   },
   {
     "app": "NHL9X Studio",
-    "id": "z80test",
-    "title": "Z80 test (NHL 92 sound)",
-    "source": "NHL92",
-    "platform": "genesis",
-    "kind": "z80test",
-    "paletteKind": "genesis",
-    "jerseyRow": 2,
-    "paletteLabel": null,
-    "tagline": "Z80 CPU, NHL 92 driver blob, and YM2612 register harness",
-    "hint": "Sound driver + FM/SFX tables are bundled in the repo (not the full game ROM). Z80 and Audio tabs work without a file. Optional: load your own NHL Hockey (Genesis) ROM via Open file… for a full 512KB image.",
-    "frames": "frames92.asm",
-    "banks": [
-      {
-        "id": "sprites",
-        "label": "Sprites"
-      }
-    ],
-    "images": [],
-    "pixels": false,
-    "rom": false,
-    "sheet": null,
-    "snes": null,
-    "romHint": "Drop ROM or use roms/"
-  },
-  {
-    "app": "NHL9X Studio",
     "id": "nhl95pc",
     "title": "NHL 95 (PC)",
     "source": "NHL95PC",
