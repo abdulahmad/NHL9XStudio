@@ -12,6 +12,7 @@
  *   songs            the TitleSong/MenuSong/PlayoffSong and the 80 organ songs
  *   samples          the BRR samples (loop point, length, blocks), the in-game, title/menu, intro and streamed sets
  *   sfx tables       the 48-byte sound entries of the in-game, menu and intro sets, with the sample lists
+ *   driver           the SPC700 sound program (SoundDriver, loads at $0400)
  *   PitchTable, VolumeCurve, TeamSongs, DefaultSongs, StreamSfxSounds, team abbreviations
  */
 const fs = require('fs');
@@ -154,6 +155,15 @@ function main() {
   sets.intro = { sampleList: list('IntroSampleList'), sounds: sfx('IntroSfxTable') };
   pack.sets = sets;
   pack.streamSounds = wordList('StreamSfxSounds', 6);
+
+  // The sound CPU program: the upload block at SoundDriver is [length][sound RAM address][code], the program starts at its address.
+  const drv = rd('SoundDriver', 4);
+  const drvLen = drv[0] | (drv[1] << 8);
+  const drvBase = drv[2] | (drv[3] << 8);
+  const drvCode = rd('SoundDriver', 4 + drvLen).subarray(4);
+  if (drvBase !== 0x0400 || drvCode[0] !== 0x20 || drvCode[1] !== 0xcd) throw new Error('SoundDriver block is not the expected SPC700 program');
+  pack.driver = { load: drvBase, length: drvLen, code: Buffer.from(drvCode).toString('base64') };
+  verified.tables += 1;
 
   const fileNames = fs.readdirSync(path.join(dir, 'src', 'data', 'sound')).map((f) => f.replace(/\.asm$/, ''));
   const samples = {};
