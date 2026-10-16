@@ -77,14 +77,26 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
 - **Pitch bends** are read from MIDI (with the channel's RPN 0 range), written to MIDI (RPN 0 is set to fit), played
   by the reference synth, kept when a retail song is copied, and exported in the stream. The driver bends by
   +-(patch byte `$1E`) semitones over the 14-bit range (PCM patches: 12), so import rescales a bend in semitones to
-  the patch in force and clamps what does not fit. The editor does not draw or edit bends note by note: it shows a tick
-  for each, keeps them, and can clear them.
+  the patch in force and clamps what does not fit. In the editor, set **Click: pitch bends** to edit them: the
+  channel's bends are drawn as a stepped line across the roll, a click adds a bend whose height is the click's height
+  (middle = no bend, top/bottom = the full range) and a click near an existing bend removes it.
 - **Loop timing:** when a stream loops, its target event fires the moment the end event is reached (its own delay is
   not waited again); `parse()` reports the target event's time as `loopTick`.
 
+- **Instruments and selection.** Every note carries its own instrument, so a channel can switch instruments as often as
+  a song wants (13 retail 93/94 songs do, e.g. the intermission song `$79` / `$36`; the encoder writes a patch event
+  wherever a channel's instrument changes, checked on every retail song). **Shift-click** notes to select them, change
+  the Instrument menu to re-instrument the selection; *Select channel*, *Select this instrument*, *Select none*,
+  *Delete selected* and *Set velocity of selected* are next to it, and a line under the toolbar lists the
+  instruments each channel uses.
+- **Native MIDI.** *Export MIDI (native)* writes one MIDI tick per vblank, one track per channel, and puts each note's
+  patch and every raw bend value into marker events (`NHL c=1 p=17`, `NHL c=1 b=-512`, header `NHL9X v1 game=94 ...`).
+  The sequencer's import (and the MIDI import tool) recognises the header and restores the song exactly: tested on
+  all 175 retail 93/94 songs. Other players hear the notes and ignore the markers.
+
 ## Not done yet
 
-- Editing pitch bends, per-note volume changes and the volume controller in the sequencer (they are kept, not edited).
+- Per-note volume changes and the volume controller (`$3x` 7) in the sequencer. No retail 93/94 stream uses a controller, and notes already carry their own velocity.
 - NHLPA 93 Rev A (`1992.OCT`, runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled; the
   slice is the retail v1.1 ROM. PAL timing is not modelled.
 - The Audio tab (old square-wave sketch) is hidden for these two games, like NHL 92.
