@@ -9,6 +9,7 @@
   const NAMES = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8'];
   const COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a', '#c9b8ff', '#7ee0d8'];
   const EVENT_LINES = 18;
+  const LOOKBACK_S = 12; // notes that started before the window can still be sounding inside it
 
   const make = (tag, cls, text) => {
     const n = document.createElement(tag);
@@ -159,7 +160,7 @@
       const cmds = st.commands;
       let lo0 = 0;
       let hi0 = cmds.length;
-      const fromFrame = leftT * frameRate;
+      const fromFrame = Math.max(0, leftT - LOOKBACK_S) * frameRate;
       while (lo0 < hi0) { const mid = (lo0 + hi0) >> 1; if (cmds[mid].frame < fromFrame) lo0 = mid + 1; else hi0 = mid; }
       const keyOns = [];
       for (let i = lo0; i < cmds.length && cmds[i].frame / frameRate <= timeSec; i++) if (cmds[i].name === 'keyOn') keyOns.push(cmds[i]);
@@ -167,6 +168,7 @@
       let lo = Infinity;
       let hi = -Infinity;
       for (const c of keyOns) {
+        if (c.frame / frameRate < leftT - 1) continue; // only what the window shows steers the pitch range
         const s = semis(c.args);
         if (s == null) continue;
         lo = Math.min(lo, s);
@@ -178,6 +180,23 @@
         pitchRange.lo += (lo - pitchRange.lo) * k;
         pitchRange.hi += (hi - pitchRange.hi) * k;
         pitchRange.init = true;
+      }
+      // Time axis: whole seconds scroll with the notes, like the Genesis roll.
+      g.font = (L.small ? 9 : 10) + 'px ' + mono;
+      g.lineWidth = 1;
+      for (let m = Math.max(0, Math.ceil(leftT)); m <= timeSec; m++) {
+        const x = Math.round(xOf(m)) + 0.5;
+        if (x < G.x0 + 14) continue;
+        g.globalAlpha = 0.35;
+        g.strokeStyle = C.line;
+        g.beginPath();
+        g.moveTo(x, 13);
+        g.lineTo(x, G.laneTop(NAMES.length - 1) + L.laneH);
+        g.stroke();
+        g.globalAlpha = 1;
+        const lab = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
+        g.fillStyle = C.muted;
+        if (x + g.measureText(lab).width < G.x1) g.fillText(lab, x + 2, 10);
       }
       const barH = 5;
       g.font = '9px ' + mono;
@@ -192,13 +211,16 @@
         const t = c.frame / frameRate;
         const voice = c.args && c.args.voice != null ? c.args.voice : 0;
         const top = G.laneTop(voice);
-        const x = Math.round(xOf(t)) + 0.5;
-        if (x < G.x0) continue;
+        const x0 = Math.round(xOf(t)) + 0.5;
         const s = semis(c.args);
         const f = s == null ? 0.5 : Math.min(1, Math.max(0, (s - pitchRange.lo) / (pitchRange.hi - pitchRange.lo)));
         const y = top + 3 + (1 - f) * (L.laneH - 6 - barH);
         const lenF = c.args && c.args.frames ? c.args.frames : c.gapFrames ? Math.min(c.gapFrames, frameRate) : 0;
-        const w = lenF ? Math.max(4, Math.min(G.x1 - x, (lenF / frameRate) * pps)) : 4;
+        const w0 = lenF ? Math.max(4, (lenF / frameRate) * pps) : 4;
+        // Clip at the left edge so notes slide out of view instead of vanishing whole.
+        const x = Math.max(x0, G.x0 + 1);
+        const w = Math.min(G.x1 - x, x0 + w0 - x);
+        if (w <= 0) continue;
         g.fillStyle = COLORS[voice % COLORS.length];
         g.globalAlpha = 0.85;
         g.fillRect(x, y, w, barH);

@@ -2223,7 +2223,8 @@ async function loadGame(id, keepSelection) {
   }
   if (soundPanel() && !soundPanel().available(info)) state.mode = 'spa';
   if (state.mode === 'audio' && !hasAudioTab(info)) state.mode = hasSoundTest(info) ? 'soundtest' : 'spa';
-  if (keepSelection && state.mode !== 'spa' && state.mode !== 'spf') state.playing = false;
+  // SPA and SPF animations play by default, including on the first load of the page.
+  state.playing = state.mode === 'spa' || state.mode === 'spf';
   const spaMatch = named(catalog.anims, previous.spa) || named(catalog.anims, 'SPAskatewp') || catalog.anims[0];
   const spfMatch = named(catalog.spfs, previous.spf) || catalog.spfs[0];
   state.spa = spaMatch ? spaMatch.name : '';
