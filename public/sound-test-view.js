@@ -97,14 +97,14 @@
       out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: kinds + ' · ' + SFX_VBLANKS + ' vblanks' });
     }
     if (root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools) {
-      out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → General MIDI', sub: 'open a .mid, hear it, save it as GM' });
+      out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
       out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
     }
     return out;
   }
 
   function title(id) {
-    if (id === TOOL_IMPORT) return 'MIDI import → General MIDI';
+    if (id === TOOL_IMPORT) return 'MIDI import → NHL 92';
     if (id === TOOL_EDITOR) return 'Sequencer · new NHL 92 song';
     const n = Number(id.split('-')[1]);
     return id.startsWith('song-') ? 'Song ' + n + ' · ' + data.songs[n].name : 'SFX ' + NAMES().name(n);
@@ -519,7 +519,7 @@
     if (!rom || !Ym) return [['Sound test', error || 'loading']];
     if (isTool(id)) {
       return id === TOOL_IMPORT
-        ? [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1)'], ['Out', 'General MIDI file; or an NHL 92 song for the sequencer'], ['Mapping', 'data/audio/nhl92-gm-map.json'], ['Notes', 'docs/NHL92-SEQUENCER.md']]
+        ? [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1)'], ['Out', 'an NHL 92 song in the sequencer (and a GM file)'], ['Mapping', 'data/audio/nhl92-gm-map.json'], ['Notes', 'docs/NHL92-SEQUENCER.md']]
         : [['Tool', title(id)], ['Song', 'six FM channels, one note at a time each'], ['Plays on', 'the retail 68k + Z80 drivers, as song 4 of a ROM copy'], ['Exports', 'MIDI, cmdstream asm and binary'], ['Notes', 'docs/NHL92-SEQUENCER.md']];
     }
     const n = Number(id.split('-')[1]);

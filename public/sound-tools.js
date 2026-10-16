@@ -113,9 +113,9 @@
 
   function renderImport(box, id, host) {
     box.appendChild(make('p', 'st-kind', 'Tool'));
-    box.appendChild(make('h3', null, 'MIDI import → General MIDI'));
-    box.appendChild(make('p', 'st-note', 'Open a Standard MIDI file. It is cleaned up as General MIDI (programs per channel, drums on channel 10 within notes 35–81, one tempo map), ' +
-      'played with the plain reference sounds, and can be saved back as a General MIDI file or turned into an NHL 92 song for the sequencer.'));
+    box.appendChild(make('h3', null, 'MIDI import → NHL 92'));
+    box.appendChild(make('p', 'st-note', 'Open a Standard MIDI file. It is converted to an NHL 92 song (six FM channels, patches chosen by the GM → NHL 92 table) and opened in the sequencer, where you can edit it, ' +
+      'play it on the retail drivers and export it. The conversion report is kept under the editor. You can also hear the cleaned-up General MIDI version with the plain reference sounds, or save it as a GM file, from here.'));
 
     const controls = make('div', 'st-controls');
     const input = make('input');
@@ -132,7 +132,7 @@
     });
     save.id = 'tool-import-save';
     save.disabled = true;
-    const toEditor = button('Convert to NHL 92 → sequencer', () => convert());
+    const toEditor = button('Open in sequencer', () => convert());
     toEditor.id = 'tool-import-convert';
     toEditor.disabled = true;
     controls.append(input, play, save, toEditor);
@@ -178,9 +178,9 @@
       model.undo.push(clone(model.song));
       model.song = r.song;
       model.name = m.name;
-      model.gmReport = r.report;
+      model.gmReport = m.report.concat(r.report);
       store();
-      status.textContent = 'Converted: ' + r.report.length + ' notes below. Open "Sequencer · new NHL 92 song" in the list.';
+      status.textContent = 'Converted to an NHL 92 song; opening the sequencer.';
       out.replaceChildren(make('p', 'st-kind', m.name + ' → NHL 92'), reportList(r.report));
       if (host.openItem) host.openItem('tool-editor');
     }
@@ -194,6 +194,7 @@
         model.imported = r;
         status.textContent = 'Loaded ' + file.name;
         show();
+        convert(); // the point of the import: an NHL 92 song you can edit
       } catch (err) {
         model.imported = null;
         out.replaceChildren();

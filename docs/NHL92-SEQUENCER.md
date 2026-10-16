@@ -6,7 +6,7 @@ Everything here sits on top of the retail sound data. No driver, patch or retail
 |---|---|
 | Lane labels: the instrument each channel loaded last (`P17 · Rock Organ`) | Sound test → Songs (the Roll view) |
 | **Play as GM**: a retail song through the NHL 92 → GM table and the plain reference synth | Sound test → Songs |
-| **MIDI import → General MIDI** | Sound test → MIDI group |
+| **MIDI import → NHL 92**: opens a `.mid`, converts it to an NHL 92 song and opens it in the sequencer | Sound test → MIDI group (the sequencer has its own Import MIDI button too) |
 | **Sequencer · new NHL 92 song**: edit, play on the retail drivers, export | Sound test → MIDI group |
 | `lib/audio/smf.js` | Standard MIDI File reader and writer |
 | `lib/audio/nhl92-song.js` | the song model, the cmdstream encoder, ROM copy, asm and binary export |
@@ -71,17 +71,17 @@ The Sound test then plays song 4 of that copy with the same chain as the retail 
 | cmdstream (.asm) | `dc.b` / `dc.w` / `dc.l` source in the disassembly's style: the 26-byte fmtune entry, six order lists with BASE-relative words and `$0000` restart, and the patterns, each with a comment listing its events |
 | cmdstream (.bin) | the same bytes as one binary: the 26-byte header, order lists, patterns; pointers are relative to the start of the file |
 
-## MIDI import → General MIDI
+## MIDI import → NHL 92
 
-`smf.js` reads format 0 and 1 files with PPQ timing (SMPTE timing is refused). `normalizeGm` produces the General MIDI song:
+Choosing a file in the import panel (or the sequencer's own Import MIDI button) converts it to an NHL 92 song and puts it in the sequencer, ready to edit; Undo brings back the previous song. Along the way `smf.js` reads format 0 and 1 files with PPQ timing (SMPTE timing is refused). `normalizeGm` produces the General MIDI song:
 
 - each note gets the program in force on its channel at its start (default 0); channel 10 is the drum kit;
 - drum notes outside 35–81 move to the nearest kit note, zero-length notes get one tick, exact duplicate notes are removed;
 - the tempo map is kept; controllers, pitch bend, bank select and sysex are ignored and counted in the report.
 
-The panel plays the result with the plain reference synth, saves it as a General MIDI file, or converts it for the sequencer.
+The import panel can also play the cleaned-up General MIDI song with the plain reference synth and save it as a General MIDI file.
 
-## GM → NHL 92 (`gmToNhl`, used by the import and the "Convert" button)
+## GM → NHL 92 (`gmToNhl`, the conversion every import goes through)
 
 1. **Grid.** One unit is a 16th note (a 32nd note if most onsets are off the 16th grid and the tempo allows it). The tempo is the nearest whole number of frames per unit, so the BPM changes slightly; the report gives both. Only the first tempo is used.
 2. **Mapping.** Each note goes through the GM → NHL 92 table: melodic notes by program (override, else family default), drum notes by the drum table. Drum notes that the table maps to a patch at a fixed pitch (the kick at MIDI 21, the snare at 30) take that pitch. Targets that are DAC samples can't be played by a song and are skipped.
