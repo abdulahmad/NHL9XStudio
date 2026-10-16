@@ -1,0 +1,41 @@
+{
+  "about": "NHLPA '93 (SNES) instruments <-> General MIDI. The game has no instrument names, so every row is a guess from the samples (measured length, loop, harmonics, noisiness) and from how the songs use them; nothing was auditioned. Edit by ear. Notes use MIDI = note index + 12 for every instrument (docs/NHL93S-SOUND.md).",
+  "sets": {
+    "boot": {
+      "0": { "program": 33, "why": "197 ms pluck, strongly periodic, played G#0-F2: electric bass (finger)" },
+      "1": { "drum": 36, "key": 19, "why": "124 ms low thump at one fixed key, 1027 uses on the drum parts: kick" },
+      "2": { "drum": 38, "key": 19, "why": "239 ms bright burst at one fixed key, 574 uses: snare" },
+      "3": { "program": 81, "why": "single-cycle loop, harmonics 1, .49, .27, .18: sawtooth lead" },
+      "4": { "program": 38, "why": "377 ms decaying pluck, played F1-D#3: synth bass 1" },
+      "5": { "drum": 42, "key": 19, "why": "43 ms bright tick at one fixed key, 900 uses: closed hi-hat" },
+      "6": { "program": 80, "why": "32-sample loop, harmonics 1, .34, .17: soft square lead" },
+      "7": { "program": 18, "why": "112-sample loop with an attack part, strong second harmonic, the main melodic voice of the organ songs: rock organ" },
+      "8": { "drum": 49, "key": 24, "why": "125 ms noise burst (zero crossings near 7 kHz), 50 uses: crash cymbal" }
+    },
+    "game": {
+      "10": { "program": 78, "why": "pure sine loop: the whistle effect: whistle" },
+      "11": { "program": 126, "why": "845 ms noise swell, the crowd cheer: applause" },
+      "27": { "program": 62, "why": "160-sample loop with strong 3rd, 4th and 8th harmonics, the lead of all four fanfares: synth brass 1" },
+      "28": { "drum": 39, "key": 23, "why": "112 ms noise burst at keys 13-23, the fanfares' drum part: hand clap" }
+    }
+  },
+  "families": {
+    "boot": { "bass": 0, "guitar": 4, "keys": 7, "lead": 3, "pad": 7, "fx": 6, "other": 3 },
+    "game": { "other": 27 }
+  },
+  "drums": {
+    "boot": {
+      "35": { "inst": 1, "key": 19 }, "36": { "inst": 1, "key": 19 },
+      "37": { "inst": 2, "key": 19 }, "38": { "inst": 2, "key": 19 }, "39": { "inst": 2, "key": 19 }, "40": { "inst": 2, "key": 19 },
+      "41": { "inst": 1, "key": 22 }, "43": { "inst": 1, "key": 24 }, "45": { "inst": 1, "key": 27 }, "47": { "inst": 1, "key": 30 }, "48": { "inst": 1, "key": 32 }, "50": { "inst": 1, "key": 34 },
+      "42": { "inst": 5, "key": 19 }, "44": { "inst": 5, "key": 19 }, "46": { "inst": 5, "key": 19 },
+      "49": { "inst": 8, "key": 24 }, "51": { "inst": 8, "key": 24 }, "52": { "inst": 8, "key": 24 }, "53": { "inst": 8, "key": 24 }, "55": { "inst": 8, "key": 24 }, "57": { "inst": 8, "key": 24 }, "59": { "inst": 8, "key": 24 }
+    },
+    "game": {
+      "35": { "inst": 28, "key": 13 }, "36": { "inst": 28, "key": 13 },
+      "38": { "inst": 28, "key": 23 }, "39": { "inst": 28, "key": 23 }, "40": { "inst": 28, "key": 23 },
+      "42": { "inst": 28, "key": 30 }, "44": { "inst": 28, "key": 30 }, "46": { "inst": 28, "key": 30 },
+      "49": { "inst": 28, "key": 36 }, "51": { "inst": 28, "key": 36 }, "57": { "inst": 28, "key": 36 }
+    }
+  }
+}
