@@ -80,6 +80,15 @@ The Sound test then plays song 4 of that copy with the same chain as the retail 
 | cmdstream (.asm) | `dc.b` / `dc.w` / `dc.l` source in the disassembly's style: the 26-byte fmtune entry, six order lists with BASE-relative words and `$0000` restart, and the patterns, each with a comment listing its events |
 | cmdstream (.bin) | the same bytes as one binary: the 26-byte header, order lists, patterns; pointers are relative to the start of the file |
 
+**Edited instruments** go into every export, and a song with no edits exports exactly as before:
+
+- MIDI (native): a marker per patch, `NHL92 patch id=6 bytes=<64 hex>`, restored on import.
+- `.asm`: a `dc.b` block per patch after the patterns.
+- `.bin`: a `PTCH` block after the patterns (`'PTCH'`, count, then id + 32 bytes each).
+- MIDI (GM): an edited note offset (byte 26) moves that patch's notes, as the driver does.
+
+See `lib/audio/patch-edits.js` and `test/patch-edits-export.js`.
+
 ## MIDI import → NHL 92
 
 A file written by **Export MIDI (native)** is recognised by its `NHL92 v1` marker and loaded as is (no GM mapping, nothing lost). Any other file goes through the conversion below.

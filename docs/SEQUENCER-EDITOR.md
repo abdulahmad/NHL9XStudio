@@ -138,8 +138,19 @@ patch the Instrument menu has selected.
   - An edited patch is marked `*` in the menu.
 - **PCM patches (96 and up)** on NHLPA 93 / NHL 94 are DAC samples, not FM, so they are not editable. The SNES games
   have no instrument editor yet: their instruments are BRR samples with ADSR.
-- **Exports.** The edits apply to live playback (Play and Audition). The exports write the retail patches; see the
-  game docs for any change to that.
+- **Note offset.** Only NHL 92 offers it. The NHLPA 93 / NHL 94 drivers do not read byte 26: an edited value
+  changes nothing they play (`test/patch-edits-export.js` checks both).
+- **Exports carry the edits** (`lib/audio/patch-edits.js`). A song with no edits exports byte for byte as before.
+  `test/patch-edits-export.js` pins the hashes of every retail song's exports taken before this change.
+  - **MIDI (native):** one marker per edited patch, `NHL92 patch id=6 bytes=<64 hex digits>` (`NHL9X …` on
+    93/94). Importing the file restores the edits with the notes.
+  - **.asm:** after the song, one `dc.b` block per edited patch (`<name>_patch6:`). On 93/94 the comment gives the
+    patch's ROM address.
+  - **.bin:** the song bytes, unchanged, then a `PTCH` block: `'PTCH'`, a count byte, then per patch its id and 32
+    bytes. A loader that follows the song's own pointers or end event never reaches it.
+  - **MIDI (GM) and Play as GM:** the conversion follows the edits. On NHL 92 an edited note offset moves that
+    patch's notes by the difference from the retail offset, as the driver does. On 93/94 the edited bank is used,
+    so a patch's bend range (byte `$1E`) scales its bends. The GM program is still chosen by patch number.
 
 ## SNES song editor (`public/sound-tools-snes.js`)
 

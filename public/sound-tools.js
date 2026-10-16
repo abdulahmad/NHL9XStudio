@@ -909,8 +909,9 @@
     function exportCmd(kind) {
       try {
         const built = buildOrExplain();
-        if (kind === 'asm') download(model.name + '.asm', S.toAsm(built, model.name), 'text/plain');
-        else download(model.name + '.nhl92song.bin', S.toBinary(built), 'application/octet-stream');
+        // Edited instruments ride along (an appended patch block); a song without edits exports as before.
+        if (kind === 'asm') download(model.name + '.asm', S.toAsm(built, model.name, model.song.patchEdits), 'text/plain');
+        else download(model.name + '.nhl92song.bin', S.toBinary(built, model.song.patchEdits), 'application/octet-stream');
       } catch (err) { info.textContent = String(err.message || err); }
     }
 
@@ -967,8 +968,8 @@
       const smf = mapped ? SongGm().toSmfSong(SongGm().nhlToGm(nhlSong, map).song) : SongGm().nhlToSmfSong(nhlSong, base);
       if (mapped) smf.name = base;
       download(base + (mapped ? '-gm' : '-fm') + '.mid', Smf().write(smf), 'audio/midi');
-    } else if (kind === 'asm') download(base + '.asm', S.toAsm(S.build(nhlSong), base), 'text/plain');
-    else download(base + '.nhl92song.bin', S.toBinary(S.build(nhlSong)), 'application/octet-stream');
+    } else if (kind === 'asm') download(base + '.asm', S.toAsm(S.build(nhlSong), base, nhlSong.patchEdits), 'text/plain');
+    else download(base + '.nhl92song.bin', S.toBinary(S.build(nhlSong), nhlSong.patchEdits), 'application/octet-stream');
   }
 
   root.NhlSoundTools = { render, model, readMidiFile, loadSong, exportSong, download };

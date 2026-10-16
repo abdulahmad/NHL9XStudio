@@ -738,7 +738,7 @@
         reset: (id) => edit(() => { if (song().patchEdits) delete song().patchEdits[id]; }),
         edited: (id) => !!(song().patchEdits && song().patchEdits[id]),
         label: (id) => 'FM ' + id + (map && map.patches.find((x) => x.patch === id) ? ' · ≈ ' + map.patches.find((x) => x.patch === id).target.name : ''),
-        hasNoteOffset: true,
+        hasNoteOffset: false, // the 93 / 94 drivers do not read byte 26 (an edited offset changes nothing they play)
         audition: async (id) => {
           const s = Stream().emptySong(game);
           const u = s.unit;
@@ -843,7 +843,7 @@
   function exportSongStream(song, name, kind) {
     const base = safeName(name);
     if (kind === 'asm') Tools().download(base + '.asm', Stream().toAsm(song, base), 'text/plain');
-    else Tools().download(base + '.nhl' + song.game + 'song.bin', Stream().encode(song, 0).bytes, 'application/octet-stream');
+    else Tools().download(base + '.nhl' + song.game + 'song.bin', Stream().toBinary(song), 'application/octet-stream');
   }
 
   root.NhlSoundToolsNx = { render, model, loadSong, exportSongStream };

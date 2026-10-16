@@ -1199,6 +1199,7 @@ require('./test/nhl92-gm-map');
 require('./test/nhl92-sequencer');
 require('./test/fingerprint-site');
 require('./test/editor-extras');
+require('./test/patch-edits-export');
 
 // Browser check (Playwright): every game in every mode at desktop and phone width, with no page errors, console errors
 // or error text. Skipped without Playwright; NHL_SKIP_BROWSER=1 skips it too. test/browser/editor-scrub.js runs on its own.
