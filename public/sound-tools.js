@@ -316,7 +316,11 @@
     canvas.id = 'se-canvas';
     canvas.setAttribute('role', 'img');
     canvas.setAttribute('aria-label', 'Piano roll editor for the six FM channels');
-    scroller.appendChild(canvas);
+    // The canvas is only as wide as the scroller and is moved along with it (a 100-bar song is far wider
+    // than a browser allows a canvas to be); `inner` gives the scroller its full width.
+    const inner = make('div', 'se-inner');
+    inner.appendChild(canvas);
+    scroller.appendChild(inner);
     box.appendChild(scroller);
 
     const messages = make('div', 'se-out');
@@ -385,19 +389,24 @@
     function draw() {
       const { units, w, h } = geometry();
       const dpr = Math.min(2, root.devicePixelRatio || 1);
-      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-        canvas.width = Math.round(w * dpr);
+      const viewW = Math.max(200, Math.min(w, scroller.clientWidth || 900));
+      const sx = Math.max(0, Math.min(scroller.scrollLeft, w - viewW));
+      inner.style.width = w + 'px';
+      inner.style.height = h + 'px';
+      if (canvas.width !== Math.round(viewW * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(viewW * dpr);
         canvas.height = Math.round(h * dpr);
-        canvas.style.width = w + 'px';
+        canvas.style.width = viewW + 'px';
         canvas.style.height = h + 'px';
       }
+      canvas.style.left = sx + 'px';
       const g = canvas.getContext('2d');
       const css = getComputedStyle(document.documentElement);
       const v = (n, f) => (css.getPropertyValue(n) || '').trim() || f;
       const C = { bg: v('--bg', '#101418'), panel: v('--raise', '#1a2129'), line: v('--line', '#33414d'), text: v('--text', '#e8eef3'), muted: v('--muted', '#8ea0b0') };
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.setTransform(dpr, 0, 0, dpr, -sx * dpr, 0); // world coordinates; the canvas shows [sx, sx + viewW]
       g.fillStyle = C.bg;
-      g.fillRect(0, 0, w, h);
+      g.fillRect(sx, 0, viewW, h);
       for (let m = MIDI_LO; m <= MIDI_HI; m++) {
         const y = (MIDI_HI - m) * ROW_H;
         if (BLACK.has(m % 12)) { g.fillStyle = C.panel; g.fillRect(GUTTER, y, w - GUTTER, ROW_H); }
@@ -409,10 +418,10 @@
           g.stroke();
           g.fillStyle = C.muted;
           g.font = '9px ui-monospace, monospace';
-          g.fillText(S.noteName(m), 3, y + ROW_H - 1);
+          g.fillText(S.noteName(m), sx + 3, y + ROW_H - 1);
         }
       }
-      for (let u = 0; u <= units; u++) {
+      for (let u = Math.max(0, Math.floor((sx - GUTTER) / model.zoom) - 1); u <= units && GUTTER + u * model.zoom <= sx + viewW; u++) {
         const x = GUTTER + u * model.zoom + 0.5;
         g.strokeStyle = C.line;
         g.globalAlpha = u % BAR === 0 ? 1 : u % 4 === 0 ? 0.55 : 0.2;
@@ -450,13 +459,17 @@
 
     function cellAt(ev) {
       const r = canvas.getBoundingClientRect();
-      const x = (ev.clientX - r.left) * (canvas.clientWidth ? canvas.width / canvas.clientWidth / (Math.min(2, root.devicePixelRatio || 1)) : 1);
-      const y = (ev.clientY - r.top) * (canvas.clientHeight ? canvas.height / canvas.clientHeight / (Math.min(2, root.devicePixelRatio || 1)) : 1);
+      const x = ev.clientX - r.left + (parseFloat(canvas.style.left) || 0);
+      const y = ev.clientY - r.top;
       const unit = Math.floor((x - GUTTER) / model.zoom);
       const midi = MIDI_HI - Math.floor(y / ROW_H);
       return { unit, midi };
     }
 
+    let scrollDraw = 0;
+    scroller.addEventListener('scroll', () => {
+      if (!scrollDraw) scrollDraw = root.requestAnimationFrame(() => { scrollDraw = 0; draw(); });
+    });
     canvas.addEventListener('pointermove', (ev) => {
       const c = cellAt(ev);
       hover.textContent = c.unit >= 0 && c.midi >= MIDI_LO && c.midi <= MIDI_HI
@@ -589,7 +602,18 @@
 
     afterChange();
     // Scroll the roll to the middle of the range on first show.
-    scroller.scrollTop = Math.max(0, (MIDI_HI - 76) * ROW_H);
+    // Open on the music: the first note of any channel, at the pitch range it uses (an imported song can start with rests).
+    {
+      const all = model.song.channels.flat();
+      if (all.length) {
+        const first = Math.min(...all.map((n) => n.unit));
+        const mids = all.filter((n) => n.unit < first + BAR * 8).map((n) => n.index + 12);
+        const mid = (Math.min(...mids) + Math.max(...mids)) / 2;
+        scroller.scrollLeft = Math.max(0, GUTTER + first * model.zoom - GUTTER - 20);
+        scroller.scrollTop = Math.max(0, (MIDI_HI - mid) * ROW_H - (scroller.clientHeight || 380) / 2);
+      } else scroller.scrollTop = Math.max(0, (MIDI_HI - 76) * ROW_H);
+    }
+    draw();
     // Keep the play button honest while the chain runs.
     const timer = setInterval(() => {
       if (!box.isConnected) { clearInterval(timer); return; }

@@ -474,7 +474,8 @@ select:focus, input:focus, button:focus-visible {
 .se-chan { padding: 3px 9px; font-size: 12px; border-left: 3px solid var(--ch, var(--line)); }
 .se-chan.is-on { border-color: var(--amber); color: var(--amber); border-left-color: var(--ch); }
 .se-scroll { max-height: 380px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0 12px; max-width: 920px; }
-.se-canvas { display: block; cursor: crosshair; }
+.se-inner { position: relative; }
+.se-canvas { display: block; position: absolute; top: 0; left: 0; cursor: crosshair; }
 .se-info, .se-hover { margin: 2px 0; }
 .se-report { margin: 4px 0 10px; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .se-out { max-width: 920px; }
