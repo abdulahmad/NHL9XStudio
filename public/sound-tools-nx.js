@@ -207,7 +207,7 @@
     const modeSel = make('select');
     modeSel.id = 'se-mode';
     modeSel.setAttribute('aria-label', 'What a click does');
-    [['notes', 'Click: notes'], ['bends', 'Click: pitch bends']].forEach(([v, t]) => modeSel.appendChild(Object.assign(make('option', null, t), { value: v })));
+    [['notes', 'Click: draw notes'], ['select', 'Click: select / move'], ['bends', 'Click: pitch bends']].forEach(([v, t]) => modeSel.appendChild(Object.assign(make('option', null, t), { value: v })));
     modeSel.addEventListener('change', () => { model.mode = modeSel.value; refreshTools(); draw(); });
     const selChan = button('Select channel', () => { model.sel = song().notes.filter((n) => n.ch === model.channel); refreshTools(); draw(); });
     selChan.id = 'se-sel-channel';
@@ -334,7 +334,7 @@
       const used = {};
       s.notes.forEach((n) => { if (n.ch === model.channel) used[n.patch] = (used[n.patch] || 0) + 1; });
       selInfo.textContent = 'CH' + (model.channel + 1) + ' instruments: ' + (Object.keys(used).map((p) => p + '×' + used[p]).join(' ') || 'none') + ' · ' + s.bends.filter((b) => b.ch === model.channel).length +
-        ' bends · ' + model.sel.length + ' selected' + (model.mode === 'bends' ? ' · click the roll: height sets the bend (middle = none, top/bottom = full range); click an existing bend to remove it' : ' · shift-click a note to select it');
+        ' bends · ' + model.sel.length + ' selected' + (model.mode === 'bends' ? ' · click the roll: height sets the bend (middle = none, top/bottom = full range); click an existing bend to remove it' : model.mode === 'select' ? ' · click or drag a box to select, drag a selected note to move it, arrows nudge, Delete removes, Esc clears' : ' · shift-click a note to select it (or use Click: select / move)');
       undoBtn.disabled = !model.undo.length;
       clearBends.disabled = !s.bends.length;
       const problems = [];
@@ -354,6 +354,7 @@
     };
     const px = () => model.zoom * 2; // pixels per grid unit
     const BLACK = new Set([1, 3, 6, 8, 10]);
+    let drag = null;
     function draw() {
       const { units, w, h } = geometry();
       const dpr = Math.min(2, root.devicePixelRatio || 1);
@@ -452,6 +453,20 @@
       g.lineWidth = 1.5;
       model.sel.forEach((n) => { if (n.note >= NOTE_LO && n.note <= NOTE_HI) g.strokeRect(GUTTER + (n.t / unitTicks()) * px() + 0.5, (NOTE_HI - n.note) * ROW_H + 0.5, Math.max(2, (n.dur / unitTicks()) * px() - 1), ROW_H - 1); });
       g.lineWidth = 1;
+      if (drag && drag.kind === 'move' && (drag.dt || drag.dn)) {
+        g.strokeStyle = '#fff';
+        g.setLineDash([3, 2]);
+        model.sel.forEach((n) => g.strokeRect(GUTTER + ((n.t / unitTicks()) + drag.dt) * px() + 0.5, (NOTE_HI - n.note - drag.dn) * ROW_H + 0.5, Math.max(2, (n.dur / unitTicks()) * px() - 1), ROW_H - 1));
+        g.setLineDash([]);
+      }
+      if (drag && drag.kind === 'band') {
+        const x = Math.min(drag.x0, drag.x1);
+        const y = Math.min(drag.y0, drag.y1);
+        g.fillStyle = 'rgba(255,255,255,0.12)';
+        g.fillRect(x, y, Math.abs(drag.x1 - drag.x0), Math.abs(drag.y1 - drag.y0));
+        g.strokeStyle = '#fff';
+        g.strokeRect(x + 0.5, y + 0.5, Math.abs(drag.x1 - drag.x0), Math.abs(drag.y1 - drag.y0));
+      }
     }
 
     function cellAt(ev) {
@@ -464,7 +479,136 @@
     scroller.addEventListener('scroll', () => {
       if (!scrollDraw) scrollDraw = root.requestAnimationFrame(() => { scrollDraw = 0; draw(); });
     });
+    const patchText = (p) => {
+      const e = map && map.patches.find((x) => x.patch === p);
+      return (p >= 96 ? 'PCM $' + p.toString(16).toUpperCase() : 'FM ' + p) + (e ? ' · ≈ ' + e.target.name : '');
+    };
+    const secs = (ticks) => (ticks / SongLib().VBLANK_HZ).toFixed(2) + ' s';
+    const tip = make('div', 'se-tip');
+    tip.hidden = true;
+    box.style.position = 'relative';
+    box.appendChild(tip);
+    const pos = (ev) => {
+      const r = canvas.getBoundingClientRect();
+      return { x: ev.clientX - r.left + (parseFloat(canvas.style.left) || 0), y: ev.clientY - r.top };
+    };
+    const noteAtXY = (x, y) => {
+      const t = ((x - GUTTER) / px()) * unitTicks();
+      const note = NOTE_HI - Math.floor(y / ROW_H);
+      return song().notes.find((n) => n.ch === model.channel && n.note === note && t >= n.t && t < n.t + n.dur) || null;
+    };
+    function showTip(n, ev) {
+      if (!n) { tip.hidden = true; return; }
+      const u = unitTicks();
+      const unit = n.t / u;
+      const bends = song().bends.filter((b) => b.ch === n.ch && b.t >= n.t && b.t < n.t + n.dur);
+      const before = song().bends.filter((b) => b.ch === n.ch && b.t <= n.t).pop();
+      const lines = [
+        noteName(n.note) + ' (MIDI ' + n.note + ') · channel ' + (n.ch + 1),
+        'Instrument ' + patchText(n.patch),
+        'Starts bar ' + (Math.floor(unit / BAR) + 1) + ' beat ' + (Math.floor((unit % BAR) / BEAT) + 1) + ' (' + secs(n.t) + ')',
+        'Length ' + (n.dur / u) + ' units (' + secs(n.dur) + ')',
+        'Velocity ' + n.vel,
+        'Pitch bend: ' + (before && before.value ? 'starts bent ' + before.value : 'starts straight') + (bends.length ? ' · ' + bends.length + ' change' + (bends.length > 1 ? 's' : '') + ' during the note (' + Math.min.apply(null, bends.map((b) => b.value)) + ' to ' + Math.max.apply(null, bends.map((b) => b.value)) + ')' : '')
+      ];
+      tip.textContent = lines.join('\n');
+      tip.hidden = false;
+      const br = box.getBoundingClientRect();
+      tip.style.left = Math.min(ev.clientX - br.left + 14, Math.max(0, br.width - 260)) + 'px';
+      tip.style.top = (ev.clientY - br.top + 18) + 'px';
+    }
+    canvas.addEventListener('pointerleave', () => { tip.hidden = true; });
+    canvas.addEventListener('pointerdown', (ev) => {
+      if (model.mode !== 'select' || ev.button !== 0) return;
+      const p = pos(ev);
+      const hit = noteAtXY(p.x, p.y);
+      scroller.focus({ preventScroll: true });
+      canvas.setPointerCapture(ev.pointerId);
+      tip.hidden = true;
+      if (hit) {
+        if (ev.shiftKey) {
+          const at = model.sel.indexOf(hit);
+          if (at >= 0) model.sel.splice(at, 1); else model.sel.push(hit);
+          drag = null;
+        } else {
+          if (model.sel.indexOf(hit) < 0) model.sel = [hit];
+          model.patch = hit.patch;
+          model.vel = hit.vel;
+          drag = { kind: 'move', x0: p.x, y0: p.y, dt: 0, dn: 0 };
+        }
+      } else {
+        drag = { kind: 'band', x0: p.x, y0: p.y, x1: p.x, y1: p.y, base: ev.shiftKey ? model.sel.slice() : [] };
+        if (!ev.shiftKey) model.sel = [];
+      }
+      refreshTools();
+      draw();
+    });
+    function dragMove(ev) {
+      const p = pos(ev);
+      if (drag.kind === 'move') {
+        let dt = Math.round((p.x - drag.x0) / px());
+        let dn = Math.round(-(p.y - drag.y0) / ROW_H);
+        const minUnit = Math.min.apply(null, model.sel.map((n) => n.t / unitTicks()));
+        dt = Math.max(dt, -Math.round(minUnit));
+        dn = Math.max(NOTE_LO - Math.min.apply(null, model.sel.map((n) => n.note)), Math.min(NOTE_HI - Math.max.apply(null, model.sel.map((n) => n.note)), dn));
+        drag.dt = dt;
+        drag.dn = dn;
+      } else {
+        drag.x1 = p.x;
+        drag.y1 = p.y;
+        const x0 = Math.min(drag.x0, drag.x1);
+        const x1 = Math.max(drag.x0, drag.x1);
+        const y0 = Math.min(drag.y0, drag.y1);
+        const y1 = Math.max(drag.y0, drag.y1);
+        const inside = song().notes.filter((n) => {
+          if (n.ch !== model.channel) return false;
+          const nx = GUTTER + (n.t / unitTicks()) * px();
+          const nw = (n.dur / unitTicks()) * px();
+          const ny = (NOTE_HI - n.note) * ROW_H;
+          return nx < x1 && nx + nw > x0 && ny < y1 && ny + ROW_H > y0;
+        });
+        model.sel = drag.base.concat(inside.filter((n) => drag.base.indexOf(n) < 0));
+      }
+      draw();
+    }
+    function nudge(dt, dn) {
+      if (!model.sel.length) return;
+      const minUnit = Math.min.apply(null, model.sel.map((n) => n.t / unitTicks()));
+      dt = Math.max(dt, -Math.round(minUnit));
+      dn = Math.max(NOTE_LO - Math.min.apply(null, model.sel.map((n) => n.note)), Math.min(NOTE_HI - Math.max.apply(null, model.sel.map((n) => n.note)), dn));
+      if (!dt && !dn) return;
+      edit(() => {
+        model.sel.forEach((n) => { n.t += dt * unitTicks(); n.note += dn; });
+        song().notes.sort((a, b) => a.t - b.t || a.ch - b.ch || a.note - b.note);
+      });
+    }
+    const endDrag = () => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      if (d.kind === 'move' && (d.dt || d.dn)) nudge(d.dt, d.dn);
+      else { refreshTools(); draw(); }
+    };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', () => { drag = null; draw(); });
+    scroller.tabIndex = 0;
+    scroller.addEventListener('keydown', (ev) => {
+      if (model.mode !== 'select') return;
+      const k = ev.key;
+      if ((k === 'Delete' || k === 'Backspace') && model.sel.length) { ev.preventDefault(); selDel.click(); }
+      else if (k === 'Escape') { model.sel = []; refreshTools(); draw(); }
+      else if ((k === 'a' || k === 'A') && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); selChan.click(); }
+      else if (model.sel.length && /^Arrow/.test(k)) {
+        ev.preventDefault();
+        const big = ev.shiftKey;
+        nudge(k === 'ArrowLeft' ? -1 : k === 'ArrowRight' ? 1 : 0, k === 'ArrowUp' ? (big ? 12 : 1) : k === 'ArrowDown' ? (big ? -12 : -1) : 0);
+      }
+    });
     canvas.addEventListener('pointermove', (ev) => {
+      if (drag) { dragMove(ev); return; }
+      const hitNote = noteAtXY(pos(ev).x, pos(ev).y);
+      showTip(hitNote, ev);
+      canvas.style.cursor = model.mode === 'select' ? (hitNote ? (model.sel.indexOf(hitNote) >= 0 ? 'move' : 'pointer') : 'default') : hitNote && model.mode === 'notes' ? 'pointer' : 'crosshair';
       const c = cellAt(ev);
       hover.textContent = c.unit >= 0 && c.note >= NOTE_LO && c.note <= NOTE_HI
         ? 'CH' + (model.channel + 1) + ' · ' + noteName(c.note) + ' (' + c.note + ') · bar ' + (Math.floor(c.unit / BAR) + 1) + ' beat ' + (Math.floor((c.unit % BAR) / BEAT) + 1) + ' · ' + (c.unit * unitTicks() / SongLib().VBLANK_HZ).toFixed(2) + ' s'
@@ -472,7 +616,7 @@
     });
     canvas.addEventListener('click', (ev) => {
       const { unit, note } = cellAt(ev);
-      if (unit < 0) return;
+      if (unit < 0 || model.mode === 'select') return;
       if (model.mode === 'bends') { bendClick(unit * unitTicks(), ev); return; }
       if (note < NOTE_LO || note > NOTE_HI) return;
       if (ev.shiftKey) { toggleSelect(unit * unitTicks(), note); return; }
