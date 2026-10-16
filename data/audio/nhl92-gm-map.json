@@ -54,7 +54,7 @@
       },
       {
         "patch": 5,
-        "character": "Harsh and dense. Feedback 7, flatness 0.33, strong partials from 0.5x to 6x the note, sustained. SngEOP FM2 and FM4 together (E3-E4 with E2-A3, 0.5 s notes) and long chords (1.3-3.2 s) in SngTitle.",
+        "character": "Harsh and dense. Feedback 7, flatness 0.33, strong partials from 0.5x to 6x the note, sustained. endofperiod FM2 and FM4 together (E3-E4 with E2-A3, 0.5 s notes) and long chords (1.3-3.2 s) in splash.",
         "target": {"kind":"program","program":30,"name":"Distortion Guitar"},
         "reason": "Noisy, harmonically dense and sustained, in the E2-A3 range as two parts moving together (power-chord pairs): a distorted rhythm voice. Weak spot: the same numbers fit a harsh organ or a brass stab.",
         "runnerUp": {"kind":"program","program":29,"name":"Overdriven Guitar"},
@@ -62,7 +62,7 @@
       },
       {
         "patch": 6,
-        "character": "Bright vibrato lead. Instant attack, sustained, tonal, strong partials at 1x, 1.5x and 3x the note. Vibrato and pitch envelope on 98% of its notes. FM3 and FM5 in SngEOP and SngTitle: 380 notes, D4-F#7 (median G5).",
+        "character": "Bright vibrato lead. Instant attack, sustained, tonal, strong partials at 1x, 1.5x and 3x the note. Vibrato and pitch envelope on 98% of its notes. FM3 and FM5 in endofperiod and splash: 380 notes, D4-F#7 (median G5).",
         "target": {"kind":"program","program":81,"name":"Lead 2 (sawtooth)"},
         "reason": "Melody-duet voice, sustained and bright with vibrato on nearly every note; the strong third harmonic points to a saw-like tone. The 1.5x partial gives it a brassy edge, hence the runner-up.",
         "runnerUp": {"kind":"program","program":62,"name":"Synth Brass 1"},
@@ -150,7 +150,7 @@
       },
       {
         "patch": 17,
-        "character": "Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. SngTitle, Reprise, EOG and PO: FM2 paired with FM4 (FM3 in PO), 1,360 notes cycling 3-7 pitches per part (D3-A4).",
+        "character": "Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. splash, Reprise, EOG and PO: FM2 paired with FM4 (FM3 in PO), 1,360 notes cycling 3-7 pitches per part (D3-A4).",
         "target": {"kind":"program","program":18,"name":"Rock Organ"},
         "reason": "A bright, sustained, harmonically dense tone playing repeated short figures in the middle register is the rock-organ role. Weak spot: dense and harsh like patch 5, so a guitar is also plausible.",
         "runnerUp": {"kind":"program","program":29,"name":"Overdriven Guitar"},
@@ -182,9 +182,9 @@
       },
       {
         "patch": 21,
-        "character": "Hollow high lead. Odd harmonics dominate (3x about as loud as the note, 2x 12 dB down), slow decay (-8 dB at key-off). Vibrato on 91% of notes. SngPO only, FM4 and FM5: 128 notes (A4-D7, median C6).",
+        "character": "Hollow high lead. Odd harmonics dominate (3x about as loud as the note, 2x 12 dB down), slow decay (-8 dB at key-off). Vibrato on 91% of notes. playofftree only, FM4 and FM5: 128 notes (A4-D7, median C6).",
         "target": {"kind":"program","program":80,"name":"Lead 1 (square)"},
-        "reason": "Odd-harmonic-heavy, hollow and sustained is the square-wave lead shape; it is the SngPO duet voice.",
+        "reason": "Odd-harmonic-heavy, hollow and sustained is the square-wave lead shape; it is the playofftree duet voice.",
         "runnerUp": {"kind":"program","program":73,"name":"Flute"},
         "confidence": "medium"
       }
@@ -366,7 +366,7 @@
         "program": 17,
         "name": "Percussive Organ",
         "target": {"kind":"patch","patch":17},
-        "reason": "Bright and sustained, with the repeated-figure organ role patch 17 has in SngTitle.",
+        "reason": "Bright and sustained, with the repeated-figure organ role patch 17 has in splash.",
         "runnerUp": {"kind":"patch","patch":2},
         "confidence": "low"
       },
@@ -390,7 +390,7 @@
         "program": 30,
         "name": "Distortion Guitar",
         "target": {"kind":"patch","patch":5},
-        "reason": "Noisy, dense, sustained, and played as paired low parts in SngEOP; the same patch the other table maps to this program.",
+        "reason": "Noisy, dense, sustained, and played as paired low parts in endofperiod; the same patch the other table maps to this program.",
         "runnerUp": {"kind":"patch","patch":17},
         "confidence": "medium"
       },

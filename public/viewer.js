@@ -81,6 +81,8 @@ const state = {
   query: '',
   audioId: '',
   soundTestItem: 'song-0',
+  openGroups: new Set(), // collapsible Audio lists (DAC samples, Instruments) the listener opened; closed by default
+  groupsInit: false,
   acc: 0,
   holdKey: '',
   holdLeft: null,
@@ -850,15 +852,39 @@ function renderSoundList(box, q) {
     box.appendChild(note);
     return;
   }
+  // A link to an item inside a collapsible list opens that list once, so the selection is visible.
+  if (!state.groupsInit && list.length) {
+    state.groupsInit = true;
+    const sel = list.find((e) => e.id === state[panel.key]);
+    if (sel && sel.collapsible) state.openGroups.add(sel.group);
+  }
   let group = '';
+  let open = true;
   for (const entry of list) {
     if (entry.group !== group) {
       group = entry.group;
-      const label = document.createElement('div');
-      label.className = 'group-label';
-      label.textContent = group;
+      // Collapsible lists are closed unless opened; a search shows every match.
+      open = !entry.collapsible || !!q || state.openGroups.has(group);
+      let label;
+      if (entry.collapsible) {
+        const name = group;
+        label = document.createElement('button');
+        label.type = 'button';
+        label.className = 'group-label is-toggle';
+        label.setAttribute('aria-expanded', open ? 'true' : 'false');
+        label.textContent = (open ? '▾ ' : '▸ ') + group + ' (' + list.filter((e) => e.group === group).length + ')';
+        label.addEventListener('click', () => {
+          if (state.openGroups.has(name)) state.openGroups.delete(name); else state.openGroups.add(name);
+          renderList();
+        });
+      } else {
+        label = document.createElement('div');
+        label.className = 'group-label';
+        label.textContent = group;
+      }
       box.appendChild(label);
     }
+    if (!open) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'item';

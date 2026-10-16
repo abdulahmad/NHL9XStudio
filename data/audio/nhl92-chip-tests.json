@@ -160,15 +160,15 @@
   "sfx": [
     {
       "rom": "$FD1C",
-      "name": "puckwall3",
-      "file": "sfx-fd1c-puckwall3.wav",
+      "name": "sam_hitboard1",
+      "file": "sfx-fd1c-sam_hitboard1.wav",
       "wav": "1bdec5aa422bee251454335a6750e09527122ab2686e968bfe9b050267fa8443",
       "log": "5815f312e0748a1a583fb3f6f0e3053933759c2659f2e506a2961a4d51cddeff"
     },
     {
       "rom": "$FD32",
-      "name": "id_3",
-      "file": "sfx-fd32-id_3.wav",
+      "name": "skating3",
+      "file": "sfx-fd32-skating3.wav",
       "wav": "ff68aab2c391813d89b1c9f2b429ae29b8839a08078cd68f4123f2613f711eec",
       "log": "50d9cecb37307b88dd8b24255c9dd047334c9dfba5eda642f8d04da80c50a800"
     },
@@ -181,106 +181,106 @@
     },
     {
       "rom": "$FD56",
-      "name": "whistle",
-      "file": "sfx-fd56-whistle.wav",
+      "name": "skating4",
+      "file": "sfx-fd56-skating4.wav",
       "wav": "3d1fe33e1feb96a2d61aea10c2fef81b8fab994f844d83f91aaccb9cc9b9ac50",
       "log": "dec9c8920777c2ba39fc167e6bdeaef86b2e67efcf9581cb89a31621e1f7f1e5"
     },
     {
       "rom": "$FD6A",
-      "name": "puckpost",
-      "file": "sfx-fd6a-puckpost.wav",
+      "name": "sam_hitboard2",
+      "file": "sfx-fd6a-sam_hitboard2.wav",
       "wav": "15597a0eb5f2f004908f0d7ecd3221e2b2bbbf70d49b4e80ee14091c40a7914e",
       "log": "d87104caffe22be81808f24b9e647831b9ccc1f820f367d7e2aef88bd6cf42f9"
     },
     {
       "rom": "$FD82",
-      "name": "puckice",
-      "file": "sfx-fd82-puckice.wav",
+      "name": "sam_hitboard3",
+      "file": "sfx-fd82-sam_hitboard3.wav",
       "wav": "28088ff8b11404eb7e448d4874c5681337ffda252ecb8057fb2d3eee40adb4ea",
       "log": "3780082a762692f2c8ab5763e257453179c035692fe7e806866831cfefe1416b"
     },
     {
       "rom": "$FD9A",
-      "name": "playerwall",
-      "file": "sfx-fd9a-playerwall.wav",
+      "name": "sam_hit1",
+      "file": "sfx-fd9a-sam_hit1.wav",
       "wav": "69fbb87c5184867ba0fa8f436e1183fc57732d594e38fbbe3f9bc14c9516249c",
       "log": "ed67bdf4f4590ab5f617df16264ccb5f80e45e6ede3ba39317f5e403e0ca16f0"
     },
     {
       "rom": "$FDAE",
-      "name": "check",
-      "file": "sfx-fdae-check.wav",
+      "name": "sam_hit2",
+      "file": "sfx-fdae-sam_hit2.wav",
       "wav": "18451e87e748525d46a70f371ae7dafcfc289857c9f4620a9882d774005ab152",
       "log": "c106d793bfb8f7c5d39c97dd5cdbe67a021543804ad95ef44622a0ac45479a68"
     },
     {
       "rom": "$FDC2",
-      "name": "check2",
-      "file": "sfx-fdc2-check2.wav",
+      "name": "sam_hit3",
+      "file": "sfx-fdc2-sam_hit3.wav",
       "wav": "8fa69561ea0dd1760ec0da767dcc32fe867031674f7711b75a23436b10ea9028",
       "log": "f890a81bdcd03d6acd016c3e9735dcf82983b8b4f67cce2fd571795e3e68c7f8"
     },
     {
       "rom": "$FDD6",
-      "name": "puckget",
-      "file": "sfx-fdd6-puckget.wav",
+      "name": "sam_pass1",
+      "file": "sfx-fdd6-sam_pass1.wav",
       "wav": "358b604f5650ba98224ed8d2b89fc97d3e413b9d98586596e4c426fff835fc7f",
       "log": "c53c9a23ab3297fb75175fba2aec0866dc7c95cc08e53d85741c831d7016272e"
     },
     {
       "rom": "$FDEA",
-      "name": "puckbody",
-      "file": "sfx-fdea-puckbody.wav",
+      "name": "sam_pass2",
+      "file": "sfx-fdea-sam_pass2.wav",
       "wav": "7c3f8e353fee71bc05362bad49fb05c11187e057a4fd44b2f8ab8bb5b7d9f114",
       "log": "c9fbb43f8e8f7f68881c433f032104039b56e1da426eff470501aa79f8cd2ce7"
     },
     {
       "rom": "$FDFE",
-      "name": "puckwall1",
-      "file": "sfx-fdfe-puckwall1.wav",
+      "name": "sam_puck2_slap",
+      "file": "sfx-fdfe-sam_puck2_slap.wav",
       "wav": "65768b35d03f4d1d5b495d823be5c8c978c0ee8497a48c1d6c9526d0700e1d89",
       "log": "6616e8c23ee97f727bd356ed9c588399823ba04b96a8892013171d70d4687646"
     },
     {
       "rom": "$FE12",
-      "name": "hithigh",
-      "file": "sfx-fe12-hithigh.wav",
+      "name": "sam_punch1",
+      "file": "sfx-fe12-sam_punch1.wav",
       "wav": "a8d4d957e36bdd615f58ed4883c56bcbfd20f01d5e575b3a53766b2a13c0c5b9",
       "log": "b28b66a56cf7bcde33fa849c5e227745a80c5a603e1628988965423f4106142d"
     },
     {
       "rom": "$FE26",
-      "name": "id_23",
-      "file": "sfx-fe26-id_23.wav",
+      "name": "sam_punch3",
+      "file": "sfx-fe26-sam_punch3.wav",
       "wav": "3c6181bf25f874cc9df25b3212acd3efe0129b0798bbda3fc975df3b586c84d3",
       "log": "1d07ba58e71c9824c8a55e67bc7fb8f792e462dee2fcce6632540afd1ed1f254"
     },
     {
       "rom": "$FE3A",
-      "name": "hitlow",
-      "file": "sfx-fe3a-hitlow.wav",
+      "name": "sam_punch2",
+      "file": "sfx-fe3a-sam_punch2.wav",
       "wav": "88e60a6d489ad9acf42e44537a8eae31aee63f0ba2aed37a4f5c90f5d208a009",
       "log": "975ac1e6034e52c61983513ed63658c25bbfac4bb44369b24cbd24a8b52ceded"
     },
     {
       "rom": "$FE4E",
-      "name": "crowdboo",
-      "file": "sfx-fe4e-crowdboo.wav",
+      "name": "sam_crowdgoal",
+      "file": "sfx-fe4e-sam_crowdgoal.wav",
       "wav": "49565e3e9a11aac6bd247fecb975ebdfd367684deea22900d26da1867ce05864",
       "log": "6b788af19e9d582b721ccc982d68999ab33e578680f15458495fbd967678a5c7"
     },
     {
       "rom": "$FE62",
-      "name": "oooh",
-      "file": "sfx-fe62-oooh.wav",
+      "name": "sam_booing",
+      "file": "sfx-fe62-sam_booing.wav",
       "wav": "92ad1dcd4bcd24baa25d4794f90d06b98cf0754848ec62db2139c83526adbf59",
       "log": "cf5f84b4f96bfafd0220d89f7cea72c87326978e1b47ea3840e834159841563d"
     },
     {
       "rom": "$FE76",
-      "name": "id_31",
-      "file": "sfx-fe76-id_31.wav",
+      "name": "oooh",
+      "file": "sfx-fe76-oooh.wav",
       "wav": "ece135d2b9c1719a3a913103f5bcb5020d0e2af00a5a28d7deda806b7d633afb",
       "log": "51f015255bd0b4dd5a7ff90255672e3051662e3fd58bb51814c1f721920093a9"
     }

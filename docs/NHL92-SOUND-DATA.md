@@ -37,11 +37,11 @@ There are 5 entries. The table ends at `$10315`, and the next byte is the start 
 
 | ID | Name | Entry | Tempo | Order lists ch0–ch5 |
 |---|---|---|---|---|
-| 0 | SngEOP | `$10294` | 7 | `$10568`, `$10580`, `$105B6`, `$1059C`, `$105CA`, `$105E0` |
-| 1 | SngTitle | `$102AE` | 6 | `$1040E`, `$1042E`, `$10472`, `$1044E`, `$104A4`, `$104D2` |
-| 2 | SngTitle reprise | `$102C8` | 6 | `$10426`, `$10446`, `$10498`, `$10468`, `$104C6`, `$10538` |
-| 3 | SngEOG | `$102E2` | 6 | `$10360`, `$10368`, `$1037C`, `$10372`, `$103AA`, `$103DE` |
-| 4 | SngPO | `$102FC` | 7 | `$10316`, `$10320`, `$1032E`, `$1033C`, `$1034C`, `$1035C` |
+| 0 | endofperiod | `$10294` | 7 | `$10568`, `$10580`, `$105B6`, `$1059C`, `$105CA`, `$105E0` |
+| 1 | splash | `$102AE` | 6 | `$1040E`, `$1042E`, `$10472`, `$1044E`, `$104A4`, `$104D2` |
+| 2 | unused | `$102C8` | 6 | `$10426`, `$10446`, `$10498`, `$10468`, `$104C6`, `$10538` |
+| 3 | endofgame | `$102E2` | 6 | `$10360`, `$10368`, `$1037C`, `$10372`, `$103AA`, `$103DE` |
+| 4 | playofftree | `$102FC` | 7 | `$10316`, `$10320`, `$1032E`, `$1033C`, `$1034C`, `$1035C` |
 
 The audio catalog in `lib/audio/genesis-constants.js` lists a sixth NHL 92 song, "In-game organ", and sets `fmtuneTracks: 6`. Entry 5 would start at `$10316`, which is order-list data, so ROM `$10294` holds no sixth song. This step doesn't change the catalog.
 
@@ -56,7 +56,7 @@ Each channel's list is a sequence of big-endian words. At song start the driver 
 | `$0002 n` | 4 | Repeat the previous pattern. With count `n` it plays `n + 1` times in total, then the list continues after the 4 bytes. |
 | anything else | 2 | Next pattern, BASE-relative. `movea.w` sign-extends, so the word must be below `$8000`; the parser checks this. |
 
-Five SngTitle lists (ch1–ch5, at `$1042E`, `$1044E`, `$10472`, `$104A4` and `$104D2`) have no `0` or `1` terminator. If the driver read past their last pattern, it would continue into the SngTitle reprise list stored right after. SngTitle ch0 ends with `$0001 $0002`, switching to song 2. The parser reports where each unterminated list would run into the next (`fallsInto`). Whether the other channels ever reach that point is a timing question for step 6.
+Five splash lists (ch1–ch5, at `$1042E`, `$1044E`, `$10472`, `$104A4` and `$104D2`) have no `0` or `1` terminator. If the driver read past their last pattern, it would continue into the unused-song list stored right after. splash ch0 ends with `$0001 $0002`, switching to song 2. The parser reports where each unterminated list would run into the next (`fallsInto`). Whether the other channels ever reach that point is a timing question for step 6.
 
 ## Patterns
 

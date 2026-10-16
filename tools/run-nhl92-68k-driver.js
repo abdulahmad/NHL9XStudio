@@ -48,7 +48,7 @@ function main() {
     fs.writeFileSync(path.join(outDir, name + '.log'), log);
     manifest.sfx.push({ id, frames, file: name + '.log', sha256: sha256(log) });
     const check = A.checkSfx(run, data);
-    summary.sfx.push(Object.assign({ name: names.name(id), handlerLabel: data.sfx[id].label, tableComment: names.TABLE_COMMENTS[id] }, check));
+    summary.sfx.push(Object.assign({ name: names.name(id), handlerLabel: data.sfx[id].label }, check));
     console.log(name, names.name(id), check.ok ? 'ok' : 'MISMATCH');
   }
   fs.writeFileSync(path.join(outDir, 'summary.json'), JSON.stringify(summary, null, 1) + '\n');

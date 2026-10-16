@@ -20,7 +20,7 @@
   <main>
     <p><a class="back" href="index.html">← NHL9X Studio</a></p>
     <h1>Chip lab</h1>
-    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Click a sound to hear it: the button lights up, click it again to stop. Audio starts on your first click (browser policy). Below, pick an NHL '92 instrument or SFX to hear it through the game's own driver.</p>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Click a sound to hear it: the button lights up, click it again to stop. Audio starts on your first click (browser policy). The NHL '92 instruments, DAC samples and General MIDI mapping audition are in the Audio section of NHL9X Studio (NHL 92).</p>
     <div class="chip-grid">
       <section class="chip-card" aria-labelledby="ym-title">
         <h2 id="ym-title">YM2612 (Genesis FM)</h2>
@@ -40,60 +40,11 @@
         <p class="meter" id="psg-meter">Engine idle</p>
       </section>
     </div>
-    <section class="chip-card nhl92-card" aria-labelledby="nhl92-title">
-      <h2 id="nhl92-title">NHL '92 instruments · retail Z80 driver → YM2612</h2>
-      <p class="hint">The game's own Z80 sound driver runs on the emulated Z80 and drives the YM2612 core. Patches are the 22 instruments at Z80 <code>$02A5</code>; SFX are the DAC samples the 68k can trigger. Rendered offline, then played.</p>
-      <div class="row">
-        <label>Patch <select id="nhl92-patch"></select></label>
-        <button type="button" class="primary" id="nhl92-play-patch">Play scale</button>
-      </div>
-      <div class="row">
-        <label>DAC SFX <select id="nhl92-sfx"></select></label>
-        <button type="button" id="nhl92-play-sfx">Play SFX</button>
-      </div>
-      <div class="row">
-        <a id="nhl92-download" class="download" hidden>Download WAV</a>
-      </div>
-      <p class="meter" id="nhl92-meter">Loading driver…</p>
-    </section>
-    <section class="chip-card nhl92-card" aria-labelledby="audition-title">
-      <h2 id="audition-title">Mapping audition · NHL '92 ↔ General MIDI</h2>
-      <p class="hint">Hear a pick next to its mapped sound. The NHL '92 side is the retail driver; the GM side is a basic stand-in synth, not a real GM sound set, so judge the NHL '92 sound against the <em>name</em>. Both sides play at the same level. Matches live in <code>data/audio/nhl92-gm-map.json</code>.</p>
-      <div class="row">
-        <label>Direction
-          <select id="aud-dir">
-            <option value="n2g">NHL '92 patch → GM</option>
-            <option value="g2n">GM program → NHL '92</option>
-            <option value="drum">GM drum → NHL '92</option>
-          </select>
-        </label>
-        <label>Pick <select id="aud-pick"></select></label>
-      </div>
-      <p class="hint" id="aud-info">Loading mapping…</p>
-      <div class="row">
-        <button type="button" class="primary" id="aud-both">Play pick, then match</button>
-        <button type="button" id="aud-a">Pick only</button>
-        <button type="button" id="aud-b">Match only</button>
-        <button type="button" id="aud-ru">Runner-up only</button>
-        <button type="button" id="aud-stop">Stop</button>
-      </div>
-      <p class="meter" id="aud-meter">Loading driver…</p>
-    </section>
     <p class="meter" id="status">Loading WASM…</p>
   </main>
   <script src="lib/audio/sn76489.js"></script>
   <script src="lib/audio/chip-lab-presets.js"></script>
   <script src="lib/audio/chip-resampler.js"></script>
-  <script src="lib/audio/z80-cpu.js"></script>
-  <script src="lib/audio/z80-cpu-core.js"></script>
-  <script src="lib/audio/nhl92-z80.js"></script>
-  <script src="lib/audio/nhl92-sound-fixture.js"></script>
-  <script src="lib/audio/nhl92-z80-harness.js"></script>
-  <script src="lib/audio/nhl92-z80-audio.js"></script>
-  <script src="lib/audio/wav.js"></script>
-  <script src="lib/audio/nhl92-gm-map.js"></script>
-  <script src="lib/audio/gm-reference.js"></script>
-  <script src="lib/audio/nhl92-gm-audition.js"></script>
   <script type="module" src="chip-lab.js"></script>
 </body>
 </html>

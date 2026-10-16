@@ -206,6 +206,15 @@ select:focus, input:focus, button:focus-visible {
   background: var(--raise);
   padding: 4px 0;
 }
+.group-label.is-toggle {
+  display: block;
+  width: calc(100% - 8px);
+  border: 0;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+.group-label.is-toggle:hover { color: var(--text); }
 .item {
   width: 100%;
   text-align: left;
