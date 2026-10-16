@@ -57,9 +57,34 @@ map, `data/audio/nhl9x-gm-map.json`, covers both (FM patches 0-31, PCM patches `
   songs; nothing was auditioned, so every entry carries a confidence and the file is meant to be edited by ear.
   `node test/nhl9x-song-gm.js` checks it.
 
+## Sequencer, MIDI import and pitch bends
+
+- **Sequencer · new NHL 93/94 song** and **MIDI import → NHL 93/94** are the first two entries of the Sound test list
+  (`public/sound-tools-nx.js`, model and encoder in `lib/audio/nhl9x-stream.js`). A song is up to eight channels
+  (the driver keeps eight per song) of notes on a grid of vblanks, each note with a patch (32 FM patches or the PCM
+  drum samples) and a velocity. Click to add or remove a note, pick the channel, instrument, length and velocity, set
+  the grid, the length in bars and a loop bar. **Start from…** copies a retail song; every retail song panel also has
+  **Edit in sequencer**.
+- **Play** encodes the song, appends it to a COPY of the sound slice and points one song-table entry (the last song:
+  `$37` / `$7A`) at it, then runs the retail 68k + Z80 drivers on the copy. Every retail byte is untouched (a test
+  compares them). NHLPA 93's table holds signed 16-bit offsets, which is fine because only the start offset has to fit.
+- **Export:** MIDI (GM), and the event stream as `.asm` (a comment per event) or `.bin`. A loop is an absolute ROM
+  address in the stream; relocate it if you place the stream somewhere else.
+- **Import:** a GM file goes through the GM → NHL 93/94 table (`gmToNhl` in `nhl9x-gm-map.json`: an exact program match
+  from the patch map, else the family's patch; drums become the FM thump, the noise burst or the PCM big-hit sample).
+  Channels beyond eight are merged, chords are thinned to the driver's five FM voices, notes are moved by octaves into
+  12-95, repeated notes of one key are cut, and the report lists what changed.
+- **Pitch bends** are read from MIDI (with the channel's RPN 0 range), written to MIDI (RPN 0 is set to fit), played
+  by the reference synth, kept when a retail song is copied, and exported in the stream. The driver bends by
+  +-(patch byte `$1E`) semitones over the 14-bit range (PCM patches: 12), so import rescales a bend in semitones to
+  the patch in force and clamps what does not fit. The editor does not draw or edit bends note by note: it shows a tick
+  for each, keeps them, and can clear them.
+- **Loop timing:** when a stream loops, its target event fires the moment the end event is reached (its own delay is
+  not waited again); `parse()` reports the target event's time as `loopTick`.
+
 ## Not done yet
 
-- The sequencer and stream export for 93/94 (the sequencer is NHL 92 only).
+- Editing pitch bends, per-note volume changes and the volume controller in the sequencer (they are kept, not edited).
 - NHLPA 93 Rev A (`1992.OCT`, runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled; the
   slice is the retail v1.1 ROM. PAL timing is not modelled.
 - The Audio tab (old square-wave sketch) is hidden for these two games, like NHL 92.
