@@ -1112,7 +1112,7 @@
           raw.name + ' → ' + (rep.native ? 'native file, read back exactly' : 'GM file'),
           rep.tracks + ' tracks, ' + rep.notes + ' notes' + (rep.seconds ? ', ' + rep.seconds.toFixed(1) + ' s' : '') + ', sample set: ' + snesImport.set,
           r.bytes.length + (s93 ? ' bytes of sequence data at $' + r.base.toString(16).toUpperCase() + ' (' + r.report.capacity + ' free), played as cue 7' : ' bytes in the game\'s song format')
-        ].concat(rep.warnings.map((w) => '! ' + w)).join('\n');
+        ].concat(rep.compressed ? ['too long for the free sound RAM as written: ' + rep.compressed.from + ' → ' + rep.compressed.to + ' bytes with ' + rep.compressed.patterns + ' repeated patterns'] : [], rep.warnings.map((w) => '! ' + w)).join('\n');
         play.disabled = false;
         saveBin.disabled = false;
         if (live && live.id === id) stop();

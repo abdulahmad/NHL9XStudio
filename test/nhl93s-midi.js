@@ -97,4 +97,53 @@ for (const cue of [4, 1]) {
   const tl = d.timeline(7, { loops: 0, ram: d.customImage('boot', r.bytes, r.base, 7) });
   assert.strictEqual(tl.events.filter((e) => e.type === 'note' || e.type === 'percussion').length, 32);
 }
+// --- 6. pattern compression: a song too big for its RAM is squeezed with pattern calls and plays the same ---
+{
+  const lastTail = (a) => a.slice(0, -1); // the final note may lose its 2-tick key-off tail (see 1)
+  for (const [cue, share] of [[4, 0.65], [8, 0.9], [1, 0.6]]) {
+    const info = d.cueList.find((c) => c.cue === cue);
+    const model = Midi.fromSmf(Midi.toSmf(d, gm, cue, { native: true }), d, gm, {}).model;
+    const flat = Midi.buildSong(model, Midi.BASE[info.set]);
+    const cap = Math.floor(flat.size * share);
+    const packed = Midi.buildSong(model, Midi.BASE[info.set], { capacity: cap });
+    assert.ok(packed.patterns > 0 && packed.size <= cap, 'cue ' + cue + ': ' + flat.size + ' -> ' + packed.size + ' (limit ' + cap + ')');
+    const a = noteSig(d.timeline(7, { loops: 0, ram: d.customImage(info.set, flat.bytes, flat.base, 7) }));
+    const b = noteSig(d.timeline(7, { loops: 0, ram: d.customImage(info.set, packed.bytes, packed.base, 7) }));
+    assert.deepStrictEqual(b, a, 'cue ' + cue + ' plays the same compressed');
+  }
+  // and in the retail program: every key-on of a compressed song is where the timeline puts it
+  const info = d.cueList.find((c) => c.cue === 5);
+  const model = Midi.fromSmf(Midi.toSmf(d, gm, 5, { native: true }), d, gm, {}).model;
+  const packed = Midi.buildSong(model, Midi.BASE.game, { capacity: 300 });
+  assert.ok(packed.patterns > 0);
+  const p = Player.create({ data: d });
+  p.playCustom('game', packed.bytes, packed.base);
+  p.runFrame();
+  p.runFrame();
+  const cpu = p.spc.cpu;
+  const emu = [];
+  let ticks = 0;
+  const end = p.spc.cycles + 5 * 1024000;
+  while (p.spc.cycles < end) {
+    const pc = cpu.pc;
+    if (pc === 0x664) ticks += 1;
+    else if (pc === 0x4e3 && cpu.y < 0xc8) emu.push({ tick: ticks, ch: cpu.x >> 1, code: cpu.y });
+    p.spc.step();
+  }
+  const mine = d.timeline(7, { loops: 0, ram: d.customImage('game', packed.bytes, packed.base, 7) }).events.filter((e) => e.type === 'note');
+  const t0 = emu[0].tick;
+  assert.ok(emu.length > 20 && mine.length > 20);
+  mine.slice(0, emu.length).forEach((e, i) => {
+    assert.strictEqual(emu[i].tick - t0, e.tick, 'compressed note ' + i);
+    assert.strictEqual(emu[i].ch, e.ch);
+    assert.strictEqual(emu[i].code, e.code);
+  });
+  // a long repetitive GM file for the game set (4.6 KB free) fits once compressed, and says so
+  const lead = [];
+  for (let bar = 0; bar < 400; bar++) for (let i = 0; i < 8; i++) lead.push({ tick: (bar * 8 + i) * 120, dur: 100, pitch: 55 + ((i * 3) % 7), vel: 100 });
+  const big = Smf.write({ ppq: 480, tempos: [{ tick: 0, bpm: 120 }], tracks: [{ ch: 0, program: 80, name: 'lead', notes: lead }] });
+  const r = Midi.fromSmf(big, d, gm, { set: 'game' });
+  assert.ok(r.report.compressed && r.report.compressed.from > r.report.capacity, 'it needed compressing: ' + JSON.stringify(r.report.compressed));
+  assert.ok(!r.report.tooBig && r.bytes.length <= r.report.capacity);
+}
 console.log('nhl93s-midi: ok');

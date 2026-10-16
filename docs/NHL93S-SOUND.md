@@ -41,7 +41,7 @@ Verified against the retail program on the SPC700 core: every key-on (tick, chan
 - **Export (GM)**: one track per channel, notes with GM programs / drum notes from the map, tempo map.
 - **Export (native)**: real notes plus `n93:` markers carrying every command, so import gives the same song back.
 - **Export song (.bin)**: the flattened song as two upload blocks (song bytes + the cue 7 pointer).
-- **Import**: a GM or native file becomes a song for the boot set (at `$8000`, 30464 B free) or the game set (at `$E500`, 4608 B free). Notes are allocated to the 8 voices (the earliest note is cut with a warning), octaves are folded into the 6-octave range. The song replaces cue 7 (unused in the game) and is played by the real program. Songs larger than the free RAM are reported and not loaded (no pattern compression yet).
+- **Import**: a GM or native file becomes a song for the boot set (at `$8000`, 30464 B free) or the game set (at `$E500`, 4608 B free). Notes are allocated to the 8 voices (the earliest note is cut with a warning), octaves are folded into the 6-octave range. The song replaces cue 7 (unused in the game) and is played by the real program. A song larger than the free RAM is squeezed with the sequencer's pattern call (`$EF addr16 count`): repeated runs of records become patterns shared by all channels (greedy, longest gain first, only as far as needed; no nested calls, the program keeps one return address), and the report says how much it saved. Only if that still does not fit is it reported and not loaded.
 
 ## Not covered
 
