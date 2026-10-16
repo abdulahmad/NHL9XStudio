@@ -38,6 +38,10 @@ Every retail track ends with a stop or a loop, and the retail tool leaves paddin
 
 `data/audio/nhl94s-gm-map.json` is built from measured probe notes, the sample names and how the retail songs use each sound entry, with a reason, confidence and runner-up for each (see [SNES-GM-MAP.md](SNES-GM-MAP.md)). Change it to change both export and import. It does not touch the game's data.
 
+## Sound effects as MIDI
+
+`lib/audio/snes-sfx-midi.js` plays a sound entry through the SPC700 program, logs the S-DSP voice writes and writes them as a MIDI file (notes, pitch bends, drum entries on channel 10). The six streamed game-set effects (22-27) are not exported. Same method as '93: see [NHL93S-SOUND.md](NHL93S-SOUND.md#effects-as-midi).
+
 ## Not done
 
 Volume controller and pan from the MIDI file (`$DE` / `$DF` are written only by native import), several sound entries per GM program with panning, and editing songs in a sequencer view.
