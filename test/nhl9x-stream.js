@@ -175,4 +175,57 @@ for (const g of [93, 94]) {
   })().catch((e) => { console.error(e); process.exit(1); });
 }
 
+// 6. Per-channel mute (the roll's lane click): the taps still see every write, the chip makes no sound.
+(async () => {
+  const ym = require('../lib/audio/ym2612-wasm');
+  const run = async (mute) => {
+    const chip = await ym.createChip();
+    try {
+      let taps = 0;
+      const chain = Chain.create({ rom: roms[94], driver: DRIVER[94], chip, keepLogs: false, onYmWrite() { taps++; } });
+      for (let c = 0; c < 6; c++) if (mute[c]) chain.setChannelMute(c, true);
+      chain.step(null);
+      chain.step([{ song: 0x30 }]);
+      for (let f = 2; f < 200; f++) chain.step(null);
+      const pcm = chain.take();
+      let peak = 0;
+      for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
+      return { taps, peak };
+    } finally { chip.dispose(); }
+  };
+  const open = await run([]);
+  const all = await run([true, true, true, true, true, true]);
+  const one = await run([true, false, false, false, false, false]);
+  assert.strictEqual(all.taps, open.taps, 'taps see every write');
+  assert.ok(open.peak > 3000, 'unmuted song is audible');
+  assert.ok(all.peak < open.peak / 8, 'all FM channels muted is much quieter (' + all.peak + ' vs ' + open.peak + ')');
+  assert.ok(one.peak > 0, 'muting one channel keeps the others');
+  console.log('nhl9x-stream: ok');
+})().catch((e) => { console.error(e); process.exit(1); });
+
 console.log('nhl9x-stream: ok');
+
+// --- Native MIDI: every retail song of both games survives export and import -----------------------
+{
+  const Smf = require('../lib/audio/smf');
+  const key = (s) => JSON.stringify([s.ticks, s.loopTick, s.notes.map((x) => [x.t, x.dur, x.ch, x.note, x.vel, x.patch].join()).sort(), s.bends.map((x) => [x.t, x.ch, x.value].join()).sort()]);
+  let songs = 0;
+  let mixed = 0;
+  for (const g of [93, 94]) {
+    for (let id = 0; id < Song.GAMES[g].count; id++) {
+      const a = Stream.fromStream(g, slices[g], id);
+      if (!a.notes.length) continue;
+      const b = Stream.fromSmfNative(Smf.parse(Smf.write(Stream.toSmfNative(a))));
+      assert.ok(b, 'native header');
+      assert.strictEqual(b.song.game, g);
+      assert.strictEqual(key(b.song), key(a), g + ' $' + id.toString(16) + ' survives the native MIDI round trip');
+      songs++;
+      const per = {};
+      a.notes.forEach((n) => { (per[n.ch] = per[n.ch] || new Set()).add(n.patch); });
+      if (Object.keys(per).some((c) => per[c].size > 1)) mixed++;
+    }
+  }
+  assert.ok(songs > 150 && mixed >= 1, 'songs ' + songs + ', with several instruments on one channel ' + mixed);
+  assert.strictEqual(Stream.fromSmfNative(Smf.parse(Smf.write(SongGm.toSmfSong(Stream.toGm(Stream.emptySong(94), map, Song.patches(94, slices[94])).song)))), null, 'a GM file has no native header');
+  console.log('nhl9x-stream: native MIDI round trip of ' + songs + ' retail songs OK (' + mixed + ' with several instruments on one channel)');
+}

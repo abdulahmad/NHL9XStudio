@@ -295,3 +295,59 @@ let patchBursts = 0;
   assert.deepStrictEqual(fast.tr.notes.map((n) => [n.ch, n.t0, n.t1]), plain.tr.notes.map((n) => [n.ch, n.t0, n.t1]));
   console.log('nhl92 sequencer: FM SFX convert to GM notes, DAC-only SFX give none, muting changes no chip writes OK');
 }
+
+// --- Effects: modulation, pitch envelopes, legato, no-key-off ------------------------------------
+{
+  const canon = (s) => JSON.stringify(s, (k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a, key) => { a[key] = v[key]; return a; }, {}) : v));
+  let fxNotes = 0;
+  for (let id = 0; id < 5; id++) {
+    const song = Song.fromParsed(data, id);
+    song.channels.forEach((c) => c.forEach((n) => { if (n.mod || n.env) fxNotes++; }));
+    // Native MIDI round trip: notes, instruments and every effect come back unchanged.
+    const bytes = Smf.write(SongGm.nhlToSmfSong(song, 'x'));
+    const back = SongGm.nhlFromNativeSmf(Smf.parse(bytes));
+    assert.ok(back, 'native header found');
+    assert.strictEqual(canon(back.song.channels), canon(song.channels), 'song ' + id + ' survives the native MIDI round trip');
+    assert.strictEqual(back.song.tempo, song.tempo);
+  }
+  assert.ok(fxNotes > 500, 'the retail songs carry modulation / envelope notes (' + fxNotes + ')');
+  assert.strictEqual(SongGm.nhlFromNativeSmf(Smf.parse(Smf.write(SongGm.toSmfSong(SongGm.nhlToGm(Song.fromParsed(data, 0), map).song)))), null, 'a GM file has no native header');
+
+  // A rebuilt retail song writes the same F-number and key registers as the retail song, effects included.
+  const regs = (romBytes, id, frames) => {
+    const out = [];
+    let latch = 0;
+    const chain = Chain.create({ rom: romBytes, keepLogs: false, onYmWrite: (t, port, v) => { if (port === 0 || port === 2) latch = v; else if ((latch >= 0xa0 && latch <= 0xa6 && v !== 0) || latch === 0x28) out.push((port > 1 ? 1 : 0) + ':' + latch + ':' + v); }, onPsgWrite: () => {}, onYmReset: () => {} });
+    const plan = Chain.songPlan(id, frames);
+    for (let f = 0; f < plan.frames; f++) chain.step(plan.calls[f] || null);
+    return out;
+  };
+  const perReg = (list) => { const m = {}; list.forEach((x) => { const k = x.slice(0, x.lastIndexOf(':')); (m[k] = m[k] || []).push(x.slice(x.lastIndexOf(':') + 1)); }); return m; };
+  for (const id of [0, 1, 3]) {
+    const built = Song.build(Song.fromParsed(data, id));
+    const a = perReg(regs(rom, id, 500));
+    const b = perReg(regs(Song.romWithSong(rom, built), 4, 500));
+    Object.keys(a).filter((k) => !k.endsWith(':40')).forEach((k) => assert.deepStrictEqual(b[k], a[k], 'song ' + id + ' register ' + k + ' (modulation and envelopes included) matches the retail song'));
+  }
+
+  // Effects reach the cmdstream as the driver's commands, and change what the driver plays.
+  const plain = Song.emptySong(6);
+  plain.channels[0] = [{ unit: 0, len: 8, index: 40, patch: 3 }, { unit: 8, len: 8, index: 40, patch: 3 }];
+  plain.units = 16;
+  const fx = JSON.parse(JSON.stringify(plain));
+  fx.channels[0][0].mod = { delay: 8, delta: 6 };
+  fx.channels[0][1].env = { id: 1, speed: -128 };
+  fx.channels[0][1].legato = true;
+  fx.channels[0][1].noKeyOff = true;
+  const bp = Song.build(plain).channels[0].patterns[0];
+  const bf = Song.build(fx).channels[0].patterns[0];
+  assert.ok(!bp.some((b) => b === 0x81 || b === 0x86), 'no effects, no commands');
+  const at = bf.indexOf(0x81);
+  assert.deepStrictEqual(bf.slice(at, at + 3), [0x81, 8, 6], 'modulation: $81 delay delta');
+  const ae = bf.indexOf(0x86);
+  assert.deepStrictEqual(bf.slice(ae, ae + 3), [0x86, 1, 0x80], 'envelope: $86 id speed');
+  assert.ok(bf.includes(0x83) && bf.includes(0x89), 'legato $83 and no-key-off $89');
+  assert.notDeepStrictEqual(perReg(regs(Song.romWithSong(rom, Song.build(fx)), 4, 120)), perReg(regs(Song.romWithSong(rom, Song.build(plain)), 4, 120)), 'effects change the F-number writes');
+  assert.ok(Song.build(Object.assign({}, fx, { channels: [[Object.assign({}, fx.channels[0][0], { mod: { delay: 0, delta: 3 } })], [], [], [], [], []] })).problems.some((p) => /modulation/.test(p)), 'bad modulation is reported');
+  console.log('nhl92 sequencer: modulation, envelopes, legato and no-key-off encode as cmdstream commands, round trip through native MIDI, and drive the same registers as the retail songs OK');
+}

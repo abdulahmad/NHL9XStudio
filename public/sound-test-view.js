@@ -35,6 +35,7 @@
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
   let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
+  const chMuted = [false, false, false, false, false, false]; // roll lanes the listener muted (click a lane); kept across plays
   let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
@@ -320,6 +321,7 @@
     const tracker = root.YmNoteTracker.create();
     // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
     const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false, driver: isNx() ? root[NX[game].driver] : undefined }, taps(tracker)));
+    chMuted.forEach((m, i) => { if (m) chain.setChannelMute(i, true); });
     return { chip, chain, tracker, held: new Array(6).fill(null) };
   }
 
@@ -642,7 +644,7 @@
       mountRoll(container) {
         if (roll) roll.destroy();
         roll = root.NhlSoundRoll && root.YmNoteTracker
-          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel, dacLabel })
+          ? root.NhlSoundRoll.mount(container, { chain: Chain(), state: seqState, patchLabel, dacLabel, isMuted: (i) => chMuted[i], onToggle: toggleChannel })
           : null;
         return roll;
       }
@@ -720,6 +722,12 @@
     const entry = nxMap.patches.find((e) => e.sig && e.patch !== 103 && fits(e.sig));
     if (!entry) return null;
     return '$' + entry.patch.toString(16).toUpperCase() + (entry.target ? ' · ' + entry.target.name : '');
+  }
+
+  /** Click on a roll lane: mute or unmute that FM channel in the live chain (and in later plays). */
+  function toggleChannel(i) {
+    chMuted[i] = !chMuted[i];
+    if (live && live.chain && live.chain.setChannelMute) live.chain.setChannelMute(i, chMuted[i]);
   }
 
   /** Lane label for a patch burst the tracker saw: the retail patch and the GM sound its mapping names. */
@@ -1023,6 +1031,17 @@
         });
         ex.appendChild(edit);
         ex.appendChild(b);
+        const nat = make('button', 'ghost-btn', 'Export MIDI (native)');
+        nat.type = 'button';
+        nat.title = 'Standard MIDI file with one track per channel; patches and pitch bends ride in marker events so the sequencer reads it back exactly';
+        nat.addEventListener('click', () => {
+          try {
+            const smf = root.Nhl9xStream.toSmfNative(model());
+            smf.name = nm;
+            root.NhlSoundTools.download(nm + '-native.mid', root.Nhl92Smf.write(smf), 'audio/midi');
+          } catch (err) { fail('Export MIDI (native)')(err); }
+        });
+        ex.appendChild(nat);
         [['asm', 'Export stream (.asm)', 'The song\'s event stream as source, one comment per event (the loop address is absolute: relocate it)'], ['bin', 'Export stream (.bin)', 'The song\'s event stream as bytes']].forEach(([kind, text, tip]) => {
           const x = make('button', 'ghost-btn', text);
           x.type = 'button';
@@ -1053,7 +1072,7 @@
           host().openItem(TOOL_EDITOR);
         });
         add('Export MIDI (GM)', 'Standard MIDI file with General MIDI sounds chosen by the NHL 92 → GM table', () => root.NhlSoundTools.exportSong(song(), name, 'midi-gm', gmMap));
-        add('Export MIDI (FM tracks)', 'Standard MIDI file with one track per FM channel and the NHL 92 patch numbers as program changes', () => root.NhlSoundTools.exportSong(song(), name, 'midi-fm', gmMap));
+        add('Export MIDI (native)', 'Standard MIDI file with one track per FM channel; the NHL 92 patches and effects ride in marker events so the sequencer reads it back exactly', () => root.NhlSoundTools.exportSong(song(), name, 'midi-fm', gmMap));
         add('Export cmdstream (.asm)', 'The song rebuilt as NHL 92 cmdstream source (see docs/NHL92-SEQUENCER.md)', () => root.NhlSoundTools.exportSong(song(), name, 'asm', gmMap));
         add('Export cmdstream (.bin)', 'The song rebuilt as NHL 92 cmdstream bytes', () => root.NhlSoundTools.exportSong(song(), name, 'bin', gmMap));
       } else if (gmMap && !sfxIsDacOnly(n)) {
@@ -1107,7 +1126,7 @@
     if (root.NhlSoundRoll && root.YmNoteTracker) {
       const seq = make('div', 'st-seq');
       box.appendChild(seq);
-      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel, dacLabel });
+      roll = root.NhlSoundRoll.mount(seq, { chain: Chain(), state: seqState, patchLabel, dacLabel, isMuted: (i) => chMuted[i], onToggle: toggleChannel });
     }
 
     box.appendChild(make('p', 'st-note', describe(id)));

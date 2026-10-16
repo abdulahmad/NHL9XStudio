@@ -51,7 +51,7 @@
   };
 
   // State kept while you move around the Sound test: one song per game.
-  const model = { songs: {}, names: {}, undo: [], channel: 0, patch: 11, len: 4, vel: 100, zoom: 4, report: [], loaded: {} };
+  const model = { songs: {}, names: {}, undo: [], channel: 0, patch: 11, len: 4, vel: 100, zoom: 4, report: [], loaded: {}, sel: [], mode: 'notes' };
 
   function songFor(game) {
     if (!model.songs[game]) {
@@ -99,6 +99,13 @@
       out.replaceChildren(make('p', 'st-status', 'Reading ' + file.name + '…'));
       try {
         const r = await Tools().readMidiFile(file);
+        const native = Stream().fromSmfNative(r.parsed);
+        if (native) {
+          native.song.game = gameOf(host);
+          loadSong(gameOf(host), native.song, r.name, native.report);
+          host.openItem('tool-editor');
+          return;
+        }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
         const conv = Stream().fromGm(r.gm, host.map, gameOf(host), host.bank);
         loadSong(gameOf(host), conv.song, r.name, r.report.concat(conv.report));
@@ -177,7 +184,10 @@
       const e = map && map.patches.find((x) => x.patch === p);
       patchSel.appendChild(Object.assign(make('option', null, (p >= 96 ? 'PCM $' + p.toString(16).toUpperCase() : 'FM ' + p) + (e ? ' · ≈ ' + e.target.name : '')), { value: String(p) }));
     });
-    patchSel.addEventListener('change', () => { model.patch = Number(patchSel.value); });
+    patchSel.addEventListener('change', () => {
+      model.patch = Number(patchSel.value);
+      if (model.sel.length) edit(() => model.sel.forEach((n) => { n.patch = model.patch; }));
+    });
     const lenSel = make('select');
     lenSel.id = 'se-len';
     lenSel.setAttribute('aria-label', 'Note length in grid units');
@@ -192,6 +202,34 @@
     velIn.addEventListener('change', () => { model.vel = Math.max(1, Math.min(127, Math.round(Number(velIn.value) || 100))); velIn.value = String(model.vel); });
     row2.append(chanBox, lab('Instrument', patchSel), lab('Length', lenSel), lab('Velocity', velIn));
     box.appendChild(row2);
+
+    // Selection and pitch bends. A channel can use any number of instruments: every note carries its own, the encoder
+    // writes a patch event wherever the channel's instrument changes. Shift-click selects notes; changing the Instrument
+    // above then re-instruments the selection.
+    const rowSel = make('div', 'st-controls se-bar se-fx');
+    const modeSel = make('select');
+    modeSel.id = 'se-mode';
+    modeSel.setAttribute('aria-label', 'What a click does');
+    [['notes', 'Click: notes'], ['bends', 'Click: pitch bends']].forEach(([v, t]) => modeSel.appendChild(Object.assign(make('option', null, t), { value: v })));
+    modeSel.addEventListener('change', () => { model.mode = modeSel.value; refreshTools(); draw(); });
+    const selChan = button('Select channel', () => { model.sel = song().notes.filter((n) => n.ch === model.channel); refreshTools(); draw(); });
+    selChan.id = 'se-sel-channel';
+    const selPatch = button('Select this instrument', () => { model.sel = song().notes.filter((n) => n.ch === model.channel && n.patch === model.patch); refreshTools(); draw(); });
+    selPatch.id = 'se-sel-patch';
+    const selNone = button('Select none', () => { model.sel = []; refreshTools(); draw(); });
+    selNone.id = 'se-sel-none';
+    const selDel = button('Delete selected', () => {
+      const dead = new Set(model.sel);
+      edit(() => { song().notes = song().notes.filter((n) => !dead.has(n)); model.sel = []; });
+    });
+    selDel.id = 'se-sel-delete';
+    const selVel = button('Set velocity of selected', () => { if (model.sel.length) edit(() => model.sel.forEach((n) => { n.vel = model.vel; })); });
+    selVel.id = 'se-sel-vel';
+    rowSel.append(lab('Mode', modeSel), selChan, selPatch, selNone, selDel, selVel);
+    box.appendChild(rowSel);
+    const selInfo = make('p', 'st-status mono se-sel');
+    selInfo.id = 'se-selinfo';
+    box.appendChild(selInfo);
 
     const row3 = make('div', 'st-controls se-bar');
     const playBtn = button('▶ Play', () => {}, 'se-playbtn');
@@ -216,11 +254,13 @@
     });
     const exMidi = button('Export MIDI (GM)', () => exportMidi());
     exMidi.id = 'se-export-midi';
+    const exNative = button('Export MIDI (native)', () => exportNative());
+    exNative.id = 'se-export-native';
     const exAsm = button('Export stream (.asm)', () => exportStream('asm'));
     exAsm.id = 'se-export-asm';
     const exBin = button('Export stream (.bin)', () => exportStream('bin'));
     exBin.id = 'se-export-bin';
-    row3.append(playBtn, gmBtn, undoBtn, clearBtn, clearBends, lab('Loop', loopSel), exMidi, exAsm, exBin);
+    row3.append(playBtn, gmBtn, undoBtn, clearBtn, clearBends, lab('Loop', loopSel), exMidi, exNative, exAsm, exBin);
     box.appendChild(row3);
 
     const info = make('p', 'st-status mono se-info');
@@ -259,6 +299,7 @@
     }
     function undo() {
       if (!model.undo.length) return;
+      model.sel = [];
       model.songs[game] = model.undo.pop();
       afterChange();
     }
@@ -290,6 +331,13 @@
         b.setAttribute('aria-checked', c === model.channel ? 'true' : 'false');
         b.classList.toggle('is-on', c === model.channel);
       });
+      modeSel.value = model.mode;
+      selDel.disabled = !model.sel.length;
+      selVel.disabled = !model.sel.length;
+      const used = {};
+      s.notes.forEach((n) => { if (n.ch === model.channel) used[n.patch] = (used[n.patch] || 0) + 1; });
+      selInfo.textContent = 'CH' + (model.channel + 1) + ' instruments: ' + (Object.keys(used).map((p) => p + '×' + used[p]).join(' ') || 'none') + ' · ' + s.bends.filter((b) => b.ch === model.channel).length +
+        ' bends · ' + model.sel.length + ' selected' + (model.mode === 'bends' ? ' · click the roll: height sets the bend (middle = none, top/bottom = full range); click an existing bend to remove it' : ' · shift-click a note to select it');
       undoBtn.disabled = !model.undo.length;
       clearBends.disabled = !s.bends.length;
       const problems = [];
@@ -380,12 +428,33 @@
         g.globalAlpha = 1;
       }
       g.fillStyle = COLORS[model.channel];
-      song().bends.forEach((b) => { if (b.ch === model.channel) g.fillRect(GUTTER + (b.t / unitTicks()) * px() - 1, 0, 2, 5); });
+      const chBends = song().bends.filter((b) => b.ch === model.channel).sort((a, b) => a.t - b.t);
+      chBends.forEach((b) => g.fillRect(GUTTER + (b.t / unitTicks()) * px() - 1, 0, 2, 5));
+      if (chBends.length) {
+        g.strokeStyle = COLORS[model.channel];
+        g.globalAlpha = model.mode === 'bends' ? 0.9 : 0.35;
+        g.beginPath();
+        let py = h / 2;
+        g.moveTo(GUTTER, py);
+        chBends.forEach((b) => {
+          const x = GUTTER + (b.t / unitTicks()) * px();
+          g.lineTo(x, py);
+          py = h / 2 - (b.value / 8192) * (h / 2);
+          g.lineTo(x, py);
+        });
+        g.lineTo(endX, py);
+        g.stroke();
+        g.globalAlpha = 1;
+      }
       g.font = '8px ui-monospace, monospace';
       g.fillStyle = '#111';
       song().notes.forEach((n) => {
         if (n.ch === model.channel && (n.dur / unitTicks()) * px() >= 14 && n.note >= NOTE_LO && n.note <= NOTE_HI) g.fillText(String(n.patch), GUTTER + (n.t / unitTicks()) * px() + 3, (NOTE_HI - n.note) * ROW_H + ROW_H - 1);
       });
+      g.strokeStyle = '#fff';
+      g.lineWidth = 1.5;
+      model.sel.forEach((n) => { if (n.note >= NOTE_LO && n.note <= NOTE_HI) g.strokeRect(GUTTER + (n.t / unitTicks()) * px() + 0.5, (NOTE_HI - n.note) * ROW_H + 0.5, Math.max(2, (n.dur / unitTicks()) * px() - 1), ROW_H - 1); });
+      g.lineWidth = 1;
     }
 
     function cellAt(ev) {
@@ -406,9 +475,33 @@
     });
     canvas.addEventListener('click', (ev) => {
       const { unit, note } = cellAt(ev);
-      if (unit < 0 || note < NOTE_LO || note > NOTE_HI) return;
+      if (unit < 0) return;
+      if (model.mode === 'bends') { bendClick(unit * unitTicks(), ev); return; }
+      if (note < NOTE_LO || note > NOTE_HI) return;
+      if (ev.shiftKey) { toggleSelect(unit * unitTicks(), note); return; }
       addOrRemove(unit * unitTicks(), note);
     });
+    function toggleSelect(t, note) {
+      const hit = song().notes.find((n) => n.ch === model.channel && n.note === note && t >= n.t && t < n.t + n.dur);
+      if (!hit) return;
+      const at = model.sel.indexOf(hit);
+      if (at >= 0) model.sel.splice(at, 1); else { model.sel.push(hit); model.patch = hit.patch; model.vel = hit.vel; }
+      refreshTools();
+      draw();
+    }
+    /** Pitch-bend mode: a click near a bend of this channel removes it; otherwise one is added at the click's height. */
+    function bendClick(t, ev) {
+      const near = unitTicks() / 2;
+      const hit = song().bends.findIndex((b) => b.ch === model.channel && Math.abs(b.t - t) <= near);
+      if (hit >= 0) { edit(() => song().bends.splice(hit, 1)); return; }
+      if (t >= barTicks() * 200) return;
+      const r = canvas.getBoundingClientRect();
+      const frac = (ev.clientY - r.top) / r.height;
+      let value = Math.round((0.5 - frac) * 2 * 8192);
+      if (Math.abs(value) < 200) value = 0;
+      value = Math.max(-8192, Math.min(8191, value));
+      edit(() => { song().bends.push({ t: t, ch: model.channel, value: value }); song().bends.sort((a, b) => a.t - b.t); });
+    }
     function addOrRemove(t, note) {
       const hit = song().notes.findIndex((n) => n.ch === model.channel && n.note === note && t >= n.t && t < n.t + n.dur);
       if (hit >= 0) { edit(() => song().notes.splice(hit, 1)); return; }
@@ -448,6 +541,7 @@
           model.names[game] = safeName(host.data.songs.find((s) => s.id === id2).name);
         }
         model.report = [];
+        model.sel = [];
       });
     });
     importBtn.addEventListener('change', async () => {
@@ -456,9 +550,11 @@
       if (!file) return;
       try {
         const r = await Tools().readMidiFile(file);
+        const native = Stream().fromSmfNative(r.parsed);
+        if (native) { native.song.game = game; edit(() => { model.songs[game] = native.song; model.names[game] = r.name; model.sel = []; model.report = native.report; }); return; }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
         const conv = Stream().fromGm(r.gm, map, game, host.bank);
-        edit(() => { model.songs[game] = conv.song; model.names[game] = r.name; model.report = r.report.concat(conv.report); });
+        edit(() => { model.songs[game] = conv.song; model.names[game] = r.name; model.sel = []; model.report = r.report.concat(conv.report); });
       } catch (err) {
         model.report = ['Could not import that file: ' + (err && err.message ? err.message : String(err))];
         refreshTools();
@@ -494,6 +590,14 @@
         const smf = SongGm().toSmfSong(Stream().toGm(song(), map, host.bank).song);
         smf.name = model.names[game];
         Tools().download(model.names[game] + '-gm.mid', Smf().write(smf), 'audio/midi');
+      } catch (err) { info.textContent = String(err.message || err); }
+    }
+    function exportNative() {
+      try {
+        needNotes();
+        const smf = Stream().toSmfNative(song());
+        smf.name = model.names[game];
+        Tools().download(model.names[game] + '-nhl' + game + '.mid', Smf().write(smf), 'audio/midi');
       } catch (err) { info.textContent = String(err.message || err); }
     }
     function exportStream(kind) {
@@ -537,6 +641,7 @@
     model.songs[game] = clone(song);
     model.names[game] = safeName(name);
     model.report = report || [];
+    model.sel = [];
     store(game);
   }
 
