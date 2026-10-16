@@ -1095,8 +1095,9 @@
         setBar(Math.min(1, secs / total), text);
         time.textContent = text;
       }
+      const keyOns = shown.session.player.stats.keyOns;
       box.textContent = (message || 'Playing') + ' · video frame ' + shown.session.frames + ' · ' +
-        shown.session.player.stats.keyOns + ' key-ons · SPC700 + S-DSP';
+        (keyOns != null ? keyOns + ' key-ons · ' : '') + 'SPC700 + S-DSP';
       return;
     }
     if (total == null) { // no known length: elapsed time and a moving stripe
