@@ -77,7 +77,7 @@ Choosing a file in the import panel (or the sequencer's own Import MIDI button) 
 
 - each note gets the program in force on its channel at its start (default 0); channel 10 is the drum kit;
 - drum notes outside 35–81 move to the nearest kit note, zero-length notes get one tick, exact duplicate notes are removed;
-- the tempo map is kept; controllers, pitch bend, bank select and sysex are ignored and counted in the report.
+- the tempo map is kept; controllers, bank select and sysex are ignored; pitch bends are read (they are used by NHL 93 / 94, not NHL 92) and counted in the report.
 
 The import panel can also play the cleaned-up General MIDI song with the plain reference synth and save it as a General MIDI file.
 
