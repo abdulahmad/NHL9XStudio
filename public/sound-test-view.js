@@ -368,12 +368,13 @@
 
   async function playSnes(id, startSec) {
     if (!snesData || !root.NhlSoundTestSnes) throw new Error(error || 'Sound test still loading');
-    const songName = id.slice(5);
+    const sm = /^sound-(\w+)-(\d+)$/.exec(id);
+    const songName = sm ? null : id.slice(5);
     stop();
     stopBuffer();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const session = root.NhlSoundTestSnes.startSession(snesData, songName);
+    const session = root.NhlSoundTestSnes.startSession(snesData, songName, sm ? { set: sm[1], n: Number(sm[2]) } : null);
     const pullFn = (n) => root.NhlSoundTestSnes.pull(session, n);
     live = { id, snes: true, session, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(root.NhlSoundTestSnes.RATE, ctx.sampleRate, pullFn);
@@ -478,7 +479,7 @@
   }
 
   function toggle(id) {
-    if (id.startsWith('sound-')) return Promise.resolve();
+    if (id.startsWith('sound-') && !isSnes94()) return Promise.resolve();
     if (toggles[id]) return toggles[id]();
     if (live && live.id === id) {
       stop();
@@ -950,7 +951,7 @@
     const n = isSong ? songKey(id) : Number(id.split('-')[1]);
     // Length of the bar: one pass of an NHL 92 song, the whole run of an SFX; NHL 94 songs have no known length.
     const info = isSong ? passInfo(n) : null;
-    const total = isSong ? (info ? info.total : null) : secondsOf(planFor(id).frames);
+    const total = isSong ? (info ? info.total : null) : isSnes94() ? null : secondsOf(planFor(id).frames);
     bar.classList.remove('is-loop');
     if (!shown) {
       setBar(0, clock(0));
@@ -1018,7 +1019,7 @@
         const set = snesData.songSet(name);
         return 'Boot the extracted SPC700 program, upload the ' + set + ' BRR samples (SPCGameUpload / SPCMenuUpload), then MusicStart on ' + name + ' with SoundUpdate (UpdateSfxVoices + SequencerTick) every NTSC video frame until Stop or the song stop event.';
       }
-      return 'A 48-byte sound entry from the extracted tables (instrument / SFX metadata). Live SFX playback is not ported.';
+      return 'Boot the extracted SPC700 program, upload the sample set, then PlaySound / QueueSound on this 48-byte sound entry (the effect track, $10) with SoundUpdate every NTSC video frame until its voice ends. The six streamed effects go through UpdateStreamSfx (SPCStreamStart / SPCStreamNext) first.';
     }
     if (isNx()) {
       const n = Number(id.split('-')[1]);
@@ -1048,12 +1049,6 @@
       box.appendChild(make('p', 'st-note', error ? 'Sound test failed to load: ' + error : 'Loading the sound test…'));
       return;
     }
-    if (id.startsWith('sound-')) {
-      box.appendChild(make('p', 'st-kind', 'NHL 94 (SNES) sound entry'));
-      box.appendChild(make('h3', null, title(id)));
-      box.appendChild(make('p', 'st-note', 'These 48-byte instrument records are listed for reference. SFX playback (PlaySound / track $10) is not ported yet; use the song list for live music.'));
-      return;
-    }
     if (live && live.id !== id) stop();
     if (gmPlay && gmPlay.id !== id) stopBuffer();
     if (isTool(id)) {
@@ -1062,7 +1057,13 @@
       return;
     }
     const n = Number(id.split('-')[1]);
-    if (isSnes94()) {
+    if (isSnes94() && id.startsWith('sound-')) {
+      box.appendChild(make('p', 'st-kind', 'NHL 94 (SNES) sound effect'));
+      box.appendChild(make('h3', null, title(id)));
+      const sm = /^sound-(\w+)-(\d+)$/.exec(id);
+      const snd = snesData.sound(sm[1], Number(sm[2]));
+      box.appendChild(make('p', 'st-note mono', sm[1] + ' sample set · sample ' + snd.sample + ' (' + (snesData.soundSample(sm[1], Number(sm[2])) || '?') + ') · priority ' + snd.priority + ' · ' + (snd.adsr ? 'ADSR' : 'GAIN') + ' envelope'));
+    } else if (isSnes94()) {
       const name = id.slice(5);
       box.appendChild(make('p', 'st-kind', 'NHL 94 (SNES) song'));
       box.appendChild(make('h3', null, name));
@@ -1263,7 +1264,7 @@
   function metaRows(id) {
     if (!assetsReady()) return [['Sound test', error || 'loading']];
     if (isSnes94()) {
-      if (id.startsWith('sound-')) return [['Entry', title(id)], ['Playback', 'not ported (SFX path)'], ['Notes', 'docs/NHL94S-PLAYBACK.md']];
+      if (id.startsWith('sound-')) return [['Entry', title(id)], ['Path', 'PlaySound → StartSoundVoice → SPC700 program → S-DSP'], ['Output', '32 kHz stereo, live'], ['Source', 'data/audio/nhl94s-sound.json'], ['Notes', 'docs/NHL94S-PLAYBACK.md']];
       const name = id.slice(5);
       const song = snesData.song(name);
       return [

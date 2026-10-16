@@ -27,7 +27,13 @@ Controllers handled: 7 (volume), `$0B/$0C` (left/right), `$32-$35` (echo voices,
 
 ## What is not ported
 
-Sound effects (track `$10`, `PlaySound`, `QueueSound`, `StreamSfx`), the sound entries `StartSoundVoice` special-cases by address (sound effects), `MusicDuck`, the volume fade, and the Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; it computes the same product).
+`MusicDuck`, the volume fade, the replay recording (`recsfx*`), the puck and collision effect routing (`PuckSfx`, `CollisionSfx`: which effect the game plays for which event, and their random pitch), and the Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; it computes the same product).
+
+## Sound effects
+
+`player.playSound(n)` is `QueueSound` + `PlaySoundEntry`: sound entry `n` of the loaded set starts on the effect track (`$10`) with velocity `SfxVelocity+1` (default `$70`), its note (`+5`), length (`+6`), bend range and volumes; a sound already playing is not restarted. Effect voices are released by `UpdateVoice` when their length ends, like note voices. `stopSound(n)` is `PlaySound.stop`.
+
+Game-set entries 11 and 12 (`$DF80`, `$DFB0`) start only with a positive length, so `playEntry` gives them 30 ticks; entry 20 (`$E130`) is always 45 ticks. Entries 22-27 are the six streamed effects: `streamSfx(1..6)` is `StreamSfx`, and each frame `UpdateStreamSfx` frees sample RAM (`SPCCmd02`/`SPCCmd04`), sends the sample in blocks (`SPCStreamStart`/`SPCStreamNext`, commands `$0F`/`$10`) and plays it once the first block is in. `playEntry(n)` picks the right call for the sound test. `idle()` says when nothing is sounding.
 
 ## What the port settled
 

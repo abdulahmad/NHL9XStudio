@@ -9,6 +9,8 @@
   const Player = () => root.NhlNhl94sPlayer;
   const SD = () => root.NhlNhl94sSoundData;
 
+  const STREAM_NAMES = ['Period end', 'Goal', 'Big hit', 'Save', 'Puck on body', 'Puck on glass'];
+
   function displaySongName(name) {
     return name.replace(/^Song/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
   }
@@ -37,18 +39,18 @@
         sub: data.songSet(name) + ' sample set · plays until Stop or song end'
       });
     }
-    const sets = ['game', 'menu'];
+    const sets = ['game', 'menu', 'intro'];
     for (const set of sets) {
       const sounds = data.sounds(set);
       const samples = data.sampleList(set);
       sounds.forEach((snd, i) => {
         const sample = samples[snd.sample] || ('sample ' + snd.sample);
+        const streamed = set === 'game' && i >= 22 && i <= 27;
         out.push({
           id: 'sound-' + set + '-' + i,
-          group: set === 'game' ? 'Sound entries (game)' : 'Sound entries (menu)',
-          label: set + ' #' + i + ' · ' + sample,
-          sub: 'SFX playback not ported (music only)',
-          disabled: true
+          group: 'Sound effects (' + set + ' set)',
+          label: set + ' #' + i + ' · ' + (streamed ? 'streamed ' + STREAM_NAMES[i - 22] : sample),
+          sub: streamed ? 'streamed to the sound CPU, then played' : 'plays until its envelope ends'
         });
       });
     }
@@ -77,15 +79,18 @@
     return SD().load(pack);
   }
 
-  function startSession(data, songName) {
+  /** A song (songName) or one sound effect ({ set, n }) on a fresh sound unit. */
+  function startSession(data, songName, sound) {
     const player = Player().create({ data });
     player.boot();
-    player.loadSet(data.songSet(songName) === 'game' ? 'game' : 'menu');
+    player.loadSet(sound ? sound.set : data.songSet(songName) === 'game' ? 'game' : 'menu');
     player.logCommands(true);
-    player.startSong(songName);
+    if (sound) player.playEntry(sound.n);
+    else player.startSong(songName);
     player.record();
     return {
       player,
+      sound: sound || null,
       songName,
       data,
       chunks: [],
@@ -117,7 +122,7 @@
       p.runFrame();
       session.frames = p.stats.frames;
       appendPcm(session, p.spc.drainRecording());
-      if (!p.musicOn && session.queued === 0) session.done = true;
+      if (session.sound ? (p.idle() && session.frames > 3) || session.frames > 1500 : !p.musicOn && session.queued === 0) session.done = true;
     }
     const left = new Float32Array(n);
     const right = new Float32Array(n);

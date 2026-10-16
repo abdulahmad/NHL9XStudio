@@ -80,4 +80,45 @@ function play(name, frames, opts) {
   assert.ok(a.every((v, i) => v === b[i]));
 }
 
+// --- 5. sound effects: PlaySound / QueueSound on the effect track, the length-gated entries, the streamed effects ---
+{
+  const peakOf = (pcm) => { let m = 0; for (let i = 0; i < pcm.length; i++) m = Math.max(m, Math.abs(pcm[i])); return m; };
+  const p = Player.create({ data: d });
+  p.boot();
+  p.loadSet('game');
+  assert.strictEqual(p.soundCount(), 29);
+  p.logCommands(true);
+  p.record();
+  const v = p.playSound(1);
+  assert.ok(v >= 0, 'a voice was found');
+  assert.strictEqual(p.playSound(1), v, 'QueueSound does not start a sound that is already playing');
+  assert.strictEqual(p.commands.filter((c) => c.name === 'keyOn').length, 1);
+  assert.strictEqual(p.voices()[v].track, 0x10, 'effects play on track $10');
+  p.runFrames(120);
+  assert.ok(peakOf(p.stopRecording()) > 4000, 'sound 1 is audible');
+  assert.ok(p.idle(), 'the voice ended by itself');
+  // sounds 11 and 12 start only with a positive length (StartSoundVoice tests them by address)
+  assert.strictEqual(p.playSound(11), -1);
+  assert.ok(p.playEntry(11) >= 0);
+  // a streamed effect: the sample goes to the sound CPU in blocks, then it plays
+  const q = Player.create({ data: d });
+  q.boot();
+  q.loadSet('game');
+  q.logCommands(true);
+  q.record();
+  q.streamSfx(2);
+  assert.ok(!q.idle(), 'a stream is pending');
+  q.runFrames(240);
+  assert.ok(peakOf(q.stopRecording()) > 4000, 'the goal effect is audible');
+  assert.ok(q.idle());
+  assert.strictEqual(q.commands.filter((c) => c.name === 'keyOn').length, 1);
+  // the menu and intro sets have sounds too
+  const m = Player.create({ data: d });
+  m.boot();
+  m.loadSet('menu');
+  assert.strictEqual(m.soundCount(), 56);
+  m.loadSet('intro');
+  assert.strictEqual(m.soundCount(), 1);
+}
+
 console.log('nhl94s player: the real sound program plays the extracted songs OK');
