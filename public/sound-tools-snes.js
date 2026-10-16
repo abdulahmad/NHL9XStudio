@@ -267,7 +267,6 @@
     box.appendChild(scroller);
     const tip = make('div', 'se-tip');
     tip.hidden = true;
-    box.style.position = 'relative';
     box.appendChild(tip);
     const messages = make('div', 'se-out');
     box.appendChild(messages);
@@ -476,9 +475,8 @@
       if (is94 && !drum) lines.push('Pitch bends during the note: ' + (bends.length ? bends.length + ' (' + Math.min.apply(null, bends.map((b) => b.semis)).toFixed(1) + ' to ' + Math.max.apply(null, bends.map((b) => b.semis)).toFixed(1) + ' semitones)' : 'none'));
       tip.textContent = lines.join('\n');
       tip.hidden = false;
-      const br = box.getBoundingClientRect();
-      tip.style.left = Math.min(ev.clientX - br.left + 14, Math.max(0, br.width - 260)) + 'px';
-      tip.style.top = (ev.clientY - br.top + 18) + 'px';
+      tip.style.left = Math.max(4, Math.min(ev.clientX + 14, root.innerWidth - 270)) + 'px';
+      tip.style.top = Math.max(4, Math.min(ev.clientY + 18, root.innerHeight - 140)) + 'px';
     }
     const clampMove = (dt, dn) => {
       const minUnit = Math.min.apply(null, model.sel.map((n) => n.t / UNIT));
