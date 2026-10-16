@@ -16,7 +16,7 @@
  * A test passes when A, X, Y, SP, PC, PSW and every RAM byte in the final state match, no other byte was
  * written, and the instruction's total cycle count equals the length of the suite's bus trace. The order of the
  * individual bus accesses (dummy reads) is not compared. The suite's RAM is flat, so the test bus has no I/O
- * registers or boot ROM. Exit status is 1 if any test failed or any driver-used opcode is below 100%.
+ * registers or boot ROM. Exit status is 1 if any test failed or any opcode the 93S/94S sound programs use is below 100%.
  */
 const fs = require('fs');
 const path = require('path');
@@ -107,6 +107,7 @@ function main() {
   }
   const pct = (p, n) => (!n ? '—' : p === n ? '100%' : (Math.floor(10000 * 100 * p / n) / 10000).toFixed(4) + '%');
   const used = new Set(driverOps.opcodes());
+  const swept = new Set(driverOps.opcodes(true));
   const lines = [];
   lines.push('# spc700-cpu.js vs SingleStepTests SPC700 (v1)');
   lines.push('');
@@ -128,9 +129,9 @@ function main() {
   lines.push('| Opcode | Instruction | Used by the 93S/94S sound drivers | Pass | Tests |');
   lines.push('|---|---|---|---|---|');
   for (const r of rows) {
-    lines.push('| $' + r.hex + ' | ' + r.name + ' | ' + (used.has(r.op) ? 'yes' : '') + ' | ' + pct(r.pass, r.all) + ' | ' + r.pass + '/' + r.all + ' |');
+    lines.push('| $' + r.hex + ' | ' + r.name + ' | ' + (used.has(r.op) ? 'yes' : swept.has(r.op) ? 'only in a linear sweep' : '') + ' | ' + pct(r.pass, r.all) + ' | ' + r.pass + '/' + r.all + ' |');
   }
-  const driverBad = rows.filter((r) => used.has(r.op) && r.pass !== r.all);
+  const driverBad = rows.filter((r) => swept.has(r.op) && r.pass !== r.all);
   if (failures.length) {
     lines.push('', '## Failing tests' + (failures.length === 50 ? ' (first 50)' : ''), '');
     for (const x of failures) lines.push('- `' + x.hex + '` ' + x.name + ' ' + x.test + ': ' + x.diffs.slice(0, 4).join('; '));
