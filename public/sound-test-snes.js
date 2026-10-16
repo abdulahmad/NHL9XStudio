@@ -76,21 +76,28 @@
     const res = await fetch(new URL('data/audio/nhl94s-sound.json', document.baseURI).href);
     if (!res.ok) throw new Error('NHL 94 SNES sound pack missing (' + res.status + ')');
     const pack = await res.json();
-    return SD().load(pack);
+    const data = SD().load(pack);
+    try {
+      const gm = await fetch(new URL('data/audio/nhl94s-gm-map.json', document.baseURI).href);
+      data.gmMap = gm.ok ? await gm.json() : null;
+    } catch (err) { data.gmMap = null; }
+    return data;
   }
 
   /** A song (songName) or one sound effect ({ set, n }) on a fresh sound unit. */
-  function startSession(data, songName, sound) {
+  function startSession(data, songName, sound, custom) {
     const player = Player().create({ data });
     player.boot();
-    player.loadSet(sound ? sound.set : data.songSet(songName) === 'game' ? 'game' : 'menu');
+    player.loadSet(custom ? custom.set : sound ? sound.set : data.songSet(songName) === 'game' ? 'game' : 'menu');
     player.logCommands(true);
-    if (sound) player.playEntry(sound.n);
+    if (custom) player.startSongBytes(custom.bytes);
+    else if (sound) player.playEntry(sound.n);
     else player.startSong(songName);
     player.record();
     return {
       player,
       sound: sound || null,
+      custom: custom || null,
       songName,
       data,
       chunks: [],

@@ -28,11 +28,12 @@
   };
   const SNES94 = 'nhl94snes';
   let snesData = null;
+  let snesImport = null; // the last MIDI file converted by the SNES import tool: { name, bytes, set, report }
   const isSnes94 = () => game === SNES94;
   const isNx = () => !!NX[game];
   const assetsReady = () => (isSnes94() ? !!(snesData && root.NhlSoundTestSnes) : !!(rom && Ym));
   const nxNumber = () => (game === 'nhlpa93' ? 93 : 94);
-  const toolName = (id) => (isNx()
+  const toolName = (id) => (isSnes94() ? 'MIDI import → NHL 94 (SNES)' : isNx()
     ? (id === TOOL_EDITOR ? 'Sequencer · new ' + NX[game].label + ' song' : 'MIDI import → ' + NX[game].label)
     : (id === TOOL_EDITOR ? 'Sequencer · new NHL 92 song' : 'MIDI import → NHL 92'));
   let rom = null;
@@ -188,7 +189,11 @@
   function entries() {
     if (!data) return [];
     const out = [];
-    if (isSnes94() && snesData && root.NhlSoundTestSnes) return root.NhlSoundTestSnes.entries(snesData);
+    if (isSnes94() && snesData && root.NhlSoundTestSnes) {
+      const rows = root.NhlSoundTestSnes.entries(snesData);
+      if (root.NhlNhl94sMidi && root.Nhl92Smf && snesData.gmMap) rows.unshift({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, hear it on the SPC700, save the song' });
+      return rows;
+    }
     if (isNx()) {
       if (root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
         out.push({ id: TOOL_EDITOR, group: 'MIDI', label: toolName(TOOL_EDITOR), sub: 'edit, play on the retail drivers, export' });
@@ -369,12 +374,14 @@
   async function playSnes(id, startSec) {
     if (!snesData || !root.NhlSoundTestSnes) throw new Error(error || 'Sound test still loading');
     const sm = /^sound-(\w+)-(\d+)$/.exec(id);
-    const songName = sm ? null : id.slice(5);
+    const imp = id === TOOL_IMPORT ? snesImport : null;
+    if (id === TOOL_IMPORT && !imp) throw new Error('Open a MIDI file first');
+    const songName = sm || imp ? null : id.slice(5);
     stop();
     stopBuffer();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const session = root.NhlSoundTestSnes.startSession(snesData, songName, sm ? { set: sm[1], n: Number(sm[2]) } : null);
+    const session = root.NhlSoundTestSnes.startSession(snesData, songName, sm ? { set: sm[1], n: Number(sm[2]) } : null, imp ? { set: imp.set, bytes: imp.bytes } : null);
     const pullFn = (n) => root.NhlSoundTestSnes.pull(session, n);
     live = { id, snes: true, session, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(root.NhlSoundTestSnes.RATE, ctx.sampleRate, pullFn);
@@ -1039,6 +1046,81 @@
     return 'Boot, one vblank, then sfx(' + n + ') and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.';
   }
 
+  /** MIDI import for NHL 94 (SNES): open a .mid, choose the sample set, hear the song on the SPC700, save the song bytes. */
+  function renderSnesImport(box, id) {
+    const M = root.NhlNhl94sMidi;
+    box.appendChild(make('p', 'st-kind', 'MIDI import'));
+    box.appendChild(make('h3', null, toolName(id)));
+    box.appendChild(make('p', 'st-note', 'Open a Standard MIDI file (format 0 or 1). Channel 10 becomes the drum track; the other channels become tracks, each with the sound the GM table picks for its program. A file saved by "Export MIDI (native)" comes back exactly as it was. Nothing in the game or the sound data is changed.'));
+    const row = make('div', 'st-controls');
+    const file = make('input');
+    file.type = 'file';
+    file.accept = '.mid,.midi,audio/midi';
+    const setSel = make('select');
+    [['menu', 'Menu / band sounds (kick, snare, brass, guitar…)'], ['game', 'Game sounds (organ)']].forEach(([v, t]) => { const o = make('option', null, t); o.value = v; setSel.appendChild(o); });
+    const loopBox = make('input');
+    loopBox.type = 'checkbox';
+    const loopLabel = make('label', null, ' loop');
+    loopLabel.prepend(loopBox);
+    row.append(file, setSel, loopLabel);
+    box.appendChild(row);
+    const out = make('div', 'st-note mono');
+    const ctl = make('div', 'st-controls');
+    const play = make('button', 'ghost-btn st-toggle', '▶ Play');
+    play.type = 'button';
+    play.disabled = true;
+    play.addEventListener('click', () => {
+      if (live && live.id === id) { stop(); return; }
+      playSnes(id, 0).catch((err) => { out.textContent = 'Playback failed: ' + (err && err.message ? err.message : String(err)); });
+    });
+    const save = (label, fn) => {
+      const b = make('button', 'ghost-btn', label);
+      b.type = 'button';
+      b.disabled = true;
+      b.addEventListener('click', () => { try { fn(); } catch (err) { out.textContent = label + ' failed: ' + (err && err.message ? err.message : String(err)); } });
+      ctl.appendChild(b);
+      return b;
+    };
+    ctl.appendChild(play);
+    const saveBin = save('Save song (.bin)', () => root.NhlSoundTools.download('nhl94s-' + snesImport.name + '.bin', snesImport.bytes, 'application/octet-stream'));
+    box.appendChild(ctl);
+    box.appendChild(out);
+    let raw = null;
+    const convert = () => {
+      if (!raw) return;
+      try {
+        const r = M.fromSmf(raw.bytes, snesData, snesData.gmMap, { set: setSel.value, loop: loopBox.checked });
+        snesImport = { name: raw.name, bytes: r.bytes, set: r.report.set || setSel.value, report: r.report };
+        const rep = r.report;
+        out.textContent = [
+          raw.name + ' → ' + (rep.native ? 'native file, read back exactly' : 'GM file'),
+          rep.tracks + ' tracks, ' + rep.notes + ' notes' + (rep.seconds ? ', ' + rep.seconds.toFixed(1) + ' s' : '') + ', sample set: ' + snesImport.set,
+          r.bytes.length + ' bytes in the game\'s song format'
+        ].concat(rep.warnings.map((w) => '! ' + w)).join('\n');
+        play.disabled = false;
+        saveBin.disabled = false;
+        if (live && live.id === id) stop();
+      } catch (err) {
+        out.textContent = 'Could not convert: ' + (err && err.message ? err.message : String(err));
+        play.disabled = true;
+        saveBin.disabled = true;
+      }
+    };
+    file.addEventListener('change', async () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      raw = { name: f.name.replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '-'), bytes: new Uint8Array(await f.arrayBuffer()) };
+      convert();
+    });
+    setSel.addEventListener('change', convert);
+    loopBox.addEventListener('change', convert);
+    if (snesImport) { out.textContent = 'Last import: ' + snesImport.name + ' (' + snesImport.bytes.length + ' bytes). Choose a file to import another.'; play.disabled = false; saveBin.disabled = false; }
+    const tick = setInterval(() => {
+      if (!box.isConnected) { clearInterval(tick); return; }
+      play.textContent = live && live.id === id ? '■ Stop' : '▶ Play';
+    }, 250);
+  }
+
   function renderPanel(box, id) {
     panel = box;
     if (roll) roll.destroy();
@@ -1051,6 +1133,10 @@
     }
     if (live && live.id !== id) stop();
     if (gmPlay && gmPlay.id !== id) stopBuffer();
+    if (isTool(id) && isSnes94()) {
+      renderSnesImport(box, id);
+      return;
+    }
     if (isTool(id)) {
       toggles = {};
       (isNx() ? root.NhlSoundToolsNx : root.NhlSoundTools).render(box, id, host());
@@ -1111,7 +1197,7 @@
       gmBtn.addEventListener('click', () => { playGm(id).catch(fail('GM playback')); });
       controls.append(gmBtn);
     }
-    if (!isNx() && gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
+    if (!isNx() && !isSnes94() && gmMap && root.Nhl92SongGm && root.Nhl92GmReference) {
       const isSong = id.startsWith('song-');
       const gmBtn = make('button', 'ghost-btn st-gm', '▶ Play as GM');
       gmBtn.type = 'button';
@@ -1168,7 +1254,23 @@
     }
 
     // Edit / export: the same conversions the sequencer uses, straight from this entry.
-    if (!isNx() && root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
+    if (isSnes94() && id.startsWith('song-') && root.NhlNhl94sMidi && root.Nhl92Smf && root.NhlSoundTools && snesData.gmMap) {
+      const ex = make('div', 'st-controls st-exports');
+      const name = id.slice(5);
+      const add = (label, tip, fn) => {
+        const b = make('button', 'ghost-btn', label);
+        b.type = 'button';
+        b.title = tip;
+        b.addEventListener('click', () => { try { fn(); } catch (err) { fail(label)(err); } });
+        ex.appendChild(b);
+      };
+      const M = root.NhlNhl94sMidi;
+      add('Export MIDI (GM)', 'Standard MIDI file with General MIDI sounds chosen by the NHL 94 → GM table (data/audio/nhl94s-gm-map.json)', () => root.NhlSoundTools.download('nhl94s-' + name + '-gm.mid', M.toSmf(snesData, snesData.gmMap, name, {}), 'audio/midi'));
+      add('Export MIDI (native)', 'Standard MIDI file with one track per game track; every other event rides in a marker, so importing it back gives the same song', () => root.NhlSoundTools.download('nhl94s-' + name + '-native.mid', M.toSmf(snesData, snesData.gmMap, name, { native: true }), 'audio/midi'));
+      add('Export song (.bin)', 'The song in the game\'s own format (header, track offsets, TRAK chunks), as the ROM stores it', () => root.NhlSoundTools.download('nhl94s-' + name + '.bin', snesData.songBytes(name), 'application/octet-stream'));
+      box.appendChild(ex);
+    }
+    if (!isNx() && !isSnes94() && root.NhlSoundTools && root.Nhl92Song && root.Nhl92SongGm && root.Nhl92Smf) {
       const ex = make('div', 'st-controls st-exports');
       const add = (label, title, fn) => {
         const b = make('button', 'ghost-btn', label);
@@ -1254,7 +1356,7 @@
     box.appendChild(make('p', 'st-note', describe(id)));
     box.appendChild(make('p', 'st-note', isSnes94()
       ? 'Rendered live from the ported main-CPU sequencer and the extracted SPC700 sound program (32 kHz stereo), one video frame at a time, resampled to ' +
-        (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '. Space plays or stops; ↑ ↓ pick. MIDI import/export is not wired for SNES yet.'
+        (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '. Space plays or stops; ↑ ↓ pick. Export MIDI above; open a .mid in "MIDI import".'
       : 'Rendered live from the retail code: 68k driver → Z80 RAM → Z80 driver → YM2612 (ymfm) + SN76489, ' +
         'one frame (59,736 Z80 T-states) at a time at 53,267 Hz, resampled to ' + (ctx ? ctx.sampleRate + ' Hz' : 'the audio device rate') + '. ' +
         'Space plays or stops; ↑ ↓ pick.'));
@@ -1263,6 +1365,7 @@
 
   function metaRows(id) {
     if (!assetsReady()) return [['Sound test', error || 'loading']];
+    if (isSnes94() && id === TOOL_IMPORT) return [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1), or a native export'], ['Out', 'a song in the game\'s format, played on the SPC700 program'], ['Mapping', 'data/audio/nhl94s-gm-map.json'], ['Notes', 'docs/NHL94S-MIDI.md']];
     if (isSnes94()) {
       if (id.startsWith('sound-')) return [['Entry', title(id)], ['Path', 'PlaySound → StartSoundVoice → SPC700 program → S-DSP'], ['Output', '32 kHz stereo, live'], ['Source', 'data/audio/nhl94s-sound.json'], ['Notes', 'docs/NHL94S-PLAYBACK.md']];
       const name = id.slice(5);
