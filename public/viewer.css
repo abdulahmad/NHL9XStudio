@@ -483,6 +483,7 @@ select:focus, input:focus, button:focus-visible {
 .se-inner { position: relative; }
 .se-canvas { display: block; position: absolute; top: 0; left: 0; cursor: crosshair; }
 .se-info, .se-hover { margin: 2px 0; }
+.se-hover { min-height: 1.4em; } /* reserve the line so hovering never shifts the canvas under the pointer */
 .se-report { margin: 4px 0 10px; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .se-out { max-width: 920px; }
 .se-playbtn { min-width: 96px; font-weight: 600; }
