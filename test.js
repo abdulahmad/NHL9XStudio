@@ -1189,6 +1189,7 @@ require('./test/nhl92-sound-data');
 require('./test/m68k-cpu');
 require('./test/nhl92-68k-driver');
 require('./test/nhl92-sound-chain');
+require('./test/nhl9x-sound-chain');
 require('./test/ym-note-tracker');
 require('./test/nhl92-gm-map');
 require('./test/nhl92-sequencer');
