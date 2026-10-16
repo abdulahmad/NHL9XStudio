@@ -1,0 +1,1129 @@
+{
+  "note": "Hand-editable NHL 92 <-> General MIDI instrument mapping. Edit any target, reason or runner-up by ear; run `node test.js` (or node test/nhl92-gm-map.js) afterwards and `node tools/build-nhl92-gm-map-doc.js` to refresh the tables in docs/NHL92-GM-MAP.md. Method and measurements: docs/NHL92-GM-MAP.md and data/audio/nhl92-patch-analysis.json.",
+  "schema": 1,
+  "conventions": {
+    "pitch": "MIDI note = note-table index + 12 (index 48 = C4 = MIDI 60). A patch target's \"midi\" is the pitch to play the patch at.",
+    "program": "GM program numbers are 0-127 (not 1-128).",
+    "drum": "GM drums are channel 10, notes 35-81.",
+    "dac": "A \"dac\" target names the game's SFX ID (sfx_pointer_table) that starts the sample.",
+    "resolve": "A GM program uses its override if it has one, otherwise its family default.",
+    "confidence": "high / medium / low: how sure the match is from the measurements and song usage, not from listening.",
+    "fit": "good / rough / none: how close a drum match is. \"none\" means no patch or sample is a good match; the nearest is listed."
+  },
+  "nhl92ToGm": {
+    "patches": [
+      {
+        "patch": 0,
+        "character": "Siren swell. 0.55 s fade-in (carrier attack rate 7), bright full-harmonic tone (centroid about 12x the note), no decay. Only SFX 0 (siren) loads it; no song does.",
+        "target": {"kind":"program","program":63,"name":"Synth Brass 2"},
+        "reason": "Slow swell into a bright, harmonically full sustained tone is the Synth Brass 2 shape. GM has no siren, so this matches the envelope and spectrum, not the role.",
+        "runnerUp": {"kind":"program","program":81,"name":"Lead 2 (sawtooth)"},
+        "confidence": "low"
+      },
+      {
+        "patch": 1,
+        "character": "Round, sustained near-sine bass. Carrier MUL 1, no decay, attack 5 ms, harmonics about 35 dB down. FM1 in all five songs: 1,348 notes, D2-B3 (median A2).",
+        "target": {"kind":"program","program":39,"name":"Synth Bass 2"},
+        "reason": "Role (the only bass line, FM1, D2-B3) and shape (instant attack, no decay, near-sine) both say synth bass; Synth Bass 2 is the rounder of the two GM synth basses.",
+        "runnerUp": {"kind":"program","program":35,"name":"Fretless Bass"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 2,
+        "character": "Unused by any song or SFX. Organ-like: two carriers at MUL 2, 45 ms attack, no decay, even harmonics, centroid about 5x the note.",
+        "target": {"kind":"program","program":20,"name":"Reed Organ"},
+        "reason": "Sustained with no decay and an even-harmonic reedy spectrum; the 45 ms attack is a soft organ onset.",
+        "runnerUp": {"kind":"program","program":19,"name":"Church Organ"},
+        "confidence": "low"
+      },
+      {
+        "patch": 3,
+        "character": "Kick. Instant attack, decays to -24 dB by 400 ms, low thump with a bright click (centroid 650 Hz on a 27.5 Hz note). FM6 in all five songs, always A0: 818 notes on the steady pulse.",
+        "target": {"kind":"drum","note":36,"name":"Bass Drum 1"},
+        "reason": "Role and sound agree: one low pitch on the pulse, with the pitched thump and click of an FM kick.",
+        "runnerUp": {"kind":"drum","note":35,"name":"Acoustic Bass Drum"},
+        "confidence": "high"
+      },
+      {
+        "patch": 4,
+        "character": "Snare. Noisy and bright (flatness 0.22, centroid 3 kHz), 0.28 s tail. FM6 beside the kick, always F#1 (patch note offset -3): 465 notes, one in every four steps (the backbeat).",
+        "target": {"kind":"drum","note":38,"name":"Acoustic Snare"},
+        "reason": "Backbeat role plus a noisy, bright burst with a short tail is a snare; the noise comes from feedback 7 with a MUL 15 modulator.",
+        "runnerUp": {"kind":"drum","note":40,"name":"Electric Snare"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 5,
+        "character": "Harsh and dense. Feedback 7, flatness 0.33, strong partials from 0.5x to 6x the note, sustained. SngEOP FM2 and FM4 together (E3-E4 with E2-A3, 0.5 s notes) and long chords (1.3-3.2 s) in SngTitle.",
+        "target": {"kind":"program","program":30,"name":"Distortion Guitar"},
+        "reason": "Noisy, harmonically dense and sustained, in the E2-A3 range as two parts moving together (power-chord pairs): a distorted rhythm voice. Weak spot: the same numbers fit a harsh organ or a brass stab.",
+        "runnerUp": {"kind":"program","program":29,"name":"Overdriven Guitar"},
+        "confidence": "low"
+      },
+      {
+        "patch": 6,
+        "character": "Bright vibrato lead. Instant attack, sustained, tonal, strong partials at 1x, 1.5x and 3x the note. Vibrato and pitch envelope on 98% of its notes. FM3 and FM5 in SngEOP and SngTitle: 380 notes, D4-F#7 (median G5).",
+        "target": {"kind":"program","program":81,"name":"Lead 2 (sawtooth)"},
+        "reason": "Melody-duet voice, sustained and bright with vibrato on nearly every note; the strong third harmonic points to a saw-like tone. The 1.5x partial gives it a brassy edge, hence the runner-up.",
+        "runnerUp": {"kind":"program","program":62,"name":"Synth Brass 1"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 7,
+        "character": "Unused. Hollow swell: 0.44 s fade-in, strong at 0.5x to 2x the note then falling fast, sustained, near-sine highs.",
+        "target": {"kind":"program","program":89,"name":"Pad 2 (warm)"},
+        "reason": "A slow-onset sustained tone with few high harmonics is the warm-pad shape.",
+        "runnerUp": {"kind":"program","program":52,"name":"Choir Aahs"},
+        "confidence": "low"
+      },
+      {
+        "patch": 8,
+        "character": "Unused. Very short tonal blip: -21 dB by 100 ms, silent by 400 ms, near-pure tone (periodicity 0.98).",
+        "target": {"kind":"program","program":45,"name":"Pizzicato Strings"},
+        "reason": "A plucked tone that stops before it can sustain; pizzicato is the shortest pitched GM voice. It reads as a blip, not a mallet or a drum.",
+        "runnerUp": {"kind":"program","program":108,"name":"Kalimba"},
+        "confidence": "low"
+      },
+      {
+        "patch": 9,
+        "character": "Puck-hit click. Very short (-18 dB by 100 ms), mid-bright, slightly noisy (periodicity 0.76). Only SFX 5 (hit puck) and 8 (puck faceoff) load it.",
+        "target": {"kind":"drum","note":37,"name":"Side Stick"},
+        "reason": "A short dry tick is the side-stick sound, and it is the puck-on-stick SFX.",
+        "runnerUp": {"kind":"drum","note":76,"name":"Hi Wood Block"},
+        "confidence": "low"
+      },
+      {
+        "patch": 10,
+        "character": "Board hit. Same FM structure as patches 3, 19 and 20 (a kick-family thump) with a brighter body: centroid 3.2 kHz at C4, -14 dB by 400 ms. SFX 6, 7 (hit board) and 15, 16, 17 (player hits boards).",
+        "target": {"kind":"drum","note":41,"name":"Low Floor Tom"},
+        "reason": "A pitched, decaying low thump with a bright attack is tom-like; patch 3 is already the kick. The SFX streams add a falling pitch sweep that the probe note does not have.",
+        "runnerUp": {"kind":"drum","note":45,"name":"Low Tom"},
+        "confidence": "low"
+      },
+      {
+        "patch": 11,
+        "character": "Unused. Noise swell: flatness 0.47, centroid 7 kHz, 0.5 s fade-in peaking at 0.6 s.",
+        "target": {"kind":"program","program":119,"name":"Reverse Cymbal"},
+        "reason": "Noise that grows for half a second and then cuts is the reverse-cymbal shape; a struck cymbal would peak at once.",
+        "runnerUp": {"kind":"drum","note":49,"name":"Crash Cymbal 1"},
+        "confidence": "low"
+      },
+      {
+        "patch": 12,
+        "character": "Unused. Noise with a fast attack and a long decay: flatness 0.45, centroid 6.5 kHz, -11 dB by 400 ms.",
+        "target": {"kind":"drum","note":49,"name":"Crash Cymbal 1"},
+        "reason": "Bright noise that rings out is cymbal-like, and no other patch has this much noise with a sustained tail.",
+        "runnerUp": {"kind":"drum","note":57,"name":"Crash Cymbal 2"},
+        "confidence": "low"
+      },
+      {
+        "patch": 13,
+        "character": "Post ping. Tonal and metallic (centroid 3 kHz at C4, flatness 0.01), rings to -20 dB by 400 ms. SFX 9 (post).",
+        "target": {"kind":"drum","note":53,"name":"Ride Bell"},
+        "reason": "A struck-metal ping with a short ring is the bell of a ride cymbal, and the game uses it for the puck hitting the post.",
+        "runnerUp": {"kind":"drum","note":81,"name":"Open Triangle"},
+        "confidence": "low"
+      },
+      {
+        "patch": 14,
+        "character": "Pure tone. Almost a sine (harmonics 15 dB or more down), instant attack, sustained. The beeps (SFX 1, 2) and the whistle (SFX 10).",
+        "target": {"kind":"program","program":78,"name":"Whistle"},
+        "reason": "The game uses it for its whistle and beeps, and a sine-like sustained tone without a harmonic bite is also what the GM whistle is.",
+        "runnerUp": {"kind":"program","program":79,"name":"Ocarina"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 15,
+        "character": "Whiff. Noisy sweep (flatness 0.51): 0.16 s swell, gone by 400 ms. SFX 14 (whiff).",
+        "target": {"kind":"program","program":121,"name":"Breath Noise"},
+        "reason": "A short noisy whoosh that fades in and out; Breath Noise is GM's air-noise voice.",
+        "runnerUp": {"kind":"program","program":122,"name":"Seashore"},
+        "confidence": "low"
+      },
+      {
+        "patch": 16,
+        "character": "Foghorn. Sustained; three carriers at MUL 1 with detunes 0, +3, +3 (slow beating); harmonic series falling from the 2nd partial; 155 ms release. SFX 24 (foghorn).",
+        "target": {"kind":"program","program":61,"name":"Brass Section"},
+        "reason": "A horn blast: a sustained harmonic stack with slight beating between carriers, like a section of brass.",
+        "runnerUp": {"kind":"program","program":58,"name":"Tuba"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 17,
+        "character": "Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. SngTitle, Reprise, EOG and PO: FM2 and FM4 as a pair, 1,360 notes cycling 3-7 pitches (A3-A4).",
+        "target": {"kind":"program","program":18,"name":"Rock Organ"},
+        "reason": "A bright, sustained, harmonically dense tone playing repeated short figures in the middle register is the rock-organ role. Weak spot: dense and harsh like patch 5, so a guitar is also plausible.",
+        "runnerUp": {"kind":"program","program":29,"name":"Overdriven Guitar"},
+        "confidence": "low"
+      },
+      {
+        "patch": 18,
+        "character": "Main lead. Bright, tonal, sustained (-2 dB at key-off). Vibrato and pitch envelope on 99% of its notes. Four songs, FM3 and FM5: 2,135 notes (G4-D7, median D#6).",
+        "target": {"kind":"program","program":81,"name":"Lead 2 (sawtooth)"},
+        "reason": "The most-used melodic voice. Partials at 1x, 1.5x, 2x and 3x all within 7 dB is saw-like, and vibrato on every note is how a synth lead is played. Same voice family as patches 6 and 21 with different modulator levels.",
+        "runnerUp": {"kind":"program","program":80,"name":"Lead 1 (square)"},
+        "confidence": "medium"
+      },
+      {
+        "patch": 19,
+        "character": "Quieter board hit. The same sound as patch 10 with the carrier level 3 dB lower (TL 9 against 5). SFX 27, 29.",
+        "target": {"kind":"drum","note":41,"name":"Low Floor Tom"},
+        "reason": "Same FM thump as patch 10 with a lower carrier level: the same instrument hit softer. Map to the same drum at a lower velocity.",
+        "runnerUp": {"kind":"drum","note":45,"name":"Low Tom"},
+        "confidence": "low"
+      },
+      {
+        "patch": 20,
+        "character": "Quietest board hit. The same sound as patch 10 with the carrier level 6 dB lower (TL 13 against 5). SFX 28, 30, 32, 33, 34.",
+        "target": {"kind":"drum","note":41,"name":"Low Floor Tom"},
+        "reason": "Same FM thump as patch 10 with a lower carrier level: the same instrument hit softer. Map to the same drum at a lower velocity.",
+        "runnerUp": {"kind":"drum","note":45,"name":"Low Tom"},
+        "confidence": "low"
+      },
+      {
+        "patch": 21,
+        "character": "Hollow high lead. Odd harmonics dominate (3x about as loud as the note, 2x 12 dB down), slow decay (-8 dB at key-off). Vibrato on 91% of notes. SngPO only, FM4 and FM5: 128 notes (A4-D7, median C6).",
+        "target": {"kind":"program","program":80,"name":"Lead 1 (square)"},
+        "reason": "Odd-harmonic-heavy, hollow and sustained is the square-wave lead shape; it is the SngPO duet voice.",
+        "runnerUp": {"kind":"program","program":73,"name":"Flute"},
+        "confidence": "medium"
+      }
+    ]
+  },
+  "gmToNhl92": {
+    "families": [
+      {
+        "family": "piano",
+        "target": {"kind":"patch","patch":21},
+        "reason": "No patch has a real piano decay. Patch 21 is the only one with an instant attack and a slow decay (-8 dB at 0.65 s) without a metallic ring or harsh noise.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "family": "chromatic-percussion",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Struck, tonal and metallic, ringing to -20 dB by 0.4 s: the closest thing to bells, mallets and tines.",
+        "runnerUp": {"kind":"patch","patch":8},
+        "confidence": "low"
+      },
+      {
+        "family": "organ",
+        "target": {"kind":"patch","patch":2},
+        "reason": "Sustained with no decay and an even-harmonic reedy spectrum (patch 2 is unused in the game).",
+        "runnerUp": {"kind":"patch","patch":17},
+        "confidence": "low"
+      },
+      {
+        "family": "guitar",
+        "target": {"kind":"patch","patch":8},
+        "reason": "The shortest tonal pluck: it decays before it can sustain, like a picked string.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "family": "bass",
+        "target": {"kind":"patch","patch":1},
+        "reason": "The only low, round, sustained patch, and the game's own bass voice (FM1, D2-B3, all five songs).",
+        "runnerUp": {"kind":"patch","patch":16},
+        "confidence": "medium"
+      },
+      {
+        "family": "strings",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Sustained and bright with a strong third harmonic, written for vibrato; the nearest to a bowed tone.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "family": "ensemble",
+        "target": {"kind":"patch","patch":7},
+        "reason": "Slow onset (0.44 s) and a hollow, sustained tone: the pad and choir shape (patch 7 is unused in the game).",
+        "runnerUp": {"kind":"patch","patch":6},
+        "confidence": "low"
+      },
+      {
+        "family": "brass",
+        "target": {"kind":"patch","patch":16},
+        "reason": "Sustained harmonic stack with slight carrier beating, used by the game for its horn.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "medium"
+      },
+      {
+        "family": "reed",
+        "target": {"kind":"patch","patch":2},
+        "reason": "Sustained with an even-harmonic reedy tone and a soft onset.",
+        "runnerUp": {"kind":"patch","patch":21},
+        "confidence": "low"
+      },
+      {
+        "family": "pipe",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Almost a pure sine, sustained: the flute, whistle and ocarina shape.",
+        "runnerUp": {"kind":"patch","patch":21},
+        "confidence": "medium"
+      },
+      {
+        "family": "synth-lead",
+        "target": {"kind":"patch","patch":18},
+        "reason": "The game's own main lead: bright, sustained and written with vibrato on every note.",
+        "runnerUp": {"kind":"patch","patch":6},
+        "confidence": "medium"
+      },
+      {
+        "family": "synth-pad",
+        "target": {"kind":"patch","patch":7},
+        "reason": "Slow onset and a hollow, sustained tone.",
+        "runnerUp": {"kind":"patch","patch":0},
+        "confidence": "low"
+      },
+      {
+        "family": "synth-effects",
+        "target": {"kind":"patch","patch":0},
+        "reason": "Slow swell into a bright, full tone; the least conventional pitched patch.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "family": "ethnic",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short plucked tones for the plucked instruments in this family.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "family": "percussive",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Struck, tonal and metallic: bells, agogo and steel drums. The drum programs and the reverse cymbal are overridden.",
+        "runnerUp": {"kind":"patch","patch":8},
+        "confidence": "low"
+      },
+      {
+        "family": "sound-effects",
+        "target": {"kind":"patch","patch":15},
+        "reason": "Noisy whoosh, the nearest to air, sea and rotor noise.",
+        "runnerUp": {"kind":"patch","patch":12},
+        "confidence": "low"
+      }
+    ],
+    "overrides": [
+      {
+        "program": 4,
+        "name": "Electric Piano 1",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Tine and bell ring on the attack suits patch 13's ping better than patch 21's plain tone.",
+        "runnerUp": {"kind":"patch","patch":21},
+        "confidence": "low"
+      },
+      {
+        "program": 5,
+        "name": "Electric Piano 2",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Tine and bell ring on the attack suits patch 13's ping better than patch 21's plain tone.",
+        "runnerUp": {"kind":"patch","patch":21},
+        "confidence": "low"
+      },
+      {
+        "program": 6,
+        "name": "Harpsichord",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short bright pluck with no sustain.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 7,
+        "name": "Clavinet",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short, percussive, bright pluck.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 11,
+        "name": "Vibraphone",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Soft, sine-like ringing tone.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 12,
+        "name": "Marimba",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short, woody, plucked tone.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 13,
+        "name": "Xylophone",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short, woody, plucked tone.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 17,
+        "name": "Percussive Organ",
+        "target": {"kind":"patch","patch":17},
+        "reason": "Bright and sustained, with the repeated-figure organ role patch 17 has in SngTitle.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "low"
+      },
+      {
+        "program": 18,
+        "name": "Rock Organ",
+        "target": {"kind":"patch","patch":17},
+        "reason": "Patch 17 is the other table's match for this program: bright, sustained and harmonically dense.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "low"
+      },
+      {
+        "program": 29,
+        "name": "Overdriven Guitar",
+        "target": {"kind":"patch","patch":17},
+        "reason": "Bright, harmonically dense and sustained; less noisy than patch 5.",
+        "runnerUp": {"kind":"patch","patch":5},
+        "confidence": "low"
+      },
+      {
+        "program": 30,
+        "name": "Distortion Guitar",
+        "target": {"kind":"patch","patch":5},
+        "reason": "Noisy, dense, sustained, and played as paired low parts in SngEOP; the same patch the other table maps to this program.",
+        "runnerUp": {"kind":"patch","patch":17},
+        "confidence": "medium"
+      },
+      {
+        "program": 31,
+        "name": "Guitar Harmonics",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Pure, sustained, bell-like tone.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 42,
+        "name": "Cello",
+        "target": {"kind":"patch","patch":16},
+        "reason": "Mellow harmonic stack, lower and less bright than patch 6.",
+        "runnerUp": {"kind":"patch","patch":6},
+        "confidence": "low"
+      },
+      {
+        "program": 43,
+        "name": "Contrabass",
+        "target": {"kind":"patch","patch":1},
+        "reason": "Low, round and sustained.",
+        "runnerUp": {"kind":"patch","patch":16},
+        "confidence": "low"
+      },
+      {
+        "program": 45,
+        "name": "Pizzicato Strings",
+        "target": {"kind":"patch","patch":8},
+        "reason": "Short plucked tone: pizzicato is the other table's match for patch 8.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 46,
+        "name": "Orchestral Harp",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Plucked tone with a ring.",
+        "runnerUp": {"kind":"patch","patch":8},
+        "confidence": "low"
+      },
+      {
+        "program": 47,
+        "name": "Timpani",
+        "target": {"kind":"patch","patch":10},
+        "reason": "Pitched, decaying low thump: the board-hit patch is the nearest to a tuned drum.",
+        "runnerUp": {"kind":"patch","patch":3},
+        "confidence": "low"
+      },
+      {
+        "program": 48,
+        "name": "String Ensemble 1",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Sustained with vibrato, as the strings default; a pad swell is too slow for a string section.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "program": 49,
+        "name": "String Ensemble 2",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Sustained with vibrato, as the strings default; a pad swell is too slow for a string section.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "program": 55,
+        "name": "Orchestra Hit",
+        "target": {"kind":"patch","patch":5},
+        "reason": "A loud harsh, dense stab.",
+        "runnerUp": {"kind":"patch","patch":17},
+        "confidence": "low"
+      },
+      {
+        "program": 56,
+        "name": "Trumpet",
+        "target": {"kind":"patch","patch":18},
+        "reason": "Bright, sustained and brassy; brighter than the foghorn.",
+        "runnerUp": {"kind":"patch","patch":16},
+        "confidence": "low"
+      },
+      {
+        "program": 59,
+        "name": "Muted Trumpet",
+        "target": {"kind":"patch","patch":21},
+        "reason": "Thin, hollow, odd-harmonic tone: a muted trumpet is thin and nasal.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 62,
+        "name": "Synth Brass 1",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Bright, brassy edge from the 1.5x partial.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 63,
+        "name": "Synth Brass 2",
+        "target": {"kind":"patch","patch":0},
+        "reason": "Slow swell into a bright full tone (the other table maps patch 0 here).",
+        "runnerUp": {"kind":"patch","patch":16},
+        "confidence": "medium"
+      },
+      {
+        "program": 67,
+        "name": "Baritone Sax",
+        "target": {"kind":"patch","patch":16},
+        "reason": "Lower and mellower than the reed default.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "low"
+      },
+      {
+        "program": 68,
+        "name": "Oboe",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Bright and nasal with strong mid harmonics.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "low"
+      },
+      {
+        "program": 70,
+        "name": "Bassoon",
+        "target": {"kind":"patch","patch":16},
+        "reason": "Lower and mellower than the reed default.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "low"
+      },
+      {
+        "program": 71,
+        "name": "Clarinet",
+        "target": {"kind":"patch","patch":21},
+        "reason": "Odd harmonics dominate, as in a clarinet.",
+        "runnerUp": {"kind":"patch","patch":2},
+        "confidence": "medium"
+      },
+      {
+        "program": 72,
+        "name": "Piccolo",
+        "target": {"kind":"patch","patch":21},
+        "reason": "High, thin and slightly brighter than a pure sine.",
+        "runnerUp": {"kind":"patch","patch":14},
+        "confidence": "low"
+      },
+      {
+        "program": 80,
+        "name": "Lead 1 (square)",
+        "target": {"kind":"patch","patch":21},
+        "reason": "Odd-harmonic square-wave shape (the other table maps patch 21 here).",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "medium"
+      },
+      {
+        "program": 82,
+        "name": "Lead 3 (calliope)",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Almost a pure tone: plain, like a calliope.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 83,
+        "name": "Lead 4 (chiff)",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Bright, sustained, with a strong attack from the 1.5x partial.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 84,
+        "name": "Lead 5 (charang)",
+        "target": {"kind":"patch","patch":5},
+        "reason": "Distorted, dense lead.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 85,
+        "name": "Lead 6 (voice)",
+        "target": {"kind":"patch","patch":7},
+        "reason": "Hollow, slow-onset, vowel-like tone.",
+        "runnerUp": {"kind":"patch","patch":14},
+        "confidence": "low"
+      },
+      {
+        "program": 86,
+        "name": "Lead 7 (fifths)",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Its strong 1.5x partial is a fifth above the note, which is the sound of a fifths lead.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "medium"
+      },
+      {
+        "program": 90,
+        "name": "Pad 3 (polysynth)",
+        "target": {"kind":"patch","patch":17},
+        "reason": "Bright, dense, sustained.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "program": 92,
+        "name": "Pad 5 (bowed)",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Sustained and bowed-sounding with a bright harmonic stack.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "program": 93,
+        "name": "Pad 6 (metallic)",
+        "target": {"kind":"patch","patch":17},
+        "reason": "Bright, harmonically dense, sustained: the nearest to a metallic pad.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 95,
+        "name": "Pad 8 (sweep)",
+        "target": {"kind":"patch","patch":0},
+        "reason": "Slow swell into a bright full tone.",
+        "runnerUp": {"kind":"patch","patch":7},
+        "confidence": "low"
+      },
+      {
+        "program": 96,
+        "name": "FX 1 (rain)",
+        "target": {"kind":"patch","patch":7},
+        "reason": "Soft, slow, hollow pad.",
+        "runnerUp": {"kind":"patch","patch":0},
+        "confidence": "low"
+      },
+      {
+        "program": 97,
+        "name": "FX 2 (soundtrack)",
+        "target": {"kind":"patch","patch":7},
+        "reason": "Soft, slow, hollow pad.",
+        "runnerUp": {"kind":"patch","patch":0},
+        "confidence": "low"
+      },
+      {
+        "program": 98,
+        "name": "FX 3 (crystal)",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Ringing, tonal and metallic.",
+        "runnerUp": {"kind":"patch","patch":14},
+        "confidence": "low"
+      },
+      {
+        "program": 104,
+        "name": "Sitar",
+        "target": {"kind":"patch","patch":13},
+        "reason": "Metallic plucked ring.",
+        "runnerUp": {"kind":"patch","patch":8},
+        "confidence": "low"
+      },
+      {
+        "program": 109,
+        "name": "Bagpipe",
+        "target": {"kind":"patch","patch":2},
+        "reason": "Sustained reedy tone with no decay.",
+        "runnerUp": {"kind":"patch","patch":5},
+        "confidence": "low"
+      },
+      {
+        "program": 110,
+        "name": "Fiddle",
+        "target": {"kind":"patch","patch":6},
+        "reason": "Bright, sustained, vibrato-ready bowed lead.",
+        "runnerUp": {"kind":"patch","patch":18},
+        "confidence": "low"
+      },
+      {
+        "program": 111,
+        "name": "Shanai",
+        "target": {"kind":"patch","patch":2},
+        "reason": "Sustained reedy tone.",
+        "runnerUp": {"kind":"patch","patch":21},
+        "confidence": "low"
+      },
+      {
+        "program": 115,
+        "name": "Woodblock",
+        "target": {"kind":"patch","patch":9},
+        "reason": "Short dry click.",
+        "runnerUp": {"kind":"patch","patch":8},
+        "confidence": "low"
+      },
+      {
+        "program": 116,
+        "name": "Taiko Drum",
+        "target": {"kind":"patch","patch":10},
+        "reason": "Low pitched thump with a bright attack.",
+        "runnerUp": {"kind":"patch","patch":3},
+        "confidence": "low"
+      },
+      {
+        "program": 117,
+        "name": "Melodic Tom",
+        "target": {"kind":"patch","patch":10},
+        "reason": "Pitched, decaying thump: closest to a tuned tom.",
+        "runnerUp": {"kind":"patch","patch":3},
+        "confidence": "low"
+      },
+      {
+        "program": 118,
+        "name": "Synth Drum",
+        "target": {"kind":"patch","patch":10},
+        "reason": "Pitched, decaying thump with a bright attack.",
+        "runnerUp": {"kind":"patch","patch":3},
+        "confidence": "low"
+      },
+      {
+        "program": 119,
+        "name": "Reverse Cymbal",
+        "target": {"kind":"patch","patch":11},
+        "reason": "Noise that grows for half a second then cuts (the other table maps patch 11 here).",
+        "runnerUp": {"kind":"patch","patch":15},
+        "confidence": "medium"
+      },
+      {
+        "program": 123,
+        "name": "Bird Tweet",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Pure high tone; a tweet is a short sine glide.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 124,
+        "name": "Telephone Ring",
+        "target": {"kind":"patch","patch":14},
+        "reason": "Pure repeated tones are the shape of a ring.",
+        "runnerUp": {"kind":"patch","patch":13},
+        "confidence": "low"
+      },
+      {
+        "program": 126,
+        "name": "Applause",
+        "target": {"kind":"dac","sfx":25,"label":"crowd cheer, DAC sample"},
+        "reason": "The game plays a crowd-cheer sample (the EA list names SFX 25 \"crowd cheer\"; 27,007 bytes, about 3.7 s).",
+        "runnerUp": {"kind":"patch","patch":15},
+        "confidence": "medium"
+      },
+      {
+        "program": 127,
+        "name": "Gunshot",
+        "target": {"kind":"dac","sfx":13,"label":"slap shot, DAC sample"},
+        "reason": "The slap-shot crack is the closest percussive burst in the DAC set (EA list: SFX 13 \"slap shot\").",
+        "runnerUp": {"kind":"patch","patch":12},
+        "confidence": "low"
+      }
+    ],
+    "drums": [
+      {
+        "note": 35,
+        "name": "Acoustic Bass Drum",
+        "target": {"kind":"patch","patch":3,"midi":21},
+        "fit": "good",
+        "reason": "Patch 3 is the game's own kick; played at its retail pitch (A0).",
+        "runnerUp": {"kind":"patch","patch":10,"midi":29}
+      },
+      {
+        "note": 36,
+        "name": "Bass Drum 1",
+        "target": {"kind":"patch","patch":3,"midi":21},
+        "fit": "good",
+        "reason": "Patch 3 is the game's own kick; played at its retail pitch (A0).",
+        "runnerUp": {"kind":"patch","patch":10,"midi":29}
+      },
+      {
+        "note": 37,
+        "name": "Side Stick",
+        "target": {"kind":"patch","patch":9},
+        "fit": "rough",
+        "reason": "Short dry tick, the puck-on-stick SFX patch.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":72}
+      },
+      {
+        "note": 38,
+        "name": "Acoustic Snare",
+        "target": {"kind":"patch","patch":4,"midi":30},
+        "fit": "good",
+        "reason": "Patch 4 is the game's snare (backbeat on FM6); played at its retail pitch (F#1).",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 39,
+        "name": "Hand Clap",
+        "target": {"kind":"patch","patch":4,"midi":30},
+        "fit": "rough",
+        "reason": "A noisy burst is the closest to a clap; there is no patch with a clap's spread of attacks.",
+        "runnerUp": {"kind":"dac","sfx":13,"label":"slap shot, DAC sample"}
+      },
+      {
+        "note": 40,
+        "name": "Electric Snare",
+        "target": {"kind":"patch","patch":4,"midi":30},
+        "fit": "good",
+        "reason": "Patch 4 is the game's snare; played at its retail pitch (F#1).",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 41,
+        "name": "Low Floor Tom",
+        "target": {"kind":"patch","patch":10,"midi":41},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump with a bright attack; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":33}
+      },
+      {
+        "note": 42,
+        "name": "Closed Hi-Hat",
+        "target": {"kind":"patch","patch":12},
+        "fit": "none",
+        "reason": "No tight, noisy tick exists. Patch 12 is the nearest noise, but its 70 ms attack is far too slow for a closed hat.",
+        "runnerUp": {"kind":"patch","patch":9}
+      },
+      {
+        "note": 43,
+        "name": "High Floor Tom",
+        "target": {"kind":"patch","patch":10,"midi":43},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":35}
+      },
+      {
+        "note": 44,
+        "name": "Pedal Hi-Hat",
+        "target": {"kind":"patch","patch":12},
+        "fit": "none",
+        "reason": "No tight, noisy tick exists (as the closed hat).",
+        "runnerUp": {"kind":"patch","patch":9}
+      },
+      {
+        "note": 45,
+        "name": "Low Tom",
+        "target": {"kind":"patch","patch":10,"midi":45},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":37}
+      },
+      {
+        "note": 46,
+        "name": "Open Hi-Hat",
+        "target": {"kind":"patch","patch":12},
+        "fit": "rough",
+        "reason": "Bright noise with a slow decay: a washy, open sound.",
+        "runnerUp": {"kind":"patch","patch":15}
+      },
+      {
+        "note": 47,
+        "name": "Low-Mid Tom",
+        "target": {"kind":"patch","patch":10,"midi":47},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":39}
+      },
+      {
+        "note": 48,
+        "name": "Hi-Mid Tom",
+        "target": {"kind":"patch","patch":10,"midi":48},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":40}
+      },
+      {
+        "note": 49,
+        "name": "Crash Cymbal 1",
+        "target": {"kind":"patch","patch":12},
+        "fit": "rough",
+        "reason": "Bright noise that rings out.",
+        "runnerUp": {"kind":"patch","patch":11}
+      },
+      {
+        "note": 50,
+        "name": "High Tom",
+        "target": {"kind":"patch","patch":10,"midi":50},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump; pitch chosen to match the tom (by ear).",
+        "runnerUp": {"kind":"patch","patch":3,"midi":42}
+      },
+      {
+        "note": 51,
+        "name": "Ride Cymbal 1",
+        "target": {"kind":"patch","patch":13,"midi":60},
+        "fit": "rough",
+        "reason": "Metallic ping with a short ring; a ride is a ping over a wash, and there is no wash.",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 52,
+        "name": "Chinese Cymbal",
+        "target": {"kind":"patch","patch":12},
+        "fit": "rough",
+        "reason": "Bright noise with a long decay.",
+        "runnerUp": {"kind":"patch","patch":11}
+      },
+      {
+        "note": 53,
+        "name": "Ride Bell",
+        "target": {"kind":"patch","patch":13,"midi":60},
+        "fit": "rough",
+        "reason": "Struck-metal ping with a short ring; the game uses it for the post.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":84}
+      },
+      {
+        "note": 54,
+        "name": "Tambourine",
+        "target": {"kind":"patch","patch":12},
+        "fit": "none",
+        "reason": "A tambourine is short, high and jingly; patch 12 has the noise but not the length or the jingle.",
+        "runnerUp": {"kind":"patch","patch":9}
+      },
+      {
+        "note": 55,
+        "name": "Splash Cymbal",
+        "target": {"kind":"patch","patch":12},
+        "fit": "rough",
+        "reason": "Bright noise that rings out; play it short for a splash.",
+        "runnerUp": {"kind":"patch","patch":15}
+      },
+      {
+        "note": 56,
+        "name": "Cowbell",
+        "target": {"kind":"patch","patch":13,"midi":72},
+        "fit": "rough",
+        "reason": "Tonal metal hit that rings briefly.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":72}
+      },
+      {
+        "note": 57,
+        "name": "Crash Cymbal 2",
+        "target": {"kind":"patch","patch":12},
+        "fit": "rough",
+        "reason": "Bright noise that rings out.",
+        "runnerUp": {"kind":"patch","patch":11}
+      },
+      {
+        "note": 58,
+        "name": "Vibraslap",
+        "target": {"kind":"patch","patch":15},
+        "fit": "none",
+        "reason": "A vibraslap rattles and rings; the nearest noise is the whiff patch, which does neither.",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 59,
+        "name": "Ride Cymbal 2",
+        "target": {"kind":"patch","patch":13,"midi":60},
+        "fit": "rough",
+        "reason": "Metallic ping with a short ring.",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 60,
+        "name": "Hi Bongo",
+        "target": {"kind":"patch","patch":8,"midi":79},
+        "fit": "rough",
+        "reason": "Short tonal blip, played high.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":79}
+      },
+      {
+        "note": 61,
+        "name": "Low Bongo",
+        "target": {"kind":"patch","patch":8,"midi":72},
+        "fit": "rough",
+        "reason": "Short tonal blip, played lower.",
+        "runnerUp": {"kind":"patch","patch":10,"midi":55}
+      },
+      {
+        "note": 62,
+        "name": "Mute Hi Conga",
+        "target": {"kind":"patch","patch":8,"midi":74},
+        "fit": "rough",
+        "reason": "Short tonal blip: a muted conga slap.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":74}
+      },
+      {
+        "note": 63,
+        "name": "Open Hi Conga",
+        "target": {"kind":"patch","patch":10,"midi":55},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump: an open conga tone.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":67}
+      },
+      {
+        "note": 64,
+        "name": "Low Conga",
+        "target": {"kind":"patch","patch":10,"midi":48},
+        "fit": "rough",
+        "reason": "Pitched, decaying thump, played lower.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":60}
+      },
+      {
+        "note": 65,
+        "name": "High Timbale",
+        "target": {"kind":"patch","patch":8,"midi":84},
+        "fit": "rough",
+        "reason": "Short tonal blip, played high.",
+        "runnerUp": {"kind":"patch","patch":13,"midi":84}
+      },
+      {
+        "note": 66,
+        "name": "Low Timbale",
+        "target": {"kind":"patch","patch":8,"midi":77},
+        "fit": "rough",
+        "reason": "Short tonal blip, played lower than the high timbale.",
+        "runnerUp": {"kind":"patch","patch":13,"midi":77}
+      },
+      {
+        "note": 67,
+        "name": "High Agogo",
+        "target": {"kind":"patch","patch":13,"midi":84},
+        "fit": "rough",
+        "reason": "Tonal metal hit that rings briefly, played high.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":84}
+      },
+      {
+        "note": 68,
+        "name": "Low Agogo",
+        "target": {"kind":"patch","patch":13,"midi":77},
+        "fit": "rough",
+        "reason": "Tonal metal hit that rings briefly, played lower.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":77}
+      },
+      {
+        "note": 69,
+        "name": "Cabasa",
+        "target": {"kind":"patch","patch":12},
+        "fit": "none",
+        "reason": "A cabasa is a short scratchy rattle; patch 12 is the noisiest patch but is washy, not scratchy.",
+        "runnerUp": {"kind":"patch","patch":15}
+      },
+      {
+        "note": 70,
+        "name": "Maracas",
+        "target": {"kind":"patch","patch":12},
+        "fit": "none",
+        "reason": "A maraca is a short, dry rattle; patch 12 is the nearest noise.",
+        "runnerUp": {"kind":"patch","patch":9}
+      },
+      {
+        "note": 71,
+        "name": "Short Whistle",
+        "target": {"kind":"patch","patch":14,"midi":84},
+        "fit": "good",
+        "reason": "A pure sustained tone: the game itself uses patch 14 for its whistle. Play a short note.",
+        "runnerUp": {"kind":"patch","patch":21,"midi":84}
+      },
+      {
+        "note": 72,
+        "name": "Long Whistle",
+        "target": {"kind":"patch","patch":14,"midi":84},
+        "fit": "good",
+        "reason": "A pure sustained tone: the game itself uses patch 14 for its whistle. Play a long note.",
+        "runnerUp": {"kind":"patch","patch":21,"midi":84}
+      },
+      {
+        "note": 73,
+        "name": "Short Guiro",
+        "target": {"kind":"dac","sfx":3,"label":"skating, DAC sample"},
+        "fit": "rough",
+        "reason": "The skating sample (EA list SFX 3) is the only scraping sound; cut it short for a short guiro. Not heard by the author of this table.",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 74,
+        "name": "Long Guiro",
+        "target": {"kind":"dac","sfx":3,"label":"skating, DAC sample"},
+        "fit": "rough",
+        "reason": "The skating sample (EA list SFX 3) is the only scraping sound; play it whole for a long guiro. Not heard by the author of this table.",
+        "runnerUp": {"kind":"patch","patch":12}
+      },
+      {
+        "note": 75,
+        "name": "Claves",
+        "target": {"kind":"patch","patch":9,"midi":72},
+        "fit": "rough",
+        "reason": "Short dry tick, played high.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":84}
+      },
+      {
+        "note": 76,
+        "name": "Hi Wood Block",
+        "target": {"kind":"patch","patch":9,"midi":67},
+        "fit": "rough",
+        "reason": "Short dry tick.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":79}
+      },
+      {
+        "note": 77,
+        "name": "Low Wood Block",
+        "target": {"kind":"patch","patch":9,"midi":55},
+        "fit": "rough",
+        "reason": "Short dry tick, played low.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":67}
+      },
+      {
+        "note": 78,
+        "name": "Mute Cuica",
+        "target": {"kind":"patch","patch":14,"midi":72},
+        "fit": "none",
+        "reason": "A cuica is a pitch-sliding squeak; the nearest is the sine-like patch, played short.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":72}
+      },
+      {
+        "note": 79,
+        "name": "Open Cuica",
+        "target": {"kind":"patch","patch":14,"midi":72},
+        "fit": "none",
+        "reason": "A cuica is a pitch-sliding squeak; the nearest is the sine-like patch.",
+        "runnerUp": {"kind":"patch","patch":8,"midi":72}
+      },
+      {
+        "note": 80,
+        "name": "Mute Triangle",
+        "target": {"kind":"patch","patch":13,"midi":96},
+        "fit": "rough",
+        "reason": "Short metallic ping, played high.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":84}
+      },
+      {
+        "note": 81,
+        "name": "Open Triangle",
+        "target": {"kind":"patch","patch":13,"midi":96},
+        "fit": "rough",
+        "reason": "Metallic ping that rings, played high.",
+        "runnerUp": {"kind":"patch","patch":9,"midi":84}
+      }
+    ]
+  }
+}
