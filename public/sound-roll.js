@@ -493,6 +493,16 @@
       raf = 0;
     }
 
+    canvas.addEventListener('mousemove', (ev) => {
+      if (!mutable) return;
+      const r = canvas.getBoundingClientRect();
+      const y = ev.clientY - r.top;
+      const L = size();
+      const G = geometry(L);
+      let over = false;
+      for (let i = 0; i < 6; i++) if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) over = true;
+      canvas.style.cursor = over ? 'pointer' : '';
+    });
     canvas.addEventListener('click', (ev) => {
       if (!mutable) return;
       const r = canvas.getBoundingClientRect();

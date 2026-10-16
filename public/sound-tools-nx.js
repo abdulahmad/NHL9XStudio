@@ -146,18 +146,15 @@
     barsIn.max = '200';
     barsIn.id = 'se-bars';
     barsIn.setAttribute('aria-label', 'Bars');
-    const copy = make('select');
-    copy.id = 'se-copy';
-    copy.setAttribute('aria-label', 'Start from a retail song');
-    copy.appendChild(Object.assign(make('option', null, 'Start from…'), { value: '' }));
-    host.data.songs.forEach((s) => copy.appendChild(Object.assign(make('option', null, '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name), { value: String(s.id) })));
-    copy.appendChild(Object.assign(make('option', null, 'Empty song'), { value: 'empty' }));
+    const fresh = make('button', 'ghost-btn', 'New empty song');
+    fresh.type = 'button';
+    fresh.title = 'Clear the sequencer (Undo brings the song back)';
     const importBtn = make('input');
     importBtn.type = 'file';
     importBtn.accept = '.mid,.midi,audio/midi,audio/x-midi';
     importBtn.id = 'se-import';
     importBtn.setAttribute('aria-label', 'Import MIDI');
-    row1.append(lab('Name', nameIn), lab('Grid', gridSel), gridNote, lab('Bars', barsIn), copy, lab('Import MIDI', importBtn));
+    row1.append(lab('Name', nameIn), lab('Grid', gridSel), gridNote, lab('Bars', barsIn), fresh, lab('Import MIDI', importBtn));
     box.appendChild(row1);
 
     const row2 = make('div', 'st-controls se-bar');
@@ -530,16 +527,10 @@
         if (s.loopTick != null && s.loopTick >= s.ticks) s.loopTick = null;
       });
     });
-    copy.addEventListener('change', () => {
-      const v = copy.value;
-      copy.value = '';
-      if (!v) return;
+    fresh.addEventListener('click', () => {
       edit(() => {
-        if (v === 'empty') { model.songs[game] = Stream().emptySong(game); model.names[game] = 'my-song'; } else {
-          const id2 = Number(v);
-          model.songs[game] = Stream().fromStream(game, host.slice, id2, map);
-          model.names[game] = safeName(host.data.songs.find((s) => s.id === id2).name);
-        }
+        model.songs[game] = Stream().emptySong(game);
+        model.names[game] = 'my-song';
         model.report = [];
         model.sel = [];
       });

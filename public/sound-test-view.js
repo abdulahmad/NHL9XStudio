@@ -379,7 +379,7 @@
   }
 
   async function playSnes(id, startSec) {
-    if (!snesData || !snesApi()) throw new Error(error || 'Sound test still loading');
+    if (!snesData || !snesApi()) throw new Error(error || 'Audio still loading');
     const sm = /^sound-(\w+)-(\d+)$/.exec(id);
     const imp = id === TOOL_IMPORT ? snesImport : null;
     if (id === TOOL_IMPORT && !imp) throw new Error('Open a MIDI file first');
@@ -411,7 +411,7 @@
 
   async function play(id, startSec) {
     if (isSnes()) return playSnes(id, startSec);
-    if (!rom || !Ym) throw new Error(error || 'Sound test still loading');
+    if (!rom || !Ym) throw new Error(error || 'Audio still loading');
     stop();
     stopBuffer();
     ensureContext();
@@ -1145,7 +1145,7 @@
     box.replaceChildren();
     box.dataset.item = id;
     if (!assetsReady()) {
-      box.appendChild(make('p', 'st-note', error ? 'Sound test failed to load: ' + error : 'Loading the sound test…'));
+      box.appendChild(make('p', 'st-note', error ? 'Audio failed to load: ' + error : 'Loading audio…'));
       return;
     }
     if (live && live.id !== id) stop();
@@ -1437,7 +1437,7 @@
   }
 
   function metaRows(id) {
-    if (!assetsReady()) return [['Sound test', error || 'loading']];
+    if (!assetsReady()) return [['Audio', error || 'loading']];
     if (isSnes93()) {
       if (id === TOOL_IMPORT) return [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1), or a native export'], ['Out', 'a song for the game\'s sound program, played on it as cue 7'], ['Mapping', 'data/audio/nhl93s-gm-map.json'], ['Notes', 'docs/NHL93S-SOUND.md']];
       const cue = Number(id.split('-').pop());
