@@ -1166,7 +1166,7 @@
         const info = snesApi().songInfo(snesData, cue);
         box.appendChild(make('p', 'st-kind', 'NHLPA 93 (SNES) song'));
         box.appendChild(make('h3', null, info.name));
-        box.appendChild(make('p', 'st-note mono', info.set + ' sample set · cue $' + cue.toString(16).toUpperCase() + ' · ' + info.label + (info.note ? ' · ' + info.note : '')));
+        box.appendChild(make('p', 'st-note mono', info.set + ' sample set · cue $' + cue.toString(16).toUpperCase() + (info.label ? ' · ' + info.label : '') + (info.note ? ' · ' + info.note : '')));
       } else {
         box.appendChild(make('p', 'st-kind', cue <= 0x87 ? 'NHLPA 93 (SNES) crowd noise' : 'NHLPA 93 (SNES) sound effect'));
         box.appendChild(make('h3', null, title(id)));
