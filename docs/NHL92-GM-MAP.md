@@ -452,7 +452,7 @@ The analysis file only changes if the data or the render pipeline changes; `node
 
 ## Audition
 
-The **Chip lab** page has a *Mapping audition* card. Choose a direction, pick a patch (or a GM program or drum note), and play the NHL '92 sound, the basic GM-style reference for the mapped program (or the reverse), or both one after the other. The reference sounds are plain synth stand-ins made by `gm-reference.js` (a waveform, an envelope, a little vibrato; noise and sweeps for drums), not a soundfont, so they say which instrument family was meant rather than how a real GM synth sounds. Both sides are played at the same level so loudness does not bias the comparison. The viewer's default view (NHL 92 with the SPA tab) is unchanged.
+The **Chip lab** page has a *Mapping audition* card. Choose a direction (NHL '92 patch → GM, GM program → NHL '92, or GM drum → NHL '92), pick the patch, program or drum note, and read the match, runner-up, confidence and reason shown under it. Buttons: *Play pick, then match* (the pick, a short pause, the mapped sound), *Pick only*, *Match only* and *Runner-up only*. Pitched sounds play an eight-note C-major scale; percussive patches play three hits (the kick and snare at their retail pitch). DAC targets play the sample through the retail Z80 driver. Page checks were done in headless Chromium (the card loads the JSON, renders and builds the playback buffer); nobody has listened to it. The reference sounds are plain synth stand-ins made by `gm-reference.js` (a waveform, an envelope, a little vibrato; noise and sweeps for drums), not a soundfont, so they say which instrument family was meant rather than how a real GM synth sounds. Both sides are played at the same level so loudness does not bias the comparison. The viewer's default view (NHL 92 with the SPA tab) is unchanged.
 
 ## Tests (`test/nhl92-gm-map.js`, part of `node test.js`)
 
@@ -462,6 +462,7 @@ The **Chip lab** page has a *Mapping audition* card. Choose a direction, pick a 
 - No override repeats its family default; no runner-up repeats its match.
 - The generated tables in this doc and the analysis JSON are current (analysis checked with small tolerances on the measured values).
 - The GM reference renders every program and drum note deterministically and non-silently.
+- The audition planner plans every pick in all three directions (match and runner-up), and every distinct NHL '92 side (patch scales, drum hits, DAC samples) renders audibly through the retail driver.
 
 ## Not verified
 
