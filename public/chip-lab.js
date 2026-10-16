@@ -16,9 +16,9 @@ let psg = null;
 let ctx = null;
 let node = null;
 let resampler = null;
-let running = false;
-let ymPreset = '440';
-let psgMode = 'tone';
+let running = false; // true while a YM2612 or PSG button is on
+let ymPreset = null; // the YM2612 button that is on (data-ym), or null
+let psgMode = null; // the SN76489 button that is on (data-psg), or null
 let engineReady = false;
 
 // NHL '92 retail driver picker: a dedicated YM2612 instance restored to its
@@ -92,7 +92,7 @@ async function initEngine() {
   ymChip.reset();
   psg = NhlSn76489.create({ clock: 3579545 });
   engineReady = true;
-  statusEl.textContent = 'Ready — pick a preset and press Play';
+  statusEl.textContent = 'Ready — click a button to hear it, click it again to stop';
   initNhl92(Ym2612).catch((err) => {
     el('nhl92-meter').textContent = 'Driver unavailable: ' + (err && err.message ? err.message : String(err));
     console.error(err);
@@ -241,76 +241,63 @@ function ensureAudioGraph() {
   node.connect(ctx.destination);
 }
 
-async function startAudio() {
-  if (!engineReady || !ymChip || !psg) {
-    statusEl.textContent = 'Still loading — wait for Ready';
-    return;
-  }
-  ensureAudioGraph();
-  applyYm();
-  applyPsg();
-  resampler.reset();
-  if (ctx.state === 'suspended') await ctx.resume();
-  running = true;
-  statusEl.textContent = 'Playing — YM ' + ymPreset + ' + PSG ' + psgMode;
+function describeOn() {
+  const on = [];
+  if (ymPreset) on.push('YM ' + ymPreset);
+  if (psgMode) on.push('PSG ' + psgMode);
+  return on.length ? 'Playing — ' + on.join(' + ') : 'Stopped';
 }
 
-function stopAudio() {
-  running = false;
-  stopNhl92();
-  if (ymChip) ymChip.reset();
-  if (psg) psg.reset();
-  ymLevel.clear();
-  psgLevel.clear();
-  if (engineReady) {
-    ymMeter.textContent = 'YM2612 · stopped';
-    psgMeter.textContent = 'SN76489 · stopped';
-    statusEl.textContent = 'Stopped';
+/** Make sure the audio graph runs while at least one button is on. */
+async function syncRunning() {
+  running = !!(ymPreset || psgMode);
+  if (running) {
+    ensureAudioGraph();
+    if (ctx.state === 'suspended') await ctx.resume();
+  } else {
+    ymLevel.clear();
+    psgLevel.clear();
+    if (engineReady) {
+      ymMeter.textContent = 'YM2612 · stopped';
+      psgMeter.textContent = 'SN76489 · stopped';
+    }
   }
+  statusEl.textContent = describeOn();
 }
 
 function markSelected(selector, attr, value) {
   document.querySelectorAll(selector).forEach((btn) => {
-    btn.classList.toggle('is-selected', btn.getAttribute(attr) === value);
+    const on = value != null && btn.getAttribute(attr) === value;
+    btn.classList.toggle('is-selected', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 }
 
-document.querySelectorAll('[data-ym]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    ymPreset = btn.getAttribute('data-ym');
+// Each YM2612 / SN76489 button is a toggle: click to hear it (the button lights up), click again to stop it.
+// One YM2612 sound and one PSG sound can play together; picking another one on the same chip replaces it.
+function toggleButton(btn, which) {
+  if (!engineReady || !ymChip || !psg) {
+    statusEl.textContent = 'Still loading the engine…';
+    return;
+  }
+  if (which === 'ym') {
+    const v = btn.getAttribute('data-ym');
+    ymPreset = ymPreset === v ? null : v;
+    if (ymPreset) applyYm(); else ymChip.reset();
     markSelected('[data-ym]', 'data-ym', ymPreset);
-    if (running) {
-      applyYm();
-      statusEl.textContent = 'Playing — YM ' + ymPreset + ' + PSG ' + psgMode;
-    } else {
-      ymMeter.textContent = 'Selected ' + btn.textContent + ' — press Play';
-    }
-  });
-});
-
-document.querySelectorAll('[data-psg]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    psgMode = btn.getAttribute('data-psg');
+  } else {
+    const v = btn.getAttribute('data-psg');
+    psgMode = psgMode === v ? null : v;
+    if (psgMode) applyPsg(); else psg.reset();
     markSelected('[data-psg]', 'data-psg', psgMode);
-    if (running) {
-      applyPsg();
-      statusEl.textContent = 'Playing — YM ' + ymPreset + ' + PSG ' + psgMode;
-    } else {
-      psgMeter.textContent = 'Selected ' + btn.textContent + ' — press Play';
-    }
-  });
-});
+  }
+  syncRunning().catch((err) => { statusEl.textContent = err.message || 'Playback failed'; });
+}
 
-markSelected('[data-ym]', 'data-ym', ymPreset);
-markSelected('[data-psg]', 'data-psg', psgMode);
-
-el('play').addEventListener('click', () => {
-  startAudio().catch((err) => {
-    statusEl.textContent = err.message || 'Playback failed';
-  });
-});
-
-el('stop').addEventListener('click', stopAudio);
+document.querySelectorAll('[data-ym]').forEach((btn) => btn.addEventListener('click', () => toggleButton(btn, 'ym')));
+document.querySelectorAll('[data-psg]').forEach((btn) => btn.addEventListener('click', () => toggleButton(btn, 'psg')));
+markSelected('[data-ym]', 'data-ym', null);
+markSelected('[data-psg]', 'data-psg', null);
 
 for (const [id, kind] of [['nhl92-play-patch', 'patch'], ['nhl92-play-sfx', 'sfx']]) {
   el(id).addEventListener('click', () => {

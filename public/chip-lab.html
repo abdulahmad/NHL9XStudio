@@ -20,7 +20,7 @@
   <main>
     <p><a class="back" href="index.html">← NHL9X Studio</a></p>
     <h1>Chip lab</h1>
-    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Use the presets, then <strong>Play</strong> — audio requires a click (browser policy). Below, pick an NHL '92 instrument or SFX to hear it through the game's own driver.</p>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Click a sound to hear it: the button lights up, click it again to stop. Audio starts on your first click (browser policy). Below, pick an NHL '92 instrument or SFX to hear it through the game's own driver.</p>
     <div class="chip-grid">
       <section class="chip-card" aria-labelledby="ym-title">
         <h2 id="ym-title">YM2612 (Genesis FM)</h2>
@@ -79,11 +79,7 @@
       </div>
       <p class="meter" id="aud-meter">Loading driver…</p>
     </section>
-    <div class="transport">
-      <button type="button" class="primary" id="play">Play</button>
-      <button type="button" id="stop">Stop</button>
-      <span class="meter" id="status">Loading WASM…</span>
-    </div>
+    <p class="meter" id="status">Loading WASM…</p>
   </main>
   <script src="lib/audio/sn76489.js"></script>
   <script src="lib/audio/chip-lab-presets.js"></script>
