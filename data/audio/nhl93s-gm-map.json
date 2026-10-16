@@ -1,41 +1,292 @@
 {
-  "about": "NHLPA '93 (SNES) instruments <-> General MIDI. The game has no instrument names, so every row is a guess from the samples (measured length, loop, harmonics, noisiness) and from how the songs use them; nothing was auditioned. Edit by ear. Notes use MIDI = note index + 12 for every instrument (docs/NHL93S-SOUND.md).",
-  "sets": {
-    "boot": {
-      "0": { "program": 33, "why": "197 ms pluck, strongly periodic, played G#0-F2: electric bass (finger)" },
-      "1": { "drum": 36, "key": 19, "why": "124 ms low thump at one fixed key, 1027 uses on the drum parts: kick" },
-      "2": { "drum": 38, "key": 19, "why": "239 ms bright burst at one fixed key, 574 uses: snare" },
-      "3": { "program": 81, "why": "single-cycle loop, harmonics 1, .49, .27, .18: sawtooth lead" },
-      "4": { "program": 38, "why": "377 ms decaying pluck, played F1-D#3: synth bass 1" },
-      "5": { "drum": 42, "key": 19, "why": "43 ms bright tick at one fixed key, 900 uses: closed hi-hat" },
-      "6": { "program": 80, "why": "32-sample loop, harmonics 1, .34, .17: soft square lead" },
-      "7": { "program": 18, "why": "112-sample loop with an attack part, strong second harmonic, the main melodic voice of the organ songs: rock organ" },
-      "8": { "drum": 49, "key": 24, "why": "125 ms noise burst (zero crossings near 7 kHz), 50 uses: crash cymbal" }
-    },
-    "game": {
-      "10": { "program": 78, "why": "pure sine loop: the whistle effect: whistle" },
-      "11": { "program": 126, "why": "845 ms noise swell, the crowd cheer: applause" },
-      "27": { "program": 62, "why": "160-sample loop with strong 3rd, 4th and 8th harmonics, the lead of all four fanfares: synth brass 1" },
-      "28": { "drum": 39, "key": 23, "why": "112 ms noise burst at keys 13-23, the fanfares' drum part: hand clap" }
+ "about": "NHLPA '93 (SNES) instruments <-> General MIDI. The game has no instrument names, so every row rests on measurements: one probe note per instrument played through the game's own SPC700 program (data/audio/nhl93s-instrument-analysis.json, rebuilt by tools/build-snes-gm-analysis.js) and how the retail songs use it. Each row has a confidence and a runner-up. Nothing was auditioned: edit by ear. Instruments 12-26 are used only by sound effects and are not mapped. Notes use MIDI = note index + 12 for every instrument (docs/NHL93S-SOUND.md).",
+ "sets": {
+  "boot": {
+   "0": {
+    "program": 33,
+    "why": "the bass of the boot songs. 1636 notes, MIDI 20-41 in cues 1,2,3,9. Measured: plucked, attack 70 ms, -30 dB at key-off, brightness 3.1x, periodicity 0.98",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 35,
+     "why": "fretless bass"
     }
-  },
-  "families": {
-    "boot": { "bass": 0, "guitar": 4, "keys": 7, "lead": 3, "pad": 7, "fx": 6, "other": 3 },
-    "game": { "other": 27 }
-  },
-  "drums": {
-    "boot": {
-      "35": { "inst": 1, "key": 19 }, "36": { "inst": 1, "key": 19 },
-      "37": { "inst": 2, "key": 19 }, "38": { "inst": 2, "key": 19 }, "39": { "inst": 2, "key": 19 }, "40": { "inst": 2, "key": 19 },
-      "41": { "inst": 1, "key": 22 }, "43": { "inst": 1, "key": 24 }, "45": { "inst": 1, "key": 27 }, "47": { "inst": 1, "key": 30 }, "48": { "inst": 1, "key": 32 }, "50": { "inst": 1, "key": 34 },
-      "42": { "inst": 5, "key": 19 }, "44": { "inst": 5, "key": 19 }, "46": { "inst": 5, "key": 19 },
-      "49": { "inst": 8, "key": 24 }, "51": { "inst": 8, "key": 24 }, "52": { "inst": 8, "key": 24 }, "53": { "inst": 8, "key": 24 }, "55": { "inst": 8, "key": 24 }, "57": { "inst": 8, "key": 24 }, "59": { "inst": 8, "key": 24 }
-    },
-    "game": {
-      "35": { "inst": 28, "key": 13 }, "36": { "inst": 28, "key": 13 },
-      "38": { "inst": 28, "key": 23 }, "39": { "inst": 28, "key": 23 }, "40": { "inst": 28, "key": 23 },
-      "42": { "inst": 28, "key": 30 }, "44": { "inst": 28, "key": 30 }, "46": { "inst": 28, "key": 30 },
-      "49": { "inst": 28, "key": 36 }, "51": { "inst": 28, "key": 36 }, "57": { "inst": 28, "key": 36 }
+   },
+   "1": {
+    "drum": 36,
+    "key": 19,
+    "why": "low thump on the drum parts. 1027 notes, MIDI 31-31 (one fixed key) in cues 1,2,3,9. Measured: plucked, attack 5 ms, -60 dB at key-off, brightness 1.8x, periodicity 0.99",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 35,
+     "why": "acoustic bass drum"
     }
+   },
+   "2": {
+    "drum": 38,
+    "key": 19,
+    "why": "bright burst on the drum parts. 574 notes, MIDI 31-31 (one fixed key) in cues 1,2,3,9. Measured: plucked, attack 10 ms, -60 dB at key-off, brightness 4.8x, periodicity 0.91",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 40,
+     "why": "electric snare"
+    }
+   },
+   "3": {
+    "program": 81,
+    "why": "sawtooth-like lead (harmonics 1, .49, .27, .18). 516 notes, MIDI 43-69 in cues 1,2. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 3.5x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 82,
+     "why": "calliope lead"
+    }
+   },
+   "4": {
+    "program": 38,
+    "why": "sustained, bright synth bass (not a pluck). 1980 notes, MIDI 22-46 in cues 1,2,3,9. Measured: sustained, attack 55 ms, -2 dB at key-off, brightness 14.2x, periodicity 0.92",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 39,
+     "why": "synth bass 2"
+    }
+   },
+   "5": {
+    "drum": 42,
+    "key": 19,
+    "why": "short bright tick on the drum parts. 900 notes, MIDI 31-31 (one fixed key) in cues 1,2,3,9. Measured: plucked, attack 5 ms, -60 dB at key-off, brightness 11x, periodicity 0.96",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "6": {
+    "program": 80,
+    "why": "soft square-ish lead. 102 notes, MIDI 48-64 in cues 1. Measured: sustained, attack 10 ms, 0 dB at key-off, brightness 2.3x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 81,
+     "why": "sawtooth lead"
+    }
+   },
+   "7": {
+    "program": 18,
+    "why": "the main melodic voice of the organ songs; bright sustained organ. 2684 notes, MIDI 31-72 in cues 2,3,9. Measured: sustained, attack 5 ms, -2 dB at key-off, brightness 7.5x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 16,
+     "why": "drawbar organ"
+    }
+   },
+   "8": {
+    "drum": 49,
+    "key": 24,
+    "why": "short bright noise burst. 28 notes, MIDI 36-36 (one fixed key) in cues 1,2,3,9. Measured: plucked, attack 10 ms, -60 dB at key-off, brightness 36.9x, periodicity 0.4",
+    "confidence": "low",
+    "runnerUp": {
+     "drum": 55,
+     "why": "splash cymbal (the burst is only 125 ms)"
+    }
+   },
+   "9": {
+    "program": 121,
+    "why": "noise instrument (flatness 0.08, periodicity 0.17); no song uses it. Measured: sustained, attack 35 ms, -1 dB at key-off, brightness 10x, periodicity 0.17",
+    "confidence": "low",
+    "runnerUp": {
+     "program": 122,
+     "why": "seashore"
+    }
+   }
+  },
+  "game": {
+   "10": {
+    "program": 78,
+    "why": "pure sine loop, the whistle effect. no song uses it. Measured: sustained, attack 0 ms, 0 dB at key-off, brightness 4.4x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 79,
+     "why": "ocarina"
+    }
+   },
+   "11": {
+    "program": 126,
+    "why": "noise swell, the crowd cheer. 3 notes, MIDI 21-24 in cues 4,8. Measured: swell, attack 275 ms, -8 dB at key-off, brightness 27.4x, periodicity 0.76",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 122,
+     "why": "seashore"
+    }
+   },
+   "27": {
+    "program": 62,
+    "why": "sustained, harmonically rich lead of all four fanfares. 597 notes, MIDI 16-60 in cues 4,5,6,7,8. Measured: sustained, attack 0 ms, -1 dB at key-off, brightness 8.8x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 61,
+     "why": "brass section"
+    }
+   },
+   "28": {
+    "drum": 39,
+    "key": 23,
+    "why": "noise burst whose pitch is shifted per hit: the fanfares' drum part. 167 notes, MIDI 25-35 in cues 4,5,6,7. Measured: plucked, attack 0 ms, -60 dB at key-off, brightness 25.1x, periodicity 0.22",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 40,
+     "why": "electric snare"
+    }
+   }
   }
+ },
+ "families": {
+  "boot": {
+   "bass": 0,
+   "guitar": 4,
+   "keys": 7,
+   "lead": 3,
+   "pad": 7,
+   "fx": 6,
+   "other": 3
+  },
+  "game": {
+   "other": 27
+  }
+ },
+ "drums": {
+  "boot": {
+   "35": {
+    "inst": 1,
+    "key": 19
+   },
+   "36": {
+    "inst": 1,
+    "key": 19
+   },
+   "37": {
+    "inst": 2,
+    "key": 19
+   },
+   "38": {
+    "inst": 2,
+    "key": 19
+   },
+   "39": {
+    "inst": 2,
+    "key": 19
+   },
+   "40": {
+    "inst": 2,
+    "key": 19
+   },
+   "41": {
+    "inst": 1,
+    "key": 22
+   },
+   "42": {
+    "inst": 5,
+    "key": 19
+   },
+   "43": {
+    "inst": 1,
+    "key": 24
+   },
+   "44": {
+    "inst": 5,
+    "key": 19
+   },
+   "45": {
+    "inst": 1,
+    "key": 27
+   },
+   "46": {
+    "inst": 5,
+    "key": 19
+   },
+   "47": {
+    "inst": 1,
+    "key": 30
+   },
+   "48": {
+    "inst": 1,
+    "key": 32
+   },
+   "49": {
+    "inst": 8,
+    "key": 24
+   },
+   "50": {
+    "inst": 1,
+    "key": 34
+   },
+   "51": {
+    "inst": 8,
+    "key": 24
+   },
+   "52": {
+    "inst": 8,
+    "key": 24
+   },
+   "53": {
+    "inst": 8,
+    "key": 24
+   },
+   "55": {
+    "inst": 8,
+    "key": 24
+   },
+   "57": {
+    "inst": 8,
+    "key": 24
+   },
+   "59": {
+    "inst": 8,
+    "key": 24
+   }
+  },
+  "game": {
+   "35": {
+    "inst": 28,
+    "key": 13
+   },
+   "36": {
+    "inst": 28,
+    "key": 13
+   },
+   "38": {
+    "inst": 28,
+    "key": 23
+   },
+   "39": {
+    "inst": 28,
+    "key": 23
+   },
+   "40": {
+    "inst": 28,
+    "key": 23
+   },
+   "42": {
+    "inst": 28,
+    "key": 30
+   },
+   "44": {
+    "inst": 28,
+    "key": 30
+   },
+   "46": {
+    "inst": 28,
+    "key": 30
+   },
+   "49": {
+    "inst": 28,
+    "key": 36
+   },
+   "51": {
+    "inst": 28,
+    "key": 36
+   },
+   "57": {
+    "inst": 28,
+    "key": 36
+   }
+  }
+ }
 }

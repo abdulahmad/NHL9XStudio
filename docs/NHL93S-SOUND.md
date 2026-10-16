@@ -36,7 +36,7 @@ Verified against the retail program on the SPC700 core: every key-on (tick, chan
 
 ## MIDI
 
-`lib/audio/nhl93s-midi.js`, mapping in `data/audio/nhl93s-gm-map.json` (a guess from sample analysis; adjust by ear).
+`lib/audio/nhl93s-midi.js`, mapping in `data/audio/nhl93s-gm-map.json`, built from measured probe notes (see [SNES-GM-MAP.md](SNES-GM-MAP.md); not auditioned, adjust by ear).
 
 - **Export (GM)**: one track per channel, notes with GM programs / drum notes from the map, tempo map.
 - **Export (native)**: real notes plus `n93:` markers carrying every command, so import gives the same song back.
