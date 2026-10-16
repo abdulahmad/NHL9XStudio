@@ -496,5 +496,111 @@
    "reason": "Crowd: Applause.",
    "confidence": "low"
   }
- ]
+ ],
+ "gmToNhl": {
+  "note": "GM -> NHL 93/94 import: exact matches come from the patch -> GM table above (a patch whose target is that GM program); otherwise the family patch. Drums become hits on one channel.",
+  "families": [
+   2,
+   7,
+   11,
+   3,
+   13,
+   4,
+   4,
+   11,
+   3,
+   9,
+   10,
+   4,
+   5,
+   1,
+   7,
+   1
+  ],
+  "familyNames": [
+   "Piano",
+   "Chromatic percussion",
+   "Organ",
+   "Guitar",
+   "Bass",
+   "Strings",
+   "Ensemble",
+   "Brass",
+   "Reed",
+   "Pipe",
+   "Synth lead",
+   "Synth pad",
+   "Synth effects",
+   "Ethnic",
+   "Percussive",
+   "Sound effects"
+  ],
+  "programOverrides": {
+   "32": 12,
+   "33": 12,
+   "35": 12,
+   "52": 9,
+   "53": 9,
+   "54": 9
+  },
+  "drums": [
+   {
+    "notes": [
+     35,
+     36
+    ],
+    "patch": 17,
+    "note": 38,
+    "name": "Bass drum: the short low FM thump (patch 17)"
+   },
+   {
+    "notes": [
+     41,
+     43,
+     45,
+     47,
+     48,
+     50
+    ],
+    "patch": 20,
+    "note": 21,
+    "name": "Toms: the fixed-pitch low FM hit (patch 20)"
+   },
+   {
+    "notes": [
+     37,
+     38,
+     39,
+     40,
+     54,
+     56,
+     70
+    ],
+    "patch": 106,
+    "note": 70,
+    "name": "Snare and claps: the big-hit PCM sample (patch 106)"
+   },
+   {
+    "notes": [
+     42,
+     44,
+     46,
+     49,
+     51,
+     52,
+     53,
+     55,
+     57,
+     59
+    ],
+    "patch": 25,
+    "note": 28,
+    "name": "Hi-hats and cymbals: the noise burst (patch 25)"
+   }
+  ],
+  "defaultDrum": {
+   "patch": 25,
+   "note": 28
+  }
+ }
 }
