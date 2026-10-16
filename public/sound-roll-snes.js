@@ -72,8 +72,17 @@
     tabEvents.addEventListener('click', () => setMode('events'));
     setMode('roll');
 
+    // Reading clientWidth every frame forces a layout of the whole page; a ResizeObserver tells us when it changes.
+    let measured = wrap.clientWidth || container.clientWidth || 0;
+    let ro = null;
+    if (root.ResizeObserver) {
+      ro = new root.ResizeObserver(() => { measured = wrap.clientWidth || container.clientWidth || measured; });
+      ro.observe(wrap);
+    }
+    else root.addEventListener('resize', () => { measured = wrap.clientWidth || container.clientWidth || measured; });
+
     function size() {
-      const w = Math.max(240, Math.floor(wrap.clientWidth || container.clientWidth || 320));
+      const w = Math.max(240, Math.floor(measured || 320));
       const ratio = Math.min(2, root.devicePixelRatio || 1);
       const laneH = w < 460 ? 26 : 30;
       const h = 16 + NAMES.length * (laneH + 2) + 2;
@@ -146,7 +155,14 @@
       const semis = (a) => (a && a.midi != null ? a.midi : a && a.pitch > 0 ? 12 * Math.log2(a.pitch / 4096) : null);
       const NN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       const noteName = (a) => (a.midi != null ? NN[a.midi % 12] + (Math.floor(a.midi / 12) - 1) : (semis(a) >= 0 ? '+' : '') + semis(a).toFixed(1) + 'st');
-      const keyOns = st.commands.filter((c) => c.name === 'keyOn' && c.frame / frameRate <= timeSec && c.frame / frameRate >= leftT);
+      // Commands are logged in time order: binary-search the window instead of scanning the whole song every frame.
+      const cmds = st.commands;
+      let lo0 = 0;
+      let hi0 = cmds.length;
+      const fromFrame = leftT * frameRate;
+      while (lo0 < hi0) { const mid = (lo0 + hi0) >> 1; if (cmds[mid].frame < fromFrame) lo0 = mid + 1; else hi0 = mid; }
+      const keyOns = [];
+      for (let i = lo0; i < cmds.length && cmds[i].frame / frameRate <= timeSec; i++) if (cmds[i].name === 'keyOn') keyOns.push(cmds[i]);
       // One shared pitch range for all voices, eased so the view does not jump (at least an octave tall).
       let lo = Infinity;
       let hi = -Infinity;
@@ -164,6 +180,7 @@
         pitchRange.init = true;
       }
       const barH = 5;
+      g.font = '9px ' + mono;
       // Key-ons without a known length ('94 notes, effects) run until the voice's next key-on, at most one second.
       const nextOn = new Map();
       for (let i = keyOns.length - 1; i >= 0; i--) {
@@ -186,9 +203,8 @@
         g.globalAlpha = 0.85;
         g.fillRect(x, y, w, barH);
         g.globalAlpha = 1;
-        const lab = s != null && w > 22 ? noteName(c.args) : (opts.voiceLabel && opts.voiceLabel(c)) || '';
+        const lab = w < 22 ? '' : s != null ? noteName(c.args) : (opts.voiceLabel && opts.voiceLabel(c)) || '';
         if (lab) {
-          g.font = '9px ' + mono;
           g.fillStyle = C.text;
           g.fillText(lab, Math.max(G.x0 + 2, x), y < top + L.laneH / 2 ? y + barH + 9 : y - 2);
         }
@@ -210,6 +226,7 @@
     function destroy() {
       if (raf) root.cancelAnimationFrame(raf);
       raf = 0;
+      if (ro) ro.disconnect();
       container.replaceChildren();
     }
 

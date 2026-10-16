@@ -123,14 +123,20 @@
   }
 
   /** Run the player until at least `n` stereo samples are queued (or the song ends). */
-  function pull(session, n) {
+  /** Emulate until `n` stereo samples are queued, at most `maxFrames` video frames (so a timer can top the queue up in small steps). */
+  function fill(session, n, maxFrames) {
     const p = session.player;
-    while (session.queued < n && !session.done) {
+    let frames = maxFrames || Infinity;
+    while (session.queued < n && !session.done && frames-- > 0) {
       p.runFrame();
       session.frames = p.stats.frames;
       appendPcm(session, p.spc.drainRecording());
       if (session.sound ? (p.idle() && session.frames > 3) || session.frames > 1500 : !p.musicOn && session.queued === 0) session.done = true;
     }
+  }
+
+  function pull(session, n) {
+    fill(session, n);
     const left = new Float32Array(n);
     const right = new Float32Array(n);
     let at = 0;
@@ -172,6 +178,7 @@
     loadPack,
     startSession,
     pull,
+    fill,
     heardSeconds,
     trackDelivered,
     dispose,

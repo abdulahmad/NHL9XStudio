@@ -146,6 +146,35 @@ for (const g of [93, 94]) {
   assert.strictEqual(Song.identify(Song.patches(g, slices[g]), burst.regs, burst.ch), 11);
 }
 
+// 6b. Instrument edits (public/sound-patch-editor.js): the 32 patch bytes at table - 1024 + 32 * id in the ROM copy are what
+// the driver loads into the chip, so an edited total level / envelope shows up in the register burst.
+for (const g of [93, 94]) {
+  const song = Stream.emptySong(g);
+  song.notes = [{ t: 4, dur: 30, ch: 0, note: 69, vel: 110, patch: 11 }];
+  song.ticks = 64;
+  const T = require('../lib/audio/ym-note-tracker');
+  const burstOf = (rom) => {
+    const tr = T.create();
+    const chain = Chain.create({ rom, driver: DRIVER[g], keepLogs: false, onYmWrite: (t, p, v) => tr.writePort(t, p, v), onPsgWrite: (t, v) => tr.psgWrite(t, v), onYmReset: (t) => tr.reset(t) });
+    chain.step(null);
+    chain.step([{ song: copy.id }]);
+    for (let f = 2; f < 60; f++) chain.step(null);
+    return tr.patches.find((p) => p.kind === 'patch');
+  };
+  var copy = Stream.romWithSong(g, roms[g], song);
+  const at = Song.GAMES[g].table - 1024 + 11 * 32;
+  const before = burstOf(copy.rom);
+  const edited = Uint8Array.from(copy.rom);
+  edited[at + 7] = 101; // operator 4 total level (register $4C)
+  edited[at + 20] = 0x3c; // operator 1 sustain level / release rate (register $80)
+  const after = burstOf(edited);
+  assert.strictEqual(after.regs.get(0x4c), 101, 'NHL ' + g + ': the edited total level reaches the chip');
+  assert.strictEqual(after.regs.get(0x80), 0x3c, 'NHL ' + g + ': the edited sustain / release reaches the chip');
+  assert.strictEqual(after.regs.get(0x50), before.regs.get(0x50), 'NHL ' + g + ': an unedited register is unchanged');
+  assert.strictEqual(before.regs.get(0x4c), slices[g][at - Song.GAMES[g].start + 7], 'NHL ' + g + ': byte 7 of the patch is register $4C');
+}
+console.log('nhl9x stream: instrument edits written into the ROM copy are what the 93 and 94 drivers load OK');
+
 // 7. DAC (PCM) drums: the roll sees real sample hits, and the kick / snare roles follow the songs' own use.
 {
   const Tracker = require('../lib/audio/ym-note-tracker');
