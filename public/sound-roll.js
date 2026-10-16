@@ -141,6 +141,9 @@
       }
     }
 
+    const held = new Array(6).fill(null);
+    let heldSrc = 0;
+
     function drawIdle() {
       const L = size();
       const G = geometry(L);
@@ -228,13 +231,17 @@
 
       // The instrument in each lane: the latest patch load before the playhead, named by the caller
       // (retail patch number and the GM sound the mapping gives it). Drawn after the notes, below.
-      const instrument = new Array(6).fill(null);
+      // Held per lane: the tracker only keeps a few seconds of history, so a patch loaded long ago
+      // is remembered here until a newer load replaces it (or playback restarts / seeks back).
+      if (src < heldSrc - 1) held.fill(null);
+      heldSrc = src;
       if (opts.patchLabel) {
         for (const p of tr.patches) {
           if (p.kind !== 'patch' || sampleAt(p.t0) > src) continue;
-          instrument[p.ch] = p;
+          if (!held[p.ch] || p.t0 >= held[p.ch].t0) held[p.ch] = p;
         }
       }
+      const instrument = st.held || held; // the caller may keep them itself (it can seek, and the tracker forgets)
 
       // Notes.
       const barH = L.small ? 5 : 6;
@@ -402,6 +409,8 @@
       if (root.document.hidden) return;
       const st = opts.state();
       if (!st) {
+        held.fill(null);
+        heldSrc = 0;
         if (mode === 'roll') {
           const L = size();
           if (!idleDrawn || L.w !== cssW) { drawIdle(); idleDrawn = true; }
