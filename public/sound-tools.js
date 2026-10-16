@@ -615,7 +615,6 @@
     const secs = (units) => (units * model.song.tempo / 60).toFixed(2) + ' s';
     const tip = make('div', 'se-tip');
     tip.hidden = true;
-    box.style.position = 'relative';
     box.appendChild(tip);
     const pos = (ev) => {
       const r = canvas.getBoundingClientRect();
@@ -640,9 +639,8 @@
       ];
       tip.textContent = lines.join('\n');
       tip.hidden = false;
-      const br = box.getBoundingClientRect();
-      tip.style.left = Math.min(ev.clientX - br.left + 14, Math.max(0, br.width - 260)) + 'px';
-      tip.style.top = (ev.clientY - br.top + 18) + 'px';
+      tip.style.left = Math.max(4, Math.min(ev.clientX + 14, root.innerWidth - 270)) + 'px';
+      tip.style.top = Math.max(4, Math.min(ev.clientY + 18, root.innerHeight - 140)) + 'px';
     }
     canvas.addEventListener('pointerleave', () => { tip.hidden = true; });
     canvas.addEventListener('pointerdown', (ev) => {
