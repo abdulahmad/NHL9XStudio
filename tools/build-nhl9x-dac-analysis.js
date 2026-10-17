@@ -17,7 +17,7 @@ const Stream = require('../lib/audio/nhl9x-stream');
 const Chain = require('../lib/audio/nhl92-sound-chain');
 const ym = require('../lib/audio/ym2612-wasm');
 const DRIVER = { 93: require('../lib/audio/nhl93-68k-harness'), 94: require('../lib/audio/nhl94-68k-harness') };
-const ROM_SIZE = { 93: 0x2efa2, 94: 0x4b5c0 };
+const ROM_SIZE = { 93: 0x2e1fc, 94: 0x4b5c0 };
 
 const OUT = path.join(__dirname, '..', 'data', 'audio', 'nhl9x-dac-analysis.json');
 const Z80_HZ = 3579545;

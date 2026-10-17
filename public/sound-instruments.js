@@ -15,6 +15,8 @@
 
   // A YM2612 restored to its pristine saved state before every render, so each render is reproducible.
   const nhl = { chip: null, pristine: null, program: null, rom: null };
+  const N93 = () => root.Nhl93Names;
+  let mode = 'nhl92'; // 'nhl92': DAC samples and instrument patches; 'nhlpa93': the DAC samples (the game's PCM files) only
   let ctx = null;
   let source = null; // the buffer source that is playing
   let playingId = '';
@@ -33,8 +35,13 @@
   };
 
   /** Called once the NHL '92 ROM image and the YM2612 runtime are loaded. */
-  function init(rom, Ym, hostApi) {
+  function init(rom, Ym, hostApi, game) {
     host = hostApi;
+    mode = game === 'nhlpa93' ? 'nhlpa93' : 'nhl92';
+    if (mode === 'nhlpa93') {
+      nhl.rom = rom;
+      return;
+    }
     if (nhl.rom === rom && nhl.chip) return;
     nhl.rom = rom;
     nhl.program = root.Nhl92SoundFixture.getEmbeddedZ80Program();
@@ -49,16 +56,27 @@
       .catch(() => { map = null; });
   }
 
-  const ready = () => !!(nhl.chip && nhl.program && nhl.rom);
+  const ready = () => (mode === 'nhlpa93' ? !!nhl.rom : !!(nhl.chip && nhl.program && nhl.rom));
 
   const isId = (id) => /^(dac|patch)-\d+$/.test(id);
   const index = (id) => Number(id.split('-')[1]);
 
   // --- DAC samples: the raw PCM files -------------------------------------------------------------------
 
+  /** The raw samples of the loaded game (NHL 92 or NHLPA 93). */
+  const samples = () => (mode === 'nhlpa93' ? N93().PCM : PCM().SAMPLES);
+
+  /** Sample bytes before the 00 terminator (or the whole range when it has none). */
+  function sampleLength(sample) {
+    let n = 0;
+    while (sample.start + n < sample.end && nhl.rom[sample.start + n] !== 0) n += 1;
+    return n;
+  }
+
   /** SFX that start this sample: [{ id, label, rate }] (the handlers of the retail driver, via the SFX table). */
   function usedBy(sample) {
     const out = [];
+    if (mode === 'nhlpa93') return out;
     if (!ready() || !root.Nhl92GmMap) return out;
     for (let id = 0; id < 35; id++) {
       const handler = root.Nhl92GmMap.sfxHandler(nhl.rom, id);
@@ -71,11 +89,15 @@
   /** Playback rate in Hz of a DAC byte stream started with the driver rate `rate` (one byte per 161 + 17*rate Z80 T-states). */
   const rateHz = (rate) => Z80_HZ / (161 + 17 * rate);
 
-  function sampleOf(id) { return PCM().SAMPLES[index(id)]; }
+  function sampleOf(id) { return samples()[index(id)]; }
 
   function dacSub(sample) {
+    if (mode === 'nhlpa93') {
+      return sample.name + '.bin · $' + hex(sample.start) + '-$' + hex(sample.end - 1) + ' · ' + sampleLength(sample) + ' bytes' +
+        (sample.from92 ? ' · 92 ' + sample.from92 : ' · no 92 equivalent');
+    }
     const users = usedBy(sample);
-    const n = PCM().length(nhl.rom, sample);
+    const n = sampleLength(sample);
     return sample.name + '.bin · $' + hex(sample.start) + '-$' + hex(sample.end - 1) + ' · ' + n + ' bytes' +
       (users.length ? ' · ' + users.map((u) => u.id + ' ' + u.label).join(', ') : '');
   }
@@ -111,9 +133,10 @@
   function entries() {
     if (!ready()) return [];
     const out = [];
-    PCM().SAMPLES.forEach((sample, i) => {
+    samples().forEach((sample, i) => {
       out.push({ id: 'dac-' + i, group: GROUP_DAC, collapsible: true, label: sample.name, sub: dacSub(sample) });
     });
+    if (mode === 'nhlpa93') return out;
     for (let i = 0; i < A().PATCH_COUNT; i++) {
       const at = A().patchAddress(i);
       const algFb = nhl.program[at + 24];
@@ -131,9 +154,18 @@
     const rows = [['Plays', title(id)]];
     if (id.startsWith('dac-')) {
       const s = sampleOf(id);
+      if (mode === 'nhlpa93') {
+        rows.push(['File', s.name + '.bin (as extracted by NHLPA93Genesis)']);
+        rows.push(['ROM', '$' + hex(s.start) + '-$' + hex(s.end - 1) + ' (retail)']);
+        rows.push(['Format', 'unsigned 8-bit, ' + sampleLength(s) + ' bytes then 00']);
+        rows.push(['92 sample', s.from92 || 'none']);
+        rows.push(['Started by', s.uses.map((id) => '$' + hex(id) + ' ' + N93().SFX[id][0]).join(', ')]);
+        rows.push(['Path', 'ROM bytes at a nominal 8 kHz']);
+        return rows;
+      }
       rows.push(['File', s.name + '.bin (as extracted by NHL92Genesis)']);
       rows.push(['ROM', '$' + hex(s.start) + '-$' + hex(s.end - 1) + ' (Hockey.snd +$' + hex(s.start - A().SOUND_BASE) + ')']);
-      rows.push(['Format', 'unsigned 8-bit, ' + PCM().length(nhl.rom, s) + ' bytes then 00 00']);
+      rows.push(['Format', 'unsigned 8-bit, ' + sampleLength(s) + ' bytes then 00 00']);
       const users = usedBy(s);
       if (users.length) rows.push(['Started by', users.map((u) => 'SFX ' + u.id + ' ' + u.label + ' (rate $' + hex(u.rate) + ', ' + Math.round(rateHz(u.rate)) + ' Hz)').join('; ')]);
       rows.push(['Path', 'ROM bytes, played at the first SFX\'s rate']);
@@ -150,6 +182,7 @@
   }
 
   function describe(id) {
+    if (id.startsWith('dac-') && mode === 'nhlpa93') return 'The raw PCM file from the game. ' + N93().pcmDescribe(sampleOf(id)) + ' Played from its ROM bytes at a nominal 8 kHz (the 93 driver picks the rate per sound).';
     if (id.startsWith('dac-')) {
       const s = sampleOf(id);
       const users = usedBy(s);
@@ -222,9 +255,9 @@
     if (id.startsWith('dac-')) {
       const s = sampleOf(id);
       const users = usedBy(s);
-      const hz = Math.round(rateHz(users.length ? users[0].rate : 0x13));
-      const raw = PCM().bytes(nhl.rom, s);
-      const n = PCM().length(nhl.rom, s);
+      const hz = mode === 'nhlpa93' ? 8000 : Math.round(rateHz(users.length ? users[0].rate : 0x13));
+      const raw = nhl.rom.slice(s.start, s.end);
+      const n = sampleLength(s);
       const buf = ctx.createBuffer(1, n, hz);
       const ch = buf.getChannelData(0);
       const wav = new Int16Array(n);

@@ -14,7 +14,7 @@ const jobs = [
     gameId: 'nhlpa93',
     root: process.env.DISASM93 || '/tmp/NHLPA93Genesis',
     asm: 'src/sound93.asm',
-    extract: 'tools/extractAssets93-1.1.js'
+    extract: 'tools/extractAssets93.js'
   },
   {
     gameId: 'nhl94',
