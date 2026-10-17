@@ -524,7 +524,7 @@ if (retail92) {
   assert.strictEqual(refs.renderFrame(1).height, 2160);
 }
 const genesis93 =
-  romIf('/tmp/disasm/NHLPA93Genesis/lst/nhlpa93.bin')
+  romIf('/tmp/disasm/NHLPA93Genesis/output/retail/nhl93.bin')
   || romIf(path.join(root, 'roms', 'nhlpa93.bin'));
 if (genesis93) {
   const sheet = parseSheet(genesis93, pa93.sheet);
@@ -1171,7 +1171,7 @@ if (audioRom) {
   const titleRender = previewRender.renderSchedule(titleSched);
   assert.ok(previewRender.rms(titleRender.samples) > 0.01, 'title preview PCM should have energy');
 }
-const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'lst/nhlpa93.bin'));
+const genesis93Rom = genesis93 || romIf(path.join(disasm93, 'output/retail/nhl93.bin'));
 if (genesis93Rom) {
   const entry = nhlpa93Audio.entries.find((e) => e.id === 'snd-30') || nhlpa93Audio.entries.find((e) => e.type === 'fm-stream' && e.group === 'Music');
   const schedule93 = audio.genesis.previewEntry(
@@ -1196,6 +1196,7 @@ require('./test/chip-audio');
 require('./test/nhl92-z80-driver');
 require('./test/nhl92-z80-audio');
 require('./test/nhl92-sound-data');
+require('./test/nhl93-names');
 require('./test/m68k-cpu');
 require('./test/spc700-cpu');
 require('./test/snes-dsp');

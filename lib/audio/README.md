@@ -16,6 +16,8 @@ Genesis (AUD-0 / AUD-1):
 - `gm-reference.js` — plain, deterministic GM-style stand-in sounds (128 programs, drums 35-81) for auditioning the mapping; not a real GM sound set. `nhl92-gm-audition.js` plans and renders one audition (picked side, mapped side, level-matched) for the Chip lab's Mapping audition card.
 - `smf.js` — Standard MIDI File reader/writer (UMD, formats 0 and 1, PPQ). `nhl92-song.js` — the NHL 92 song model (6 FM channels, notes in duration units), cmdstream encoder (`build`), a ROM copy that plays the built song as song 4 (`romWithSong`), asm/binary export and `identifyPatch`. `nhl92-song-gm.js` — NHL 92 ⇄ General MIDI conversions using `data/audio/nhl92-gm-map.json`. Used by the Sound test's Play as GM, MIDI import and sequencer (`public/sound-tools.js`); see `docs/NHL92-SEQUENCER.md`, tests in `test/nhl92-sequencer.js`.
 - `nhl92-sfx-names.js` — SFX and song labels and descriptions by ID, as in EA's SOUNDTAB.DOC and the equates in NHL92Genesis `sound.asm` (handlers, command streams and PCM files use the same labels), plus the game's own ram.asm equates.
+- `nhl93-names.js` — NHLPA 93 effect, song and PCM sample names lined up with NHL 92: the 93 labels and `ram93.asm` equates, the 92 sound each shares an equate with, and the 92 sample file each 93 sample is an excerpt of (checked byte for byte by `test/nhl93-names.js`).
+- `nhl92-pcm.js` — the 10 raw DAC sample files of NHL 92 (the PCM files NHL92Genesis extracts).
 - `z80-cpu-core.js` — vendored `@dcorp80/z80cpu` (regenerate: `node tools/vendor-z80cpu.js`).
 - `ym2612.js` — YM2612 register bus (Z80 / harness).
 - `ym2612-wasm.js` + `generated/ym2612_wasm.*` — ymfm YM2612 PCM (BSD-3-Clause, see `licenses-ymfm.txt`).

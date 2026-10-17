@@ -12,7 +12,7 @@ volume are the NHL 92 ones. Nothing is captured from an emulator; every byte tha
 | `lib/audio/nhl9x-68k-harness.js` | The driver runner (`build(cfg)`): trampolines, the game's `sfx` / `song` wrappers (re-assembled from `video94.asm` / `middle93.asm`: `move.w d0,(lastsfx).w` then `jsr play_sfx_or_music_track`), pad ports idle, Z80 window, BUSREQ / RESET. |
 | `lib/audio/nhl93-68k-harness.js`, `nhl94-68k-harness.js` | Each game's addresses. |
 | `lib/audio/nhl92-sound-chain.js` | Unchanged chain; `create({ driver })` selects the game's harness (default: NHL 92). |
-| `data/fixtures/nhl93-sound-slice.bin`, `nhl94-sound-slice.bin` | The sound segments (`$165D8–$2EFA2`, 100,810 bytes; `$1A264–$4B5C0`, 201,564 bytes): driver, Z80 program, FM patches, event streams, PCM. Not full ROMs. |
+| `data/fixtures/nhl93-sound-slice.bin`, `nhl94-sound-slice.bin` | The sound segments (`$165D8–$2E1FB`, 97,316 bytes; `$1A264–$4B5C0`, 201,564 bytes): driver, Z80 program, FM patches, event streams, PCM. Not full ROMs. |
 | `tools/extract-nhl9x-sound-fixture.js` | Refreshes the slices from your ROM (checked by SHA-1 and size). |
 | `data/audio/nhlpa93.json`, `nhl94.json` | Names of the 56 / 123 sounds (SFX `$0–$2F`, songs `$30` up). |
 | `test/nhl9x-sound-chain.js` | Tests (below). |
