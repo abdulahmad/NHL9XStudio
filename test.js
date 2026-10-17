@@ -1,3 +1,15 @@
+// node test.js [-q|--quiet]: -q hides the progress lines and prints one summary line, or the full log if anything fails.
+const quiet = process.argv.includes('-q') || process.argv.includes('--quiet');
+const quietLog = [];
+if (quiet) {
+  const keep = (...a) => quietLog.push(a.join(' '));
+  console.log = keep;
+  console.info = keep;
+  process.on('exit', (code) => {
+    if (code) process.stderr.write(quietLog.join('\n') + '\n');
+    else process.stdout.write('all tests passed (' + quietLog.length + ' log lines hidden)\n');
+  });
+}
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
@@ -1084,7 +1096,7 @@ if (fs.existsSync(path.join(disasm93, 'src/sound93.asm'))) {
   const merged93 = loadMerged(
     'nhlpa93',
     path.join(disasm93, 'src/sound93.asm'),
-    path.join(disasm93, 'tools/extractAssets93-1.1.js')
+    path.join(disasm93, 'tools/extractAssets93.js')
   );
   assert.strictEqual(merged93.streams.length, 56);
 }
@@ -1212,7 +1224,8 @@ require('./test/patch-edits-export');
 // or error text. Skipped without Playwright; NHL_SKIP_BROWSER=1 skips it too. test/browser/editor-scrub.js runs on its own.
 if (process.env.NHL_SKIP_BROWSER !== '1') {
   const { spawn } = require('child_process');
-  const child = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'load-errors.js')], { stdio: 'inherit' });
+  const child = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'load-errors.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) child.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
   child.on('exit', (code) => {
     if (code !== 0) {
       console.error('test/browser/load-errors.js failed');
