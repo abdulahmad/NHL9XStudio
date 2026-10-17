@@ -182,7 +182,7 @@
     },
     {
       "id": "snd-0d",
-      "label": "sfx id 0D",
+      "label": "sfx oooh2",
       "group": "SFX",
       "type": "fm-stream",
       "soundId": 13,
@@ -190,11 +190,11 @@
       "end": 183498,
       "playable": true,
       "blurb": "sound $D",
-      "symbol": "sfx_id_0D_cmdstream"
+      "symbol": "sfx_oooh2_cmdstream"
     },
     {
       "id": "snd-0e",
-      "label": "sfx id 0E",
+      "label": "sfx bglass",
       "group": "SFX",
       "type": "fm-stream",
       "soundId": 14,
@@ -202,7 +202,7 @@
       "end": 183482,
       "playable": true,
       "blurb": "sound $E",
-      "symbol": "sfx_id_0E_cmdstream"
+      "symbol": "sfx_bglass_cmdstream"
     },
     {
       "id": "snd-0f",
@@ -422,7 +422,7 @@
     },
     {
       "id": "snd-21",
-      "label": "sfx id 21",
+      "label": "sfx playerwall2",
       "group": "SFX",
       "type": "fm-stream",
       "soundId": 33,
@@ -430,11 +430,11 @@
       "end": 182728,
       "playable": true,
       "blurb": "sound $21",
-      "symbol": "sfx_id_21_cmdstream"
+      "symbol": "sfx_playerwall2_cmdstream"
     },
     {
       "id": "snd-22",
-      "label": "sfx id 22",
+      "label": "sfx playerwall3",
       "group": "SFX",
       "type": "fm-stream",
       "soundId": 34,
@@ -442,11 +442,11 @@
       "end": 182756,
       "playable": true,
       "blurb": "sound $22",
-      "symbol": "sfx_id_22_cmdstream"
+      "symbol": "sfx_playerwall3_cmdstream"
     },
     {
       "id": "snd-23",
-      "label": "sfx id 23",
+      "label": "sfx playerwall4",
       "group": "SFX",
       "type": "fm-stream",
       "soundId": 35,
@@ -454,7 +454,7 @@
       "end": 182784,
       "playable": true,
       "blurb": "sound $23",
-      "symbol": "sfx_id_23_cmdstream"
+      "symbol": "sfx_playerwall4_cmdstream"
     },
     {
       "id": "snd-24",
@@ -1486,7 +1486,7 @@
       "end": 299230,
       "playable": true,
       "blurb": "song $79 (93 $36): IntermissionStart, StartHL2 (penalty94) (differs from 93)",
-      "symbol": "fmtune_intermission_cmdstream"
+      "symbol": "fmtune_eop_cmdstream"
     },
     {
       "id": "snd-7a",
