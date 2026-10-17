@@ -15,10 +15,12 @@ const DATA = path.join(ROOT, 'data');
 // The ANIM-To-BMP checkout next to this one, else the copies bundled in test/fixtures (what GitHub Pages serves).
 const ANIM_DIR = [path.join(ROOT, '..', 'ANIM-To-BMP'), path.join(ROOT, 'test', 'fixtures', 'ANIM-To-BMP')]
   .find((dir) => fs.existsSync(path.join(dir, 'Sprites.anim'))) || path.join(ROOT, '..', 'ANIM-To-BMP');
+// A sibling ANIM-To-BMP checkout wins; otherwise the copies bundled in data/pals (what GitHub Pages serves).
+const palDir = (sibling, bundled) => (fs.existsSync(sibling) && fs.readdirSync(sibling).some((name) => /\.pal$/i.test(name)) ? sibling : path.join(DATA, 'pals', bundled));
 const PAL_DIRS = {
-  '92': path.join(ANIM_DIR, 'Palettes'),
-  '94': path.join(ROOT, '..', 'ANIM94-To-BMP', 'Palettes'),
-  '95': path.join(ROOT, '..', 'ANIM95-To-BMP', 'Palettes', 'NHL95'),
+  '92': palDir(path.join(ANIM_DIR, 'Palettes'), 'genesis'),
+  '94': palDir(path.join(ROOT, '..', 'ANIM94-To-BMP', 'Palettes'), 'genesis'),
+  '95': palDir(path.join(ROOT, '..', 'ANIM95-To-BMP', 'Palettes', 'NHL95'), 'genesis95'),
   'snes': path.join(DATA, 'pals', 'snes')
 };
 const PAL_DIR = PAL_DIRS['92'];

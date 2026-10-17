@@ -2168,8 +2168,8 @@ async function ensurePalette(name) {
   }
   if (!bytes) {
     let response;
-    if (!useApi && gameInfo.paletteKind === 'snes') {
-      response = await fetch(resolveUrl('/data/pals/snes/' + encodeURIComponent(name)));
+    if (!useApi && gameInfo.paletteDir) {
+      response = await fetch(resolveUrl('/data/pals/' + gameInfo.paletteDir + '/' + encodeURIComponent(name)));
     } else if (useApi) {
       response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent(name)));
     } else {
