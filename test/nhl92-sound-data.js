@@ -75,7 +75,7 @@ console.log('nhl92 sound data: every byte of ' + sd.BLOCKS.length + ' data block
   assert.strictEqual(a, b, 'two parses give identical results');
   assert.strictEqual(Buffer.from(ROM).toString('hex'), before, 'parsing does not modify the ROM bytes');
   const digest = crypto.createHash('sha256').update(a).digest('hex');
-  assert.strictEqual(digest, '42f81bee1f465e37e2ace8ccd356784401cd91b82be9079cf9496a40d11feae4', 'parse summary matches the pinned hash');
+  assert.strictEqual(digest, '5b75dea5e0413733ed27f739f2ffc8606696eae98cb69536fe9b161daf8cdcad', 'parse summary matches the pinned hash');
   const romPath = path.join(__dirname, '..', 'roms', 'nhl92.bin');
   if (fs.existsSync(romPath)) {
     assert.strictEqual(sd.summary(sd.parse(new Uint8Array(fs.readFileSync(romPath)))), a, 'full retail ROM parses like the fixture');
@@ -88,7 +88,7 @@ const bytes = (start, n) => Array.from(ROM.subarray(start, start + n));
 {
   // fmtune_pointer_table: dc.w $0507 / $0506 / $0506 / $0506 / $0507, then six channel lists.
   assert.deepStrictEqual(data.songs.map((s) => [s.lastChannel, s.tempo]), [[5, 7], [5, 6], [5, 6], [5, 6], [5, 7]]);
-  assert.deepStrictEqual(data.songs.map((s) => s.name), ['SngEOP', 'SngTitle', 'SngTitle reprise', 'SngEOG', 'SngPO']);
+  assert.deepStrictEqual(data.songs.map((s) => s.name), ['endofperiod', 'splash', 'unused', 'endofgame', 'playofftree']);
   // Labels' address comments: song0 ch0 0x10568, ch1 0x10580, ch2 0x105B6, ch3 0x1059C, ch4 0x105CA, ch5 0x105E0.
   assert.deepStrictEqual(data.songs[0].orderLists, [0x10568, 0x10580, 0x105b6, 0x1059c, 0x105ca, 0x105e0]);
   assert.deepStrictEqual(data.songs[3].orderLists, [0x10360, 0x10368, 0x1037c, 0x10372, 0x103aa, 0x103de]);
@@ -131,13 +131,13 @@ const bytes = (start, n) => Array.from(ROM.subarray(start, start + n));
     ? ['dac', a.sample - 0xf4c8, a.rate, a.priority]
     : ['fm', a.channel, a.stream - 0xf4c8]));
   assert.deepStrictEqual(by(0), [['fm', 0, 0xaac], ['fm', 1, 0xac8]]);            // handle_sfx_siren
-  assert.deepStrictEqual(by(1), [['fm', 3, 0xca2]]);                               // handle_sfx_beep1
-  assert.deepStrictEqual(by(10), [['fm', 4, 0xb00]]);                              // handle_sfx_stdef
-  assert.deepStrictEqual(by(15), [['dac', 0x53be, 0x13, 1], ['fm', 2, 0xbde]]);    // puckwall3 -> + handle_sfx_pass
-  assert.deepStrictEqual(by(24), [['fm', 0, 0xb64], ['fm', 1, 0xb8c]]);            // handle_sfx_crowdcheer
-  assert.deepStrictEqual(by(25), [['dac', 0x793c, 0x13, 0]]);                      // handle_sfx_crowdboo
-  assert.deepStrictEqual(by(31), [['dac', 0x10820, 0x1b, 0]]);                     // handle_sfx_id_31
-  assert.deepStrictEqual([32, 33, 34].map((i) => data.sfx[i].handler), [0xfefa, 0xfefa, 0xfefa], 'three duplicates of id_30');
+  assert.deepStrictEqual(by(1), [['fm', 3, 0xca2]]);                               // handle_sfx_skating1
+  assert.deepStrictEqual(by(10), [['fm', 4, 0xb00]]);                              // handle_sfx_whistle
+  assert.deepStrictEqual(by(15), [['dac', 0x53be, 0x13, 1], ['fm', 2, 0xbde]]);    // sam_hitboard1 -> + handle_sfx_hitboard
+  assert.deepStrictEqual(by(24), [['fm', 0, 0xb64], ['fm', 1, 0xb8c]]);            // handle_sfx_foghorn
+  assert.deepStrictEqual(by(25), [['dac', 0x793c, 0x13, 0]]);                      // handle_sfx_sam_crowdgoal
+  assert.deepStrictEqual(by(31), [['dac', 0x10820, 0x1b, 0]]);                     // handle_sfx_oooh
+  assert.deepStrictEqual([32, 33, 34].map((i) => data.sfx[i].handler), [0xfefa, 0xfefa, 0xfefa], 'three duplicates of hitboard2vols (30)');
   // configure_ym2612: move.l #$53BA,d1 / #$B / #0.
   assert.deepStrictEqual(data.stopHandler.actions.map((a) => [a.sample - 0xf4c8, a.rate, a.priority]), [[0x53ba, 0x0b, 0]]);
   // SFX stream address comments (0xFF74-0xFF90 ...): each stream + its after-stop byte.

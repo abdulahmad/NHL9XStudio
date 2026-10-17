@@ -5,31 +5,31 @@
       "id": 0,
       "frames": 3600,
       "file": "song-0.log",
-      "sha256": "11a3f4c34ecf98aba33688388eca648b3368fdd306fc87c69dd05d78eb7b8d5b"
+      "sha256": "8d3f7933503df76d0e37f98f77d70abc08b8f7e7765b5835246bbc09f1ed5264"
     },
     {
       "id": 1,
       "frames": 9000,
       "file": "song-1.log",
-      "sha256": "000ff2b99ad7344c3e23eb70399489d89fa2dc036a8684a570200acf10c5aa9f"
+      "sha256": "c581d94574b885175a254d29aa17ca990c11a8a7d92607b550016586313d0f1e"
     },
     {
       "id": 2,
       "frames": 3600,
       "file": "song-2.log",
-      "sha256": "29e8b3f7406c16688331dcf0b2f0816003ead47fffd1dbc4b997625574d32d1d"
+      "sha256": "ee52d154f7f1f7a54b17afedd3fdd33296b64f08e3ec60630fbe83784dbc7166"
     },
     {
       "id": 3,
       "frames": 3600,
       "file": "song-3.log",
-      "sha256": "e1a301087d769635c3d7f046169ed4d31934a3fd5c40117327f2bbd81eb69ea6"
+      "sha256": "00fca6aafde08c1f1f2b9bd0f771b89f5efa31f8264a28acd5d524d9a9ea81e1"
     },
     {
       "id": 4,
       "frames": 3600,
       "file": "song-4.log",
-      "sha256": "527f38ddad09274cb6094ccf80e02ea8f3be9aa55c5b2f7cebbc43db02f08432"
+      "sha256": "56a429f8998b2f67aa66a057371b08bcd5aa2a7086159bdaaf7cbcc3a5df1784"
     }
   ],
   "sfx": [
@@ -37,211 +37,211 @@
       "id": 0,
       "frames": 600,
       "file": "sfx-00.log",
-      "sha256": "2d07102c1dac6583671031d693efda0a70ceb683748d5149df789a198b1e31fe"
+      "sha256": "00d392567559df1a49e4053f066548a25b102f9e8549fe8dbf29263cf1fe244c"
     },
     {
       "id": 1,
       "frames": 600,
       "file": "sfx-01.log",
-      "sha256": "727c41c14a3ae989fc6b231bcf4ce6496f3a1e21489a9bb10400bf371368defa"
+      "sha256": "b51a0732edcca7fcc8c731df29dc9045c76334e96e20f6a8502e37b3ceb75440"
     },
     {
       "id": 2,
       "frames": 600,
       "file": "sfx-02.log",
-      "sha256": "e342ce3b0bfa63206c24bb47fed4c718118d0f0315e7b2e5d8c49f7573363a51"
+      "sha256": "60ea64e4c0f16f069897d7dda0959cac010af006afc1f81887638a7bd9ce92d9"
     },
     {
       "id": 3,
       "frames": 600,
       "file": "sfx-03.log",
-      "sha256": "37de471287f7b6635a93ed28f5e28fce425d4f3791665e233b757b4cf3aba3f7"
+      "sha256": "86cb3959d5052b931a1bd5d61e736a2d83a571858dc0bb614c3575bf8fa836d4"
     },
     {
       "id": 4,
       "frames": 600,
       "file": "sfx-04.log",
-      "sha256": "579d43d25461e63239aad8346a0c7cb10c37dd886cfb5f813ee6539cf731e6db"
+      "sha256": "aad453bcce7648467c4c341f8e300c3e98b57e62de4bc5ae0de62bf3298f0dd1"
     },
     {
       "id": 5,
       "frames": 600,
       "file": "sfx-05.log",
-      "sha256": "0a3cd9ea7ba2fa1d8bade41db7b5be1c5ebe75dd51b3b566444332a2e005c35b"
+      "sha256": "dcea7c799dc76d9140c23a7815d53dd10820065f2899b443c68c6b2a5b446033"
     },
     {
       "id": 6,
       "frames": 600,
       "file": "sfx-06.log",
-      "sha256": "edf7853538a8f3bc5cb9ad7c7dfd1c9926ddbaa25b70ce7854ecccd817e97864"
+      "sha256": "1f7ca7ca6ce662f23eb9bcb4b0b99eaebf721e147242de4a14efe6270d833b5c"
     },
     {
       "id": 7,
       "frames": 600,
       "file": "sfx-07.log",
-      "sha256": "6822c3c3e69feaebf3e34fbc6e090f5c419a99ca3e1bd7295043e33fededa8f8"
+      "sha256": "284a475059ddf940817337fb31b50b4466bc5c901f1f68b76ae6497aa04db1b3"
     },
     {
       "id": 8,
       "frames": 600,
       "file": "sfx-08.log",
-      "sha256": "44ff7b75c34ab7b4b7488ba98f2f952a5c2a8119d42bf39e08d614438e9cb118"
+      "sha256": "cd4cd60b6a56f72c055cd9e4964ddfdcf02252856d3179e4a1bf852e6c23536d"
     },
     {
       "id": 9,
       "frames": 600,
       "file": "sfx-09.log",
-      "sha256": "57d8c8555d20b5bdf5789dbb7637424afc33b94ee93a7877afe80bfb943d6082"
+      "sha256": "9d1b2e33fd328dfdc80e97934e30500bd385c80ebe7c149fa873096838275cf9"
     },
     {
       "id": 10,
       "frames": 600,
       "file": "sfx-10.log",
-      "sha256": "21108eabca7be63adc0082c6ddf038af670960c8f3c4a0820831eaefdfc3d012"
+      "sha256": "4c665c0d2e1aa9a8e87389e5399bfe275f4781aabdd5788758299b4131be87b1"
     },
     {
       "id": 11,
       "frames": 600,
       "file": "sfx-11.log",
-      "sha256": "83f133e1ba339a58f1abe95a299177fc861b99b788cd8235385b90190ed713e0"
+      "sha256": "63bb8386e7bd4f34e7d7f547dabb10803c74549907ae719ec663220aefc16738"
     },
     {
       "id": 12,
       "frames": 600,
       "file": "sfx-12.log",
-      "sha256": "081e22eccb64021693d27f70f6cab5ffab51d932c8618f06450be60ade7d2191"
+      "sha256": "b2c96c3aa4278d86d6ef9e68236b191ee11d02ecbe46243f6df59ff909e96b67"
     },
     {
       "id": 13,
       "frames": 600,
       "file": "sfx-13.log",
-      "sha256": "673759dd640dcd7e1ba05124c7e81bd5fb6ea19ac3b8a3e6407446abb6fb1cdd"
+      "sha256": "a50ff17bd3b9b63fffb5bd947e0a2720fb02c4e893673e3dadd8af577c3973dc"
     },
     {
       "id": 14,
       "frames": 600,
       "file": "sfx-14.log",
-      "sha256": "7188f48dacdc0f9144ebb771bc05f2059c8fbc5fcb03212693b3c8f82cdb9ad5"
+      "sha256": "322ce1d9d0b23525d44aa79d713e5c69746d08b9dd0c4fe217ec4425560483a7"
     },
     {
       "id": 15,
       "frames": 600,
       "file": "sfx-15.log",
-      "sha256": "a5bcfb86c6bff7754ae63d6619230b065f1641c5138b507a8d787cd3de9609ae"
+      "sha256": "325c5c8f94f3f506b9a4640ce4bd0a748379136b11102d9963e95bd6df3d534d"
     },
     {
       "id": 16,
       "frames": 600,
       "file": "sfx-16.log",
-      "sha256": "71c2f44359a38328a20cdfa7e654270fa10fbe7b0b2f2f5a48839484f86b24c2"
+      "sha256": "11ef8b860e08798aa6b0b65f834852f2b38c382147030bd0f84cec36c58c1b03"
     },
     {
       "id": 17,
       "frames": 600,
       "file": "sfx-17.log",
-      "sha256": "8534a6579b06f96eda7de39c3b661b401e25c97942b0d91fef421496a42ed9c1"
+      "sha256": "9ae2c83eb52f4cd6a9129e17751c70707598031c4cb0457a5a54dbd2f02db936"
     },
     {
       "id": 18,
       "frames": 600,
       "file": "sfx-18.log",
-      "sha256": "feab43ab0c1ac943b6ad3feec88852e7ba198b4b3daa937fcc9a856546aeaacd"
+      "sha256": "2df2e63187e40b8d8846d56f5ab4cb38397bae51f69ca55706f9b648de32df0d"
     },
     {
       "id": 19,
       "frames": 600,
       "file": "sfx-19.log",
-      "sha256": "d6bcaa572681b1332690da61918b9ad36a8d50687e02490c8d3aa29800026fc2"
+      "sha256": "2cf9cef6445d1cb5bf336677326523ca19e8c4b8cd1ff49c74fa0e558daf03b0"
     },
     {
       "id": 20,
       "frames": 600,
       "file": "sfx-20.log",
-      "sha256": "e75ea0b6ec31364c0377e7c1531f1fe61d48c69472563178f2046c4317963d05"
+      "sha256": "43aed64f939a9d6dbc89d31f1a0670231432b9010389c172439d5f69a145692a"
     },
     {
       "id": 21,
       "frames": 600,
       "file": "sfx-21.log",
-      "sha256": "40a5c5156cadcc554fdf06a617abc4c901ff8476ab47405385a22e8a271f123d"
+      "sha256": "455f9c281251570f606b51c23860e246a0e3dd5dc8763f866677bedef700171a"
     },
     {
       "id": 22,
       "frames": 600,
       "file": "sfx-22.log",
-      "sha256": "1a6a0f287567cd4c22da7c94729c96927b59d8be275584416e780385b315b431"
+      "sha256": "df84779822a79e680ddb8837efb7c5421c0d5788a2f90c817668bc2e0e353647"
     },
     {
       "id": 23,
       "frames": 600,
       "file": "sfx-23.log",
-      "sha256": "cded74c8d244bb953d2cbf9c31f6267640067963241b26bc3cddaa2672167ee8"
+      "sha256": "34e7a22fc237663ee4e08527bbfd4458cb62e8e93eeddff93062752cdf818c6f"
     },
     {
       "id": 24,
       "frames": 600,
       "file": "sfx-24.log",
-      "sha256": "1deb7e84576beb326bbb90c585f055661eede4d7c3ac01fd962650927290fa70"
+      "sha256": "e61818637eb5129531322043065c2c57833adfa5e562486564948808be414eb7"
     },
     {
       "id": 25,
       "frames": 600,
       "file": "sfx-25.log",
-      "sha256": "6ea7503fc217fd10886f40870ed07c20a4ed479d27ff60b261fdea8862f37ff7"
+      "sha256": "e046d46307a8218f98f33edd2bedc12044b419409668abf83add6260ab42f050"
     },
     {
       "id": 26,
       "frames": 600,
       "file": "sfx-26.log",
-      "sha256": "5cec7e888978aa5d6808009a8e834630905fd41adcdb7e4280327f9f83c6b8ca"
+      "sha256": "8c944e59f264b620faba5cc2b7b50540b9e0672d19da0f733c1f70913e214bb3"
     },
     {
       "id": 27,
       "frames": 600,
       "file": "sfx-27.log",
-      "sha256": "cb30bc12ab5ce5bc50060d15a772c9541a18cff17417fb50f6aea66882ce2d5c"
+      "sha256": "6057e61a080ec5cccaa6db5c9ed608f2a5bf1403a6677c61b7c3aeda84d754da"
     },
     {
       "id": 28,
       "frames": 600,
       "file": "sfx-28.log",
-      "sha256": "591405a0a5ec9af1914704eda8738522e7a7edff1d4057d88f8238c4e1a4f834"
+      "sha256": "fb762fc71cb606df5c9f1140684f2d325a2178e6378a24ce0bbd46b136ef4c0b"
     },
     {
       "id": 29,
       "frames": 600,
       "file": "sfx-29.log",
-      "sha256": "e7bc42f73ccc9dcd393c4d34001fc69a53a4794d696bf9316a31036365e760c4"
+      "sha256": "ac77b72dd3cdbf15dec41777e9a0f5d6c36cfe15cf65caee2061e7a6207f4ff5"
     },
     {
       "id": 30,
       "frames": 600,
       "file": "sfx-30.log",
-      "sha256": "63399badbd69a6fe77a0209103a2dd98246f1b67b527bce2fdf74702a6cc5b3f"
+      "sha256": "7ba11a0b57e1bbf76f514b20826ebf48debbce5c6d95f93ebc28ed487cbfb584"
     },
     {
       "id": 31,
       "frames": 600,
       "file": "sfx-31.log",
-      "sha256": "9d1c03a22531dec24c83fbfdbf11a714d0f529edff90243791ad6bba9e2073f9"
+      "sha256": "8d83fc3a1883d56e749d4359d0237d9a19b0c6a9f9fcbc110aeb57243b39cfc4"
     },
     {
       "id": 32,
       "frames": 600,
       "file": "sfx-32.log",
-      "sha256": "3f0b971cf21caf05e4545ef9cacd9c9b0f01836bd2ce47ea11fad89681008a7f"
+      "sha256": "3c008c5e00f4225b12e8b5277afa5bdf65fb5d119e4a5fcbfaf84a4804ccb806"
     },
     {
       "id": 33,
       "frames": 600,
       "file": "sfx-33.log",
-      "sha256": "5a10c10723c16aa1faee94f9841d4ea7c1ee933676f96ee74ff1add032b08c28"
+      "sha256": "7ecb0fa32c316d111129bc453b954bafce1e238119a33a462eb23e947464546c"
     },
     {
       "id": 34,
       "frames": 600,
       "file": "sfx-34.log",
-      "sha256": "82e8e1fd81a5efb8663ad93de2a295cb63aa27000da404fc24a77e427f86eaf2"
+      "sha256": "e94fe7a1a969549ca4c6aeb5fff058001a679fb5db99a1f53740c5faea4db24b"
     }
   ]
 }

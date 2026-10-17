@@ -167,17 +167,17 @@ console.log('nhl92 68k driver: all 35 SFX IDs hand the Z80 what their handlers e
   assert.deepStrictEqual(on.freq, [DATA.noteTables.freq[n], DATA.noteTables.octave[n]], 'first note is transposed +12');
 }
 {
-  // SFX handlers (sound.asm). Table position 25 is handle_sfx_crowdboo (move.l #$793C,d1;
-  // #$13; #0): ID 25 = crowd cheer plays sample $F4C8+$793C = $16E04. Position 26 is
-  // handle_sfx_oooh (#$E2BE; #$18; #0): ID 26 = boo plays $1D786. Labels are shifted vs IDs.
+  // SFX handlers (sound.asm; labels are the table position = SFX ID). handle_sfx_sam_crowdgoal (25:
+  // move.l #$793C,d1; #$13; #0) plays sample $F4C8+$793C = $16E04. handle_sfx_sam_booing (26: #$E2BE;
+  // #$18; #0) plays $1D786.
   assert.deepStrictEqual(runs.sfx[25].run.frames[0].sfx, { 0xbe: 0x04, 0xbf: 0xee, 0xc0: 0, 0xc1: 0x13, 0xc2: 0x02, 0xc3: 0 });
   assert.deepStrictEqual(runs.sfx[26].run.frames[0].sfx, { 0xbe: 0x86, 0xbf: 0xd7, 0xc0: 0, 0xc1: 0x18, 0xc2: 0x03, 0xc3: 0 });
-  assert.deepStrictEqual([DATA.sfx[25].label, DATA.sfx[26].label], ['crowdboo', 'oooh']);
-  // Position 24 is labelled handle_sfx_crowdcheer but is ID 24 = foghorn (SFXhorn): two FM streams.
+  assert.deepStrictEqual([DATA.sfx[25].label, DATA.sfx[26].label], ['sam_crowdgoal', 'sam_booing']);
+  // ID 24 = handle_sfx_foghorn (SFXhorn): two FM streams.
   assert.deepStrictEqual(DATA.sfx[24].actions.map((a) => [a.channel, a.stream - 0xf4c8]), [[0, 0xb64], [1, 0xb8c]]);
-  assert.strictEqual(DATA.sfx[24].label, 'crowdcheer');
+  assert.strictEqual(DATA.sfx[24].label, 'foghorn');
   assert.deepStrictEqual(names.EQUATES[24], ['SFXhorn']);
-  // Position 15 (handle_sfx_puckwall3): DAC $53BE rate $13 priority 1, then handle_sfx_pass (FM ch2 $BDE).
+  // ID 15 (handle_sfx_sam_hitboard1): DAC $53BE rate $13 priority 1, then handle_sfx_hitboard (FM ch2 $BDE).
   const p15 = runs.sfx[15].run.frames[0].sfx;
   assert.deepStrictEqual(p15, { 0xbe: 0x86, 0xbf: 0xc8, 0xc0: 0, 0xc1: 0x13, 0xc2: 0x02, 0xc3: 1 });
 }

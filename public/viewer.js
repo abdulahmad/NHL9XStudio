@@ -81,6 +81,8 @@ const state = {
   query: '',
   audioId: '',
   soundTestItem: 'song-0',
+  openGroups: new Set(), // collapsible Audio lists (DAC samples, Instruments) the listener opened; closed by default
+  groupsInit: false,
   acc: 0,
   holdKey: '',
   holdLeft: null,
@@ -472,8 +474,9 @@ function paintInto(ctx, cssW, cssH, frame, colors, scaleCap, opts) {
     scale = Math.max(0.08, Math.min(scaleCap, halfW / reachX, halfH / reachY));
   }
   const bmp = bitmapFor(frame, colors);
-  const originX = cssW / 2;
-  const originY = (cssH - padBottom) / 2;
+  const pan = opts && opts.pan;
+  const originX = cssW / 2 + (pan ? pan.x : 0);
+  const originY = (cssH - padBottom) / 2 + (pan ? pan.y : 0);
   const dx = originX - place.ax * scale;
   const dy = originY - place.ay * scale;
   ctx.imageSmoothingEnabled = scale < 1.25;
@@ -572,7 +575,10 @@ function paintStage() {
   const picture = frame.picture || state.mode === 'image';
   const base = picture ? Math.min(8, fit) : Math.min(state.scale, fit);
   const zoom = picture ? Math.pow(2, (state.scale - 8) / 2) : 1;
+  // Dragging pans the picture; the offset starts over when another item is picked.
+  if (pan.key !== seq.key) { pan.key = seq.key; pan.x = 0; pan.y = 0; }
   paintInto(ctx, cssW, cssH, frame, colors, base * zoom, {
+    pan: clampPan(frame, base * zoom, cssW, cssH - 46),
     padBottom: 46,
     exactScale: true,
     mark: !frame.picture
@@ -580,6 +586,18 @@ function paintStage() {
 }
 
 const fitCache = new Map();
+
+/** Pan offset (CSS px) of the stage picture, set by dragging it; kept so some of the picture stays in view. */
+const pan = { x: 0, y: 0, key: '', drag: null };
+
+function clampPan(frame, scale, viewW, viewH) {
+  const box = canvasSize(frame);
+  const limX = (box.width * scale + viewW) / 2 - 24;
+  const limY = (box.height * scale + viewH) / 2 - 24;
+  pan.x = Math.max(-limX, Math.min(limX, pan.x));
+  pan.y = Math.max(-limY, Math.min(limY, pan.y));
+  return pan;
+}
 
 function viewScale(cssW, cssH, padBottom, scaleCap) {
   const fitKey = [
@@ -850,15 +868,39 @@ function renderSoundList(box, q) {
     box.appendChild(note);
     return;
   }
+  // A link to an item inside a collapsible list opens that list once, so the selection is visible.
+  if (!state.groupsInit && list.length) {
+    state.groupsInit = true;
+    const sel = list.find((e) => e.id === state[panel.key]);
+    if (sel && sel.collapsible) state.openGroups.add(sel.group);
+  }
   let group = '';
+  let open = true;
   for (const entry of list) {
     if (entry.group !== group) {
       group = entry.group;
-      const label = document.createElement('div');
-      label.className = 'group-label';
-      label.textContent = group;
+      // Collapsible lists are closed unless opened; a search shows every match.
+      open = !entry.collapsible || !!q || state.openGroups.has(group);
+      let label;
+      if (entry.collapsible) {
+        const name = group;
+        label = document.createElement('button');
+        label.type = 'button';
+        label.className = 'group-label is-toggle';
+        label.setAttribute('aria-expanded', open ? 'true' : 'false');
+        label.textContent = (open ? '▾ ' : '▸ ') + group + ' (' + list.filter((e) => e.group === group).length + ')';
+        label.addEventListener('click', () => {
+          if (state.openGroups.has(name)) state.openGroups.delete(name); else state.openGroups.add(name);
+          renderList();
+        });
+      } else {
+        label = document.createElement('div');
+        label.className = 'group-label';
+        label.textContent = group;
+      }
       box.appendChild(label);
     }
+    if (!open) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'item';
@@ -1772,7 +1814,25 @@ function wire() {
     setDrawer('meta', !document.querySelector('.app').classList.contains('show-meta'));
   });
   el('scrim').addEventListener('click', closeDrawers);
-  el('stage').addEventListener('wheel', (event) => {
+  const stage = el('stage');
+  stage.style.touchAction = 'none';
+  stage.addEventListener('pointerdown', (event) => {
+    if (soundPanel() || event.button > 0) return;
+    pan.drag = { x: event.clientX - pan.x, y: event.clientY - pan.y };
+    stage.setPointerCapture(event.pointerId);
+    stage.style.cursor = 'grabbing';
+  });
+  stage.addEventListener('pointermove', (event) => {
+    if (!pan.drag) return;
+    pan.x = event.clientX - pan.drag.x;
+    pan.y = event.clientY - pan.drag.y;
+    paintStage();
+  });
+  const endDrag = () => { pan.drag = null; stage.style.cursor = ''; };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+  stage.addEventListener('dblclick', () => { pan.x = 0; pan.y = 0; paintStage(); });
+  stage.addEventListener('wheel', (event) => {
     event.preventDefault();
     state.scale = Math.max(1, Math.min(12, state.scale + (event.deltaY < 0 ? 1 : -1)));
     el('scale').value = String(state.scale);

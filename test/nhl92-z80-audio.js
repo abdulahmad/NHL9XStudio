@@ -179,11 +179,11 @@ function expectedDacBytes(entry) {
 
   // --- Determinism: same input, byte-identical log and WAV ----------------------------
   {
-    const crowd = audio.DAC_SFX.find((e) => e.name === 'crowdboo');
+    const crowd = audio.DAC_SFX.find((e) => e.name === 'sam_crowdgoal');
     const pairs = [
       [() => renders.renderPatch(0, SRC), 'patch 0'],
       [() => renders.renderPatch(15, SRC), 'patch 15'],
-      [() => renders.renderSfx(crowd, SRC), 'crowdboo']
+      [() => renders.renderSfx(crowd, SRC), 'sam_crowdgoal']
     ];
     for (const [run, label] of pairs) {
       const a = await run();

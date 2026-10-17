@@ -9,6 +9,9 @@
   const Chain = () => root.Nhl92SoundChain;
   const SD = () => root.Nhl92SoundData;
   const NAMES = () => root.Nhl92SfxNames;
+  const INST = () => root.NhlSoundInstruments;
+  /** NHL 92 DAC sample / instrument / mapping ids (public/sound-instruments.js). */
+  const isInst = (id) => game === 'nhl92' && !!INST() && INST().isId(id);
   const SFX_VBLANKS = 600;
   const BLOCK = 4096;
   const Z80_HZ = 3579545;
@@ -94,6 +97,7 @@
     if (want === game) return;
     stop();
     stopBuffer();
+    if (INST()) INST().stop();
     if (roll) roll.destroy();
     roll = null;
     game = want;
@@ -174,6 +178,10 @@
         } catch (err) { gmMap = null; }
       }
       if (!Ym) Ym = await loadYm();
+      if (forGame === 'nhl92' && INST()) {
+        INST().init(rom, Ym, { stopLive: () => { stop(); stopBuffer(); }, volume: () => volume });
+        INST().onChange = () => { if (onChange) onChange(); };
+      }
       error = '';
       return true;
     })().catch((err) => {
@@ -216,11 +224,13 @@
       out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
       out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
     }
-    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: s.id + ' · ' + s.name, sub: 'song ' + s.id + ' · loops until Stop' });
+    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: s.id + ' · ' + NAMES().songName(s.id), sub: 'song ' + s.id + ' · loops until Stop' });
     for (const s of data.sfx) {
       const kinds = s.actions.map((a) => (a.type === 'dac' ? 'DAC' : 'FM ch' + a.channel)).join(' + ');
       out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: kinds + ' · ' + SFX_VBLANKS + ' vblanks' });
     }
+    // DAC samples and instruments: collapsible lists (collapsed until opened), played through the Z80 driver.
+    if (INST() && INST().ready) out.push(...INST().entries());
     return out;
   }
 
@@ -232,6 +242,7 @@
 
   function title(id) {
     if (isTool(id)) return toolName(id);
+    if (isInst(id)) return INST().title(id);
     if (isSnes()) {
       if (isSnes93() && id.startsWith('song-')) return snesApi().songInfo(snesData, id.slice(5)).name + ' · cue $' + Number(id.slice(5)).toString(16).toUpperCase().padStart(2, '0');
       if (isSnes93()) return (snesData.effectName(Number(id.split('-')[2])) || 'Sound') + ' · cue $' + Number(id.split('-')[2]).toString(16).toUpperCase();
@@ -240,7 +251,7 @@
     }
     const n = Number(id.split('-')[1]);
     if (isNx()) return (id.startsWith('song-') ? 'Song $' + n.toString(16).toUpperCase() + ' · ' + song94(n).name : 'SFX $' + n.toString(16).toUpperCase() + ' · ' + sfx94(n).name);
-    return id.startsWith('song-') ? 'Song ' + n + ' · ' + data.songs[n].name : 'SFX ' + NAMES().name(n);
+    return id.startsWith('song-') ? 'Song ' + n + ' · ' + NAMES().songName(n) : 'SFX ' + NAMES().name(n);
   }
 
   /** Plans for live playback; the siren's matches sfx-00-siren-SFXsiren-after-music-off.wav. */
@@ -514,6 +525,7 @@
     if (!rom || !Ym) throw new Error(error || 'Audio still loading');
     stop();
     stopBuffer();
+    if (INST()) INST().stop();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
     const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : rom, true);
@@ -596,6 +608,11 @@
   }
 
   function toggle(id) {
+    if (isInst(id)) {
+      stop();
+      stopBuffer();
+      return INST().toggle(id);
+    }
     if (id.startsWith('sound-') && !isSnes()) return Promise.resolve();
     if (toggles[id]) return toggles[id]();
     if (live && live.id === id) {
@@ -1332,6 +1349,11 @@
     }
     if (live && live.id !== id) stop();
     if (gmPlay && gmPlay.id !== id) stopBuffer();
+    if (isInst(id)) {
+      panel = null;
+      INST().renderPanel(box, id);
+      return;
+    }
     if (isTool(id) && isSnes()) {
       if (id === TOOL_EDITOR) root.NhlSoundToolsSnes.render(box, id, host());
       else renderSnesImport(box, id);
@@ -1373,7 +1395,7 @@
       box.appendChild(make('h3', null, rec.name));
     } else {
       box.appendChild(make('p', 'st-kind', id.startsWith('song-') ? 'Song ' + n : 'SFX ' + n));
-      box.appendChild(make('h3', null, id.startsWith('song-') ? data.songs[n].name : NAMES().name(n)));
+      box.appendChild(make('h3', null, id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n)));
     }
 
     const controls = make('div', 'st-controls');
@@ -1661,6 +1683,7 @@
         ['Notes', 'docs/NHL94S-PLAYBACK.md']
       ];
     }
+    if (isInst(id)) return INST().metaRows(id);
     if (isTool(id)) {
       if (isNx()) {
         return id === TOOL_IMPORT
@@ -1712,14 +1735,14 @@
     play,
     setGame,
     get game() { return game; },
-    stop() { stop(); stopBuffer(); },
+    stop() { stop(); stopBuffer(); if (INST()) INST().stop(); },
     toggle,
-    get playing() { return !!live || !!gmPlay; },
+    get playing() { return !!live || !!gmPlay || !!(INST() && INST().playingId); },
     /** The mounted sequencer view (readout of the last drawn frame, mode), or null. */
     get sequencer() { return roll; },
     /** Audible chip sample of the running session (see audibleSource), or null. */
     audibleSample() { return live && ctx ? audibleSource(live) : null; },
-    get playingId() { return live ? live.id : gmPlay ? gmPlay.id : ''; },
+    get playingId() { return live ? live.id : gmPlay ? gmPlay.id : INST() ? INST().playingId : ''; },
     get ready() { return !!(rom && Ym); },
     get error() { return error; },
     set onChange(fn) { onChange = typeof fn === 'function' ? fn : null; }

@@ -26,7 +26,7 @@
     },
     {
       "id": "fmtune-0",
-      "label": "SngEOP",
+      "label": "endofperiod — END OF PERIOD",
       "group": "Music",
       "type": "fm-song",
       "track": 0,
@@ -34,7 +34,7 @@
     },
     {
       "id": "fmtune-1",
-      "label": "SngTitle",
+      "label": "splash — SPLASH",
       "group": "Music",
       "type": "fm-song",
       "track": 1,
@@ -42,7 +42,7 @@
     },
     {
       "id": "fmtune-2",
-      "label": "SngTitle reprise",
+      "label": "unused — (unused/reserved)",
       "group": "Music",
       "type": "fm-song",
       "track": 2,
@@ -50,7 +50,7 @@
     },
     {
       "id": "fmtune-3",
-      "label": "SngEOG",
+      "label": "endofgame — END OF GAME",
       "group": "Music",
       "type": "fm-song",
       "track": 3,
@@ -58,7 +58,7 @@
     },
     {
       "id": "fmtune-4",
-      "label": "SngPO",
+      "label": "playofftree — PLAY OFF TREE SCREEN",
       "group": "Music",
       "type": "fm-song",
       "track": 4,
@@ -74,7 +74,7 @@
     },
     {
       "id": "sfx_siren_ch0",
-      "label": "Siren (channel 0)",
+      "label": "siren — FM siren (channel 0)",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65396,
@@ -83,7 +83,7 @@
     },
     {
       "id": "sfx_siren_ch1",
-      "label": "Siren (channel 1)",
+      "label": "siren — FM siren (channel 1)",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65424,
@@ -91,8 +91,8 @@
       "playable": true
     },
     {
-      "id": "sfx_shotfh",
-      "label": "Shot (forehand)",
+      "id": "sfx_puck_faceoff",
+      "label": "puck_faceoff — FM puck hits ice on face off",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65464,
@@ -100,8 +100,8 @@
       "playable": true
     },
     {
-      "id": "sfx_stdef",
-      "label": "Stick defend",
+      "id": "sfx_whistle",
+      "label": "whistle — FM whistle",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65480,
@@ -109,8 +109,8 @@
       "playable": true
     },
     {
-      "id": "sfx_horn",
-      "label": "Horn",
+      "id": "sfx_hitpuck",
+      "label": "hitpuck — FM hit puck",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65520,
@@ -118,8 +118,8 @@
       "playable": true
     },
     {
-      "id": "sfx_shotwiff",
-      "label": "Shot whiff",
+      "id": "sfx_bounce_goal",
+      "label": "bounce_goal — FM puck bounce off goal post",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65550,
@@ -127,8 +127,8 @@
       "playable": true
     },
     {
-      "id": "sfx_crowdcheer_ch0",
-      "label": "Crowd cheer (ch 0)",
+      "id": "sfx_foghorn_ch0",
+      "label": "foghorn — FM fog horn end of period (channel 0)",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65580,
@@ -136,8 +136,8 @@
       "playable": true
     },
     {
-      "id": "sfx_crowdcheer_ch1",
-      "label": "Crowd cheer (ch 1)",
+      "id": "sfx_foghorn_ch1",
+      "label": "foghorn — FM fog horn end of period (channel 1)",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65620,
@@ -145,8 +145,8 @@
       "playable": true
     },
     {
-      "id": "sfx_puckwall2",
-      "label": "Puck wall 2",
+      "id": "sfx_whiff",
+      "label": "whiff — FM whiff (miss puck on slap shot)",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65672,
@@ -154,8 +154,8 @@
       "playable": true
     },
     {
-      "id": "sfx_pass",
-      "label": "Pass",
+      "id": "sfx_hitboard",
+      "label": "hitboard — FM hit board loud",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65702,
@@ -163,8 +163,8 @@
       "playable": true
     },
     {
-      "id": "sfx_id_27",
-      "label": "SFX 27",
+      "id": "sfx_hitboardvolm",
+      "label": "hitboardvolm — hit board1 medium volume",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65732,
@@ -172,8 +172,8 @@
       "playable": true
     },
     {
-      "id": "sfx_id_28",
-      "label": "SFX 28",
+      "id": "sfx_hitboardvols",
+      "label": "hitboardvols — hit board1 softer volume",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65762,
@@ -181,8 +181,8 @@
       "playable": true
     },
     {
-      "id": "sfx_shotbh",
-      "label": "Shot (backhand)",
+      "id": "sfx_hitboard2",
+      "label": "hitboard2 — FM hit board lower pitch loud",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65792,
@@ -190,8 +190,8 @@
       "playable": true
     },
     {
-      "id": "sfx_id_29",
-      "label": "SFX 29",
+      "id": "sfx_hitboard2volm",
+      "label": "hitboard2volm — hit board2 medium volume",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65822,
@@ -199,8 +199,8 @@
       "playable": true
     },
     {
-      "id": "sfx_id_30",
-      "label": "SFX 30",
+      "id": "sfx_hitboard2vols",
+      "label": "hitboard2vols — hit board2 softer volume",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65852,
@@ -208,8 +208,8 @@
       "playable": true
     },
     {
-      "id": "sfx_beep2",
-      "label": "UI beep 2",
+      "id": "sfx_skating2",
+      "label": "skating2 — FM skate and stop short",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65882,
@@ -217,8 +217,8 @@
       "playable": true
     },
     {
-      "id": "sfx_beep1",
-      "label": "UI beep 1",
+      "id": "sfx_skating1",
+      "label": "skating1 — FM skate and stop short",
       "group": "SFX",
       "type": "fm-sfx",
       "start": 65898,
