@@ -167,7 +167,7 @@
       "end": 166928,
       "playable": true,
       "blurb": "sound $D: injury (setInjuryType), visiting goalie save",
-      "symbol": "sfx_id_0D_cmdstream"
+      "symbol": "sfx_oooh2_cmdstream"
     },
     {
       "id": "snd-0e",
@@ -179,7 +179,7 @@
       "end": 166912,
       "playable": true,
       "blurb": "sound $E: wallcollb (puck over the wall)",
-      "symbol": "sfx_id_0E_cmdstream"
+      "symbol": "sfx_bglass_cmdstream"
     },
     {
       "id": "snd-0f",
@@ -407,7 +407,7 @@
       "end": 166158,
       "playable": true,
       "blurb": "sound $21: no caller found, same patches as playerwall",
-      "symbol": "sfx_id_21_cmdstream"
+      "symbol": "sfx_playerwall2_cmdstream"
     },
     {
       "id": "snd-22",
@@ -419,7 +419,7 @@
       "end": 166186,
       "playable": true,
       "blurb": "sound $22: no caller found, same patches as playerwall",
-      "symbol": "sfx_id_22_cmdstream"
+      "symbol": "sfx_playerwall3_cmdstream"
     },
     {
       "id": "snd-23",
@@ -431,7 +431,7 @@
       "end": 166214,
       "playable": true,
       "blurb": "sound $23: no caller found, same patches as playerwall",
-      "symbol": "sfx_id_23_cmdstream"
+      "symbol": "sfx_playerwall4_cmdstream"
     },
     {
       "id": "snd-24",
@@ -659,7 +659,7 @@
       "end": 182438,
       "playable": true,
       "blurb": "song $36: IntermissionStart, PlayoffScreen, StartHL2 (92 SngEOG / SngPO)",
-      "symbol": "fmtune_intermission_cmdstream"
+      "symbol": "fmtune_eop_cmdstream"
     },
     {
       "id": "snd-37",
