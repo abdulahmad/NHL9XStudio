@@ -391,6 +391,13 @@ const staticManifest = buildManifest();
 assert.strictEqual(staticManifest.length, 8);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
+// The static site has no sibling ANIM-To-BMP checkouts: every Genesis game lists its team palettes from data/pals, each a 32-byte CRAM line.
+for (const id of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95']) {
+  const game = staticManifest.find((item) => item.id === id);
+  assert.ok(game.paletteFiles && game.paletteFiles.length >= 8, id + ' lists bundled team palettes');
+  for (const file of game.paletteFiles) assert.strictEqual(fs.statSync(path.join(root, 'data', 'pals', game.paletteDir, file)).size, 32, id + ' ' + file);
+}
+assert.ok(staticManifest.find((game) => game.id === 'nhl94').paletteFiles.includes('sabresh.pal'));
 
 const nhl92 = GAMES.find((game) => game.id === 'nhl92');
 assert.ok(nhl92.banks.some((bank) => bank.id === 'FaceOff.anim'));

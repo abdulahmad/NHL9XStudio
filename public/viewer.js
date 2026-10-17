@@ -256,10 +256,21 @@ function currentAnim() {
   return banks.get(spriteBank()) || null;
 }
 
+/** "@0".."@3": one of the four palette lines embedded in the ROM or ANIM file, used as the jersey line (Genesis games). */
+const isEmbeddedLine = (name) => /^@[0-3]$/.test(name || '');
+
+function paletteOverride(name) {
+  if (isEmbeddedLine(name)) {
+    const anim = currentAnim();
+    return anim && anim.palettes ? anim.palettes[Number(name[1])] || null : null;
+  }
+  return paletteFiles.get(name);
+}
+
 function activeColors() {
   const anim = currentAnim();
   if (!anim) return null;
-  const override = paletteFiles.get(state.paletteName);
+  const override = paletteOverride(state.paletteName);
   if (gameInfo && gameInfo.paletteKind === 'pc') {
     if (override && override.length >= 256) {
       const colors = override.map((c) => c.slice());
@@ -413,8 +424,8 @@ function imageTransparencyOn(frame) {
 
 function bitmapFor(frame, colors) {
   const named = state.paletteName;
-  const pending = Boolean(named) && !paletteFiles.has(named);
-  const team = !pending && named && paletteFiles.has(named);
+  const pending = Boolean(named) && !isEmbeddedLine(named) && !paletteFiles.has(named);
+  const team = !pending && named && (isEmbeddedLine(named) || paletteFiles.has(named));
   const own = Boolean(frame.colors) && !team;
   const override = state.mode === 'image' ? state.transparentOverride : null;
   const key = pending
@@ -1370,8 +1381,8 @@ async function applyImagePalette(image) {
 async function restoreSpritePalette() {
   if (state.mode !== 'image') return;
   const menu = el('palette');
-  const files = menu ? [...menu.options].map((option) => option.value).filter(Boolean) : [];
-  const matched = Nhl92Labels.matchPaletteFile(files, spritePalette) || '';
+  const files = menu ? [...menu.options].map((option) => option.value).filter((value) => value && !isEmbeddedLine(value)) : [];
+  const matched = isEmbeddedLine(spritePalette) ? spritePalette : (Nhl92Labels.matchPaletteFile(files, spritePalette) || '');
   state.paletteName = matched;
   spritePalette = matched;
   if (menu && [...menu.options].some((option) => option.value === matched)) menu.value = matched;
@@ -2161,15 +2172,15 @@ async function loadClientPcPalettes() {
 }
 
 async function ensurePalette(name) {
-  if (!name || paletteFiles.has(name) || !gameInfo) return;
+  if (!name || isEmbeddedLine(name) || paletteFiles.has(name) || !gameInfo) return;
   let bytes = null;
   if (clientPc && gameInfo.paletteKind === 'pc') {
     bytes = clientPcPaletteBytes(name);
   }
   if (!bytes) {
     let response;
-    if (!useApi && gameInfo.paletteKind === 'snes') {
-      response = await fetch(resolveUrl('/data/pals/snes/' + encodeURIComponent(name)));
+    if (!useApi && gameInfo.paletteDir) {
+      response = await fetch(resolveUrl('/data/pals/' + gameInfo.paletteDir + '/' + encodeURIComponent(name)));
     } else if (useApi) {
       response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent(name)));
     } else {
@@ -2192,6 +2203,7 @@ async function ensurePalette(name) {
 function choosePalette(pals, previous, keepSelection) {
   if (keepSelection && previous.paletteExplicit) {
     if (!previous.paletteName) return '';
+    if (isEmbeddedLine(previous.paletteName)) return previous.paletteName;
     if (pals.includes(previous.paletteName)) return previous.paletteName;
     return Nhl92Labels.defaultPaletteFile(pals);
   }
@@ -2272,6 +2284,8 @@ async function loadGame(id, keepSelection) {
     return a.side.localeCompare(b.side);
   });
   const paletteItems = [{ value: '', label: 'Embedded palette' }];
+  // The four palette lines stored in the ROM (or ANIM file), for the jersey slot: the default one is not always a usable jersey.
+  if (info.paletteKind === 'genesis') for (let line = 0; line < 4; line++) paletteItems.push({ value: '@' + line, label: 'Embedded palette · line ' + line });
   for (const item of labeled) paletteItems.push({ value: item.file, label: item.label });
   const chosen = choosePalette(jerseys, previous, keepSelection);
   const images = info.images || [];
