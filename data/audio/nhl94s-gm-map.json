@@ -1,0 +1,761 @@
+{
+ "note": "NHL '94 (SNES) sound entries <-> General MIDI. Every row rests on measurements: one probe note per sound entry played through the game's own SPC700 program (data/audio/nhl94s-sound-analysis.json, rebuilt by tools/build-snes-gm-analysis.js), the sample names the disassembly gives, and how the retail songs use each entry. Each row has a confidence and a runner-up. Nothing was auditioned: edit by ear. Game-set sound effects (passes, shots, pucks, ...) are not instruments and are not mapped. 'program' is a GM program (0-127), 'drum' a GM drum note; 'preferred' marks the entry MIDI import picks for that program.",
+ "sets": {
+  "menu": {
+   "0": {
+    "drum": 36,
+    "why": "SampleKick. no song uses it. Measured: plucked, attack 20 ms, -28 dB at key-off, brightness 0.2x, periodicity 0.99",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 35,
+     "why": "acoustic bass drum"
+    }
+   },
+   "1": {
+    "drum": 36,
+    "why": "SampleKick (the drum-track kick, used 391 times). 391 hits on the drum track in 3 songs. Measured: plucked, attack 10 ms, -13 dB at key-off, brightness 0.3x, periodicity 0.99 (played as the drum track plays it)",
+    "preferred": true,
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 35,
+     "why": "acoustic bass drum"
+    }
+   },
+   "2": {
+    "program": 33,
+    "why": "SampleBass: electric bass (finger). 590 notes, MIDI 59-86 in 3 songs. Measured: plucked, attack 20 ms, -28 dB at key-off, brightness 0.3x, periodicity 1",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 32,
+     "why": "acoustic bass"
+    }
+   },
+   "3": {
+    "drum": 38,
+    "why": "SampleSnare. 217 hits on the drum track in 3 songs. Measured: plucked, attack 5 ms, -19 dB at key-off, brightness 3x, periodicity 0.87 (played as the drum track plays it)",
+    "preferred": true,
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 40,
+     "why": "electric snare"
+    }
+   },
+   "4": {
+    "why": "SampleCrashBack: a swell (attack 400 ms) played melodically, so a reverse cymbal rather than a struck crash. 4 notes, MIDI 65-68 in 2 songs. Measured: swell, attack 400 ms, -60 dB at key-off, brightness 7.4x, periodicity 0.54",
+    "program": 119,
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 57,
+     "why": "crash cymbal 2"
+    }
+   },
+   "5": {
+    "drum": 42,
+    "why": "SampleClosedHat. no song uses it. Measured: plucked, attack 5 ms, -52 dB at key-off, brightness 8.8x, periodicity 0.52",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "6": {
+    "drum": 43,
+    "why": "SampleTom, note offset 4: high floor tom. 11 hits on the drum track in 3 songs. Measured: plucked, attack 15 ms, -6 dB at key-off, brightness 0.5x, periodicity 0.98 (played as the drum track plays it)",
+    "confidence": "high"
+   },
+   "7": {
+    "drum": 42,
+    "why": "SampleClosedHat (the drum-track hat, used 620 times). 620 hits on the drum track in 3 songs. Measured: plucked, attack 0 ms, -48 dB at key-off, brightness 32.1x, periodicity 0.31 (played as the drum track plays it)",
+    "preferred": true,
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "8": {
+    "drum": 45,
+    "why": "SampleTom, offset 5: low tom. 15 hits on the drum track in 3 songs. Measured: plucked, attack 20 ms, -7 dB at key-off, brightness 0.5x, periodicity 0.97 (played as the drum track plays it)",
+    "confidence": "high"
+   },
+   "9": {
+    "drum": 46,
+    "why": "SampleOpenHat. 58 hits on the drum track in 3 songs. Measured: plucked, attack 0 ms, -12 dB at key-off, brightness 13x, periodicity 0.48 (played as the drum track plays it)",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "10": {
+    "drum": 47,
+    "why": "SampleTom, offset 6: low-mid tom. 26 hits on the drum track in 3 songs. Measured: plucked, attack 5 ms, -6 dB at key-off, brightness 0.5x, periodicity 0.97 (played as the drum track plays it)",
+    "confidence": "high"
+   },
+   "11": {
+    "drum": 44,
+    "why": "SampleOpenHat, quieter: pedal hat. 34 hits on the drum track in 2 songs. Measured: plucked, attack 5 ms, -8 dB at key-off, brightness 12.7x, periodicity 0.48 (played as the drum track plays it)",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "12": {
+    "drum": 48,
+    "why": "SampleTom, offset 7: hi-mid tom. 20 hits on the drum track in 3 songs. Measured: plucked, attack 15 ms, -8 dB at key-off, brightness 0.5x, periodicity 0.97 (played as the drum track plays it)",
+    "confidence": "high"
+   },
+   "13": {
+    "drum": 50,
+    "why": "SampleTom, offset 8: high tom. 26 hits on the drum track in 3 songs. Measured: plucked, attack 5 ms, -13 dB at key-off, brightness 0.6x, periodicity 0.96 (played as the drum track plays it)",
+    "confidence": "high"
+   },
+   "14": {
+    "drum": 49,
+    "why": "SampleCrash: crash 1. 17 notes, MIDI 67-67, 4 hits on the drum track in 2 songs. Measured: plucked, attack 30 ms, -17 dB at key-off, brightness 7x, periodicity 0.27",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 57,
+     "why": "crash cymbal 2"
+    }
+   },
+   "15": {
+    "drum": 52,
+    "why": "SampleCrash, short: china. 27 notes, MIDI 65-68 in 2 songs. Measured: plucked, attack 30 ms, -17 dB at key-off, brightness 7.3x, periodicity 0.28",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 57,
+     "why": "crash cymbal 2"
+    }
+   },
+   "16": {
+    "program": 61,
+    "why": "SampleBrass, panned left. 177 notes, MIDI 69-89 in 2 songs. Measured: sustained, attack 35 ms, 0 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "17": {
+    "program": 61,
+    "why": "SampleBrass, panned right. 220 notes, MIDI 68-93 in 2 songs. Measured: sustained, attack 35 ms, 0 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "18": {
+    "program": 28,
+    "why": "SampleChug: muted guitar. 90 notes, MIDI 62-75 in 1 song. Measured: plucked, attack 45 ms, -60 dB at key-off, brightness 0.3x, periodicity 0.89",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "19": {
+    "program": 55,
+    "why": "SampleOrch: orchestra hit. 41 notes, MIDI 75-82 in 3 songs. Measured: plucked, attack 25 ms, -58 dB at key-off, brightness 1x, periodicity 0.52",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 48,
+     "why": "string ensemble"
+    }
+   },
+   "20": {
+    "program": 61,
+    "why": "SampleBrass, centre. no song uses it. Measured: sustained, attack 110 ms, -4 dB at key-off, brightness 2.5x, periodicity 0.85",
+    "preferred": true,
+    "confidence": "low",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "21": {
+    "drum": 56,
+    "why": "SampleCowbell. 36 notes, MIDI 64-64 in 1 song. Measured: plucked, attack 5 ms, -60 dB at key-off, brightness 1.6x, periodicity 0.94",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 76,
+     "why": "high wood block"
+    }
+   },
+   "22": {
+    "program": 47,
+    "why": "SampleTimp: timpani. 34 notes, MIDI 59-72 in 3 songs. Measured: plucked, attack 10 ms, -50 dB at key-off, brightness 0.7x, periodicity 0.72",
+    "preferred": true,
+    "confidence": "high",
+    "runnerUp": {
+     "program": 116,
+     "why": "taiko drum"
+    }
+   },
+   "23": {
+    "program": 61,
+    "why": "SampleBrass. no song uses it. Measured: sustained, attack 110 ms, -4 dB at key-off, brightness 2.5x, periodicity 0.85",
+    "confidence": "low",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "24": {
+    "program": 61,
+    "why": "SampleBrass. no song uses it. Measured: sustained, attack 110 ms, -4 dB at key-off, brightness 2.5x, periodicity 0.85",
+    "confidence": "low",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "25": {
+    "program": 61,
+    "why": "SampleBrass. 48 notes, MIDI 69-93 in 1 song. Measured: sustained, attack 35 ms, 0 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "26": {
+    "program": 61,
+    "why": "SampleBrass. no song uses it. Measured: sustained, attack 110 ms, -4 dB at key-off, brightness 2.5x, periodicity 0.85",
+    "confidence": "low",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "27": {
+    "program": 30,
+    "why": "SampleDist: distortion guitar. 169 notes, MIDI 59-93 in 1 song. Measured: sustained, attack 10 ms, -6 dB at key-off, brightness 1.1x, periodicity 0.66",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "28": {
+    "program": 30,
+    "why": "SampleDist, panned. 13 notes, MIDI 69-69 in 1 song. Measured: sustained, attack 10 ms, -5 dB at key-off, brightness 1.1x, periodicity 0.75",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "29": {
+    "program": 30,
+    "why": "SampleDist, panned. 21 notes, MIDI 69-81 in 1 song. Measured: sustained, attack 10 ms, -5 dB at key-off, brightness 1.1x, periodicity 0.75",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "30": {
+    "program": 61,
+    "why": "SampleBrass. 32 notes, MIDI 69-93 in 1 song. Measured: slow decay, attack 30 ms, -10 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "31": {
+    "program": 17,
+    "why": "SamplePlayoffOrgan: percussive organ. 102 notes, MIDI 65-83 in 1 song. Measured: sustained, attack 5 ms, 0 dB at key-off, brightness 1.8x, periodicity 1",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 18,
+     "why": "rock organ"
+    }
+   },
+   "32": {
+    "drum": 46,
+    "why": "SampleOpenHat. 20 notes, MIDI 77-77 in 1 song. Measured: plucked, attack 5 ms, -18 dB at key-off, brightness 5.8x, periodicity 0.5",
+    "confidence": "medium",
+    "runnerUp": {
+     "drum": 44,
+     "why": "pedal hi-hat"
+    }
+   },
+   "33": {
+    "program": 30,
+    "why": "SampleDist. no song uses it. Measured: slow decay, attack 35 ms, -7 dB at key-off, brightness 1.1x, periodicity 0.88",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "34": {
+    "program": 30,
+    "why": "SampleDist. no song uses it. Measured: slow decay, attack 35 ms, -7 dB at key-off, brightness 1.1x, periodicity 0.88",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "35": {
+    "drum": 56,
+    "why": "SampleCowbell. 15 notes, MIDI 65-65 in 1 song. Measured: plucked, attack 5 ms, -60 dB at key-off, brightness 1.6x, periodicity 0.95",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 76,
+     "why": "high wood block"
+    }
+   },
+   "36": {
+    "program": 30,
+    "why": "SampleDist. 98 notes, MIDI 61-75 in 1 song. Measured: slow decay, attack 15 ms, -6 dB at key-off, brightness 1.1x, periodicity 0.76",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "37": {
+    "program": 30,
+    "why": "SampleDist. 98 notes, MIDI 61-75 in 1 song. Measured: slow decay, attack 15 ms, -6 dB at key-off, brightness 1.1x, periodicity 0.76",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "38": {
+    "program": 30,
+    "why": "SampleDist. 54 notes, MIDI 63-70 in 1 song. Measured: slow decay, attack 15 ms, -6 dB at key-off, brightness 1.1x, periodicity 0.76",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "39": {
+    "program": 28,
+    "why": "SampleChug. 74 notes, MIDI 62-68 in 1 song. Measured: plucked, attack 70 ms, -60 dB at key-off, brightness 0.5x, periodicity 0.82",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "40": {
+    "program": 61,
+    "why": "SampleBrass. 57 notes, MIDI 74-94 in 1 song. Measured: sustained, attack 30 ms, -3 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "41": {
+    "program": 29,
+    "why": "SampleAPower: overdriven guitar (power chord). 38 notes, MIDI 73-92 in 1 song. Measured: swell, attack 290 ms, -3 dB at key-off, brightness 1.4x, periodicity 0.96",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "42": {
+    "program": 29,
+    "why": "SampleAPower. 90 notes, MIDI 70-92 in 1 song. Measured: swell, attack 290 ms, -3 dB at key-off, brightness 1.4x, periodicity 0.96",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "43": {
+    "program": 29,
+    "why": "SampleAPower. 76 notes, MIDI 70-92 in 1 song. Measured: swell, attack 290 ms, -3 dB at key-off, brightness 1.4x, periodicity 0.96",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "44": {
+    "program": 61,
+    "why": "SampleBrass. 28 notes, MIDI 77-92 in 1 song. Measured: sustained, attack 30 ms, -2 dB at key-off, brightness 2.4x, periodicity 0.91",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "45": {
+    "program": 61,
+    "why": "SampleBrass. 43 notes, MIDI 75-99 in 1 song. Measured: sustained, attack 25 ms, -1 dB at key-off, brightness 2.4x, periodicity 0.89",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "46": {
+    "program": 61,
+    "why": "SampleBrass. 43 notes, MIDI 74-87 in 1 song. Measured: sustained, attack 35 ms, -2 dB at key-off, brightness 2.3x, periodicity 0.9",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 62,
+     "why": "synth brass 1"
+    }
+   },
+   "47": {
+    "program": 17,
+    "why": "SamplePlayoffOrgan. 102 notes, MIDI 65-83 in 1 song. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 1.8x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 18,
+     "why": "rock organ"
+    }
+   },
+   "48": {
+    "program": 30,
+    "why": "SampleDist. 19 notes, MIDI 61-68 in 1 song. Measured: slow decay, attack 35 ms, -10 dB at key-off, brightness 1.1x, periodicity 0.85",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "49": {
+    "program": 30,
+    "why": "SampleDist. 19 notes, MIDI 61-68 in 1 song. Measured: slow decay, attack 35 ms, -8 dB at key-off, brightness 1x, periodicity 0.85",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "50": {
+    "program": 28,
+    "why": "SampleChug. 18 notes, MIDI 59-66 in 1 song. Measured: plucked, attack 75 ms, -60 dB at key-off, brightness 0.6x, periodicity 0.78",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "51": {
+    "program": 28,
+    "why": "SampleChug. 18 notes, MIDI 59-66 in 1 song. Measured: plucked, attack 95 ms, -60 dB at key-off, brightness 0.6x, periodicity 0.78",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 30,
+     "why": "distortion guitar"
+    }
+   },
+   "52": {
+    "program": 47,
+    "why": "SampleTimp (title). no song uses it. Measured: plucked, attack 10 ms, -60 dB at key-off, brightness 1.2x, periodicity 0.83",
+    "confidence": "high",
+    "runnerUp": {
+     "program": 116,
+     "why": "taiko drum"
+    }
+   },
+   "53": {
+    "program": 47,
+    "why": "SampleTimp (title). no song uses it. Measured: plucked, attack 10 ms, -60 dB at key-off, brightness 1.2x, periodicity 0.8",
+    "confidence": "high",
+    "runnerUp": {
+     "program": 116,
+     "why": "taiko drum"
+    }
+   },
+   "54": {
+    "program": 30,
+    "why": "SampleDist (title). no song uses it. Measured: sustained, attack 10 ms, -2 dB at key-off, brightness 2.6x, periodicity 0.62",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 29,
+     "why": "overdriven guitar"
+    }
+   },
+   "55": {
+    "program": 17,
+    "why": "SamplePlayoffOrgan (title). no song uses it. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 4.2x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 18,
+     "why": "rock organ"
+    }
+   }
+  },
+  "game": {
+   "11": {
+    "program": 16,
+    "why": "SampleOrgan, panned left: drawbar organ, the arena organ. 4052 notes, MIDI 31-77 in 53 songs. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 1.8x, periodicity 1",
+    "preferred": true,
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 18,
+     "why": "rock organ"
+    }
+   },
+   "12": {
+    "program": 16,
+    "why": "SampleOrgan, panned right. 3412 notes, MIDI 26-77 in 53 songs. Measured: sustained, attack 5 ms, -2 dB at key-off, brightness 1.8x, periodicity 1",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 18,
+     "why": "rock organ"
+    }
+   },
+   "18": {
+    "program": 126,
+    "why": "SampleCrowd1: sustained noise, the crowd. no song uses it. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 6.4x, periodicity 0.41",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 122,
+     "why": "seashore"
+    }
+   },
+   "19": {
+    "program": 126,
+    "why": "SampleCrowd2: sustained noise, the crowd. no song uses it. Measured: sustained, attack 10 ms, -2 dB at key-off, brightness 3.8x, periodicity 0.19",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 122,
+     "why": "seashore"
+    }
+   },
+   "20": {
+    "drum": 39,
+    "why": "SampleClap. no song uses it. Measured: plucked, attack 25 ms, -35 dB at key-off, brightness 4.7x, periodicity 0.22",
+    "preferred": true,
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 40,
+     "why": "electric snare"
+    }
+   },
+   "21": {
+    "program": 78,
+    "why": "SampleWhistle. no song uses it. Measured: plucked, attack 15 ms, -27 dB at key-off, brightness 22x, periodicity 0.86",
+    "confidence": "high",
+    "runnerUp": {
+     "drum": 72,
+     "why": "long whistle"
+    }
+   },
+   "28": {
+    "program": 126,
+    "why": "SampleCrowd2, second entry. no song uses it. Measured: sustained, attack 10 ms, -2 dB at key-off, brightness 3.8x, periodicity 0.19",
+    "confidence": "medium",
+    "runnerUp": {
+     "program": 122,
+     "why": "seashore"
+    }
+   }
+  }
+ },
+ "drums": {
+  "menu": {
+   "35": 1,
+   "36": 1,
+   "37": 3,
+   "38": 3,
+   "39": 3,
+   "40": 3,
+   "41": 8,
+   "42": 7,
+   "43": 6,
+   "44": 11,
+   "45": 8,
+   "46": 9,
+   "47": 10,
+   "48": 12,
+   "49": 14,
+   "50": 13,
+   "51": 14,
+   "52": 15,
+   "53": 14,
+   "54": 7,
+   "55": 14,
+   "56": 21,
+   "57": 14,
+   "58": 14,
+   "59": 14
+  },
+  "game": {
+   "37": 20,
+   "38": 20,
+   "39": 20,
+   "40": 20
+  }
+ },
+ "families": {
+  "note": "MIDI import: which mapped GM program stands in for each GM program range (the sets only have a few sounds).",
+  "menu": [
+   [
+    0,
+    23,
+    17
+   ],
+   [
+    24,
+    28,
+    28
+   ],
+   [
+    29,
+    29,
+    29
+   ],
+   [
+    30,
+    31,
+    30
+   ],
+   [
+    32,
+    39,
+    33
+   ],
+   [
+    40,
+    46,
+    55
+   ],
+   [
+    47,
+    47,
+    47
+   ],
+   [
+    48,
+    55,
+    55
+   ],
+   [
+    56,
+    79,
+    61
+   ],
+   [
+    80,
+    87,
+    61
+   ],
+   [
+    88,
+    103,
+    55
+   ],
+   [
+    104,
+    127,
+    55
+   ]
+  ],
+  "game": [
+   [
+    0,
+    127,
+    16
+   ]
+  ]
+ },
+ "sfx": {
+  "menu": {},
+  "game": {
+   "0": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.17, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "1": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.18, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "2": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.27, flatness 0.01). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "3": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.16, flatness 0.01). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "4": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.76, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "5": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.99, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "6": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.85, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "7": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0, flatness null). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "8": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.9, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "9": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.37, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "10": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.15, flatness 0.01). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "13": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.64, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "14": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.62, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "15": {
+    "program": 115,
+    "why": "sound effect, not an instrument: tonal pluck: wood block (shape plucked, periodicity 0.67, flatness 0). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "16": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.24, flatness 0.01). Measured, not auditioned.",
+    "confidence": "low"
+   },
+   "17": {
+    "program": 127,
+    "why": "sound effect, not an instrument: short noisy burst: gunshot (GM sound effect) (shape plucked, periodicity 0.17, flatness 0.01). Measured, not auditioned.",
+    "confidence": "low"
+   }
+  }
+ }
+}

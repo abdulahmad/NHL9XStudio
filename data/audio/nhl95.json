@@ -1,0 +1,28 @@
+{
+  "gameId": "nhl95",
+  "platform": "genesis",
+  "playback": false,
+  "note": "Digital anchor from Docs/SND; driver tables TBD",
+  "streamDriver": null,
+  "previewMeta": {
+    "soundBase": 62664,
+    "fmtuneTable": null,
+    "fmtuneStride": 26,
+    "noteFreqTable": null,
+    "noteOctaveTable": null,
+    "instrumentTable": null,
+    "streamDriver": null
+  },
+  "entries": [
+    {
+      "id": "hockey-snd",
+      "label": "Hockey.snd (ROM)",
+      "group": "Samples",
+      "type": "region",
+      "start": 62664,
+      "end": 147988,
+      "playable": false,
+      "blurb": "Digital sample pack; anchor 0x705f0"
+    }
+  ]
+}
