@@ -1486,7 +1486,7 @@
       "end": 299230,
       "playable": true,
       "blurb": "song $79 (93 $36): IntermissionStart, StartHL2 (penalty94) (differs from 93)",
-      "symbol": "fmtune_eog_cmdstream"
+      "symbol": "fmtune_intermission_cmdstream"
     },
     {
       "id": "snd-7a",
