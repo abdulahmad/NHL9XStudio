@@ -2,7 +2,7 @@
   "gameId": "nhlpa93",
   "platform": "genesis",
   "playback": true,
-  "note": "Streams from NHLPA93Genesis sound93.asm + extractAssets93-1.1.js",
+  "note": "Streams from NHLPA93Genesis sound93.asm + extractAssets93.js",
   "streamDriver": "event-93",
   "previewMeta": {
     "soundBase": 62664,
@@ -626,15 +626,15 @@
     },
     {
       "id": "snd-32",
-      "label": "CheckPeriodEnd, 3rd period",
+      "label": "CheckLateGameSong, 3rd period",
       "group": "Music",
       "type": "fm-stream",
       "soundId": 50,
       "start": 168668,
       "end": 169568,
       "playable": true,
-      "blurb": "song $32: CheckPeriodEnd, 3rd period",
-      "symbol": "fmtune_period3_cmdstream"
+      "blurb": "song $32: CheckLateGameSong, 3rd period",
+      "symbol": "fmtune_lategame_cmdstream"
     },
     {
       "id": "snd-33",
@@ -682,7 +682,7 @@
       "end": 182438,
       "playable": true,
       "blurb": "song $36: IntermissionStart, PlayoffScreen, StartHL2 (92 SngEOG / SngPO)",
-      "symbol": "fmtune_eog_cmdstream"
+      "symbol": "fmtune_intermission_cmdstream"
     },
     {
       "id": "snd-37",
