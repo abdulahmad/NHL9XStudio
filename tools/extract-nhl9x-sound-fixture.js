@@ -16,7 +16,7 @@ const root = path.join(__dirname, '..');
 const GAMES = {
   93: {
     name: 'NHLPA 93 (Genesis, retail v1.1)', sha1: '8efc1cacb079ea223966dda065c16c49e584cac2', size: 0x80000,
-    start: 0x165d8, end: 0x2efa2, // sound93 (NHLPA93Genesis); graphics93 starts at $2EFA2
+    start: 0x165d8, end: 0x2e1fc, // sound93 (NHLPA93Genesis); graphics93 starts at $2E1FC
     env: 'NHL93_ROM', files: ['roms/nhlpa93.bin', 'roms/nhlpa93retail.bin', '../ea-nhl-disassembly-project/NHL93-Genesis/nhlpa93retail.bin'],
     out: 'nhl93-sound'
   },

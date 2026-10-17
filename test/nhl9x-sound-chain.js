@@ -15,7 +15,7 @@ const crypto = require('crypto');
 const Chain = require('../lib/audio/nhl92-sound-chain');
 
 const GAMES = {
-  nhlpa93: { label: 'NHLPA 93', driver: require('../lib/audio/nhl93-68k-harness'), slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2efa2, catalog: 'nhlpa93.json', sounds: 56, pcmSong: 0x32, pins: ['song 30', 'song 35', 'sfx 0', 'sfx a', 'sfx 1e'] },
+  nhlpa93: { label: 'NHLPA 93', driver: require('../lib/audio/nhl93-68k-harness'), slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, catalog: 'nhlpa93.json', sounds: 56, pcmSong: 0x32, pins: ['song 30', 'song 35', 'sfx 0', 'sfx a', 'sfx 1e'] },
   nhl94: { label: 'NHL 94', driver: require('../lib/audio/nhl94-68k-harness'), slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', sounds: 123, pcmSong: 0x78, pins: ['song 30', 'song 5a', 'song 78', 'sfx 0', 'sfx 5', 'sfx 1f'] }
 };
 const PIN_FILE = path.join(__dirname, '..', 'data', 'audio', 'nhl9x-sound-chain.json');

@@ -13,10 +13,10 @@ Clone or update these on your machine (paths below are **conventions** — set e
 | Upstream | Typical local path | NHL9X Studio consumes |
 |----------|-------------------|------------------------|
 | **EA-NHL-Tools** | `$EA_NHL_TOOLS_ROOT` or sibling `../EA-NHL-Tools` | `ANIM-To-BMP`, `Asset-Extractor/extractAssets*.js`, `Docs/Sprites`, `Docs/SND`, `JIM-Tools`, `PAL-To-ACT`, golden BMP tests |
-| **NHL92Genesis** | `/tmp/disasm/NHL92Genesis` or your disasm root | `src/frames.asm` → `data/frames.asm` |
-| **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames.asm` → `data/frames93.asm`; built `lst/nhlpa93.bin` for optional ROM tests |
-| **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; `lst/nhl94.bin` |
-| **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames.asm` → `data/frames95.asm`; `lst/nhl95.bin` |
+| **NHL92Genesis** | `/tmp/disasm/NHL92Genesis` or your disasm root | `src/frames.Asm` → `data/frames.asm` |
+| **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames93.asm` → `data/frames93.asm`; `src/sound93.asm` + `tools/extractAssets93.js` → `lib/audio/data/nhlpa93-streams.json`; built `output/retail/nhl93.bin` (`node tools/build.js retail`) for optional ROM tests |
+| **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; `lst/nhl94.bin` |
+| **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames95.asm` → `data/frames95.asm`; `lst/nhl95.bin` |
 | **NHLPA93SNES** | `$SNES93` or `/tmp/snes/93` | `src/data/frames93s.asm`, `src/ram93snes.asm` → `tools/build-snes-frames.js`; team `*.snespal` → `data/pals/snes/` |
 | **NHL94 SNES disasm** | `/tmp/snes/94` | Retail ROM `lst/nhl94snes.sfc` → `tools/build-snes-frames.js` (94 SPA names) |
 | **NHL95PC** (optional) | install folder or `pc95/` locally | Not in git; used for manual QA and `test.js` live paths under `/tmp/nhl95all` |
@@ -37,7 +37,7 @@ Retail ROMs and PC installs **must not** be committed. Use `roms/`, `pc95/`, `pc
 
 | Path | Source of truth | How it gets updated |
 |------|-----------------|---------------------|
-| `data/frames.asm` | NHL92Genesis | Copy from disasm `src/frames.asm` (or export); keep header comments |
+| `data/frames.asm` | NHL92Genesis | Copy from disasm `src/frames.Asm` (or export); keep header comments |
 | `data/frames93.asm` | NHLPA93Genesis | Same |
 | `data/frames94.asm` | NHL94Genesis | Same |
 | `data/frames95.asm` | NHL95Genesis | Same |
@@ -74,10 +74,10 @@ done
 
 ```bash
 STUDIO=/path/to/NHL9XStudio
-cp "$DISASM/NHL92Genesis/src/frames.asm"     "$STUDIO/data/frames.asm"
-cp "$DISASM/NHLPA93Genesis/src/frames.asm" "$STUDIO/data/frames93.asm"
-cp "$DISASM/NHL94Genesis/src/frames.asm"     "$STUDIO/data/frames94.asm"
-cp "$DISASM/NHL95Genesis/src/frames.asm"     "$STUDIO/data/frames95.asm"
+cp "$DISASM/NHL92Genesis/src/frames.Asm"     "$STUDIO/data/frames.asm"
+cp "$DISASM/NHLPA93Genesis/src/frames93.asm" "$STUDIO/data/frames93.asm"
+cp "$DISASM/NHL94Genesis/src/frames94.asm"   "$STUDIO/data/frames94.asm"
+cp "$DISASM/NHL95Genesis/src/frames95.asm"   "$STUDIO/data/frames95.asm"
 ```
 
 Review diffs for new SPA/SPF names — update `lib/parse-frames.js` `SPF_INFO` / search aliases in `public/viewer.js` if user-facing groups or blurbs need to match.

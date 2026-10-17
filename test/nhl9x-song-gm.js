@@ -15,7 +15,7 @@ const GM = require('../lib/audio/nhl92-gm-map');
 const FIX = path.join(__dirname, '..', 'data', 'fixtures');
 const map = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'audio', 'nhl9x-gm-map.json'), 'utf8'));
 const GAMES = {
-  93: { driver: require('../lib/audio/nhl93-68k-harness'), size: 0x2efa2 },
+  93: { driver: require('../lib/audio/nhl93-68k-harness'), size: 0x2e1fc },
   94: { driver: require('../lib/audio/nhl94-68k-harness'), size: 0x4b5c0 }
 };
 const slices = {};

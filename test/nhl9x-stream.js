@@ -21,7 +21,7 @@ const slices = {};
 const roms = {};
 for (const g of [93, 94]) {
   slices[g] = fs.readFileSync(path.join(FIX, 'nhl' + g + '-sound-slice.bin'));
-  roms[g] = new Uint8Array(g === 93 ? 0x2efa2 : 0x4b5c0);
+  roms[g] = new Uint8Array(g === 93 ? 0x2e1fc : 0x4b5c0);
   roms[g].set(slices[g], Song.GAMES[g].start);
 }
 const key = (n) => [n.t, n.dur, n.ch, n.note, n.vel, n.patch].join(',');

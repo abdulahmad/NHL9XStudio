@@ -26,7 +26,7 @@
   // family (nhl9x-68k-harness.js); each has its bundled sound segment placed at its ROM offsets.
   let game = 'nhl92';
   const NX = {
-    nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2efa2, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
+    nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
     nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' }
   };
   const SNES94 = 'nhl94snes';
