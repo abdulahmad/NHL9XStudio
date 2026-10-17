@@ -26,7 +26,7 @@
     },
     {
       "id": "fmtune-0",
-      "label": "endofperiod — END OF PERIOD",
+      "label": "SngEOP",
       "group": "Music",
       "type": "fm-song",
       "track": 0,
@@ -34,7 +34,7 @@
     },
     {
       "id": "fmtune-1",
-      "label": "splash — SPLASH",
+      "label": "SngTitle",
       "group": "Music",
       "type": "fm-song",
       "track": 1,
@@ -42,7 +42,7 @@
     },
     {
       "id": "fmtune-2",
-      "label": "unused — (unused/reserved)",
+      "label": "SngReprise",
       "group": "Music",
       "type": "fm-song",
       "track": 2,
@@ -50,7 +50,7 @@
     },
     {
       "id": "fmtune-3",
-      "label": "endofgame — END OF GAME",
+      "label": "SngEOG",
       "group": "Music",
       "type": "fm-song",
       "track": 3,
@@ -58,7 +58,7 @@
     },
     {
       "id": "fmtune-4",
-      "label": "playofftree — PLAY OFF TREE SCREEN",
+      "label": "SngPO",
       "group": "Music",
       "type": "fm-song",
       "track": 4,

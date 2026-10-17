@@ -75,7 +75,7 @@ console.log('nhl92 sound data: every byte of ' + sd.BLOCKS.length + ' data block
   assert.strictEqual(a, b, 'two parses give identical results');
   assert.strictEqual(Buffer.from(ROM).toString('hex'), before, 'parsing does not modify the ROM bytes');
   const digest = crypto.createHash('sha256').update(a).digest('hex');
-  assert.strictEqual(digest, '5b75dea5e0413733ed27f739f2ffc8606696eae98cb69536fe9b161daf8cdcad', 'parse summary matches the pinned hash');
+  assert.strictEqual(digest, '156cc41d0b540bcb9eb64181b63a803fa174f074c65c0093434ff985bbb8cae0', 'parse summary matches the pinned hash');
   const romPath = path.join(__dirname, '..', 'roms', 'nhl92.bin');
   if (fs.existsSync(romPath)) {
     assert.strictEqual(sd.summary(sd.parse(new Uint8Array(fs.readFileSync(romPath)))), a, 'full retail ROM parses like the fixture');
@@ -88,7 +88,7 @@ const bytes = (start, n) => Array.from(ROM.subarray(start, start + n));
 {
   // fmtune_pointer_table: dc.w $0507 / $0506 / $0506 / $0506 / $0507, then six channel lists.
   assert.deepStrictEqual(data.songs.map((s) => [s.lastChannel, s.tempo]), [[5, 7], [5, 6], [5, 6], [5, 6], [5, 7]]);
-  assert.deepStrictEqual(data.songs.map((s) => s.name), ['endofperiod', 'splash', 'unused', 'endofgame', 'playofftree']);
+  assert.deepStrictEqual(data.songs.map((s) => s.name), ['SngEOP', 'SngTitle', 'SngReprise', 'SngEOG', 'SngPO']);
   // Labels' address comments: song0 ch0 0x10568, ch1 0x10580, ch2 0x105B6, ch3 0x1059C, ch4 0x105CA, ch5 0x105E0.
   assert.deepStrictEqual(data.songs[0].orderLists, [0x10568, 0x10580, 0x105b6, 0x1059c, 0x105ca, 0x105e0]);
   assert.deepStrictEqual(data.songs[3].orderLists, [0x10360, 0x10368, 0x1037c, 0x10372, 0x103aa, 0x103de]);

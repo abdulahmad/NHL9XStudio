@@ -1,29 +1,28 @@
 /**
- * NHL '92 Audio section: DAC samples, instruments (the 22 Z80 patches) and the NHL '92 <-> General MIDI
- * mapping audition. Each plays through the game's own Z80 sound driver on a dedicated YM2612, rendered
- * offline and then played (the same path the Chip lab used to have). sound-test-view.js lists the entries
- * and hands the selected one to render(); toggle() starts and stops it.
+ * NHL '92 Audio section: the raw DAC samples (the PCM files the game ships) and the 22 Z80 instrument patches.
+ * A sample is played from its ROM bytes at the rate of the SFX handler that starts it; a patch plays a C-major scale
+ * through the game's Z80 sound driver on a dedicated YM2612 (rendered offline, then played). sound-test-view.js lists
+ * the entries and hands the selected one to renderPanel(); toggle() starts and stops it.
  */
 (function (root) {
   const A = () => root.Nhl92Z80Audio;
-  const AUD = () => root.Nhl92GmAudition;
+  const PCM = () => root.Nhl92Pcm;
   const NAMES = () => root.Nhl92SfxNames;
 
   const GROUP_DAC = 'DAC samples';
   const GROUP_INST = 'Instruments';
-  const MAPPING = 'inst-mapping';
+  const Z80_HZ = 3579545;
 
-  // The Chip lab's NHL '92 picker: a YM2612 restored to its pristine saved state before every render,
-  // so each render is reproducible.
+  // A YM2612 restored to its pristine saved state before every render, so each render is reproducible.
   const nhl = { chip: null, pristine: null, program: null, rom: null };
   let ctx = null;
   let source = null; // the buffer source that is playing
   let playingId = '';
-  let url = null; // object URL of the last WAV
+  let urls = [];
   let host = null;
-  let map = null; // data/audio/nhl92-gm-map.json
-  let mapError = '';
+  let map = null; // data/audio/nhl92-gm-map.json (the General MIDI match shown in each patch's description)
   let onChange = null;
+  let panelUi = null;
 
   const hex = (n, w) => n.toString(16).toUpperCase().padStart(w || 0, '0');
   const make = (tag, cls, text) => {
@@ -43,59 +42,85 @@
     nhl.chip = new Ym.Chip(Ym.module, Ym.api.create(), Ym.api);
     nhl.chip.reset();
     nhl.pristine = nhl.chip.saveState();
-    if (map || mapError) return;
+    if (map) return;
     fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href)
-      .then((res) => { if (!res.ok) throw new Error('mapping JSON missing (' + res.status + ')'); return res.json(); })
-      .then((m) => { map = m; if (onChange) onChange(); })
-      .catch((err) => { mapError = err && err.message ? err.message : String(err); });
+      .then((res) => (res.ok ? res.json() : null))
+      .then((m) => { map = m; if (m && onChange) onChange(); })
+      .catch(() => { map = null; });
   }
 
   const ready = () => !!(nhl.chip && nhl.program && nhl.rom);
 
-  const isId = (id) => id === MAPPING || /^(dac|patch)-\d+$/.test(id);
+  const isId = (id) => /^(dac|patch)-\d+$/.test(id);
   const index = (id) => Number(id.split('-')[1]);
 
-  /** SFX ID that starts this DAC sample (the first of the IDs that share a handler), or -1. */
-  function sfxIdOf(entry) {
-    if (!ready() || !root.Nhl92GmMap) return -1;
-    for (let id = 0; id < 35; id++) if (root.Nhl92GmMap.sfxHandler(nhl.rom, id) === entry.rom) return id;
-    return -1;
+  // --- DAC samples: the raw PCM files -------------------------------------------------------------------
+
+  /** SFX that start this sample: [{ id, label, rate }] (the handlers of the retail driver, via the SFX table). */
+  function usedBy(sample) {
+    const out = [];
+    if (!ready() || !root.Nhl92GmMap) return out;
+    for (let id = 0; id < 35; id++) {
+      const handler = root.Nhl92GmMap.sfxHandler(nhl.rom, id);
+      const entry = A().DAC_SFX.find((e) => e.rom === handler && A().SOUND_BASE + e.off === sample.start);
+      if (entry && !out.some((o) => o.handler === handler)) out.push({ id, label: NAMES().label(id), rate: entry.rate, handler });
+    }
+    return out;
   }
 
-  function dacTitle(i) {
-    const entry = A().DAC_SFX[i];
-    const id = sfxIdOf(entry);
-    return entry.name + (id >= 0 ? ' · SFX ' + id : '');
+  /** Playback rate in Hz of a DAC byte stream started with the driver rate `rate` (one byte per 161 + 17*rate Z80 T-states). */
+  const rateHz = (rate) => Z80_HZ / (161 + 17 * rate);
+
+  function sampleOf(id) { return PCM().SAMPLES[index(id)]; }
+
+  function dacSub(sample) {
+    const users = usedBy(sample);
+    const n = PCM().length(nhl.rom, sample);
+    return sample.name + '.bin · $' + hex(sample.start) + '-$' + hex(sample.end - 1) + ' · ' + n + ' bytes' +
+      (users.length ? ' · ' + users.map((u) => u.id + ' ' + u.label).join(', ') : '');
   }
 
-  function patchTitle(i) {
-    return 'Patch ' + String(i).padStart(2, '0');
+  // --- Instruments: the Z80 patches ---------------------------------------------------------------------
+
+  function patchMatch(i) {
+    if (!map) return null;
+    const e = map.nhl92ToGm.patches.find((p) => p.patch === i);
+    return e ? e : null;
   }
+
+  function targetText(t) {
+    if (!t) return '';
+    if (t.kind === 'program') return t.name + ' (GM program ' + t.program + ')';
+    if (t.kind === 'drum') return t.name + ' (GM drum ' + t.note + ')';
+    return t.label || t.kind;
+  }
+
+  /** "Maps to Synth Brass 2 (GM program 63)", from the NHL '92 -> General MIDI table. */
+  function mapsTo(i) {
+    const e = patchMatch(i);
+    return e ? 'Maps to ' + targetText(e.target) : '';
+  }
+
+  const patchTitle = (i) => 'Patch ' + String(i).padStart(2, '0');
 
   function title(id) {
-    if (id === MAPPING) return 'Mapping audition · NHL \'92 ↔ General MIDI';
-    return id.startsWith('dac-') ? 'DAC sample · ' + dacTitle(index(id)) : 'Instrument · ' + patchTitle(index(id));
+    return id.startsWith('dac-') ? 'DAC sample · ' + sampleOf(id).name : 'Instrument · ' + patchTitle(index(id));
   }
 
   /** List rows. DAC samples and instruments are collapsible groups. */
   function entries() {
     if (!ready()) return [];
     const out = [];
-    A().DAC_SFX.forEach((entry, i) => {
-      const id = sfxIdOf(entry);
-      const desc = id >= 0 ? NAMES().describe(id) : 'stops the DAC';
-      out.push({
-        id: 'dac-' + i, group: GROUP_DAC, collapsible: true,
-        label: entry.name, sub: (id >= 0 ? 'SFX ' + id + ' · ' : '') + desc + ' · rate $' + hex(entry.rate) + ' · pri ' + entry.priority
-      });
+    PCM().SAMPLES.forEach((sample, i) => {
+      out.push({ id: 'dac-' + i, group: GROUP_DAC, collapsible: true, label: sample.name, sub: dacSub(sample) });
     });
-    out.push({ id: MAPPING, group: GROUP_INST, collapsible: true, label: 'Mapping audition', sub: 'hear a patch next to its General MIDI match' });
     for (let i = 0; i < A().PATCH_COUNT; i++) {
       const at = A().patchAddress(i);
       const algFb = nhl.program[at + 24];
+      const to = mapsTo(i);
       out.push({
-        id: 'patch-' + i, group: GROUP_INST, collapsible: true,
-        label: patchTitle(i), sub: '$' + hex(at, 4) + ' · alg ' + (algFb & 7) + ' fb ' + ((algFb >> 3) & 7)
+        id: 'patch-' + i, group: GROUP_INST, collapsible: true, label: patchTitle(i),
+        sub: '$' + hex(at, 4) + ' · alg ' + (algFb & 7) + ' fb ' + ((algFb >> 3) & 7) + (to ? ' · ' + to : '')
       });
     }
     return out;
@@ -103,38 +128,45 @@
 
   function metaRows(id) {
     if (!ready()) return [['Audio', 'loading']];
-    if (id === MAPPING) {
-      return [['Tool', title(id)], ['Plays on', 'the retail Z80 driver → YM2612, next to a plain GM stand-in synth'], ['Mapping', 'data/audio/nhl92-gm-map.json'], ['Notes', 'docs/NHL92-GM-MAP.md']];
-    }
     const rows = [['Plays', title(id)]];
     if (id.startsWith('dac-')) {
-      const entry = A().DAC_SFX[index(id)];
-      const sfx = sfxIdOf(entry);
-      if (sfx >= 0) rows.push(['SFX', sfx + ' · ' + NAMES().describe(sfx)]);
-      rows.push(['Handler', '$' + hex(entry.rom)]);
-      rows.push(['Sample', 'Hockey.snd +$' + hex(entry.off) + ' (ROM $' + hex(A().SOUND_BASE + entry.off) + ')']);
-      rows.push(['Rate', '$' + hex(entry.rate) + ' · priority ' + entry.priority]);
+      const s = sampleOf(id);
+      rows.push(['File', s.name + '.bin (as extracted by NHL92Genesis)']);
+      rows.push(['ROM', '$' + hex(s.start) + '-$' + hex(s.end - 1) + ' (Hockey.snd +$' + hex(s.start - A().SOUND_BASE) + ')']);
+      rows.push(['Format', 'unsigned 8-bit, ' + PCM().length(nhl.rom, s) + ' bytes then 00 00']);
+      const users = usedBy(s);
+      if (users.length) rows.push(['Started by', users.map((u) => 'SFX ' + u.id + ' ' + u.label + ' (rate $' + hex(u.rate) + ', ' + Math.round(rateHz(u.rate)) + ' Hz)').join('; ')]);
+      rows.push(['Path', 'ROM bytes, played at the first SFX\'s rate']);
     } else {
-      const at = A().patchAddress(index(id));
-      rows.push(['Z80 address', '$' + hex(at, 4)]);
+      const i = index(id);
+      rows.push(['Z80 address', '$' + hex(A().patchAddress(i), 4)]);
+      const to = mapsTo(i);
+      if (to) rows.push(['General MIDI', to.replace(/^Maps to /, '')]);
       rows.push(['Plays', 'a C-major scale on channel 1']);
+      rows.push(['Path', 'Z80 driver → YM2612, rendered offline']);
+      rows.push(['Output', A().SAMPLE_RATE + ' Hz']);
     }
-    rows.push(['Path', 'Z80 driver → YM2612, rendered offline']);
-    rows.push(['Output', A().SAMPLE_RATE + ' Hz']);
     return rows;
   }
 
   function describe(id) {
-    if (id === MAPPING) return 'Pick a patch, GM program or GM drum, then hear it next to its mapped sound.';
-    if (id.startsWith('dac-')) return 'The Z80 driver streams this sample to the YM2612 DAC at its handler\'s rate, as the game does when the 68k requests it.';
-    return 'The retail Z80 driver plays a C-major scale on this patch through the YM2612.';
+    if (id.startsWith('dac-')) {
+      const s = sampleOf(id);
+      const users = usedBy(s);
+      return 'The raw PCM file from the game' + (users.length
+        ? ', started by ' + users.map((u) => 'SFX ' + u.id + ' ' + u.label + ' (' + NAMES().describe(u.id) + ')').join(', ')
+        : '') + '. Played from its ROM bytes at the rate of the first of those handlers.';
+    }
+    const i = index(id);
+    const e = patchMatch(i);
+    const to = mapsTo(i);
+    return (to ? to + '. ' : '') + (e && e.character ? e.character + ' ' : '') + 'The retail Z80 driver plays a C-major scale on this patch through the YM2612.';
   }
 
-  // --- Playback ---------------------------------------------------------------------------------------
+  // --- Playback -----------------------------------------------------------------------------------------
 
   function ensureContext() {
-    if (ctx) return;
-    ctx = new (root.AudioContext || root.webkitAudioContext)();
+    if (!ctx) ctx = new (root.AudioContext || root.webkitAudioContext)();
   }
 
   function stop() {
@@ -150,7 +182,7 @@
 
   function connect(buf, id) {
     const gain = ctx.createGain();
-    gain.gain.value = host && host.volume != null ? host.volume() : 0.8;
+    gain.gain.value = host && host.volume ? host.volume() : 0.8;
     source = ctx.createBufferSource();
     source.buffer = buf;
     source.connect(gain);
@@ -167,11 +199,17 @@
     return A().create({ program: nhl.program, rom: nhl.rom, chip: nhl.chip }).play(script);
   }
 
-  function sfxFrames(entry) {
-    const start = A().SOUND_BASE + entry.off + 1;
-    let n = 0;
-    while (nhl.rom[start + n] !== 0) n += 1;
-    return Math.ceil((n * (161 + 17 * (entry.rate || 256))) / A().FRAME_TSTATES) + 30;
+  function offer(link, blob, name) {
+    const url = URL.createObjectURL(blob);
+    urls.push(url);
+    link.href = url;
+    link.download = name;
+    link.hidden = false;
+  }
+
+  function freeUrls() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
   }
 
   async function playItem(id, ui) {
@@ -180,151 +218,51 @@
     stop();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    let script;
-    let label;
+    freeUrls();
     if (id.startsWith('dac-')) {
-      const entry = A().DAC_SFX[index(id)];
-      script = A().sfxScript(entry, { frames: sfxFrames(entry) });
-      label = 'sfx-' + hex(entry.rom).toLowerCase() + '-' + entry.name.split(' ')[0];
-    } else {
-      script = A().patchScaleScript(nhl.rom, index(id));
-      label = 'patch-' + String(index(id)).padStart(2, '0');
+      const s = sampleOf(id);
+      const users = usedBy(s);
+      const hz = Math.round(rateHz(users.length ? users[0].rate : 0x13));
+      const raw = PCM().bytes(nhl.rom, s);
+      const n = PCM().length(nhl.rom, s);
+      const buf = ctx.createBuffer(1, n, hz);
+      const ch = buf.getChannelData(0);
+      const wav = new Int16Array(n);
+      for (let i = 0; i < n; i++) {
+        ch[i] = (raw[i] - 128) / 128;
+        wav[i] = (raw[i] - 128) * 256;
+      }
+      connect(buf, id);
+      if (ui) {
+        offer(ui.link, new Blob([raw], { type: 'application/octet-stream' }), s.name + '.bin');
+        offer(ui.wavLink, new Blob([root.NhlWav.encode16(wav, hz, 1)], { type: 'audio/wav' }), s.name + '.wav');
+        ui.meter.textContent = s.name + ' · ' + n + ' bytes at ' + hz + ' Hz · ' + (n / hz).toFixed(2) + ' s';
+      }
+      return;
     }
+    const i = index(id);
+    const label = 'patch-' + String(i).padStart(2, '0');
     if (ui) ui.meter.textContent = 'Rendering ' + label + ' through the Z80 driver…';
     await new Promise((r) => setTimeout(r, 20));
     const t0 = root.performance.now();
-    const pcm = render(script);
+    const pcm = render(A().patchScaleScript(nhl.rom, i));
     const ms = Math.round(root.performance.now() - t0);
     const frames = pcm.length / 2;
     const buf = ctx.createBuffer(2, frames, A().SAMPLE_RATE);
     const L = buf.getChannelData(0);
     const R = buf.getChannelData(1);
-    for (let i = 0; i < frames; i++) {
-      L[i] = pcm[i * 2] / 32768;
-      R[i] = pcm[i * 2 + 1] / 32768;
+    for (let k = 0; k < frames; k++) {
+      L[k] = pcm[k * 2] / 32768;
+      R[k] = pcm[k * 2 + 1] / 32768;
     }
     connect(buf, id);
-    if (url) URL.revokeObjectURL(url);
-    url = URL.createObjectURL(new Blob([root.NhlWav.encode16(pcm, A().SAMPLE_RATE, 2)], { type: 'audio/wav' }));
     if (ui) {
-      ui.link.href = url;
-      ui.link.download = label + '.wav';
-      ui.link.hidden = false;
+      offer(ui.wavLink, new Blob([root.NhlWav.encode16(pcm, A().SAMPLE_RATE, 2)], { type: 'audio/wav' }), label + '.wav');
       ui.meter.textContent = label + ' · ' + (frames / A().SAMPLE_RATE).toFixed(2) + ' s · rendered in ' + ms + ' ms';
     }
   }
 
-  // --- Mapping audition (lib/audio/nhl92-gm-audition.js) ----------------------------------------------
-
-  function audText(t) {
-    if (!t) return 'none';
-    if (t.kind === 'program') return 'GM ' + t.program + ' ' + t.name;
-    if (t.kind === 'drum') return 'drum ' + t.note + ' ' + t.name;
-    if (t.kind === 'patch') return 'patch ' + t.patch + (t.midi != null ? ' @ MIDI ' + t.midi : '');
-    return 'DAC SFX ' + t.sfx + (t.label ? ' (' + t.label + ')' : '');
-  }
-
-  async function playAudition(mode, ui) {
-    if (!map || !ready()) {
-      ui.meter.textContent = 'Still loading…';
-      return;
-    }
-    if (host) host.stopLive();
-    stop();
-    ensureContext();
-    if (ctx.state === 'suspended') await ctx.resume();
-    const plan = AUD().plan(map, ui.dir.value, Number(ui.pick.value), mode === 'ru');
-    const sides = mode === 'a' ? [plan.picked] : mode === 'b' || mode === 'ru' ? [plan.mapped] : [plan.picked, plan.mapped];
-    ui.meter.textContent = 'Rendering…';
-    await new Promise((r) => setTimeout(r, 20));
-    const env = { rom: nhl.rom, renderScript: (script) => render(script) };
-    const bufs = [];
-    for (const side of sides) bufs.push(await AUD().renderSide(side, env));
-    const mono = bufs.length === 2 ? AUD().join(bufs[0], bufs[1], 0.5) : bufs[0];
-    const rate = AUD().SAMPLE_RATE;
-    const buf = ctx.createBuffer(1, mono.length, rate);
-    buf.getChannelData(0).set(mono);
-    connect(buf, MAPPING);
-    ui.meter.textContent = sides.map(AUD().sideLabel).join('  →  ') + ' · ' + (mono.length / rate).toFixed(1) + ' s';
-  }
-
-  function renderMapping(box) {
-    box.appendChild(make('p', 'st-kind', 'Instruments'));
-    box.appendChild(make('h3', null, title(MAPPING)));
-    box.appendChild(make('p', 'st-note', 'Hear a pick next to its mapped sound. The NHL \'92 side is the retail driver; the GM side is a basic stand-in synth, not a real GM sound set, so judge the NHL \'92 sound against the name. Both sides play at the same level. Matches live in data/audio/nhl92-gm-map.json.'));
-    if (!map) {
-      box.appendChild(make('p', 'st-note', mapError ? 'Mapping unavailable: ' + mapError : 'Loading mapping…'));
-      return;
-    }
-    const dir = make('select');
-    dir.setAttribute('aria-label', 'Direction');
-    [['n2g', 'NHL \'92 patch → GM'], ['g2n', 'GM program → NHL \'92'], ['drum', 'GM drum → NHL \'92']].forEach(([v, t]) => {
-      const o = make('option', null, t);
-      o.value = v;
-      dir.appendChild(o);
-    });
-    const pick = make('select');
-    pick.setAttribute('aria-label', 'Pick');
-    const info = make('p', 'st-note mono');
-    const meter = make('p', 'st-note mono', 'Ready — pick something and press Play');
-    const ui = { dir, pick, meter };
-    const plan = () => AUD().plan(map, dir.value, Number(pick.value), false);
-    const showInfo = () => {
-      const i = plan().info;
-      const bits = ['Match: ' + audText(i.match), 'runner-up: ' + audText(i.runnerUp)];
-      if (i.confidence) bits.push('sure: ' + i.confidence);
-      if (i.fit) bits.push('fit: ' + i.fit);
-      bits.push('from ' + i.source);
-      info.textContent = bits.join(' · ') + '. ' + (i.reason || '');
-    };
-    const fillPicks = () => {
-      pick.textContent = '';
-      const groups = {};
-      AUD().picks(map, dir.value).forEach((p) => {
-        const opt = make('option', null, p.label);
-        opt.value = String(p.value);
-        let parent = pick;
-        if (p.group) {
-          if (!groups[p.group]) {
-            groups[p.group] = make('optgroup');
-            groups[p.group].label = p.group;
-            pick.appendChild(groups[p.group]);
-          }
-          parent = groups[p.group];
-        }
-        parent.appendChild(opt);
-      });
-      showInfo();
-    };
-    dir.addEventListener('change', fillPicks);
-    pick.addEventListener('change', showInfo);
-    const row = make('div', 'st-controls');
-    const dl = make('label', 'st-volume');
-    dl.append(make('span', null, 'Direction'), dir);
-    const pl = make('label', 'st-volume');
-    pl.append(make('span', null, 'Pick'), pick);
-    row.append(dl, pl);
-    box.append(row, info);
-    const buttons = make('div', 'st-controls');
-    [['both', 'Play pick, then match', true], ['a', 'Pick only'], ['b', 'Match only'], ['ru', 'Runner-up only']].forEach(([mode, text, primary]) => {
-      const b = make('button', 'ghost-btn' + (primary ? ' st-toggle' : ''), (primary ? '▶ ' : '') + text);
-      b.type = 'button';
-      b.addEventListener('click', () => {
-        playAudition(mode, ui).catch((err) => { meter.textContent = err && err.message ? err.message : 'Render failed'; });
-      });
-      buttons.appendChild(b);
-    });
-    const stopBtn = make('button', 'ghost-btn', '■ Stop');
-    stopBtn.type = 'button';
-    stopBtn.addEventListener('click', stop);
-    buttons.appendChild(stopBtn);
-    box.append(buttons, meter);
-    box.querySelector('.st-toggle').id = 'sound-test-toggle';
-    fillPicks();
-    lastToggle = { play: () => playAudition('both', ui) };
-  }
-
-  /** Fill the Audio panel for a DAC sample, instrument or the mapping audition. */
+  /** Fill the Audio panel for a DAC sample or an instrument. */
   function renderPanel(box, id) {
     box.replaceChildren();
     box.dataset.item = id;
@@ -332,35 +270,27 @@
       box.appendChild(make('p', 'st-note', 'Loading audio…'));
       return;
     }
-    if (id === MAPPING) {
-      renderMapping(box);
-      return;
-    }
     const isDac = id.startsWith('dac-');
     box.appendChild(make('p', 'st-kind', isDac ? 'DAC sample' : 'Instrument'));
-    box.appendChild(make('h3', null, isDac ? dacTitle(index(id)) : patchTitle(index(id))));
-    if (isDac) {
-      const sfx = sfxIdOf(A().DAC_SFX[index(id)]);
-      if (sfx >= 0) box.appendChild(make('p', 'st-note', NAMES().describe(sfx)));
-    }
+    box.appendChild(make('h3', null, isDac ? sampleOf(id).name : patchTitle(index(id))));
+    box.appendChild(make('p', 'st-note', describe(id)));
     const controls = make('div', 'st-controls');
     const btn = make('button', 'ghost-btn st-toggle', '▶ Play');
     btn.type = 'button';
     btn.id = 'sound-test-toggle';
     btn.setAttribute('aria-pressed', 'false');
-    const link = make('a', 'download', 'Download WAV');
+    const link = make('a', 'download', 'Download .bin');
     link.hidden = true;
+    const wavLink = make('a', 'download', 'Download WAV');
+    wavLink.hidden = true;
     const meter = make('p', 'st-note mono', 'Ready — press Play');
-    const ui = { meter, link };
-    btn.addEventListener('click', () => { toggle(id, ui).catch((err) => { meter.textContent = err && err.message ? err.message : 'Render failed'; }); });
-    controls.append(btn, link);
-    box.append(controls, make('p', 'st-note', describe(id)), meter);
+    const ui = { meter, link, wavLink };
+    btn.addEventListener('click', () => { toggle(id, ui).catch((err) => { meter.textContent = err && err.message ? err.message : 'Playback failed'; }); });
+    controls.append(btn, link, wavLink);
+    box.append(controls, meter);
     panelUi = { id, btn, ui };
     sync();
   }
-
-  let panelUi = null;
-  let lastToggle = null;
 
   function sync() {
     if (!panelUi) return;
@@ -375,7 +305,6 @@
       stop();
       return Promise.resolve();
     }
-    if (id === MAPPING) return lastToggle ? lastToggle.play() : Promise.resolve();
     return playItem(id, ui || (panelUi && panelUi.id === id ? panelUi.ui : null));
   }
 
