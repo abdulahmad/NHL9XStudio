@@ -11,7 +11,7 @@
   const NAMES = () => root.Nhl92SfxNames;
   const INST = () => root.NhlSoundInstruments;
   /** NHL 92 DAC sample / instrument / mapping ids (public/sound-instruments.js). */
-  const isInst = (id) => game === 'nhl92' && !!INST() && INST().isId(id);
+  const isInst = (id) => (game === 'nhl92' || game === 'nhlpa93') && !!INST() && INST().isId(id);
   const SFX_VBLANKS = 600;
   const BLOCK = 4096;
   const Z80_HZ = 3579545;
@@ -135,13 +135,17 @@
     } catch (err) { map = null; }
     const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
+    // NHLPA 93: the 93 labels and ram93 equates, lined up with the NHL 92 names (lib/audio/nhl93-names.js).
+    const N93 = c.short === '93' && root.Nhl93Names ? root.Nhl93Names : null;
+    const songRec = (e) => (N93 ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
+    const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
     return {
       rom: image,
       slice: image.subarray(c.start),
       map,
       data: {
-        songs: sounds.filter((e) => e.soundId >= 0x30).map((e) => ({ id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb })),
-        sfx: sounds.filter((e) => e.soundId < 0x30).map((e) => ({ id: e.soundId, name: nice(e), blurb: e.blurb }))
+        songs: sounds.filter((e) => e.soundId >= 0x30).map(songRec),
+        sfx: sounds.filter((e) => e.soundId < 0x30).map(sfxRec)
       }
     };
   }
@@ -178,6 +182,10 @@
         } catch (err) { gmMap = null; }
       }
       if (!Ym) Ym = await loadYm();
+      if (forGame === 'nhlpa93' && INST()) {
+        INST().init(rom, Ym, { stopLive: () => { stop(); stopBuffer(); }, volume: () => volume }, 'nhlpa93');
+        INST().onChange = () => { if (onChange) onChange(); };
+      }
       if (forGame === 'nhl92' && INST()) {
         INST().init(rom, Ym, { stopLive: () => { stop(); stopBuffer(); }, volume: () => volume });
         INST().onChange = () => { if (onChange) onChange(); };
@@ -217,9 +225,11 @@
         out.push({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, edit it as a ' + NX[game].label + ' song' });
       }
       for (const s of data.songs) {
-        out.push({ id: 'song-' + s.id, group: s.group === 'Music — Team' ? 'Team songs' : 'Songs', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: 'song $' + s.id.toString(16).toUpperCase() });
+        out.push({ id: 'song-' + s.id, group: s.group === 'Music — Team' ? 'Team songs' : 'Songs', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || 'song $' + s.id.toString(16).toUpperCase() });
       }
-      for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: SFX_VBLANKS + ' vblanks' });
+      for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || SFX_VBLANKS + ' vblanks' });
+      // NHLPA 93: the raw PCM files, a collapsible list like NHL 92's DAC samples.
+      if (game === 'nhlpa93' && INST() && INST().ready) out.push(...INST().entries());
       return out;
     }
     // Tools first, so the sequencer and the MIDI import are the first thing in the list.
@@ -1393,6 +1403,7 @@
       const rec = id.startsWith('song-') ? song94(n) : sfx94(n);
       box.appendChild(make('p', 'st-kind', (id.startsWith('song-') ? NX[game].label + ' song $' : NX[game].label + ' SFX $') + n.toString(16).toUpperCase()));
       box.appendChild(make('h3', null, rec.name));
+      if (rec.desc) box.appendChild(make('p', 'st-note', rec.desc));
     } else {
       box.appendChild(make('p', 'st-kind', id.startsWith('song-') ? 'Song ' + n : 'SFX ' + n));
       box.appendChild(make('h3', null, id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n)));
