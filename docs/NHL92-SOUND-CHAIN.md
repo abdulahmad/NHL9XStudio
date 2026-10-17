@@ -113,7 +113,7 @@ For NHL 92, the **Sound test** is the only audio tab. The Sound data tab and its
 - **Lengths:** songs run until Stop; SFX run for 600 vblanks. **Siren (SFX 0)** runs boot, `song 0` (one init vblank, no notes), `p_turnoff`, then the siren (`sfxPlanAfterMusicOff`), the same as `sfx-00-siren-SFXsiren-after-music-off.wav`. Before this, PR #28's plan (song 0, then the siren on the next vblank) let SngEOP's first notes play under it. Other SFX keep step 6's boot, idle vblank, SFX.
 - **Leaving:** picking another item or leaving the tab stops playback.
 
-**Chip lab.** YM/PSG presets only. The NHL '92 patch scales, DAC samples and the General MIDI mapping audition moved to the Audio section (`public/sound-instruments.js`): two collapsible lists, *DAC samples* and *Instruments*, collapsed by default, played through the Z80 driver alone (no 68k driver).
+**Chip lab.** YM/PSG presets and the NHL '92 ↔ General MIDI mapping audition. The NHL '92 patch scales and the raw DAC samples are in the Audio section (`public/sound-instruments.js`): two collapsible lists, *DAC samples* (the game's PCM files) and *Instruments* (the Z80 patches), collapsed by default.
 
 Checked in headless Chromium against `node server.js`, with YM writes hooked in the page:
 

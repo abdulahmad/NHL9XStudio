@@ -132,12 +132,12 @@ Channels are FM1–FM6 (channel index + 1), with the number of notes in the walk
 | Patch | Songs: channels (notes) | Range | SFX |
 |---|---|---|---|
 | 0 | none | – | 0 |
-| 1 | endofperiod: FM1 (123); splash: FM1 (521); unused: FM1 (256); endofgame: FM1 (256); playofftree: FM1 (192) | D2–B3, median A2 | none |
+| 1 | SngEOP: FM1 (123); SngTitle: FM1 (521); SngReprise: FM1 (256); SngEOG: FM1 (256); SngPO: FM1 (192) | D2–B3, median A2 | none |
 | 2 | none | – | none |
-| 3 | endofperiod: FM6 (126); splash: FM6 (360); unused: FM6 (163); endofgame: FM6 (163); playofftree: FM6 (6) | A0–A0, median A0 | none |
-| 4 | endofperiod: FM6 (70); splash: FM6 (193); unused: FM6 (100); endofgame: FM6 (100); playofftree: FM6 (2) | F#1–F#1, median F#1 | none |
-| 5 | endofperiod: FM2 (104), FM4 (104); splash: FM2 (16), FM3 (1), FM4 (16) | E2–A4, median G3 | none |
-| 6 | endofperiod: FM3 (146), FM5 (140); splash: FM3 (40), FM5 (54) | D4–F#7, median G5 | none |
+| 3 | SngEOP: FM6 (126); SngTitle: FM6 (360); SngReprise: FM6 (163); SngEOG: FM6 (163); SngPO: FM6 (6) | A0–A0, median A0 | none |
+| 4 | SngEOP: FM6 (70); SngTitle: FM6 (193); SngReprise: FM6 (100); SngEOG: FM6 (100); SngPO: FM6 (2) | F#1–F#1, median F#1 | none |
+| 5 | SngEOP: FM2 (104), FM4 (104); SngTitle: FM2 (16), FM3 (1), FM4 (16) | E2–A4, median G3 | none |
+| 6 | SngEOP: FM3 (146), FM5 (140); SngTitle: FM3 (40), FM5 (54) | D4–F#7, median G5 | none |
 | 7 | none | – | none |
 | 8 | none | – | none |
 | 9 | none | – | 5, 8 |
@@ -148,11 +148,11 @@ Channels are FM1–FM6 (channel index + 1), with the number of notes in the walk
 | 14 | none | – | 1, 2, 10 |
 | 15 | none | – | 14 |
 | 16 | none | – | 24 |
-| 17 | splash: FM2 (300), FM4 (300); unused: FM2 (144), FM4 (144); endofgame: FM2 (144), FM4 (144); playofftree: FM2 (92), FM3 (92) | D3–A4, median E4 | none |
-| 18 | splash: FM3 (326), FM5 (243); unused: FM3 (222), FM5 (264); endofgame: FM3 (494), FM5 (516); playofftree: FM4 (35), FM5 (35) | G4–D7, median D#6 | none |
+| 17 | SngTitle: FM2 (300), FM4 (300); SngReprise: FM2 (144), FM4 (144); SngEOG: FM2 (144), FM4 (144); SngPO: FM2 (92), FM3 (92) | D3–A4, median E4 | none |
+| 18 | SngTitle: FM3 (326), FM5 (243); SngReprise: FM3 (222), FM5 (264); SngEOG: FM3 (494), FM5 (516); SngPO: FM4 (35), FM5 (35) | G4–D7, median D#6 | none |
 | 19 | none | – | 27, 29 |
 | 20 | none | – | 28, 30, 32, 33, 34 |
-| 21 | playofftree: FM4 (64), FM5 (64) | A4–D7, median C6 | none |
+| 21 | SngPO: FM4 (64), FM5 (64) | A4–D7, median C6 | none |
 <!-- /GENERATED:usage -->
 
 Things the usage shows:
@@ -174,8 +174,8 @@ Targets marked *Drum* are GM drum notes on channel 10; all others are GM program
 | 2 | Unused by any song or SFX. Organ-like: two carriers at MUL 2, 45 ms attack, no decay, even harmonics, centroid about 5x the note. | **GM 20 Reed Organ** | Sustained with no decay and an even-harmonic reedy spectrum; the 45 ms attack is a soft organ onset. | GM 19 Church Organ | low |
 | 3 | Kick. Instant attack, decays to -24 dB by 400 ms, low thump with a bright click (centroid 650 Hz on a 27.5 Hz note). FM6 in all five songs, always A0: 818 notes on the steady pulse. | **Drum 36 Bass Drum 1** | Role and sound agree: one low pitch on the pulse, with the pitched thump and click of an FM kick. | Drum 35 Acoustic Bass Drum | high |
 | 4 | Snare. Noisy and bright (flatness 0.22, centroid 3 kHz), 0.28 s tail. FM6 beside the kick, always F#1 (patch note offset -3): 465 notes, one in every four steps (the backbeat). | **Drum 38 Acoustic Snare** | Backbeat role plus a noisy, bright burst with a short tail is a snare; the noise comes from feedback 7 with a MUL 15 modulator. | Drum 40 Electric Snare | medium |
-| 5 | Harsh and dense. Feedback 7, flatness 0.33, strong partials from 0.5x to 6x the note, sustained. endofperiod FM2 and FM4 together (E3-E4 with E2-A3, 0.5 s notes) and long chords (1.3-3.2 s) in splash. | **GM 30 Distortion Guitar** | Noisy, harmonically dense and sustained, in the E2-A3 range as two parts moving together (power-chord pairs): a distorted rhythm voice. Weak spot: the same numbers fit a harsh organ or a brass stab. | GM 29 Overdriven Guitar | low |
-| 6 | Bright vibrato lead. Instant attack, sustained, tonal, strong partials at 1x, 1.5x and 3x the note. Vibrato and pitch envelope on 98% of its notes. FM3 and FM5 in endofperiod and splash: 380 notes, D4-F#7 (median G5). | **GM 81 Lead 2 (sawtooth)** | Melody-duet voice, sustained and bright with vibrato on nearly every note; the strong third harmonic points to a saw-like tone. The 1.5x partial gives it a brassy edge, hence the runner-up. | GM 62 Synth Brass 1 | medium |
+| 5 | Harsh and dense. Feedback 7, flatness 0.33, strong partials from 0.5x to 6x the note, sustained. SngEOP FM2 and FM4 together (E3-E4 with E2-A3, 0.5 s notes) and long chords (1.3-3.2 s) in SngTitle. | **GM 30 Distortion Guitar** | Noisy, harmonically dense and sustained, in the E2-A3 range as two parts moving together (power-chord pairs): a distorted rhythm voice. Weak spot: the same numbers fit a harsh organ or a brass stab. | GM 29 Overdriven Guitar | low |
+| 6 | Bright vibrato lead. Instant attack, sustained, tonal, strong partials at 1x, 1.5x and 3x the note. Vibrato and pitch envelope on 98% of its notes. FM3 and FM5 in SngEOP and SngTitle: 380 notes, D4-F#7 (median G5). | **GM 81 Lead 2 (sawtooth)** | Melody-duet voice, sustained and bright with vibrato on nearly every note; the strong third harmonic points to a saw-like tone. The 1.5x partial gives it a brassy edge, hence the runner-up. | GM 62 Synth Brass 1 | medium |
 | 7 | Unused. Hollow swell: 0.44 s fade-in, strong at 0.5x to 2x the note then falling fast, sustained, near-sine highs. | **GM 89 Pad 2 (warm)** | A slow-onset sustained tone with few high harmonics is the warm-pad shape. | GM 52 Choir Aahs | low |
 | 8 | Unused. Very short tonal blip: -21 dB by 100 ms, silent by 400 ms, near-pure tone (periodicity 0.98). | **GM 45 Pizzicato Strings** | A plucked tone that stops before it can sustain; pizzicato is the shortest pitched GM voice. It reads as a blip, not a mallet or a drum. | GM 108 Kalimba | low |
 | 9 | Puck-hit click. Very short (-18 dB by 100 ms), mid-bright, slightly noisy (periodicity 0.76). Only SFX 5 (hit puck) and 8 (puck faceoff) load it. | **Drum 37 Side Stick** | A short dry tick is the side-stick sound, and it is the puck-on-stick SFX. | Drum 76 Hi Wood Block | low |
@@ -186,11 +186,11 @@ Targets marked *Drum* are GM drum notes on channel 10; all others are GM program
 | 14 | Pure tone. Almost a sine (harmonics 15 dB or more down), instant attack, sustained. The beeps (SFX 1, 2) and the whistle (SFX 10). | **GM 78 Whistle** | The game uses it for its whistle and beeps, and a sine-like sustained tone without a harmonic bite is also what the GM whistle is. | GM 79 Ocarina | medium |
 | 15 | Whiff. Noisy sweep (flatness 0.51): 0.16 s swell, gone by 400 ms. SFX 14 (whiff). | **GM 121 Breath Noise** | A short noisy whoosh that fades in and out; Breath Noise is GM's air-noise voice. | GM 122 Seashore | low |
 | 16 | Foghorn. Sustained; three carriers at MUL 1 with detunes 0, +3, +3 (slow beating); harmonic series falling from the 2nd partial; 155 ms release. SFX 24 (foghorn). | **GM 61 Brass Section** | A horn blast: a sustained harmonic stack with slight beating between carriers, like a section of brass. | GM 58 Tuba | medium |
-| 17 | Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. splash, Reprise, EOG and PO: FM2 paired with FM4 (FM3 in PO), 1,360 notes cycling 3-7 pitches per part (D3-A4). | **GM 18 Rock Organ** | A bright, sustained, harmonically dense tone playing repeated short figures in the middle register is the rock-organ role. Weak spot: dense and harsh like patch 5, so a guitar is also plausible. | GM 29 Overdriven Guitar | low |
+| 17 | Bright organ-like voice. Tonal but very bright (centroid 6 kHz at E4, about 18x the note), sustained, 195 ms release. SngTitle, SngReprise, SngEOG and SngPO: FM2 paired with FM4 (FM3 in PO), 1,360 notes cycling 3-7 pitches per part (D3-A4). | **GM 18 Rock Organ** | A bright, sustained, harmonically dense tone playing repeated short figures in the middle register is the rock-organ role. Weak spot: dense and harsh like patch 5, so a guitar is also plausible. | GM 29 Overdriven Guitar | low |
 | 18 | Main lead. Bright, tonal, sustained (-2 dB at key-off). Vibrato and pitch envelope on 99% of its notes. Four songs, FM3 and FM5 (FM4 and FM5 in PO): 2,135 notes (G4-D7, median D#6). | **GM 81 Lead 2 (sawtooth)** | The most-used melodic voice. Partials at 1x, 1.5x, 2x and 3x all within 7 dB is saw-like, and vibrato on every note is how a synth lead is played. Same voice family as patches 6 and 21 with different modulator levels. | GM 80 Lead 1 (square) | medium |
 | 19 | Quieter board hit. The same sound as patch 10 with the carrier level 3 dB lower (TL 9 against 5). SFX 27, 29. | **Drum 41 Low Floor Tom** | Same FM thump as patch 10 with a lower carrier level: the same instrument hit softer. Map to the same drum at a lower velocity. | Drum 45 Low Tom | low |
 | 20 | Quietest board hit. The same sound as patch 10 with the carrier level 6 dB lower (TL 13 against 5). SFX 28, 30, 32, 33, 34. | **Drum 41 Low Floor Tom** | Same FM thump as patch 10 with a lower carrier level: the same instrument hit softer. Map to the same drum at a lower velocity. | Drum 45 Low Tom | low |
-| 21 | Hollow high lead. Odd harmonics dominate (3x about as loud as the note, 2x 12 dB down), slow decay (-8 dB at key-off). Vibrato on 91% of notes. playofftree only, FM4 and FM5: 128 notes (A4-D7, median C6). | **GM 80 Lead 1 (square)** | Odd-harmonic-heavy, hollow and sustained is the square-wave lead shape; it is the playofftree duet voice. | GM 73 Flute | medium |
+| 21 | Hollow high lead. Odd harmonics dominate (3x about as loud as the note, 2x 12 dB down), slow decay (-8 dB at key-off). Vibrato on 91% of notes. SngPO only, FM4 and FM5: 128 notes (A4-D7, median C6). | **GM 80 Lead 1 (square)** | Odd-harmonic-heavy, hollow and sustained is the square-wave lead shape; it is the SngPO duet voice. | GM 73 Flute | medium |
 <!-- /GENERATED:nhl92-to-gm -->
 
 ## GM → NHL '92
@@ -242,7 +242,7 @@ Programs with no override show their family default.
 | 14 | Tubular Bells | **Patch 13** | family default | (chromatic percussion default) | Patch 8 | low |
 | 15 | Dulcimer | **Patch 13** | family default | (chromatic percussion default) | Patch 8 | low |
 | 16 | Drawbar Organ | **Patch 2** | family default | (organ default) | Patch 17 | low |
-| 17 | Percussive Organ | **Patch 17** | override | Bright and sustained, with the repeated-figure organ role patch 17 has in splash. | Patch 2 | low |
+| 17 | Percussive Organ | **Patch 17** | override | Bright and sustained, with the repeated-figure organ role patch 17 has in SngTitle. | Patch 2 | low |
 | 18 | Rock Organ | **Patch 17** | override | Patch 17 is the other table's match for this program: bright, sustained and harmonically dense. | Patch 2 | low |
 | 19 | Church Organ | **Patch 2** | family default | (organ default) | Patch 17 | low |
 | 20 | Reed Organ | **Patch 2** | family default | (organ default) | Patch 17 | low |
@@ -255,7 +255,7 @@ Programs with no override show their family default.
 | 27 | Electric Guitar (clean) | **Patch 8** | family default | (guitar default) | Patch 13 | low |
 | 28 | Electric Guitar (muted) | **Patch 8** | family default | (guitar default) | Patch 13 | low |
 | 29 | Overdriven Guitar | **Patch 17** | override | Bright, harmonically dense and sustained; less noisy than patch 5. | Patch 5 | low |
-| 30 | Distortion Guitar | **Patch 5** | override | Noisy, dense, sustained, and played as paired low parts in endofperiod; the same patch the other table maps to this program. | Patch 17 | medium |
+| 30 | Distortion Guitar | **Patch 5** | override | Noisy, dense, sustained, and played as paired low parts in SngEOP; the same patch the other table maps to this program. | Patch 17 | medium |
 | 31 | Guitar Harmonics | **Patch 14** | override | Pure, sustained, bell-like tone. | Patch 13 | low |
 | 32 | Acoustic Bass | **Patch 1** | family default | (bass default) | Patch 16 | medium |
 | 33 | Electric Bass (finger) | **Patch 1** | family default | (bass default) | Patch 16 | medium |
@@ -452,7 +452,7 @@ The analysis file only changes if the data or the render pipeline changes; `node
 
 ## Audition
 
-The **Audio** section (NHL 92) has a *Mapping audition* entry in its collapsible *Instruments* list. Choose a direction (NHL '92 patch → GM, GM program → NHL '92, or GM drum → NHL '92), pick the patch, program or drum note, and read the match, runner-up, confidence and reason shown under it. Buttons: *Play pick, then match* (the pick, a short pause, the mapped sound), *Pick only*, *Match only* and *Runner-up only*. Pitched sounds play an eight-note C-major scale; percussive patches play three hits (the kick and snare at their retail pitch). DAC targets play the sample through the retail Z80 driver. Page checks were done in headless Chromium (the card loads the JSON, renders and builds the playback buffer); nobody has listened to it. The reference sounds are plain synth stand-ins made by `gm-reference.js` (a waveform, an envelope, a little vibrato; noise and sweeps for drums), not a soundfont, so they say which instrument family was meant rather than how a real GM synth sounds. Both sides are played at the same level so loudness does not bias the comparison. The viewer's default view (NHL 92 with the SPA tab) is unchanged.
+The **Chip lab** page has a *Mapping audition* card. Choose a direction (NHL '92 patch → GM, GM program → NHL '92, or GM drum → NHL '92), pick the patch, program or drum note, and read the match, runner-up, confidence and reason shown under it. Buttons: *Play pick, then match* (the pick, a short pause, the mapped sound), *Pick only*, *Match only* and *Runner-up only*. Pitched sounds play an eight-note C-major scale; percussive patches play three hits (the kick and snare at their retail pitch). DAC targets play the sample through the retail Z80 driver. Page checks were done in headless Chromium (the card loads the JSON, renders and builds the playback buffer); nobody has listened to it. The reference sounds are plain synth stand-ins made by `gm-reference.js` (a waveform, an envelope, a little vibrato; noise and sweeps for drums), not a soundfont, so they say which instrument family was meant rather than how a real GM synth sounds. Both sides are played at the same level so loudness does not bias the comparison. The viewer's default view (NHL 92 with the SPA tab) is unchanged.
 
 ## Tests (`test/nhl92-gm-map.js`, part of `node test.js`)
 

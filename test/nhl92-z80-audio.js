@@ -175,6 +175,21 @@ function expectedDacBytes(entry) {
     assert.strictEqual(r.logSha256, pinned.log, entry.name + ' YM log hash');
     assert.strictEqual(r.wavSha256, pinned.wav, entry.name + ' WAV hash');
   }
+  {
+    // Raw PCM files (lib/audio/nhl92-pcm.js): they tile the PCM block, and every DAC SFX handler starts one of them.
+    const pcm = require('../lib/audio/nhl92-pcm');
+    for (let i = 1; i < pcm.SAMPLES.length; i++) assert.strictEqual(pcm.SAMPLES[i].start, pcm.SAMPLES[i - 1].end, pcm.SAMPLES[i].name + ' follows the previous file');
+    assert.strictEqual(pcm.SAMPLES[0].start, 0x11c3e);
+    assert.strictEqual(pcm.SAMPLES[pcm.SAMPLES.length - 1].end, 0x24214);
+    for (const entry of audio.DAC_SFX) {
+      if (entry.name.startsWith('stop')) continue;
+      const at = audio.SOUND_BASE + entry.off;
+      const own = pcm.SAMPLES.filter((s) => s.start === at);
+      assert.strictEqual(own.length, 1, entry.name + ' starts exactly one PCM file (' + at.toString(16) + ')');
+    }
+    for (const s of pcm.SAMPLES) assert.deepStrictEqual(Array.from(pcm.bytes(SRC.rom, s).slice(-2)), [0, 0], s.name + ' ends with 00 00');
+    console.log('nhl92 pcm: ' + pcm.SAMPLES.length + ' raw PCM files tile $11C3E-$24213 and match the DAC SFX handlers OK');
+  }
   console.log('nhl92 z80 audio: ' + audio.DAC_SFX.length + ' DAC SFX play the retail bytes at the driver rate, PSG silent OK');
 
   // --- Determinism: same input, byte-identical log and WAV ----------------------------

@@ -199,6 +199,9 @@
     return n;
   };
 
+  /** "FM ch0 + FM ch1" / "DAC" / "DAC + FM ch2": the chip channels an SFX handler starts. */
+  const sfxKinds = (s) => s.actions.map((a) => (a.type === 'dac' ? 'DAC' : 'FM ch' + a.channel)).join(' + ');
+
   function entries() {
     if (!data) return [];
     const out = [];
@@ -224,11 +227,8 @@
       out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
       out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
     }
-    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: s.id + ' · ' + NAMES().songName(s.id), sub: 'song ' + s.id + ' · loops until Stop' });
-    for (const s of data.sfx) {
-      const kinds = s.actions.map((a) => (a.type === 'dac' ? 'DAC' : 'FM ch' + a.channel)).join(' + ');
-      out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: kinds + ' · ' + SFX_VBLANKS + ' vblanks' });
-    }
+    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: NAMES().songName(s.id), sub: NAMES().SONG_DESCRIPTIONS[s.id] + ' · loops until Stop' });
+    for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: sfxKinds(s) + ' · ' + NAMES().describe(s.id) });
     // DAC samples and instruments: collapsible lists (collapsed until opened), played through the Z80 driver.
     if (INST() && INST().ready) out.push(...INST().entries());
     return out;
@@ -251,7 +251,7 @@
     }
     const n = Number(id.split('-')[1]);
     if (isNx()) return (id.startsWith('song-') ? 'Song $' + n.toString(16).toUpperCase() + ' · ' + song94(n).name : 'SFX $' + n.toString(16).toUpperCase() + ' · ' + sfx94(n).name);
-    return id.startsWith('song-') ? 'Song ' + n + ' · ' + NAMES().songName(n) : 'SFX ' + NAMES().name(n);
+    return id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n);
   }
 
   /** Plans for live playback; the siren's matches sfx-00-siren-SFXsiren-after-music-off.wav. */
@@ -1396,6 +1396,7 @@
     } else {
       box.appendChild(make('p', 'st-kind', id.startsWith('song-') ? 'Song ' + n : 'SFX ' + n));
       box.appendChild(make('h3', null, id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n)));
+      box.appendChild(make('p', 'st-note', id.startsWith('song-') ? NAMES().SONG_DESCRIPTIONS[n] : sfxKinds(data.sfx[n]) + ' · ' + NAMES().describe(n)));
     }
 
     const controls = make('div', 'st-controls');
