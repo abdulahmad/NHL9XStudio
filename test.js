@@ -1268,4 +1268,13 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
       process.exitCode = 1;
     }
   });
+  // NHLPA 93 ROMs of different revisions opened one after another (skipped without the ROMs).
+  const revChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'rev-switch.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) revChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
+  revChild.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('test/browser/rev-switch.js failed');
+      process.exitCode = 1;
+    }
+  });
 }

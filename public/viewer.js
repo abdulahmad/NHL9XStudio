@@ -1,4 +1,5 @@
 let games = [];
+let baseGames = []; // the games as the list gave them, before any ROM adjusted them (a second ROM adjusts these, not the first one's result)
 let gameInfo = null;
 let spritePalette = '';
 
@@ -2453,7 +2454,8 @@ async function ingestDroppedFiles(fileList) {
     const id = rom.id || rom.gameId;
     const body = rom.bytes || bytes;
     roms.set(id, body);
-    let entry = games.find((game) => game.id === id);
+    let entry = baseGames.find((game) => game.id === id);
+    icePalettes.delete(id);
     if (entry && typeof NhlRevA !== 'undefined') entry = NhlRevA.adjustGameStatus(entry, rom.revADate || '');
     if (entry && typeof NhlRevB !== 'undefined') entry = NhlRevB.adjustGameStatus(entry, rom.revADate || '');
     if (entry) {
@@ -2552,6 +2554,7 @@ function wireDropTarget() {
 
 async function boot() {
   games = await loadGamesList();
+  baseGames = games.slice();
   fillSelect(el('game'), games.map((game) => ({ value: game.id, label: game.title })), 'nhl92');
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) {
