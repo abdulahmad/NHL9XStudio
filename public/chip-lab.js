@@ -105,6 +105,7 @@ function sitePrefix() {
 }
 
 async function initNhl92(Ym2612) {
+  aud.Ym2612 = Ym2612;
   const A = window.Nhl92Z80Audio;
   const rom = await Nhl92SoundFixture.ensureSyntheticRom({ baseUrl: sitePrefix() });
   nhl.rom = rom;
@@ -208,8 +209,17 @@ document.querySelectorAll('[data-psg]').forEach((btn) => btn.addEventListener('c
 markSelected('[data-ym]', 'data-ym', null);
 markSelected('[data-psg]', 'data-psg', null);
 
-// Mapping audition: an NHL '92 sound next to a plain GM-style reference (lib/audio/nhl92-gm-audition.js).
-const aud = { map: null, source: null };
+// Mapping audition: a game's sound next to a plain GM-style reference. NHL '92 plays through the Z80 driver
+// (lib/audio/nhl92-gm-audition.js); NHLPA 93 and NHL 94 play a short song on the retail 68k + Z80 drivers
+// (lib/audio/nhl9x-gm-audition.js), so the three share the pick menu, the info line and the Play buttons.
+const aud = { game: '92', map: null, map9x: null, source: null, images: {}, Ym2612: null };
+const GAME_9X = {
+  93: { label: 'NHLPA 93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, driver: 'Nhl93M68kHarness' },
+  94: { label: 'NHL 94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, driver: 'Nhl94M68kHarness' }
+};
+const audLib = () => (aud.game === '92' ? Nhl92GmAudition : Nhl9xGmAudition);
+const audMap = () => (aud.game === '92' ? aud.map : aud.map9x);
+const audGameName = () => (aud.game === '92' ? "NHL '92" : GAME_9X[aud.game].label);
 
 function audText(t) {
   if (!t) return 'none';
@@ -224,7 +234,7 @@ function audFillPicks() {
   const dir = el('aud-dir').value;
   sel.textContent = '';
   const groups = {};
-  Nhl92GmAudition.picks(aud.map, dir).forEach((p) => {
+  audLib().picks(audMap(), dir).forEach((p) => {
     const opt = document.createElement('option');
     opt.value = String(p.value);
     opt.textContent = p.label;
@@ -243,7 +253,7 @@ function audFillPicks() {
 }
 
 function audPlan(runnerUp) {
-  return Nhl92GmAudition.plan(aud.map, el('aud-dir').value, Number(el('aud-pick').value), runnerUp);
+  return audLib().plan(audMap(), el('aud-dir').value, Number(el('aud-pick').value), runnerUp);
 }
 
 function audShowInfo() {
@@ -256,23 +266,54 @@ function audShowInfo() {
   el('aud-info').textContent = bits.join(' · ') + '. ' + (i.reason || '');
 }
 
+/** The sound slice of NHLPA 93 / NHL 94 placed at its ROM offset, fetched once. */
+async function audImage(game) {
+  if (aud.images[game]) return aud.images[game];
+  const c = GAME_9X[game];
+  const res = await fetch(new URL('data/fixtures/' + c.slice, document.baseURI).href);
+  if (!res.ok) throw new Error(c.label + ' sound fixture missing (' + res.status + ')');
+  const image = new Uint8Array(c.size);
+  image.set(new Uint8Array(await res.arrayBuffer()), c.start);
+  aud.images[game] = image;
+  return image;
+}
+
 async function audRender(sides) {
-  const A = window.Nhl92Z80Audio;
-  const env = {
-    rom: nhl.rom,
-    renderScript: (script) => {
-      nhl.chip.loadState(nhl.pristine);
-      return A.create({ program: nhl.program, rom: nhl.rom, chip: nhl.chip }).play(script);
-    }
-  };
   const out = [];
-  for (const side of sides) out.push(await Nhl92GmAudition.renderSide(side, env));
+  if (aud.game === '92') {
+    const A = window.Nhl92Z80Audio;
+    const env = {
+      rom: nhl.rom,
+      renderScript: (script) => {
+        nhl.chip.loadState(nhl.pristine);
+        return A.create({ program: nhl.program, rom: nhl.rom, chip: nhl.chip }).play(script);
+      }
+    };
+    for (const side of sides) out.push(await Nhl92GmAudition.renderSide(side, env));
+    return out;
+  }
+  const game = Number(aud.game);
+  const env = {
+    game,
+    image: await audImage(aud.game),
+    driver: window[GAME_9X[aud.game].driver],
+    newChip: () => {
+      const chip = new aud.Ym2612(ymChip.module, ymChip.api.create(), ymChip.api);
+      chip.reset();
+      return chip;
+    },
+    newPsg: () => NhlSn76489.create({ clock: 3579545 })
+  };
+  for (const side of sides) {
+    await new Promise((r) => setTimeout(r, 20)); // let the "Rendering…" text paint before the emulators run
+    out.push(Nhl9xGmAudition.renderSide(side, env));
+  }
   return out;
 }
 
 async function audPlay(mode) {
   const meter = el('aud-meter');
-  if (!aud.map || !nhl.chip) {
+  if (!audMap() || !nhl.chip) {
     meter.textContent = 'Still loading…';
     return;
   }
@@ -283,15 +324,16 @@ async function audPlay(mode) {
   const sides = mode === 'a' ? [pl.picked] : mode === 'b' || mode === 'ru' ? [pl.mapped] : [pl.picked, pl.mapped];
   meter.textContent = 'Rendering…';
   const bufs = await audRender(sides);
-  const mono = bufs.length === 2 ? Nhl92GmAudition.join(bufs[0], bufs[1], 0.5) : bufs[0];
-  const rate = Nhl92GmAudition.SAMPLE_RATE;
+  const mono = bufs.length === 2 ? audLib().join(bufs[0], bufs[1], 0.5) : bufs[0];
+  const rate = audLib().SAMPLE_RATE;
   const buf = ctx.createBuffer(1, mono.length, rate);
   buf.getChannelData(0).set(mono);
   aud.source = ctx.createBufferSource();
   aud.source.buffer = buf;
   aud.source.connect(ctx.destination);
   aud.source.start();
-  meter.textContent = sides.map(Nhl92GmAudition.sideLabel).join('  →  ') + ' · ' + (mono.length / rate).toFixed(1) + ' s';
+  const label = (side) => (aud.game === '92' ? Nhl92GmAudition.sideLabel(side) : Nhl9xGmAudition.sideLabel(side, Number(aud.game)));
+  meter.textContent = sides.map(label).join('  →  ') + ' · ' + (mono.length / rate).toFixed(1) + ' s';
 }
 
 function stopAudition() {
@@ -302,15 +344,28 @@ function stopAudition() {
 }
 
 async function initAudition() {
-  const res = await fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href);
-  if (!res.ok) throw new Error('mapping JSON missing (' + res.status + ')');
-  aud.map = await res.json();
+  const [r92, r9x] = await Promise.all([
+    fetch(new URL('data/audio/nhl92-gm-map.json', document.baseURI).href),
+    fetch(new URL('data/audio/nhl9x-gm-map.json', document.baseURI).href)
+  ]);
+  if (!r92.ok) throw new Error('mapping JSON missing (' + r92.status + ')');
+  if (!r9x.ok) throw new Error('NHLPA 93 / NHL 94 mapping JSON missing (' + r9x.status + ')');
+  aud.map = await r92.json();
+  aud.map9x = await r9x.json();
   audFillPicks();
   el('aud-meter').textContent = 'Ready — pick something and press Play';
 }
 
-el('aud-dir').addEventListener('change', () => aud.map && audFillPicks());
-el('aud-pick').addEventListener('change', () => aud.map && audShowInfo());
+function audSetGame() {
+  stopAudition();
+  aud.game = el('aud-game').value;
+  el('aud-title-game').textContent = audGameName();
+  if (audMap()) audFillPicks();
+}
+
+el('aud-game').addEventListener('change', audSetGame);
+el('aud-dir').addEventListener('change', () => audMap() && audFillPicks());
+el('aud-pick').addEventListener('change', () => audMap() && audShowInfo());
 for (const [id, mode] of [['aud-both', 'both'], ['aud-a', 'a'], ['aud-b', 'b'], ['aud-ru', 'ru']]) {
   el(id).addEventListener('click', () => {
     audPlay(mode).catch((err) => {

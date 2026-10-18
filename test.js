@@ -1248,6 +1248,7 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl9x-sound-chain');
   require('./test/nhl9x-song-gm');
   require('./test/nhl9x-stream');
+  require('./test/nhl9x-gm-audition');
   require('./test/ym-note-tracker');
   require('./test/nhl92-gm-map');
   require('./test/nhl92-sequencer');
@@ -1265,6 +1266,15 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
   child.on('exit', (code) => {
     if (code !== 0) {
       console.error('test/browser/load-errors.js failed');
+      process.exitCode = 1;
+    }
+  });
+  // The Audio tab's lists: collapsible groups, NHLPA 93 names, the 93 / 94 instruments play.
+  const audChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'audio-list.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) audChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
+  audChild.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('test/browser/audio-list.js failed');
       process.exitCode = 1;
     }
   });

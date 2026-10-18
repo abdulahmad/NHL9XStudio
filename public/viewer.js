@@ -82,7 +82,7 @@ const state = {
   query: '',
   audioId: '',
   soundTestItem: 'song-0',
-  openGroups: new Set(), // collapsible Audio lists (DAC samples, Instruments) the listener opened; closed by default
+  openGroups: new Set(), // Audio groups the listener flipped from their default: Songs / SFX start open, DAC samples / Instruments start closed
   groupsInit: false,
   acc: 0,
   holdKey: '',
@@ -880,21 +880,25 @@ function renderSoundList(box, q) {
     box.appendChild(note);
     return;
   }
-  // A link to an item inside a collapsible list opens that list once, so the selection is visible.
+  // Every Audio group but the MIDI tools collapses. Songs and SFX start open; lists flagged collapsible (DAC samples,
+  // Instruments) start closed. openGroups holds the groups flipped from that default.
+  const foldable = (entry) => entry.group !== 'MIDI';
+  const startsOpen = (entry) => !entry.collapsible;
+  // A link to an item inside a list that starts closed opens that list once, so the selection is visible.
   if (!state.groupsInit && list.length) {
     state.groupsInit = true;
     const sel = list.find((e) => e.id === state[panel.key]);
-    if (sel && sel.collapsible) state.openGroups.add(sel.group);
+    if (sel && foldable(sel) && !startsOpen(sel)) state.openGroups.add(sel.group);
   }
   let group = '';
   let open = true;
   for (const entry of list) {
     if (entry.group !== group) {
       group = entry.group;
-      // Collapsible lists are closed unless opened; a search shows every match.
-      open = !entry.collapsible || !!q || state.openGroups.has(group);
+      // A search shows every match.
+      open = !foldable(entry) || !!q || (startsOpen(entry) !== state.openGroups.has(group));
       let label;
-      if (entry.collapsible) {
+      if (foldable(entry)) {
         const name = group;
         label = document.createElement('button');
         label.type = 'button';
