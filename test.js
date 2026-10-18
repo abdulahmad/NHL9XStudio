@@ -21,7 +21,7 @@ const { paletteLabel, defaultPaletteFile, matchPaletteFile } = require('./lib/la
 const { decodeJim, decompressBytecode, picturePixelHidden } = require('./lib/jim');
 const { unpack93 } = require('./lib/snespak');
 const { parse93, parse94, openImage } = require('./lib/snes');
-const { GAMES, revAAdjust, sheetGameBanks } = require('./lib/games');
+const { GAMES, revAAdjust, revBAdjust, sheetGameBanks } = require('./lib/games');
 const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const romDetect = require('./lib/rom-detect');
@@ -621,6 +621,28 @@ if (revA93) {
   const crowd = openFrames(revA93.subarray(crowdSpec.start, crowdSpec.end), { decompressBytecode });
   assert.ok(crowd.numFrames >= 2);
   assert.ok(inkCount(crowd.renderFrame(1)) > 100);
+}
+const revB93 = romIf(path.join(toolsRoot, 'JIM-Tools', 'nhlpa93retailRevB.bin')) || romIf(path.join(__dirname, 'roms', 'nhlpa93retailRevB.bin'));
+if (revB93) {
+  assert.strictEqual(revB93.slice(0x118, 0x120).toString('ascii'), '1993.FEB');
+  const adjusted = revBAdjust(pa93, '1993.FEB');
+  assert.strictEqual(adjusted.sheet.sprites, 0x3A502);
+  assert.strictEqual(revBAdjust(pa93, '1992.OCT').sheet.sprites, pa93.sheet.sprites);
+  assert.ok(!adjusted.images.some((image) => image.id === 'EASN.anim' || image.id === 'EASN2.map.jim'));
+  const sheet = parseSheet(revB93, adjusted.sheet);
+  assert.ok(sheet.numFrames > 600);
+  assert.ok(renderFrame(sheet, 1).pixels.some((pixel) => pixel));
+  for (const id of ['Scouting.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
+    const spec = adjusted.images.find((image) => image.id === id);
+    const pic = decodeJim(revB93.subarray(spec.start, spec.end));
+    assert.ok(pic.renderFrame(1).width > 32, id);
+    assert.ok(inkCount(pic.renderFrame(1)) > 100, id);
+  }
+  for (const id of ['Crowd.anim', 'FaceOff.anim', 'Zam.anim']) {
+    const spec = adjusted.images.find((image) => image.id === id);
+    const bank = openFrames(revB93.subarray(spec.start, spec.end), { decompressBytecode }, null, { tableBias: -1 });
+    assert.ok(bank.numFrames >= 2, id);
+  }
 }
 const retail93 = romIf('/tmp/snes/93/lst/nhlpa93snes.bin');
 if (retail93) {
