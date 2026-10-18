@@ -1202,6 +1202,15 @@ if (genesis93Rom) {
     audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhlpa93'))
   );
   assert.ok(schedule93 && schedule93.events.length > 0, '93G stream preview should emit notes');
+  // Rev A and Rev B keep the same sound data at other offsets: every catalog stream must preview exactly as in retail.
+  const meta93 = audio.genesis.previewMetaFromGame(audio.genesis.gameMeta('nhlpa93'));
+  for (const revFile of ['nhlpa93retailRevA.bin', 'nhlpa93retailRevB.bin']) {
+    const rev = romIf(path.join(toolsRoot, 'JIM-Tools', revFile)) || romIf(path.join(__dirname, 'roms', revFile));
+    if (!rev) continue;
+    for (const e of nhlpa93Audio.entries.filter((x) => x.type === 'fm-stream' && x.playable)) {
+      assert.deepStrictEqual(audio.genesis.previewEntry(rev, e, meta93), audio.genesis.previewEntry(genesis93Rom, e, meta93), revFile + ' ' + e.id);
+    }
+  }
 }
 const genesis94Rom = genesis94 || romIf(path.join(disasm94, 'lst/nhl94.bin'));
 if (genesis94Rom) {
