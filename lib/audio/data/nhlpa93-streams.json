@@ -467,7 +467,7 @@
       "end": 165770,
       "playable": true,
       "blurb": "sounds $26 and $27: empty stream",
-      "symbol": "sfx_id_26_27_cmdstream"
+      "symbol": "sfx_empty_cmdstream"
     },
     {
       "id": "snd-27",
@@ -479,7 +479,7 @@
       "end": 165770,
       "playable": true,
       "blurb": "sounds $26 and $27: empty stream",
-      "symbol": "sfx_id_26_27_cmdstream"
+      "symbol": "sfx_empty_cmdstream"
     },
     {
       "id": "snd-28",
