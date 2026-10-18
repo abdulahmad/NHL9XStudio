@@ -56,6 +56,26 @@ After **any** catalog or `lib/games.js` change, run **`node tools/build-manifest
 
 ---
 
+## 2b. Fast sync (what to run, and how long it takes)
+
+A sync only needs the checks that its changes can affect. Compare first, copy only what differs, then pick the test run:
+
+```bash
+cmp data/frames93.asm "$DISASM/NHLPA93Genesis/src/frames93.asm"   # repeat for frames94/95 and the SNES inputs
+```
+
+| What changed | Run | Time |
+|--------------|-----|------|
+| Names, frames, palettes, picture offsets (data only) | `NHL_SKIP_BROWSER=1 node test.js --core` | about 20 s |
+| The same, plus the browser load check of every game | `node test.js --core` | about 4 min |
+| Anything in `lib/audio`, sound data or the sequencer | `node test.js` (full) | about 18 min |
+
+`--core` skips the sound and sequencer suites, which a data-only sync cannot touch. Disassembly changes that only touch
+comments, names of RAM labels or team data records (like most 93G/94G cleanups) need no Studio change at all: `frames*.asm`
+and the extract offsets are the only inputs, so `cmp` showing no difference means there is nothing to sync.
+
+---
+
 ## 3. Standard sync workflow (full)
 
 ### Step A — Update upstream checkouts
