@@ -2,7 +2,7 @@
  * Build the vendored SPF/SPA listings for the two SNES games.
  *
  * NHLPA 93 SNES names come from NHLPA93SNES src/data/frames93s.asm plus the
- * SPF equates in src/ram93snes.asm (commit recorded in the output header).
+ * SPF equates (also in frames93s.asm; RAM names in src/ram93s.asm) (commit recorded in the output header).
  * NHL 94 SNES has no named animation list yet (McMarkis fork, branch
  * segment/bank96_9000). Its tables are packed in LoROM bank $9D. Each table
  * is eight absolute bank addresses, a flags word, then (frame, time) pairs
@@ -227,11 +227,11 @@ function align(srcAnims, tables) {
 }
 
 function main() {
-  const eq = loadEquates(fs.readFileSync(path.join(SRC93, 'src/ram93snes.asm'), 'utf8'));
   const framesText = fs.readFileSync(path.join(SRC93, 'src/data/frames93s.asm'), 'utf8');
+  const eq = loadEquates(fs.readFileSync(path.join(SRC93, 'src/ram93s.asm'), 'utf8') + '\n' + framesText);
   const parsed = parse93(eq, framesText);
   const header93 = `; SPF bases and SPA sequences for NHLPA Hockey 93 on the SNES.
-; Converted from NHLPA93SNES src/data/frames93s.asm and src/ram93snes.asm.
+; Converted from NHLPA93SNES src/data/frames93s.asm and src/ram93s.asm.
 ; A direction word of $8000 runs off the end of that animation (the source
 ; points at the next table). SPF symbols are sorted by frame number.
 `;

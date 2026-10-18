@@ -1,5 +1,5 @@
 ; SPF bases and SPA sequences for NHLPA Hockey 93 on the SNES.
-; Converted from NHLPA93SNES src/data/frames93s.asm and src/ram93snes.asm.
+; Converted from NHLPA93SNES src/data/frames93s.asm and src/ram93s.asm.
 ; A direction word of $8000 runs off the end of that animation (the source
 ; points at the next table). SPF symbols are sorted by frame number.
 

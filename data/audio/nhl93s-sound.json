@@ -134,11 +134,7 @@
    "names": [
     {
      "name": "crowdcheer",
-     "note": "home player won the fight (93 song $B)"
-    },
-    {
-     "name": "savehome",
-     "note": "hard shot saved by the home goalie (93 song $B)"
+     "note": "home player won the fight, home goalie save (93 song $B)"
     }
    ]
   },
@@ -155,11 +151,11 @@
    "id": 140,
    "names": [
     {
-     "name": "saveaway",
-     "note": "hard shot saved by the visiting goalie (93 song $D)"
+     "name": "oooh2",
+     "note": "hard shot saved by the visiting goalie, an injury (93 $D)"
     },
     {
-     "name": "overglass",
+     "name": "bglass",
      "note": "puck over the glass (93 $E)"
     }
    ]

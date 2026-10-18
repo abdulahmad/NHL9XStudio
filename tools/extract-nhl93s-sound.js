@@ -16,7 +16,7 @@
  *   - the stream addresses ($868000 and $818000, from docs/file_map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream equals data/spc/driver.spc700, the sample blocks equal data/bootsamples.brr and
  *     data/gamesamples.brr, the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
- *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93snes.asm.
+ *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
  */
 const fs = require('fs');
 const path = require('path');
@@ -127,7 +127,7 @@ function main() {
   }
 
   // sound effects: the SFX numbers the game source names
-  const ram = fs.readFileSync(path.join(dir, 'src', 'ram93snes.asm'), 'utf8');
+  const ram = fs.readFileSync(path.join(dir, 'src', 'ram93s.asm'), 'utf8');
   const sfx = {};
   for (const m of ram.matchAll(/^SFX(\w+)\s*=\s*\$([0-9A-F]+)\s*;?\s*([^\n]*)/gm)) {
     const id = hex(m[2]);
