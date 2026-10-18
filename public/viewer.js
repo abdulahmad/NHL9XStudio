@@ -1963,6 +1963,16 @@ async function icePaletteBytes() {
   return donor;
 }
 
+// Options for Nhl92Sheet.openFrames: the 95 sprite record, and tableBias -1 where the offset table has no frame 0 entry (NHLPA 93 Rev B).
+function frameOptions() {
+  const sheet = gameInfo && gameInfo.sheet;
+  if (!sheet) return null;
+  const opts = {};
+  if (sheet.record === '95') opts.record = '95';
+  if (sheet.tableBias) opts.tableBias = sheet.tableBias;
+  return Object.keys(opts).length ? opts : null;
+}
+
 // The palette for a frame bank that stores none: the one the game loads with it (paletteFrom names that picture),
 // else the ice palette.
 async function framesDonor(image) {
@@ -2037,7 +2047,7 @@ async function ensureBank(name) {
       const bytes = rom.subarray(spec.start, spec.end);
       const missing = bytes.length >= 4
         && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
-      const frameOpts = gameInfo.sheet && gameInfo.sheet.record === '95' ? { record: '95' } : null;
+      const frameOpts = frameOptions();
       parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await framesDonor(spec) : null, frameOpts);
     } else {
       parsed = Nhl92Sheet.parseSheet(rom, gameInfo.sheet);
@@ -2108,7 +2118,7 @@ async function ensureImage(id) {
     const bytes = await bytesFor(image);
     if (!bytes) return null;
     const missing = bytes.length >= 4 && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
-    const frameOpts = gameInfo.sheet && gameInfo.sheet.record === '95' ? { record: '95' } : null;
+    const frameOpts = frameOptions();
     parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await framesDonor(image) : null, frameOpts);
   } else if (isPcGame(gameInfo.kind) || image.kind === 'pc95') {
     const paths = image.files && image.files.length ? image.files : [image.id];
@@ -2445,6 +2455,7 @@ async function ingestDroppedFiles(fileList) {
     roms.set(id, body);
     let entry = games.find((game) => game.id === id);
     if (entry && typeof NhlRevA !== 'undefined') entry = NhlRevA.adjustGameStatus(entry, rom.revADate || '');
+    if (entry && typeof NhlRevB !== 'undefined') entry = NhlRevB.adjustGameStatus(entry, rom.revADate || '');
     if (entry) {
       entry = Object.assign({}, entry, { rom: true, pixels: true });
       games = games.map((game) => (game.id === id ? entry : game));

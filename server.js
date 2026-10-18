@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { GAMES, gameById, revAAdjust, sheetGameBanks } = require('./lib/games');
+const { GAMES, gameById, revAdjust, sheetGameBanks } = require('./lib/games');
 const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
@@ -192,7 +192,7 @@ function placedAssets(game, romFile) {
   try {
     const buf = readRom(romFile, game);
     const date = buf.length >= 0x120 ? buf.slice(0x118, 0x120).toString('ascii') : '';
-    return revAAdjust(game, date);
+    return revAdjust(game, date);
   } catch (err) {
     return { images: game.images || [], sheet: game.sheet || null };
   }
