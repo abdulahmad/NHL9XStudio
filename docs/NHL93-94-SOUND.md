@@ -119,6 +119,20 @@ What the songs do with them: the menu and title songs (NHL 94 `$78`, `$79`, `$7A
   The sequencer's import (and the MIDI import tool) recognises the header and restores the song exactly: tested on
   all 175 retail 93/94 songs. Other players hear the notes and ignore the markers.
 
+## Instruments and the mapping audition
+
+The Audio tab's **Instruments** list (closed until opened, like the PCM samples) has one row per patch of
+`data/audio/nhl9x-gm-map.json`: the FM patches 0-31 that songs or effects select and the PCM sample patches `$60`-`$6E`.
+Playing a row builds a short song with `Nhl9xGmAudition.patchSong` (a C major scale, or three hits for the patches the
+map sends to a drum, at the note the songs use), puts it in a copy of the sound segment like the sequencer does and runs
+the retail 68k and Z80 drivers on it. Songs, SFX and the instruments are all collapsible; Songs and SFX start open.
+
+The **Chip lab** page's *Mapping audition* card has a Game menu (NHL '92, NHLPA 93, NHL 94). For 93 and 94 it plays the
+same patch song next to the General MIDI reference sound the map picks, in the three directions the 92 card has (patch →
+GM, GM program → game patch, GM drum → game patch). The game side is peak-normalised to the same level as the GM side
+(`lib/audio/nhl9x-gm-audition.js`, checked by `test/nhl9x-gm-audition.js`). Nobody has listened to the 93 / 94 matches in the
+map either: they come from measurements, as the 92 ones do.
+
 ## Not done yet
 
 - Per-note volume changes and the volume controller (`$3x` 7) in the sequencer. No retail 93/94 stream uses a controller, and notes already carry their own velocity.

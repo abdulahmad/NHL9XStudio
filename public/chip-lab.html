@@ -41,14 +41,21 @@
       </section>
     </div>
     <section class="chip-card nhl92-card" aria-labelledby="audition-title">
-      <h2 id="audition-title">Mapping audition · NHL '92 ↔ General MIDI</h2>
-      <p class="hint">Hear a pick next to its mapped sound. The NHL '92 side is the retail driver; the GM side is a basic stand-in synth, not a real GM sound set, so judge the NHL '92 sound against the <em>name</em>. Both sides play at the same level. Matches live in <code>data/audio/nhl92-gm-map.json</code>.</p>
+      <h2 id="audition-title">Mapping audition · <span id="aud-title-game">NHL '92</span> ↔ General MIDI</h2>
+      <p class="hint">Hear a pick next to its mapped sound. The game side is the retail driver; the GM side is a basic stand-in synth, not a real GM sound set, so judge the game's sound against the <em>name</em>. Both sides play at the same level. Matches live in <code>data/audio/nhl92-gm-map.json</code> (NHL '92) and <code>data/audio/nhl9x-gm-map.json</code> (NHLPA 93 and NHL 94, which share their patches).</p>
       <div class="row">
+        <label>Game
+          <select id="aud-game">
+            <option value="92">NHL '92</option>
+            <option value="93">NHLPA 93</option>
+            <option value="94">NHL 94</option>
+          </select>
+        </label>
         <label>Direction
           <select id="aud-dir">
-            <option value="n2g">NHL '92 patch → GM</option>
-            <option value="g2n">GM program → NHL '92</option>
-            <option value="drum">GM drum → NHL '92</option>
+            <option value="n2g">Game patch → GM</option>
+            <option value="g2n">GM program → game</option>
+            <option value="drum">GM drum → game</option>
           </select>
         </label>
         <label>Pick <select id="aud-pick"></select></label>
@@ -78,6 +85,19 @@
   <script src="lib/audio/nhl92-gm-map.js"></script>
   <script src="lib/audio/gm-reference.js"></script>
   <script src="lib/audio/nhl92-gm-audition.js"></script>
+  <script src="lib/audio/m68k-cpu.js"></script>
+  <script src="lib/audio/nhl92-68k-harness.js"></script>
+  <script src="lib/audio/nhl9x-68k-harness.js"></script>
+  <script src="lib/audio/nhl93-68k-harness.js"></script>
+  <script src="lib/audio/nhl94-68k-harness.js"></script>
+  <script src="lib/audio/nhl9x-song.js"></script>
+  <script src="lib/audio/nhl92-68k-run.js"></script>
+  <script src="lib/audio/nhl92-sound-chain.js"></script>
+  <script src="lib/audio/patch-edits.js"></script>
+  <script src="lib/audio/nhl92-song.js"></script>
+  <script src="lib/audio/nhl92-song-gm.js"></script>
+  <script src="lib/audio/nhl9x-stream.js"></script>
+  <script src="lib/audio/nhl9x-gm-audition.js"></script>
   <script type="module" src="chip-lab.js"></script>
 </body>
 </html>
