@@ -341,11 +341,12 @@
         "end": 494846
       },
       {
-        "id": "Stanley.anim",
+        "id": "EASN.anim",
         "label": "Spinning EASN",
         "kind": "frames",
         "start": 512772,
-        "end": 521462
+        "end": 521462,
+        "paletteFrom": "EASN2.map.jim"
       }
     ],
     "images": [
@@ -459,7 +460,8 @@
         "group": "Sprites",
         "kind": "frames",
         "start": 487792,
-        "end": 492004
+        "end": 492004,
+        "teamPalette": true
       },
       {
         "id": "Zam.anim",
@@ -534,12 +536,13 @@
         "end": 512772
       },
       {
-        "id": "Stanley.anim",
+        "id": "EASN.anim",
         "label": "Spinning EASN",
         "group": "Sprites",
         "kind": "frames",
         "start": 512772,
-        "end": 521462
+        "end": 521462,
+        "paletteFrom": "EASN2.map.jim"
       },
       {
         "id": "EASN2.map.jim",

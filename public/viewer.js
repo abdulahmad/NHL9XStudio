@@ -774,7 +774,7 @@ const IMAGE_SEARCH_EXTRA = {
   'faceoff.anim': 'faceoff face off referee',
   'zam.anim': 'zamboni zam ice',
   'playoffsprite.bin': 'playoff arrows stanley',
-  'stanley.anim': 'stanley cup easn spin',
+  'easn.anim': 'stanley cup easn spin',
   easports: 'ea sports intro logo',
   ronbarr: 'ron barr interview',
   cards: 'player card portrait headshot',
@@ -1369,9 +1369,9 @@ function showEmbeddedPalette() {
   if (menu && [...menu.options].some((option) => option.value === '')) menu.value = '';
 }
 
-// Jumbotron clips and the scoreboard are indexed into the team palette.
+// Jumbotron clips and the scoreboard are indexed into the team palette, and so are the face off sprites.
 async function applyImagePalette(image) {
-  if (image && image.group === 'Jumbotron') {
+  if (image && (image.group === 'Jumbotron' || image.teamPalette)) {
     if (!state.paletteName) await restoreSpritePalette();
     return;
   }
@@ -1963,6 +1963,19 @@ async function icePaletteBytes() {
   return donor;
 }
 
+// The palette for a frame bank that stores none: the one the game loads with it (paletteFrom names that picture),
+// else the ice palette.
+async function framesDonor(image) {
+  const from = image && image.paletteFrom && ((gameInfo.images || []).find((item) => item.id === image.paletteFrom));
+  if (from) {
+    const bytes = await bytesFor(from);
+    const view = bytes && bytes.length >= 12 ? new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength) : null;
+    const palOff = view ? view.getUint32(0) : 0;
+    if (view && palOff && palOff !== 0xffffffff && palOff + 128 <= bytes.length) return bytes.slice(palOff, palOff + 128);
+  }
+  return icePaletteBytes();
+}
+
 async function ensureRom() {
   if (!gameInfo) return null;
   if (roms.has(gameInfo.id)) {
@@ -2025,7 +2038,7 @@ async function ensureBank(name) {
       const missing = bytes.length >= 4
         && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
       const frameOpts = gameInfo.sheet && gameInfo.sheet.record === '95' ? { record: '95' } : null;
-      parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await icePaletteBytes() : null, frameOpts);
+      parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await framesDonor(spec) : null, frameOpts);
     } else {
       parsed = Nhl92Sheet.parseSheet(rom, gameInfo.sheet);
     }
@@ -2096,7 +2109,7 @@ async function ensureImage(id) {
     if (!bytes) return null;
     const missing = bytes.length >= 4 && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
     const frameOpts = gameInfo.sheet && gameInfo.sheet.record === '95' ? { record: '95' } : null;
-    parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await icePaletteBytes() : null, frameOpts);
+    parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await framesDonor(image) : null, frameOpts);
   } else if (isPcGame(gameInfo.kind) || image.kind === 'pc95') {
     const paths = image.files && image.files.length ? image.files : [image.id];
     const parts = [];
@@ -2325,7 +2338,7 @@ async function loadGame(id, keepSelection) {
   if (state.mode !== 'image' && chosen) await ensurePalette(chosen);
   if (state.mode === 'image') {
     if (!spritePalette) spritePalette = chosen || Nhl92Labels.defaultPaletteFile(jerseys);
-    const teamPic = imageMatch && imageMatch.group === 'Jumbotron';
+    const teamPic = imageMatch && (imageMatch.group === 'Jumbotron' || imageMatch.teamPalette);
     fillSelect(el('palette'), paletteItems, teamPic ? (spritePalette || chosen || '') : '');
     state.paletteName = el('palette').value;
     if (state.paletteName) await ensurePalette(state.paletteName);
