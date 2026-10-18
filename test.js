@@ -1192,34 +1192,38 @@ if (genesis94Rom) {
   assert.ok(schedule94 && schedule94.events.length > 0, '94G team song preview should emit notes');
 }
 
-require('./test/chip-audio');
-require('./test/nhl92-z80-driver');
-require('./test/nhl92-z80-audio');
-require('./test/nhl92-sound-data');
-require('./test/nhl93-names');
-require('./test/m68k-cpu');
-require('./test/spc700-cpu');
-require('./test/snes-dsp');
-require('./test/snes-spc');
-require('./test/nhl94s-sound-data');
-require('./test/nhl94s-player');
-require('./test/nhl94s-midi');
-require('./test/nhl93s-sound-data');
-require('./test/nhl93s-player');
-require('./test/nhl93s-midi');
-require('./test/snes-gm-analysis');
-require('./test/snes-sfx-midi');
-require('./test/nhl92-68k-driver');
-require('./test/nhl92-sound-chain');
-require('./test/nhl9x-sound-chain');
-require('./test/nhl9x-song-gm');
-require('./test/nhl9x-stream');
-require('./test/ym-note-tracker');
-require('./test/nhl92-gm-map');
-require('./test/nhl92-sequencer');
-require('./test/fingerprint-site');
-require('./test/editor-extras');
-require('./test/patch-edits-export');
+// Sound and sequencer suites (the slow part). `node test.js --core` skips them: use it after a data-only sync (frames,
+// names, palettes, picture offsets) that cannot touch the sound code.
+if (!process.argv.includes('--core')) {
+  require('./test/chip-audio');
+  require('./test/nhl92-z80-driver');
+  require('./test/nhl92-z80-audio');
+  require('./test/nhl92-sound-data');
+  require('./test/nhl93-names');
+  require('./test/m68k-cpu');
+  require('./test/spc700-cpu');
+  require('./test/snes-dsp');
+  require('./test/snes-spc');
+  require('./test/nhl94s-sound-data');
+  require('./test/nhl94s-player');
+  require('./test/nhl94s-midi');
+  require('./test/nhl93s-sound-data');
+  require('./test/nhl93s-player');
+  require('./test/nhl93s-midi');
+  require('./test/snes-gm-analysis');
+  require('./test/snes-sfx-midi');
+  require('./test/nhl92-68k-driver');
+  require('./test/nhl92-sound-chain');
+  require('./test/nhl9x-sound-chain');
+  require('./test/nhl9x-song-gm');
+  require('./test/nhl9x-stream');
+  require('./test/ym-note-tracker');
+  require('./test/nhl92-gm-map');
+  require('./test/nhl92-sequencer');
+  require('./test/fingerprint-site');
+  require('./test/editor-extras');
+  require('./test/patch-edits-export');
+}
 
 // Browser check (Playwright): every game in every mode at desktop and phone width, with no page errors, console errors
 // or error text. Skipped without Playwright; NHL_SKIP_BROWSER=1 skips it too. test/browser/editor-scrub.js runs on its own.
