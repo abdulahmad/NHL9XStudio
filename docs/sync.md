@@ -17,7 +17,7 @@ Clone or update these on your machine (paths below are **conventions** — set e
 | **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames93.asm` → `data/frames93.asm`; `src/sound93.asm` + `tools/extractAssets93.js` → `lib/audio/data/nhlpa93-streams.json`; built `output/retail/nhl93.bin` (`node tools/build.js retail`) for optional ROM tests |
 | **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; `lst/nhl94.bin` |
 | **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames95.asm` → `data/frames95.asm`; `lst/nhl95.bin` |
-| **NHLPA93SNES** | `$SNES93` or `/tmp/snes/93` | `src/data/frames93s.asm`, `src/ram93snes.asm` → `tools/build-snes-frames.js`; team `*.snespal` → `data/pals/snes/` |
+| **NHLPA93SNES** | `$SNES93` or `/tmp/snes/93` | `src/data/frames93s.asm` (SPA/SPF equates), `src/ram93s.asm` → `tools/build-snes-frames.js`; team `*.snespal` → `data/pals/snes/` |
 | **NHL94 SNES disasm** | `/tmp/snes/94` | Retail ROM `lst/nhl94snes.sfc` → `tools/build-snes-frames.js` (94 SPA names) |
 | **NHL95PC** (optional) | install folder or `pc95/` locally | Not in git; used for manual QA and `test.js` live paths under `/tmp/nhl95all` |
 
