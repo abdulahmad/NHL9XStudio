@@ -49,72 +49,72 @@
   {
    "cue": 1,
    "song": 9,
-   "label": "StartSong9",
-   "name": "Playoff screen",
+   "label": "StartSngPO",
+   "name": "SngPO",
    "note": "Start the playoff screen music unless it is already playing",
    "set": "boot"
   },
   {
    "cue": 2,
    "song": 7,
-   "label": "StartSong7",
-   "name": "Song 7 (unused)",
+   "label": "StartSngEOP",
+   "name": "SngEOP",
    "note": "Start song 7 unless it is already playing. Unused",
    "set": "boot"
   },
   {
    "cue": 3,
    "song": 6,
-   "label": "StartSong6",
-   "name": "Title screen",
+   "label": "StartSngTitle",
+   "name": "SngTitle",
    "note": "Start the title screen music unless it is already playing",
    "set": "boot"
   },
   {
    "cue": 4,
    "song": 1,
-   "label": "StartSong1",
-   "name": "Home goal",
+   "label": "StartSngGoal",
+   "name": "SngGoal",
    "note": "Start the home goal music unless it is already playing",
    "set": "game"
   },
   {
    "cue": 5,
    "song": 2,
-   "label": "StartSong2",
-   "name": "Period start",
+   "label": "StartSngPeriodStart",
+   "name": "SngPeriodStart",
    "note": "Start the period start music unless it is already playing",
    "set": "game"
   },
   {
    "cue": 6,
    "song": 3,
-   "label": "StartSong3",
-   "name": "Third period",
+   "label": "StartSngLateGame",
+   "name": "SngLateGame",
    "note": "Start the third period music unless it is already playing",
    "set": "game"
   },
   {
    "cue": 7,
    "song": 4,
-   "label": "StartSong4",
-   "name": "Cue 4 (unused)",
+   "label": "StartSngPP",
+   "name": "SngPP",
    "note": "Start music cue 4 unless it is already playing. Unused",
    "set": "game"
   },
   {
    "cue": 8,
    "song": 5,
-   "label": "StartSong5",
-   "name": "Mid-period",
+   "label": "StartSngFaceoff",
+   "name": "SngFaceoff",
    "note": "Start the mid-period music unless it is already playing",
    "set": "game"
   },
   {
    "cue": 9,
    "song": 8,
-   "label": "StartSong8",
-   "name": "Song 8 (unused)",
+   "label": "StartSngEOG",
+   "name": "SngEOG",
    "note": "Start song 8 unless it is already playing. Unused",
    "set": "boot"
   }

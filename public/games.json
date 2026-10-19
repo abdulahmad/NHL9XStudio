@@ -359,14 +359,6 @@
         "end": 192418
       },
       {
-        "id": "GameSetup.anim",
-        "label": "Game Setup",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 192418,
-        "end": 192688
-      },
-      {
         "id": "Title1.map.jim",
         "label": "Title 1",
         "group": "Screens",
@@ -383,24 +375,8 @@
         "end": 204560
       },
       {
-        "id": "Title3.anim",
-        "label": "Title 3",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 204560,
-        "end": 205518
-      },
-      {
-        "id": "TitleLogo.anim",
-        "label": "Title Logo",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 205518,
-        "end": 206944
-      },
-      {
-        "id": "Scouting.map.jim",
-        "label": "Scouting",
+        "id": "EASNBG.map.jim",
+        "label": "EASNBG",
         "group": "Screens",
         "kind": "jim",
         "start": 206944,
@@ -417,75 +393,10 @@
       {
         "id": "FaceOff.map.jim",
         "label": "Face Off",
-        "group": "Sprites",
+        "group": "Screens",
         "kind": "jim",
         "start": 209920,
         "end": 211044
-      },
-      {
-        "id": "IceRink.map.jim",
-        "label": "Ice Rink",
-        "group": "Ice",
-        "kind": "jim",
-        "start": 211044,
-        "end": 231686
-      },
-      {
-        "id": "Refs.map.jim",
-        "label": "Refs",
-        "group": "Ice",
-        "kind": "jim",
-        "start": 231686,
-        "end": 234594
-      },
-      {
-        "id": "Refs2.map.jim",
-        "label": "Refs 2",
-        "group": "Ice",
-        "kind": "jim",
-        "start": 234594,
-        "end": 238456
-      },
-      {
-        "id": "Crowd.anim",
-        "label": "Crowd",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 477410,
-        "end": 487792
-      },
-      {
-        "id": "FaceOff.anim",
-        "label": "Face Off sprites",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 487792,
-        "end": 492004,
-        "teamPalette": true
-      },
-      {
-        "id": "Zam.anim",
-        "label": "Zamboni",
-        "group": "Sprites",
-        "kind": "frames",
-        "start": 492004,
-        "end": 494846
-      },
-      {
-        "id": "BigFont.map.jim",
-        "label": "Big Font",
-        "group": "Fonts",
-        "kind": "jim",
-        "start": 494846,
-        "end": 497076
-      },
-      {
-        "id": "SmallFont.map.jim",
-        "label": "Small Font",
-        "group": "Fonts",
-        "kind": "jim",
-        "start": 497076,
-        "end": 500354
       },
       {
         "id": "EnergyBar.map.jim",
@@ -536,6 +447,103 @@
         "end": 512772
       },
       {
+        "id": "EASN2.map.jim",
+        "label": "EASN 2",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 521462,
+        "end": 523126
+      },
+      {
+        "id": "IceRink.map.jim",
+        "label": "Ice Rink",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 211044,
+        "end": 231686
+      },
+      {
+        "id": "Refs.map.jim",
+        "label": "Refs",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 231686,
+        "end": 234594
+      },
+      {
+        "id": "Refs2.map.jim",
+        "label": "Refs 2",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 234594,
+        "end": 238456
+      },
+      {
+        "id": "BigFont.map.jim",
+        "label": "Big Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 494846,
+        "end": 497076
+      },
+      {
+        "id": "SmallFont.map.jim",
+        "label": "Small Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 497076,
+        "end": 500354
+      },
+      {
+        "id": "GameSetup.anim",
+        "label": "Game Setup",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 192418,
+        "end": 192688
+      },
+      {
+        "id": "Title3.anim",
+        "label": "Title 3",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 204560,
+        "end": 205518
+      },
+      {
+        "id": "TitleLogo.anim",
+        "label": "Title Logo",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 205518,
+        "end": 206944
+      },
+      {
+        "id": "Crowd.anim",
+        "label": "Crowd",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 477410,
+        "end": 487792
+      },
+      {
+        "id": "FaceOff.anim",
+        "label": "Face Off sprites",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 487792,
+        "end": 492004,
+        "teamPalette": true
+      },
+      {
+        "id": "Zam.anim",
+        "label": "Zamboni",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 492004,
+        "end": 494846
+      },
+      {
         "id": "EASN.anim",
         "label": "Spinning EASN",
         "group": "Sprites",
@@ -543,14 +551,6 @@
         "start": 512772,
         "end": 521462,
         "paletteFrom": "EASN2.map.jim"
-      },
-      {
-        "id": "EASN2.map.jim",
-        "label": "EASN 2",
-        "group": "Screens",
-        "kind": "jim",
-        "start": 521462,
-        "end": 523126
       }
     ],
     "pixels": false,
@@ -5312,21 +5312,8 @@
     ],
     "images": [
       {
-        "id": "title",
-        "label": "Title",
-        "group": "Screens",
-        "kind": "snes93-screen",
-        "start": 185792,
-        "end": 195513,
-        "mapW": 32,
-        "mapH": 28,
-        "mapSize": 1792,
-        "pal": 1792,
-        "tiles": 2048
-      },
-      {
         "id": "setup",
-        "label": "Game setup",
+        "label": "Game Set Up",
         "group": "Screens",
         "kind": "snes93-screen",
         "start": 262144,
@@ -5335,11 +5322,30 @@
         "mapH": 32,
         "mapSize": 2048,
         "pal": 2048,
-        "tiles": 2304
+        "tiles": 2304,
+        "fileNames": [
+          "GameSetUp.map.sjim"
+        ]
       },
       {
-        "id": "easn",
-        "label": "EASN",
+        "id": "title",
+        "label": "Title 1",
+        "group": "Screens",
+        "kind": "snes93-screen",
+        "start": 185792,
+        "end": 195513,
+        "mapW": 32,
+        "mapH": 28,
+        "mapSize": 1792,
+        "pal": 1792,
+        "tiles": 2048,
+        "fileNames": [
+          "Title1.map.sjim"
+        ]
+      },
+      {
+        "id": "easnbg",
+        "label": "EASNBG",
         "group": "Screens",
         "kind": "snes93-screen",
         "start": 246688,
@@ -5353,69 +5359,10 @@
           "end": 29550,
           "offset": 144,
           "count": 64
-        }
-      },
-      {
-        "id": "ronbarr",
-        "label": "Ron Barr",
-        "group": "Screens",
-        "kind": "snes93-screen",
-        "start": 27960,
-        "end": 29550,
-        "mapW": 8,
-        "mapH": 9,
-        "mapSize": 144,
-        "pal": 144,
-        "tiles": 400
-      },
-      {
-        "id": "nhlpa",
-        "label": "NHLPA logo",
-        "group": "Screens",
-        "kind": "snes93-screen",
-        "start": 393216,
-        "end": 394330,
-        "mapW": 8,
-        "mapH": 10,
-        "mapSize": 160,
-        "pal": 160,
-        "tiles": 416
-      },
-      {
-        "id": "rink",
-        "label": "Ice rink",
-        "group": "Ice",
-        "kind": "snes93-map",
-        "mapStart": 117963,
-        "mapSize": 8160,
-        "mapW": 48,
-        "mapH": 85,
-        "tilesStart": 85408,
-        "tilesEnd": 96572
-      },
-      {
-        "id": "horrink",
-        "label": "Horizontal rink",
-        "group": "Ice",
-        "kind": "snes93-map",
-        "mapStart": 126123,
-        "mapSize": 2688,
-        "mapW": 48,
-        "mapH": 28,
-        "tilesStart": 85408,
-        "tilesEnd": 96572
-      },
-      {
-        "id": "faceoff",
-        "label": "Face off",
-        "group": "Screens",
-        "kind": "snes93-map",
-        "mapStart": 158025,
-        "mapSize": 240,
-        "mapW": 12,
-        "mapH": 10,
-        "tilesStart": 247476,
-        "tilesEnd": 248506
+        },
+        "fileNames": [
+          "EASNBG.map.sjim"
+        ]
       },
       {
         "id": "framer",
@@ -5434,6 +5381,43 @@
           3,
           4,
           3
+        ],
+        "fileNames": [
+          "Framer.chr",
+          "Framer.smap"
+        ]
+      },
+      {
+        "id": "faceoff",
+        "label": "Face Off",
+        "group": "Screens",
+        "kind": "snes93-map",
+        "mapStart": 158025,
+        "mapSize": 240,
+        "mapW": 12,
+        "mapH": 10,
+        "tilesStart": 247476,
+        "tilesEnd": 248506,
+        "fileNames": [
+          "FaceOff.chr.pak",
+          "FaceOff.smap"
+        ]
+      },
+      {
+        "id": "teamblocks",
+        "label": "Team Blocks",
+        "group": "Screens",
+        "kind": "snes93-frames",
+        "mapStart": 248506,
+        "frameBytes": 36,
+        "frames": 26,
+        "mapW": 9,
+        "mapH": 2,
+        "tilesStart": 269171,
+        "tilesEnd": 277590,
+        "fileNames": [
+          "TeamBlocks.chr.pak",
+          "TeamBlocks.smap"
         ]
       },
       {
@@ -5446,20 +5430,75 @@
         "mapW": 12,
         "mapH": 23,
         "tilesStart": 161693,
-        "tilesEnd": 161814
+        "tilesEnd": 161814,
+        "fileNames": [
+          "PlayoffTiles.chr.pak",
+          "Arrows.smap"
+        ]
       },
       {
-        "id": "teamblocks",
-        "label": "Team blocks",
+        "id": "ronbarr",
+        "label": "Ron Barr",
         "group": "Screens",
-        "kind": "snes93-frames",
-        "mapStart": 248506,
-        "frameBytes": 36,
-        "frames": 26,
-        "mapW": 9,
-        "mapH": 2,
-        "tilesStart": 269171,
-        "tilesEnd": 277590
+        "kind": "snes93-screen",
+        "start": 27960,
+        "end": 29550,
+        "mapW": 8,
+        "mapH": 9,
+        "mapSize": 144,
+        "pal": 144,
+        "tiles": 400,
+        "fileNames": [
+          "RonBarr.map.sjim"
+        ]
+      },
+      {
+        "id": "nhlpa",
+        "label": "NHLPA Logo",
+        "group": "Screens",
+        "kind": "snes93-screen",
+        "start": 393216,
+        "end": 394330,
+        "mapW": 8,
+        "mapH": 10,
+        "mapSize": 160,
+        "pal": 160,
+        "tiles": 416,
+        "fileNames": [
+          "NHLPALogo.map.sjim"
+        ]
+      },
+      {
+        "id": "rink",
+        "label": "Ice Rink",
+        "group": "Ice",
+        "kind": "snes93-map",
+        "mapStart": 117963,
+        "mapSize": 8160,
+        "mapW": 48,
+        "mapH": 85,
+        "tilesStart": 85408,
+        "tilesEnd": 96572,
+        "fileNames": [
+          "IceRink.chr.pak",
+          "IceRink.smap"
+        ]
+      },
+      {
+        "id": "horrink",
+        "label": "Ice Rink Hor",
+        "group": "Ice",
+        "kind": "snes93-map",
+        "mapStart": 126123,
+        "mapSize": 2688,
+        "mapW": 48,
+        "mapH": 28,
+        "tilesStart": 85408,
+        "tilesEnd": 96572,
+        "fileNames": [
+          "IceRink.chr.pak",
+          "IceRinkHor.smap"
+        ]
       },
       {
         "id": "refs",
@@ -5472,10 +5511,14 @@
         "mapW": 7,
         "mapH": 8,
         "tilesStart": 259422,
-        "tilesEnd": 262008
+        "tilesEnd": 262008,
+        "fileNames": [
+          "Ref.chr.pak",
+          "Refs.smap"
+        ]
       },
       {
-        "id": "refshor",
+        "id": "refs2",
         "label": "Refs 2",
         "group": "Ice",
         "kind": "snes93-frames",
@@ -5485,11 +5528,15 @@
         "mapW": 7,
         "mapH": 8,
         "tilesStart": 322373,
-        "tilesEnd": 324603
+        "tilesEnd": 324603,
+        "fileNames": [
+          "Ref2.chr.pak",
+          "Refs2.smap"
+        ]
       },
       {
         "id": "bigfont",
-        "label": "Big font",
+        "label": "Big Font",
         "group": "Fonts",
         "kind": "snes93-font",
         "start": 454344,
@@ -5514,24 +5561,33 @@
           13,
           14,
           15
+        ],
+        "fileNames": [
+          "BigFont.chr.pak",
+          "BigFont.smap"
         ]
       },
       {
         "id": "smallfont",
-        "label": "Small font",
+        "label": "Small Font",
         "group": "Fonts",
         "kind": "snes93-font",
         "start": 116440,
         "end": 117772,
         "columns": 16,
         "remap": [
-          4,
+          0,
           3,
           4,
           3,
           2,
           1,
           4
+        ],
+        "clear": false,
+        "fileNames": [
+          "SmallFont.chr.pak",
+          "SmallFont.smap"
         ]
       }
     ],

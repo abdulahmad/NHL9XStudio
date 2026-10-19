@@ -34,9 +34,9 @@
     for (const name of songs) {
       out.push({
         id: 'song-' + name,
-        group: songGroup(name, data),
+        group: root.NhlAudioCategories.CATEGORY.songs,
         label: name,
-        sub: data.songSet(name) + ' sample set · plays until Stop or song end'
+        sub: songGroup(name, data) + ' · ' + data.songSet(name) + ' sample set · plays until Stop or song end'
       });
     }
     const sets = ['game', 'menu', 'intro'];
@@ -48,9 +48,9 @@
         const streamed = set === 'game' && i >= 22 && i <= 27;
         out.push({
           id: 'sound-' + set + '-' + i,
-          group: 'Sound effects (' + set + ' set)',
+          group: root.NhlAudioCategories.CATEGORY.sfx,
           label: set + ' #' + i + ' · ' + (streamed ? 'streamed ' + STREAM_NAMES[i - 22] : sample),
-          sub: streamed ? 'streamed to the sound CPU, then played' : 'plays until its envelope ends'
+          sub: set + ' set · ' + (streamed ? 'streamed to the sound CPU, then played' : 'plays until its envelope ends')
         });
       });
     }

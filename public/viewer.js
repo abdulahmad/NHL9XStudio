@@ -799,7 +799,7 @@ function renderImageList(box, q) {
   const visible = [];
   for (const image of images) {
     const extra = IMAGE_SEARCH_EXTRA[image.id.toLowerCase()] || '';
-    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.group || '') + ' ' + extra).toLowerCase();
+    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + extra).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(image);
     const group = image.group || 'Other';
@@ -837,7 +837,7 @@ function renderImageList(box, q) {
       name.textContent = image.label;
       const sub = document.createElement('span');
       sub.className = 'sub';
-      sub.textContent = image.files && image.files.length > 1 ? image.files.length + ' files' : image.id;
+      sub.textContent = image.fileNames && image.fileNames.length ? image.fileNames.join(' + ') : image.files && image.files.length > 1 ? image.files.length + ' files' : image.id;
       button.append(name, sub);
       button.addEventListener('click', () => {
         if (state.image !== image.id) state.transparentOverride = null;
@@ -1248,7 +1248,7 @@ function renderMeta() {
     rows.push(['Image', image ? image.label : state.image]);
     if (image) {
       const files = image.files && image.files.length ? image.files : [image.id];
-      rows.push(['File', files.length > 1 ? files[0] + ' … ' + files[files.length - 1] : image.id]);
+      rows.push(['File', image.fileNames && image.fileNames.length ? image.fileNames.join(' + ') : files.length > 1 ? files[0] + ' … ' + files[files.length - 1] : image.id]);
     }
   }
   if (frame) {

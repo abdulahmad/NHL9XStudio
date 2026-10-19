@@ -21,7 +21,7 @@ Clone or update these on your machine (paths below are **conventions** — set e
 | **NHL94 SNES disasm** | `/tmp/snes/94` | Retail ROM `lst/nhl94snes.sfc` → `tools/build-snes-frames.js` (94 SPA names) |
 | **NHL95PC** (optional) | install folder or `pc95/` locally | Not in git; used for manual QA and `test.js` live paths under `/tmp/nhl95all` |
 
-NHLPA93SNES layout (what the tools read): `src/data/frames93s.asm` and `src/ram93s.asm` (frames), `docs/file-map.md` and `src/data/sound/*.asm` (sound; older checkouts keep the sound data in `src/banks/b86_sound_driver.asm`), `src/routines/sound/StartSong<n>.asm` (the `sound` module has no areas), `Extracted/` (written by `npm run assets`; the ROM is `nhlpa93retail.sfc` in that folder). The other routine modules have areas (`src/routines/hockey/collisions/`, ...) and the bank files are named after their data and code; none of the tools depend on those paths.
+NHLPA93SNES layout (what the tools read): `src/data/frames93s.asm` and `src/ram93s.asm` (frames), `docs/file-map.md` and `src/data/sound/*.asm` (sound; older checkouts keep the sound data in `src/banks/b86_sound_driver.asm`), `src/routines/sound/StartSng<Name>.asm` (the `sound` module has no areas), `Extracted/` (written by `npm run assets`; the ROM is `nhlpa93retail.sfc` in that folder). The other routine modules have areas (`src/routines/hockey/collisions/`, ...) and the bank files are named after their data and code; none of the tools depend on those paths.
 
 **Environment variables** (agents: read these first):
 

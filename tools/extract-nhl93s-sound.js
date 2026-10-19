@@ -16,7 +16,7 @@
  *   - the stream addresses ($868000 and $818000, from docs/file-map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
  *     Extracted/Sound/gamesamples.brr (run `npm run assets` in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
- *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
+ *   - the cue numbers the StartSng* routines send, and the SFX numbers in src/ram93s.asm.
  */
 const fs = require('fs');
 const path = require('path');
@@ -114,27 +114,25 @@ function main() {
   };
   compare(boot.blocks[1].bytes, 'bootsound.asm', 'BootInstruments');
 
-  // cue numbers: what each StartSong routine sends the sound program
-  const names = {
-    1: 'Home goal', 2: 'Period start', 3: 'Third period', 4: 'Cue 4 (unused)', 5: 'Mid-period', // StartSong1-5 (MusicCue)
-    6: 'Title screen', 7: 'Song 7 (unused)', 8: 'Song 8 (unused)', 9: 'Playoff screen' // StartSong6-9 (APUIO0)
-  };
+  // cue numbers: what each StartSng* routine sends the sound program. The song names are the Sng* equates of ram93s.asm
+  // (92 and 93G names: SngGoal, SngEOP, ...); songs 1-5 start through MusicCue, 6-9 write APUIO0 directly.
+  const names = { 1: 'SngGoal', 2: 'SngPeriodStart', 3: 'SngLateGame', 4: 'SngPP', 5: 'SngFaceoff', 6: 'SngTitle', 7: 'SngEOP', 8: 'SngEOG', 9: 'SngPO' };
   const cueOf = {};
   for (let n = 1; n <= 9; n++) {
-    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'StartSong' + n + '.asm'), 'utf8');
+    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'Start' + names[n] + '.asm'), 'utf8');
     const m = /lda\.[bw] #\$0*([0-9A-F]+)[ \t]*(?:;[^\n]*)?(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
       || /sep #\$20\s*(?:;[^\n]*)?\r?\n\s*lda\.b #\$0*([0-9A-F]+)\s*\r?\n\s*sta\.w APUIO0/.exec(text);
-    if (!m) throw new Error('StartSong' + n + '.asm: cue number not found');
+    if (!m) throw new Error('Start' + names[n] + '.asm: cue number not found');
     cueOf[n] = hex(m[1]);
   }
   const expectCue = { 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 3, 7: 2, 8: 9, 9: 1 };
-  for (const n of Object.keys(expectCue)) if (cueOf[n] !== expectCue[n]) throw new Error('StartSong' + n + ' sends cue ' + cueOf[n] + ', expected ' + expectCue[n]);
+  for (const n of Object.keys(expectCue)) if (cueOf[n] !== expectCue[n]) throw new Error('Start' + names[n] + ' sends cue ' + cueOf[n] + ', expected ' + expectCue[n]);
   const cues = [];
   for (let n = 1; n <= 9; n++) {
     const song = Number(Object.keys(cueOf).find((k) => cueOf[k] === n));
-    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'StartSong' + song + '.asm'), 'utf8');
-    const note = /^StartSong\d+:\s*;([^\n]*)/m.exec(text)[1].trim();
-    cues.push({ cue: n, song, label: 'StartSong' + song, name: names[song], note, set: song >= 6 ? 'boot' : 'game' });
+    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'Start' + names[song] + '.asm'), 'utf8');
+    const note = /^StartSng\w+:\s*;([^\n]*)/m.exec(text)[1].trim();
+    cues.push({ cue: n, song, label: 'Start' + names[song], name: names[song], note, set: song >= 6 ? 'boot' : 'game' });
   }
 
   // sound effects: the SFX numbers the game source names
