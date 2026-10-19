@@ -14,8 +14,8 @@
  * Checked against the checkout while extracting (nothing is taken on trust):
  *   - the ROM's SHA-1 (lst/nhlpa93snes.bin);
  *   - the stream addresses ($868000 and $818000, from docs/file_map.md) and that each stream parses to its end block;
- *   - block 1 of the boot stream equals data/spc/driver.spc700, the sample blocks equal data/bootsamples.brr and
- *     data/gamesamples.brr, the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
+ *   - block 1 of the boot stream equals Extracted/Sound/driver.spc700, the sample blocks equal Extracted/Sound/bootsamples.brr and
+ *     Extracted/Sound/gamesamples.brr (run ./build.sh in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
  *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
  */
 const fs = require('fs');
@@ -77,11 +77,11 @@ function main() {
   if (boot.entry !== 0x0400 || game.entry !== 0x0800) throw new Error('unexpected stream entry points');
   if (boot.blocks.length !== 4 || game.blocks.length !== 2) throw new Error('unexpected block counts');
 
-  const data = (f) => fs.readFileSync(path.join(dir, 'data', f));
+  const data = (f) => fs.readFileSync(path.join(dir, 'Extracted', 'Sound', f));
   const same = (a, b, what) => { if (!Buffer.from(a).equals(Buffer.from(b))) throw new Error(what + ' differs from the ROM stream'); };
-  same(boot.blocks[0].bytes, data('spc/driver.spc700'), 'data/spc/driver.spc700');
-  same(boot.blocks[3].bytes, data('bootsamples.brr'), 'data/bootsamples.brr');
-  same(game.blocks[1].bytes, data('gamesamples.brr'), 'data/gamesamples.brr');
+  same(boot.blocks[0].bytes, data('driver.spc700'), 'Extracted/Sound/driver.spc700');
+  same(boot.blocks[3].bytes, data('bootsamples.brr'), 'Extracted/Sound/bootsamples.brr');
+  same(game.blocks[1].bytes, data('gamesamples.brr'), 'Extracted/Sound/gamesamples.brr');
   if (boot.blocks[0].addr !== 0x0400 || boot.blocks[1].addr !== 0x2b00 || boot.blocks[2].addr !== 0x2c00 || boot.blocks[3].addr !== 0x2c30) throw new Error('unexpected boot block addresses');
   if (game.blocks[0].addr !== 0x2c00 || game.blocks[1].addr !== 0x2c50) throw new Error('unexpected game block addresses');
 

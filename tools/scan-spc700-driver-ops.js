@@ -78,7 +78,7 @@ function sweep(mem) {
 const hex = (s) => [...s].sort((a, b) => a - b).map((o) => ('0' + o.toString(16)).slice(-2));
 const [d93, d94] = process.argv.slice(2);
 if (!d93 || !d94) { console.error('usage: scan-spc700-driver-ops.js <NHLPA93SNES dir> <NHL94SNES dir>'); process.exit(2); }
-const m93 = fs.readFileSync(path.join(d93, 'data', 'spc', 'driver.spc700'));
+const m93 = fs.readFileSync(path.join(d93, 'Extracted', 'Sound', 'driver.spc700'));
 const m94 = load94(d94);
 const out = {};
 for (const [name, mem] of [['nhl93', m93], ['nhl94', m94]]) {
