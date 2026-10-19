@@ -12,7 +12,7 @@
  * disassembly gives the cues.
  *
  * Checked against the checkout while extracting (nothing is taken on trust):
- *   - the ROM's SHA-1 (lst/nhlpa93snes.bin);
+ *   - the ROM's SHA-1 (nhlpa93retail.sfc);
  *   - the stream addresses ($868000 and $818000, from docs/file-map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
  *     Extracted/Sound/gamesamples.brr (run `npm run assets` in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
@@ -65,7 +65,10 @@ function main() {
   const dir = args.filter((a) => !a.startsWith('--'))[0];
   const out = args.filter((a) => !a.startsWith('--'))[1] || OUT;
   if (!dir) { console.error('usage: extract-nhl93s-sound.js <NHLPA93SNES dir> [out.json | --check]'); process.exit(2); }
-  const rom = fs.readFileSync(path.join(dir, 'lst', 'nhlpa93snes.bin'));
+  // the retail ROM sits in the repo folder as nhlpa93retail.sfc (older checkouts: lst/nhlpa93snes.bin)
+  const romPath = [path.join(dir, 'nhlpa93retail.sfc'), path.join(dir, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p));
+  if (!romPath) throw new Error('no nhlpa93retail.sfc in ' + dir);
+  const rom = fs.readFileSync(romPath);
   const sha = crypto.createHash('sha1').update(rom).digest('hex');
   if (sha !== ROM_SHA1) throw new Error('ROM SHA-1 ' + sha + ' is not the expected NHLPA 93 SNES ' + ROM_SHA1);
   const fileMap = fs.readFileSync(path.join(dir, 'docs', 'file-map.md'), 'utf8');

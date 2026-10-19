@@ -73,7 +73,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 /tmp/disasm/NHLPA93Genesis/lst/nhlpa93.bin
 /tmp/disasm/NHL94Genesis/lst/nhl94.bin
 /tmp/disasm/NHL95Genesis/lst/nhl95.bin
-/tmp/snes/93/lst/nhlpa93snes.bin
+/tmp/snes/93/nhlpa93retail.sfc
 /tmp/snes/94/lst/nhl94snes.sfc
 ```
 

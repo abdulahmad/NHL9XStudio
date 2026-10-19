@@ -644,7 +644,7 @@ if (revB93) {
     assert.ok(bank.numFrames >= 2, id);
   }
 }
-const retail93 = romIf('/tmp/snes/93/lst/nhlpa93snes.bin');
+const retail93 = romIf('/tmp/snes/93/nhlpa93retail.sfc') || romIf('/tmp/snes/93/lst/nhlpa93snes.bin');
 if (retail93) {
   const drawn = parse93(retail93, GAMES.find((game) => game.id === 'nhlpa93snes').snes);
   assert.strictEqual(drawn.numFrames, 720);
