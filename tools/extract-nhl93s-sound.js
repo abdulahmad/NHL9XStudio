@@ -116,7 +116,7 @@ function main() {
   const cueOf = {};
   for (let n = 1; n <= 9; n++) {
     const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'StartSong' + n + '.asm'), 'utf8');
-    const m = /lda\.[bw] #\$0*([0-9A-F]+)\s*(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
+    const m = /lda\.[bw] #\$0*([0-9A-F]+)[ \t]*(?:;[^\n]*)?(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
       || /sep #\$20\s*(?:;[^\n]*)?\r?\n\s*lda\.b #\$0*([0-9A-F]+)\s*\r?\n\s*sta\.w APUIO0/.exec(text);
     if (!m) throw new Error('StartSong' + n + '.asm: cue number not found');
     cueOf[n] = hex(m[1]);
