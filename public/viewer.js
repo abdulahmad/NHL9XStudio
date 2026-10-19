@@ -93,6 +93,7 @@ const state = {
 
 const banks = new Map();
 const paletteFiles = new Map();
+let ensuringOpposite = false;
 const bitmaps = new Map();
 const roms = new Map();
 const rinkColors = new Map();
@@ -268,6 +269,12 @@ function paletteOverride(name) {
   return paletteFiles.get(name);
 }
 
+/** 'BUFh.snespal' <-> 'BUFv.snespal': the other side of a team's palette pair. */
+function oppositeSide(name) {
+  const m = /^(.+)([hv])\.snespal$/i.exec(name || '');
+  return m ? m[1] + (m[2].toLowerCase() === 'h' ? 'v' : 'h') + '.snespal' : '';
+}
+
 function activeColors() {
   const anim = currentAnim();
   if (!anim) return null;
@@ -284,6 +291,10 @@ function activeColors() {
   if (override) {
     const base = ((gameInfo && gameInfo.jerseyRow) || 2) * 16;
     for (let i = 0; i < 16; i++) colors[base + i] = override[i].slice();
+    // NHLPA 93 SNES: the game fills BG palette row 3 with the visitor colors next to the home row 2 (benches, scoreboard), so a
+    // team picked here gets its other side in row 3.
+    const other = gameInfo && gameInfo.id === 'nhlpa93snes' ? paletteFiles.get(oppositeSide(state.paletteName)) : null;
+    if (other) for (let i = 0; i < 16; i++) colors[base + 16 + i] = other[i].slice();
   }
   return colors;
 }
@@ -2200,6 +2211,10 @@ async function loadClientPcPalettes() {
 }
 
 async function ensurePalette(name) {
+  if (gameInfo && gameInfo.id === 'nhlpa93snes' && oppositeSide(name) && !paletteFiles.has(oppositeSide(name)) && !ensuringOpposite) {
+    ensuringOpposite = true;
+    try { await ensurePalette(oppositeSide(name)); } finally { ensuringOpposite = false; }
+  }
   if (!name || isEmbeddedLine(name) || paletteFiles.has(name) || !gameInfo) return;
   let bytes = null;
   if (clientPc && gameInfo.paletteKind === 'pc') {
