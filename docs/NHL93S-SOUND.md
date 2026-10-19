@@ -13,7 +13,7 @@ The extractor (`tools/extract-nhl93s-sound.js`) stores the two upload streams by
 | boot | driver `$0400` (9959 B), instruments `$2B00` (174 B), sample directory `$2C00`, boot samples `$2C30` | `$0400` |
 | game | sample directory `$2C00` (76 B), game samples `$2C50` (47124 B) | `$0800` |
 
-It checks the ROM SHA-1, the stream addresses, that the blocks equal `data/spc/driver.spc700`, `bootsamples.brr`, `gamesamples.brr` and the `db` lines of the instrument table, and takes cue numbers and effect names from the disassembly. `--check` compares the committed JSON with a fresh extract.
+It checks the ROM SHA-1, the stream addresses, that the blocks equal `Extracted/Sound/driver.spc700`, `bootsamples.brr`, `gamesamples.brr` (written by `./build.sh` in NHLPA93SNES) and the `db` lines of the instrument table, and takes cue numbers and effect names from the disassembly. `--check` compares the committed JSON with a fresh extract.
 
 `lib/audio/nhl93s-player.js` does what the main CPU does: the uploads (`$F8` on port 0 asks for the next one), the cue queue (one cue every other video frame) and the frame clock, and runs the program on `lib/audio/snes-spc.js`.
 
