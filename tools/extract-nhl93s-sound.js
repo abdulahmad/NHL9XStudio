@@ -72,9 +72,9 @@ function main() {
   const sha = crypto.createHash('sha1').update(rom).digest('hex');
   if (sha !== ROM_SHA1) throw new Error('ROM SHA-1 ' + sha + ' is not the expected NHLPA 93 SNES ' + ROM_SHA1);
   const fileMap = fs.readFileSync(path.join(dir, 'docs', 'file-map.md'), 'utf8');
-  const bootAt = /`\$(86[0-9A-F]{4})` data\/sound\/bootsound\.asm/.exec(fileMap);
-  const gameAt = /`\$(81[0-9A-F]{4})` data\/sound\/gamesound\.asm/.exec(fileMap);
-  if (!bootAt || !gameAt) throw new Error('docs/file-map.md does not place bootsound.asm / gamesound.asm');
+  const bootAt = /`\$(86[0-9A-F]{4})` (?:data\/sound\/bootsound\.asm|BootSoundUpload \(data\))/.exec(fileMap);
+  const gameAt = /`\$(81[0-9A-F]{4})` (?:data\/sound\/gamesound\.asm|GameSoundUpload \(data\))/.exec(fileMap);
+  if (!bootAt || !gameAt) throw new Error('docs/file-map.md does not place BootSoundUpload / GameSoundUpload');
   const boot = parseStream(rom, off(hex(bootAt[1])));
   const game = parseStream(rom, off(hex(gameAt[1])));
   if (boot.entry !== 0x0400 || game.entry !== 0x0800) throw new Error('unexpected stream entry points');
@@ -96,9 +96,12 @@ function main() {
   // the tables, against the db/dw lines
   let checked = 0;
   const compare = (block, file, label) => {
-    const text = fs.readFileSync(path.join(dir, 'src', 'data', 'sound', file), 'utf8');
+    // the sound data is in src/banks/b86_sound_driver.asm (older checkouts: src/data/sound/<file>)
+    const old = path.join(dir, 'src', 'data', 'sound', file);
+    const text = fs.readFileSync(fs.existsSync(old) ? old : path.join(dir, 'src', 'banks', 'b86_sound_driver.asm'), 'utf8');
     const at = text.indexOf(label + ':');
-    const end = text.indexOf('\n; ----', at);
+    const next = text.slice(at + label.length + 1).search(/\n[A-Za-z_]\w*:/);
+    const end = next < 0 ? -1 : at + label.length + 1 + next;
     const nums = asmNumbers(text.slice(at, end < 0 ? undefined : end).replace(/SPC\w*\+\$[0-9A-Fa-f]+/g, ''));
     let p = 0;
     for (const n of nums) {
