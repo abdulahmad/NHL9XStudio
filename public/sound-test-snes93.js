@@ -22,27 +22,84 @@
     return data.cueList.find((c) => c.cue === Number(cue));
   }
 
-  /** Catalog rows for the Sound test list. */
+  const SONG_DESCRIPTIONS = {
+    SngGoal: 'Home goal song', SngPeriodStart: 'Period start song', SngLateGame: 'Late game song, once in the third period',
+    SngPP: 'Power play song (unused)', SngFaceoff: 'Face-off song, once per period', SngTitle: 'Title song, also the game menu',
+    SngEOP: 'End of Period song (unused)', SngEOG: 'End of Game song (unused)', SngPO: 'Playoffs music'
+  };
+  const CAT = () => root.NhlAudioCategories.CATEGORY;
+  const hex2 = (n) => '$' + n.toString(16).toUpperCase().padStart(2, '0');
+  const setOfInstrument = (n) => (n <= 9 ? 'boot' : 'game');
+  const isPart = (id) => /^snes-(inst|sample)-/.test(id);
+
+  /** Catalog rows for the Sound test list: Songs, SFX, Samples and Instruments, the same headings every game uses. */
   function entries(data) {
     const out = [];
-    const songs = data.cueList.slice().sort((a, b) => (a.set === b.set ? a.cue - b.cue : a.set === 'game' ? -1 : 1));
+    // One song list, sorted by song number: the title and menu songs are in it with the game ones.
+    const songs = data.cueList.slice().sort((a, b) => a.song - b.song);
     for (const c of songs) {
       out.push({
         id: 'song-' + c.cue,
-        group: c.set === 'game' ? 'Game music (in-game samples)' : 'Title & menu music (boot samples)',
-        label: c.name,
-        sub: 'cue ' + hex(c.cue) + ' · ' + c.set + ' sample set' + (c.note && /unused/i.test(c.name) ? ' · unused in the game' : '')
+        group: CAT().songs,
+        label: c.song + ' · ' + c.name,
+        sub: (SONG_DESCRIPTIONS[c.name] || c.note) + ' · cue ' + hex2(c.cue) + ' · ' + c.set + ' samples'
       });
     }
     for (let level = 1; level <= 7; level++) {
-      out.push({ id: 'sound-game-' + (0x80 + level), group: 'Crowd noise', label: 'Crowd noise · level ' + level, sub: 'cue ' + hex(0x80 + level) + ' · loops until Stop' });
+      out.push({ id: 'sound-game-' + (0x80 + level), group: CAT().sfx, label: hex2(0x80 + level) + ' · crowd' + level, sub: 'crowd noise level ' + level + ' · loops until Stop' });
     }
     for (const id of data.effectIds) {
       if (id <= 0x87) continue;
-      const name = data.effectName(id);
-      out.push({ id: 'sound-game-' + id, group: 'Sound effects', label: hex(id) + ' · ' + (name || 'effect'), sub: 'cue ' + hex(id) + (data.effect(id).loops ? ' · loops until Stop' : '') });
+      const name = id === 0x88 ? 'crowdoff' : data.effectName(id);
+      out.push({ id: 'sound-game-' + id, group: CAT().sfx, label: hex2(id) + (name ? ' · ' + name : ''), sub: (id === 0x88 ? 'crowd noise off' : 'cue ' + hex2(id)) + (data.effect(id).loops ? ' · loops until Stop' : '') });
+    }
+    for (const set of ['boot', 'game']) {
+      data.samples(set).forEach((e) => {
+        const used = data.instruments.filter((i) => setOfInstrument(i.index) === set && i.sample === e.index).map((i) => hex2(i.index));
+        out.push({
+          id: 'snes-sample-' + set + '-' + e.index, group: CAT().samples, collapsible: true,
+          label: set + ' ' + hex2(e.index),
+          sub: 'BRR · ' + e.length + ' bytes' + (e.loops ? ' · loops' : '') + (used.length ? ' · instrument ' + used.join(', ') : ' · no instrument')
+        });
+      });
+    }
+    for (const i of data.instruments) {
+      out.push({
+        id: 'snes-inst-' + i.index, group: CAT().instruments, collapsible: true,
+        label: hex2(i.index),
+        sub: setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + ' · ADSR ' + hex2(i.adsr1).slice(1) + ' ' + hex2(i.adsr2).slice(1) + ' · gain ' + hex2(i.gain).slice(1)
+      });
     }
     return out;
+  }
+
+  /** The instrument an Instruments or Samples row plays: a samples row plays the first instrument that uses it. */
+  function partInstrument(data, id) {
+    let m = /^snes-inst-(\d+)$/.exec(id);
+    if (m) return Number(m[1]);
+    m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
+    if (!m) return null;
+    const hit = data.instruments.find((i) => setOfInstrument(i.index) === m[1] && i.sample === Number(m[2]));
+    return hit ? hit.index : null;
+  }
+
+  /** A one-note song of an instrument, as { set, bytes, base } for startSession: the way the analysis plays a probe note. */
+  function probeSong(data, instrument) {
+    const M = root.NhlNhl93sMidi;
+    const C = SD().CMD;
+    const set = setOfInstrument(instrument);
+    const midi = (data.probeMidi && data.probeMidi[instrument]) || 60;
+    const length = 70; // about 0.6 s at tempo 60
+    const ch = [
+      { tick: 0, type: 'command', code: C.TEMPO, params: [60] },
+      { tick: 0, type: 'command', code: C.MASTER_VOLUME, params: [0xb4] },
+      { tick: 0, type: 'command', code: C.VOLUME, params: [0xff] },
+      { tick: 0, type: 'command', code: C.PAN, params: [0x7f] },
+      { tick: 0, type: 'command', code: C.INSTRUMENT, params: [instrument] },
+      { tick: 0, type: 'note', key: Math.max(0, Math.min(0x47, midi - 12)), length, velocity: 15 }
+    ];
+    const built = M.buildSong({ set, loop: false, channels: [{ events: ch }, {}, {}, {}, {}, {}, {}, {}], end: length + 62 }, M.BASE[set]);
+    return { set, bytes: built.bytes, base: built.base };
   }
 
   const passCache = new Map();
@@ -64,6 +121,13 @@
       const gm = await fetch(new URL('data/audio/nhl93s-gm-map.json', document.baseURI).href);
       data.gmMap = gm.ok ? await gm.json() : null;
     } catch (err) { data.gmMap = null; }
+    // The key each instrument is played at for its probe note: the median the retail songs use it at.
+    try {
+      const an = await fetch(new URL('data/audio/nhl93s-instrument-analysis.json', document.baseURI).href);
+      const sets = an.ok ? (await an.json()).sets : null;
+      data.probeMidi = {};
+      if (sets) for (const set of Object.keys(sets)) for (const n of Object.keys(sets[set])) data.probeMidi[n] = sets[set][n].probeMidi;
+    } catch (err) { data.probeMidi = {}; }
     return data;
   }
 
@@ -181,6 +245,10 @@
     displaySongName,
     songInfo,
     entries,
+    isPart,
+    partInstrument,
+    probeSong,
+    setOfInstrument,
     passInfo,
     loadPack,
     startSession,

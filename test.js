@@ -632,7 +632,7 @@ if (revB93) {
   const sheet = parseSheet(revB93, adjusted.sheet);
   assert.ok(sheet.numFrames > 600);
   assert.ok(renderFrame(sheet, 1).pixels.some((pixel) => pixel));
-  for (const id of ['Scouting.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
+  for (const id of ['EASNBG.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
     const spec = adjusted.images.find((image) => image.id === id);
     const pic = decodeJim(revB93.subarray(spec.start, spec.end));
     assert.ok(pic.renderFrame(1).width > 32, id);
@@ -662,7 +662,7 @@ if (retail93) {
   assert.strictEqual(framer.renderFrame(1).width, 24);
   assert.strictEqual(framer.renderFrame(1).height, 24);
   assert.ok(framer.renderFrame(1).pixels.some((pixel) => (pixel & 15) === 4));
-  const easn = openImage(retail93, snesGame.images.find((image) => image.id === 'easn'), null, null);
+  const easn = openImage(retail93, snesGame.images.find((image) => image.id === 'easnbg'), null, null);
   assert.strictEqual(easn.renderFrame(1).width, 256);
   assert.strictEqual(easn.renderFrame(1).height, 128);
   assert.strictEqual(easn.renderFrame(1).colors[13][0], 0);
@@ -671,7 +671,7 @@ if (retail93) {
   assert.strictEqual(refs.numFrames, 7);
   assert.strictEqual(refs.renderFrame(1).width, 56);
   assert.strictEqual(refs.renderFrame(1).height, 64);
-  const refs2 = openImage(retail93, snesGame.images.find((image) => image.id === 'refshor'), null, null);
+  const refs2 = openImage(retail93, snesGame.images.find((image) => image.id === 'refs2'), null, null);
   assert.strictEqual(refs2.numFrames, 17);
   assert.strictEqual(refs2.renderFrame(1).width, 56);
   assert.strictEqual(refs2.renderFrame(1).height, 64);

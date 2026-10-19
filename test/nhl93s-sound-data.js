@@ -15,8 +15,8 @@ assert.deepStrictEqual(pack.boot.blocks.map((b) => b.addr), [0x400, 0x2b00, 0x2c
 assert.deepStrictEqual(pack.game.blocks.map((b) => b.addr), [0x2c00, 0x2c50]);
 assert.strictEqual(d.cueList.length, 9);
 assert.deepStrictEqual(d.cueList.filter((c) => c.set === 'boot').map((c) => c.cue).sort(), [1, 2, 3, 9]);
-assert.strictEqual(d.cueList.find((c) => c.cue === 3).name, 'Title screen');
-assert.strictEqual(d.cueList.find((c) => c.cue === 4).name, 'Home goal');
+assert.strictEqual(d.cueList.find((c) => c.cue === 3).name, 'SngTitle');
+assert.strictEqual(d.cueList.find((c) => c.cue === 4).name, 'SngGoal');
 assert.strictEqual(d.instruments.length, 29, 'the shared instrument table');
 
 // --- 2. order lists: every song is one set, the looping ones jump back ---

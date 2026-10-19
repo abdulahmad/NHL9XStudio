@@ -20,9 +20,12 @@ assert.strictEqual(N93.sfxName(0x10), 'pass1');
 assert.ok(N93.sfxDescribe(0x10).startsWith('ram93 SFXpass · 92 '), N93.sfxDescribe(0x10));
 assert.strictEqual(N93.sfxDescribe(0), '92 siren (0) · FM siren');
 assert.ok(N93.sfxDescribe(0x1c).endsWith('sample from 92 skating34'), N93.sfxDescribe(0x1c));
-assert.strictEqual(N93.songName(0x35), 'title');
-assert.strictEqual(N93.songName(0x37), 'scouting');
-assert.ok(N93.songDescribe(0x37).startsWith('ram93 SngScout · '), N93.songDescribe(0x37));
+assert.strictEqual(N93.songName(0x35), 'SngTitle');
+assert.strictEqual(N93.songName(0x37), 'SngScouting');
+assert.strictEqual(N93.songName(0x33), 'SngPP');
+assert.strictEqual(N93.sfxName(0x26), 'empty');
+assert.strictEqual(N93.sfxName(0x27), 'empty');
+assert.strictEqual(N93.songDescribe(0x37), 'Scouting report song');
 assert.strictEqual(N93.songDescribe(0x36), 'End of period song; 93 also plays it at the end of the game, on the playoff screen and when the highlights start (92 SngEOP, SngEOG, SngPO)');
 for (const s of N93.PCM) {
   for (const id of s.uses) assert.ok(id < 0x30, s.name + ' used by an effect');

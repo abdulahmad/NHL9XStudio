@@ -9,8 +9,8 @@
   const PCM = () => root.Nhl92Pcm;
   const NAMES = () => root.Nhl92SfxNames;
 
-  const GROUP_DAC = 'DAC samples';
-  const GROUP_INST = 'Instruments';
+  const GROUP_DAC = root.NhlAudioCategories.CATEGORY.samples;
+  const GROUP_INST = root.NhlAudioCategories.CATEGORY.instruments;
   const Z80_HZ = 3579545;
 
   // A YM2612 restored to its pristine saved state before every render, so each render is reproducible.

@@ -200,6 +200,8 @@
     return loading;
   }
 
+  const CAT = () => root.NhlAudioCategories.CATEGORY;
+
   const make = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -225,9 +227,9 @@
         out.push({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, edit it as a ' + NX[game].label + ' song' });
       }
       for (const s of data.songs) {
-        out.push({ id: 'song-' + s.id, group: s.group === 'Music — Team' ? 'Team songs' : 'Songs', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || 'song $' + s.id.toString(16).toUpperCase() });
+        out.push({ id: 'song-' + s.id, group: s.group === 'Music — Team' ? 'Team songs' : CAT().songs, label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || 'song $' + s.id.toString(16).toUpperCase() });
       }
-      for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || SFX_VBLANKS + ' vblanks' });
+      for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: CAT().sfx, label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || SFX_VBLANKS + ' vblanks' });
       // The game's patches (FM and PCM), played as a short scale: a collapsible list like NHL 92's instruments.
       if (nxMap && AUD() && root.Nhl9xStream) {
         for (const e of nxMap.patches) {
@@ -244,8 +246,8 @@
       out.push({ id: TOOL_EDITOR, group: 'MIDI', label: 'Sequencer · new NHL 92 song', sub: 'edit, play on the retail driver, export' });
       out.push({ id: TOOL_IMPORT, group: 'MIDI', label: 'MIDI import → NHL 92', sub: 'open a .mid, edit it as an NHL 92 song' });
     }
-    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: 'Songs', label: NAMES().songName(s.id), sub: NAMES().SONG_DESCRIPTIONS[s.id] + ' · loops until Stop' });
-    for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: 'SFX', label: NAMES().name(s.id), sub: sfxKinds(s) + ' · ' + NAMES().describe(s.id) });
+    for (const s of data.songs) out.push({ id: 'song-' + s.id, group: CAT().songs, label: NAMES().songName(s.id), sub: NAMES().SONG_DESCRIPTIONS[s.id] + ' · loops until Stop' });
+    for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: CAT().sfx, label: NAMES().name(s.id), sub: sfxKinds(s) + ' · ' + NAMES().describe(s.id) });
     // DAC samples and instruments: collapsible lists (collapsed until opened), played through the Z80 driver.
     if (INST() && INST().ready) out.push(...INST().entries());
     return out;
@@ -276,10 +278,18 @@
   const gmText = (t) => (!t ? '' : t.kind === 'program' ? t.name + ' (GM program ' + t.program + ')' : t.kind === 'drum' ? t.name + ' (GM drum ' + t.note + ')' : '');
   const firstSentence = (text) => { const i = text.indexOf('. '); return i < 0 ? text.replace(/\.$/, '') : text.slice(0, i); };
 
+  /** Heading of an NHLPA 93 (SNES) Samples or Instruments row. */
+  function snesPartTitle(id) {
+    const m = /^snes-(inst|sample)-(?:(\w+)-)?(\d+)$/.exec(id);
+    const n = Number(m[3]);
+    return m[1] === 'inst' ? 'Instrument $' + n.toString(16).toUpperCase().padStart(2, '0') : 'Sample ' + m[2] + ' $' + n.toString(16).toUpperCase().padStart(2, '0');
+  }
+
   function title(id) {
     if (isTool(id)) return toolName(id);
     if (isInst(id)) return INST().title(id);
     if (isSnes()) {
+      if (isSnes93() && snesApi().isPart(id)) return snesPartTitle(id);
       if (isSnes93() && id.startsWith('song-')) return snesApi().songInfo(snesData, id.slice(5)).name + ' · cue $' + Number(id.slice(5)).toString(16).toUpperCase().padStart(2, '0');
       if (isSnes93()) return (snesData.effectName(Number(id.split('-')[2])) || 'Sound') + ' · cue $' + Number(id.split('-')[2]).toString(16).toUpperCase();
       if (id.startsWith('song-')) return id.slice(5) + ' · ' + snesApi().displaySongName(id.slice(5));
@@ -484,8 +494,14 @@
   async function playSnes(id, startSec) {
     if (!snesData || !snesApi()) throw new Error(error || 'Audio still loading');
     const sm = /^sound-(\w+)-(\d+)$/.exec(id);
-    const imp = id === TOOL_IMPORT || id === TOOL_EDITOR ? snesImport : null;
+    let imp = id === TOOL_IMPORT || id === TOOL_EDITOR ? snesImport : null;
     if ((id === TOOL_IMPORT || id === TOOL_EDITOR) && !imp) throw new Error('Open a MIDI file first');
+    const part = isSnes93() && snesApi().isPart(id);
+    if (part) {
+      const inst = snesApi().partInstrument(snesData, id);
+      if (inst == null) throw new Error('No instrument uses this sample, so the game never plays it');
+      imp = snesApi().probeSong(snesData, inst);
+    }
     const songName = sm || imp ? null : id.slice(5);
     stop();
     stopBuffer();
@@ -1264,6 +1280,7 @@
   }
 
   function describe(id) {
+    if (isSnes93() && snesApi().isPart(id)) return 'Boot the game\'s own SPC700 program, upload the ' + snesApi().setOfInstrument(snesApi().partInstrument(snesData, id)) + ' sample set, then play one note of the instrument (a probe song at the key the retail songs use it at).';
     if (isSnes93()) {
       const cue = Number(id.split('-').pop());
       return id.startsWith('song-')
@@ -1397,6 +1414,22 @@
     if (isInst(id)) {
       panel = null;
       INST().renderPanel(box, id);
+      return;
+    }
+    if (isSnes93() && snesApi().isPart(id)) {
+      const inst = snesApi().partInstrument(snesData, id);
+      box.appendChild(make('p', 'st-kind', id.startsWith('snes-inst-') ? 'NHLPA 93 (SNES) instrument' : 'NHLPA 93 (SNES) sample'));
+      box.appendChild(make('h3', null, title(id)));
+      if (id.startsWith('snes-inst-')) {
+        const e = snesData.instruments[inst];
+        box.appendChild(make('p', 'st-note mono', snesApi().setOfInstrument(inst) + ' set · sample $' + e.sample.toString(16).toUpperCase().padStart(2, '0') + ' · ADSR $' + e.adsr1.toString(16).toUpperCase().padStart(2, '0') + ' $' + e.adsr2.toString(16).toUpperCase().padStart(2, '0') + ' · gain $' + e.gain.toString(16).toUpperCase().padStart(2, '0') + ' · pitch $' + e.pitch.toString(16).toUpperCase().padStart(4, '0')));
+      } else {
+        const m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
+        const e = snesData.samples(m[1])[Number(m[2])];
+        box.appendChild(make('p', 'st-note mono', m[1] + ' set · BRR ' + e.length + ' bytes (' + Math.round(e.length / 9) + ' blocks)' + (e.loops ? ' · loops' : '') + (inst == null ? ' · no instrument uses it, so it cannot be played' : ' · played through instrument $' + inst.toString(16).toUpperCase().padStart(2, '0'))));
+      }
+      box.appendChild(make('p', 'st-note', 'One note of the instrument on the game\'s own sound program, at the key the retail songs use it at. Space plays or stops.'));
+      status(true);
       return;
     }
     if (isTool(id) && isSnes()) {
@@ -1706,6 +1739,12 @@
   function metaRows(id) {
     if (!assetsReady()) return [['Audio', error || 'loading']];
     if (isSnes() && id === TOOL_EDITOR) return [['Tool', title(id)], ['Song', 'eight tracks of notes; one GM instrument per track'], ['Plays on', 'the game\'s own SPC700 sound program, through the GM import'], ['Exports', 'MIDI (GM) and the game\'s song format'], ['Notes', isSnes93() ? 'docs/NHL93S-SOUND.md' : 'docs/NHL94S-MIDI.md']];
+    if (isSnes93() && snesApi().isPart(id)) {
+      const inst = snesApi().partInstrument(snesData, id);
+      const rows = [['Entry', title(id)]];
+      if (inst != null) rows.push(['Instrument', '$' + inst.toString(16).toUpperCase().padStart(2, '0') + ' (' + snesApi().setOfInstrument(inst) + ' set)']);
+      return rows.concat([['Path', 'game SPC700 program → S-DSP, one probe note'], ['Output', '32 kHz stereo, live'], ['Source', 'data/audio/nhl93s-sound.json'], ['Notes', 'docs/NHL93S-SOUND.md']]);
+    }
     if (isSnes93()) {
       if (id === TOOL_IMPORT) return [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1), or a native export'], ['Out', 'a song for the game\'s sound program, played on it as cue 7'], ['Mapping', 'data/audio/nhl93s-gm-map.json'], ['Notes', 'docs/NHL93S-SOUND.md']];
       const cue = Number(id.split('-').pop());

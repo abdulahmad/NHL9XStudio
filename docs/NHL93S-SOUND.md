@@ -22,7 +22,7 @@ It checks the ROM SHA-1, the stream addresses, that the driver block starts with
 | Cue | Meaning |
 | --- | --- |
 | `$00` | stop music |
-| `$01`-`$09` | songs (boot set: 1 Playoff screen, 2 unused, 3 Title screen, 9 unused; game set: 4 Home goal, 5 Period start, 6 Third period, 7 unused, 8 Mid-period) |
+| `$01`-`$09` | songs, named as in 92 and 93G (boot set: 1 SngPO, 2 SngEOP (unused), 3 SngTitle, 9 SngEOG (unused); game set: 4 SngGoal, 5 SngPeriodStart, 6 SngLateGame, 7 SngPP (unused), 8 SngFaceoff). The Studio numbers the songs 1-9 by the starter (`StartSngGoal` = 1 ... `StartSngPO` = 9) |
 | `$80`-`$87` | crowd noise level (loops) |
 | `$88` | crowd off |
 | `$89`-`$A1` | sound effects (pitch-sweep programs, voice from a table) |
