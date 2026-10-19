@@ -586,7 +586,7 @@ function paintStage() {
   const fit = viewScale(cssW, cssH, 46, 64);
   const picture = frame.picture || state.mode === 'image';
   const base = picture ? Math.min(8, fit) : Math.min(state.scale, fit);
-  const zoom = picture ? Math.pow(2, (state.scale - 8) / 2) : 1;
+  const zoom = picture ? Math.pow(2, (Math.min(state.scale, 12) - 8) / 2) : 1;
   // Dragging pans the picture; the offset starts over when another item is picked.
   if (pan.key !== seq.key) { pan.key = seq.key; pan.x = 0; pan.y = 0; }
   paintInto(ctx, cssW, cssH, frame, colors, base * zoom, {
@@ -1850,7 +1850,7 @@ function wire() {
   stage.addEventListener('dblclick', () => { pan.x = 0; pan.y = 0; paintStage(); });
   stage.addEventListener('wheel', (event) => {
     event.preventDefault();
-    state.scale = Math.max(1, Math.min(12, state.scale + (event.deltaY < 0 ? 1 : -1)));
+    state.scale = Math.max(1, Math.min(30, state.scale + (event.deltaY < 0 ? 1 : -1)));
     el('scale').value = String(state.scale);
     el('scale-readout').textContent = state.scale + '×';
     paintStage();
