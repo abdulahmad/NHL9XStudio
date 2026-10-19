@@ -632,7 +632,7 @@ if (revB93) {
   const sheet = parseSheet(revB93, adjusted.sheet);
   assert.ok(sheet.numFrames > 600);
   assert.ok(renderFrame(sheet, 1).pixels.some((pixel) => pixel));
-  for (const id of ['EASNBG.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
+  for (const id of ['EASportsBG.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
     const spec = adjusted.images.find((image) => image.id === id);
     const pic = decodeJim(revB93.subarray(spec.start, spec.end));
     assert.ok(pic.renderFrame(1).width > 32, id);
