@@ -5479,6 +5479,7 @@
         "mapH": 85,
         "tilesStart": 85408,
         "tilesEnd": 96572,
+        "teamPalette": true,
         "fileNames": [
           "IceRink.chr.pak",
           "IceRink.smap"
@@ -5495,6 +5496,7 @@
         "mapH": 28,
         "tilesStart": 85408,
         "tilesEnd": 96572,
+        "teamPalette": true,
         "fileNames": [
           "IceRink.chr.pak",
           "IceRinkHor.smap"
