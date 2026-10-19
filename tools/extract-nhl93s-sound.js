@@ -13,7 +13,7 @@
  *
  * Checked against the checkout while extracting (nothing is taken on trust):
  *   - the ROM's SHA-1 (lst/nhlpa93snes.bin);
- *   - the stream addresses ($868000 and $818000, from docs/file_map.md) and that each stream parses to its end block;
+ *   - the stream addresses ($868000 and $818000, from docs/file-map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
  *     Extracted/Sound/gamesamples.brr (run ./build.sh in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
  *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
@@ -68,10 +68,10 @@ function main() {
   const rom = fs.readFileSync(path.join(dir, 'lst', 'nhlpa93snes.bin'));
   const sha = crypto.createHash('sha1').update(rom).digest('hex');
   if (sha !== ROM_SHA1) throw new Error('ROM SHA-1 ' + sha + ' is not the expected NHLPA 93 SNES ' + ROM_SHA1);
-  const fileMap = fs.readFileSync(path.join(dir, 'docs', 'file_map.md'), 'utf8');
+  const fileMap = fs.readFileSync(path.join(dir, 'docs', 'file-map.md'), 'utf8');
   const bootAt = /`\$(86[0-9A-F]{4})` data\/sound\/bootsound\.asm/.exec(fileMap);
   const gameAt = /`\$(81[0-9A-F]{4})` data\/sound\/gamesound\.asm/.exec(fileMap);
-  if (!bootAt || !gameAt) throw new Error('docs/file_map.md does not place bootsound.asm / gamesound.asm');
+  if (!bootAt || !gameAt) throw new Error('docs/file-map.md does not place bootsound.asm / gamesound.asm');
   const boot = parseStream(rom, off(hex(bootAt[1])));
   const game = parseStream(rom, off(hex(gameAt[1])));
   if (boot.entry !== 0x0400 || game.entry !== 0x0800) throw new Error('unexpected stream entry points');
