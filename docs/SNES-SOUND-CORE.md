@@ -38,7 +38,7 @@ Result: **256,000 of 256,000 tests pass (100%)**, every instruction group at 100
 
 ### The 93S/94S sound programs
 
-`tools/scan-spc700-driver-ops.js <NHLPA93SNES> <NHL94SNES>` reads the two SPC700 programs (both load at sound RAM `$0400`: `Extracted/Sound/driver.spc700` in NHLPA93SNES, 9,959 bytes; the `SoundDriver` block in the NHL94SNES ROM, 1,097 bytes) and records the opcodes in `test/spc700-driver-ops.js`:
+`tools/scan-spc700-driver-ops.js <NHLPA93SNES> <NHL94SNES>` reads the two SPC700 programs (both load at sound RAM `$0400`: the driver block at `$868004` of `lst/nhlpa93snes.bin` in NHLPA93SNES (`Extracted/Sound/driver.spc700` holds its code part, the songs and effects are the `fmtune_*` and `sfx_*` files), 9,959 bytes; the `SoundDriver` block in the NHL94SNES ROM, 1,097 bytes) and records the opcodes in `test/spc700-driver-ops.js`:
 
 - **reached:** the opcodes of code reachable from `$0400` by following branches, jumps, calls and `jmp [!a+X]` tables: 113 opcodes in the '93 program, 40 in the '94 program, 119 together.
 - **swept:** a linear decode of each whole block, data included: 226 opcodes. It is a superset that also covers code the trace can't follow (the trace can't follow indirect jumps other than `jmp [!a+X]` tables and covers 2,183 of the '93 program's 9,959 bytes, the rest being data or code reached only that way).

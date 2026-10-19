@@ -14,7 +14,7 @@
  * Checked against the checkout while extracting (nothing is taken on trust):
  *   - the ROM's SHA-1 (lst/nhlpa93snes.bin);
  *   - the stream addresses ($868000 and $818000, from docs/file_map.md) and that each stream parses to its end block;
- *   - block 1 of the boot stream equals Extracted/Sound/driver.spc700, the sample blocks equal Extracted/Sound/bootsamples.brr and
+ *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
  *     Extracted/Sound/gamesamples.brr (run ./build.sh in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
  *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
  */
@@ -79,7 +79,12 @@ function main() {
 
   const data = (f) => fs.readFileSync(path.join(dir, 'Extracted', 'Sound', f));
   const same = (a, b, what) => { if (!Buffer.from(a).equals(Buffer.from(b))) throw new Error(what + ' differs from the ROM stream'); };
-  same(boot.blocks[0].bytes, data('driver.spc700'), 'Extracted/Sound/driver.spc700');
+  // driver.spc700 is the code and tables only; the songs and effects follow in fmtune_* / sfx_* files (pieces of the block, in address order)
+  const code = data('driver.spc700');
+  same(boot.blocks[0].bytes.subarray(0, code.length), code, 'Extracted/Sound/driver.spc700');
+  let rest = 0;
+  for (const f of fs.readdirSync(path.join(dir, 'Extracted', 'Sound'))) if (/^(fmtune_.*_cmdstream|sfx_.*)\.bin$/.test(f)) rest += data(f).length;
+  if (code.length + rest !== boot.blocks[0].bytes.length) throw new Error('driver.spc700 + fmtune_* + sfx_* files do not add up to the driver block');
   same(boot.blocks[3].bytes, data('bootsamples.brr'), 'Extracted/Sound/bootsamples.brr');
   same(game.blocks[1].bytes, data('gamesamples.brr'), 'Extracted/Sound/gamesamples.brr');
   if (boot.blocks[0].addr !== 0x0400 || boot.blocks[1].addr !== 0x2b00 || boot.blocks[2].addr !== 0x2c00 || boot.blocks[3].addr !== 0x2c30) throw new Error('unexpected boot block addresses');

@@ -78,7 +78,8 @@ function sweep(mem) {
 const hex = (s) => [...s].sort((a, b) => a - b).map((o) => ('0' + o.toString(16)).slice(-2));
 const [d93, d94] = process.argv.slice(2);
 if (!d93 || !d94) { console.error('usage: scan-spc700-driver-ops.js <NHLPA93SNES dir> <NHL94SNES dir>'); process.exit(2); }
-const m93 = fs.readFileSync(path.join(d93, 'Extracted', 'Sound', 'driver.spc700'));
+// the whole driver block (code, songs and effects): $868004, 9959 bytes; Extracted/Sound/driver.spc700 holds only its code part
+const m93 = fs.readFileSync(path.join(d93, 'lst', 'nhlpa93snes.bin')).subarray(0x30004, 0x30004 + 9959);
 const m94 = load94(d94);
 const out = {};
 for (const [name, mem] of [['nhl93', m93], ['nhl94', m94]]) {
