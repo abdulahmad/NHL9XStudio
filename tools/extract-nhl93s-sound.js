@@ -12,10 +12,10 @@
  * disassembly gives the cues.
  *
  * Checked against the checkout while extracting (nothing is taken on trust):
- *   - the ROM's SHA-1 (lst/nhlpa93snes.bin);
+ *   - the ROM's SHA-1 (nhlpa93retail.sfc);
  *   - the stream addresses ($868000 and $818000, from docs/file-map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
- *     Extracted/Sound/gamesamples.brr (run ./build.sh in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
+ *     Extracted/Sound/gamesamples.brr (run `npm run assets` in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
  *   - the cue numbers the StartSong* routines send, and the SFX numbers in src/ram93s.asm.
  */
 const fs = require('fs');
@@ -65,13 +65,16 @@ function main() {
   const dir = args.filter((a) => !a.startsWith('--'))[0];
   const out = args.filter((a) => !a.startsWith('--'))[1] || OUT;
   if (!dir) { console.error('usage: extract-nhl93s-sound.js <NHLPA93SNES dir> [out.json | --check]'); process.exit(2); }
-  const rom = fs.readFileSync(path.join(dir, 'lst', 'nhlpa93snes.bin'));
+  // the retail ROM sits in the repo folder as nhlpa93retail.sfc (older checkouts: lst/nhlpa93snes.bin)
+  const romPath = [path.join(dir, 'nhlpa93retail.sfc'), path.join(dir, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p));
+  if (!romPath) throw new Error('no nhlpa93retail.sfc in ' + dir);
+  const rom = fs.readFileSync(romPath);
   const sha = crypto.createHash('sha1').update(rom).digest('hex');
   if (sha !== ROM_SHA1) throw new Error('ROM SHA-1 ' + sha + ' is not the expected NHLPA 93 SNES ' + ROM_SHA1);
   const fileMap = fs.readFileSync(path.join(dir, 'docs', 'file-map.md'), 'utf8');
-  const bootAt = /`\$(86[0-9A-F]{4})` data\/sound\/bootsound\.asm/.exec(fileMap);
-  const gameAt = /`\$(81[0-9A-F]{4})` data\/sound\/gamesound\.asm/.exec(fileMap);
-  if (!bootAt || !gameAt) throw new Error('docs/file-map.md does not place bootsound.asm / gamesound.asm');
+  const bootAt = /`\$(86[0-9A-F]{4})` (?:data\/sound\/bootsound\.asm|BootSoundUpload \(data\))/.exec(fileMap);
+  const gameAt = /`\$(81[0-9A-F]{4})` (?:data\/sound\/gamesound\.asm|GameSoundUpload \(data\))/.exec(fileMap);
+  if (!bootAt || !gameAt) throw new Error('docs/file-map.md does not place BootSoundUpload / GameSoundUpload');
   const boot = parseStream(rom, off(hex(bootAt[1])));
   const game = parseStream(rom, off(hex(gameAt[1])));
   if (boot.entry !== 0x0400 || game.entry !== 0x0800) throw new Error('unexpected stream entry points');
@@ -93,9 +96,12 @@ function main() {
   // the tables, against the db/dw lines
   let checked = 0;
   const compare = (block, file, label) => {
-    const text = fs.readFileSync(path.join(dir, 'src', 'data', 'sound', file), 'utf8');
+    // the sound data is in src/banks/b86_sound_driver.asm (older checkouts: src/data/sound/<file>)
+    const old = path.join(dir, 'src', 'data', 'sound', file);
+    const text = fs.readFileSync(fs.existsSync(old) ? old : path.join(dir, 'src', 'banks', 'b86_sound_driver.asm'), 'utf8');
     const at = text.indexOf(label + ':');
-    const end = text.indexOf('\n; ----', at);
+    const next = text.slice(at + label.length + 1).search(/\n[A-Za-z_]\w*:/);
+    const end = next < 0 ? -1 : at + label.length + 1 + next;
     const nums = asmNumbers(text.slice(at, end < 0 ? undefined : end).replace(/SPC\w*\+\$[0-9A-Fa-f]+/g, ''));
     let p = 0;
     for (const n of nums) {
@@ -116,7 +122,7 @@ function main() {
   const cueOf = {};
   for (let n = 1; n <= 9; n++) {
     const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'StartSong' + n + '.asm'), 'utf8');
-    const m = /lda\.[bw] #\$0*([0-9A-F]+)\s*(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
+    const m = /lda\.[bw] #\$0*([0-9A-F]+)[ \t]*(?:;[^\n]*)?(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
       || /sep #\$20\s*(?:;[^\n]*)?\r?\n\s*lda\.b #\$0*([0-9A-F]+)\s*\r?\n\s*sta\.w APUIO0/.exec(text);
     if (!m) throw new Error('StartSong' + n + '.asm: cue number not found');
     cueOf[n] = hex(m[1]);

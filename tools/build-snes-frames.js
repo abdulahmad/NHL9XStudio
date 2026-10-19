@@ -19,6 +19,11 @@ const { parseFrames } = require('../lib/parse-frames');
 const SRC93 = process.env.SNES93 || '/tmp/snes/93';
 const ROM94 = process.env.SNES94_ROM || '/tmp/snes/94/lst/nhl94snes.sfc';
 const OUT = path.join(__dirname, '..', 'data');
+// NHL 94 SNES sequences named by hand (see docs/AGENT-HANDOFF.md): generated name -> [name, comment].
+const KNOWN94 = {
+  SPAextra42: ['SPAcelebrate', 'On-ice celebrate (93 SNES SPAcelebrate vblank list; was SPAextra42)'],
+  SPAextra43: ['SPApump', 'Scorer pump (93 SNES SPApump vblank list; was SPAextra43)'],
+};
 
 function splitCode(line) {
   const idx = line.indexOf(';');
@@ -30,10 +35,14 @@ function loadEquates(ramText) {
   const eq = new Map();
   for (const line of ramText.split(/\r?\n/)) {
     const { code } = splitCode(line);
-    const m = /^(SPF\w+)\s*=\s*(\d+|\$[0-9A-Fa-f]+)$/.exec(code);
+    const m = /^(SPF\w+)\s*=\s*(\d+|\$[0-9A-Fa-f]+|SPF\w+\s*\+\s*\d+)$/.exec(code);
     if (!m) continue;
-    const raw = m[2];
-    eq.set(m[1], raw[0] === '$' ? parseInt(raw.slice(1), 16) : parseInt(raw, 10));
+    const raw = m[2].replace(/\s+/g, '');
+    const ch = /^(SPF\w+)\+(\d+)$/.exec(raw); // chained: the previous SPF plus the size of its group
+    if (ch) {
+      if (!eq.has(ch[1])) throw new Error('SPF equate before its base: ' + code);
+      eq.set(m[1], eq.get(ch[1]) + parseInt(ch[2], 10));
+    } else eq.set(m[1], raw[0] === '$' ? parseInt(raw.slice(1), 16) : parseInt(raw, 10));
   }
   return eq;
 }
@@ -61,17 +70,17 @@ function wordsOf(text) {
 }
 
 function parse93(eq, framesText) {
-  const body = framesText.replace(/^.*^SPAList:/ms, '');
+  const body = framesText.replace(/^.*^SPAlist:/ms, '');
   const chunks = body.split(/^(SPA\w+)_table:\s*(?:;.*)?$/m);
   const anims = [];
   for (let i = 1; i < chunks.length; i += 2) {
     const name = chunks[i];
     const block = chunks[i + 1].split(/^assert\b/m)[0];
-    const comment = ((framesText.match(new RegExp('^' + name + '_table:\\s*;\\s*(.*)$', 'm')) || [])[1] || '').trim();
-    const header = block.split(/^\.d0:/m)[0];
+    const comment = ((framesText.match(new RegExp('^' + name + '\\s*=[^;\\n]*;\\s*(.*)$', 'm')) || [])[1] || '').trim();
+    const header = block.split(/^\.0:/m)[0];
     const headerWords = wordsOf(header);
     const flags = evalFrame(headerWords[8], eq);
-    const parts = block.split(/^\.d(\d):/m);
+    const parts = block.split(/^\.(\d):/m);
     const dirs = [];
     for (let p = 1; p < parts.length; p += 2) {
       const id = Number(parts[p]);
@@ -259,6 +268,9 @@ function main() {
       matched += 1;
       extra -= 1;
     }
+    // Sequences that no longer match by vblank list but are known by hand (the 93 SNES list differs in one time).
+    const known = KNOWN94[name];
+    if (known) { comment = known[1]; name = known[0]; }
     anims94.push({
       name,
       comment,

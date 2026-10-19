@@ -47,7 +47,7 @@ SPFcrowd	= 659
 SPAList:
 	dc.w	0
 
-SPAgready	= *-SPAList	; SPAgready frames by direction
+SPAgready	= *-SPAList	; goalie ready (loops)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -60,7 +60,7 @@ SPAgready	= *-SPAList	; SPAgready frames by direction
 .6	dc.w	424,120,639,10,640,10,639,10,640,10,424,120,639,10,640,10,639,-10
 .7	dc.w	427,180,641,10,642,10,641,10,642,10,427,180,641,10,642,10,641,-10
 
-SPAgready2	= *-SPAList	; SPAgready2 frames by direction
+SPAgready2	= *-SPAList
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -73,7 +73,7 @@ SPAgready2	= *-SPAList	; SPAgready2 frames by direction
 .6	dc.w	424,-30
 .7	dc.w	427,-30
 
-SPAgglover	= *-SPAList	; SPAgglover frames by direction
+SPAgglover	= *-SPAList	; glove save (GoalieSaveList 0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -86,7 +86,7 @@ SPAgglover	= *-SPAList	; SPAgglover frames by direction
 .6	dc.w	425,-32
 .7	dc.w	428,-32
 
-SPAgglovel	= *-SPAList	; SPAgglovel frames by direction
+SPAgglovel	= *-SPAList	; glove save (GoalieSaveList 1)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -99,7 +99,7 @@ SPAgglovel	= *-SPAList	; SPAgglovel frames by direction
 .6	dc.w	426,-32
 .7	dc.w	429,-32
 
-SPAgstickr	= *-SPAList	; SPAgstickr frames by direction
+SPAgstickr	= *-SPAList	; stick save (GoalieSaveList 4) (93G $20C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -112,7 +112,7 @@ SPAgstickr	= *-SPAList	; SPAgstickr frames by direction
 .6	dc.w	482,-32
 .7	dc.w	484,-32
 
-SPAgstickl	= *-SPAList	; SPAgstickl frames by direction
+SPAgstickl	= *-SPAList	; stick save (GoalieSaveList 5) (93G $23E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -125,7 +125,7 @@ SPAgstickl	= *-SPAList	; SPAgstickl frames by direction
 .6	dc.w	483,-32
 .7	dc.w	485,-32
 
-SPAgstackr	= *-SPAList	; SPAgstackr frames by direction
+SPAgstackr	= *-SPAList	; stack pad save (GoalieSaveList 2) (93G $270)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -138,7 +138,7 @@ SPAgstackr	= *-SPAList	; SPAgstackr frames by direction
 .6	dc.w	454,8,455,-20
 .7	dc.w	456,8,457,-20
 
-SPAgstackl	= *-SPAList	; SPAgstackl frames by direction
+SPAgstackl	= *-SPAList	; stack pad save (GoalieSaveList 3) (93G $2C2)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -151,7 +151,7 @@ SPAgstackl	= *-SPAList	; SPAgstackl frames by direction
 .6	dc.w	466,8,467,-20
 .7	dc.w	468,8,469,-20
 
-SPAgswing	= *-SPAList	; SPAgswing frames by direction
+SPAgswing	= *-SPAList	; (93G $386)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -164,7 +164,7 @@ SPAgswing	= *-SPAList	; SPAgswing frames by direction
 .6	dc.w	442,5,443,8,442,-16
 .7	dc.w	444,5,445,8,444,-16
 
-SPAgskate	= *-SPAList	; SPAgskate frames by direction
+SPAgskate	= *-SPAList	; goalie skating (93G $3F8)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -177,7 +177,7 @@ SPAgskate	= *-SPAList	; SPAgskate frames by direction
 .6	dc.w	510,10,511,10,512,10,513,-15
 .7	dc.w	514,10,515,10,516,10,517,-15
 
-SPApflip	= *-SPAList	; SPApflip frames by direction
+SPApflip	= *-SPAList	; puck spin (93G $48A)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -190,7 +190,7 @@ SPApflip	= *-SPAList	; SPApflip frames by direction
 .6	dc.w	398,-4096
 .7	dc.w	398,-4096
 
-SPAglide	= *-SPAList	; SPAglide frames by direction
+SPAglide	= *-SPAList	; glide (93G $52C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -203,7 +203,7 @@ SPAglide	= *-SPAList	; SPAglide frames by direction
 .6	dc.w	31,-8
 .7	dc.w	36,-8
 
-SPAskatewp	= *-SPAList	; SPAskatewp frames by direction
+SPAskatewp	= *-SPAList	; (93G $55E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -216,7 +216,7 @@ SPAskatewp	= *-SPAList	; SPAskatewp frames by direction
 .6	dc.w	32,10,33,10,34,10,35,10,31,-15
 .7	dc.w	37,10,38,10,39,10,40,10,36,-15
 
-SPAskate	= *-SPAList	; SPAskate frames by direction
+SPAskate	= *-SPAList	; (93G $5F0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -229,7 +229,7 @@ SPAskate	= *-SPAList	; SPAskate frames by direction
 .6	dc.w	72,10,73,10,74,10,75,10,71,-15
 .7	dc.w	77,10,78,10,79,10,80,10,76,-15
 
-SPAturnl	= *-SPAList	; SPAturnl frames by direction
+SPAturnl	= *-SPAList	; (93G $682)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -242,7 +242,7 @@ SPAturnl	= *-SPAList	; SPAturnl frames by direction
 .6	dc.w	87,-18
 .7	dc.w	88,-18
 
-SPAturnr	= *-SPAList	; SPAturnr frames by direction
+SPAturnr	= *-SPAList	; (93G $6B4)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -255,7 +255,7 @@ SPAturnr	= *-SPAList	; SPAturnr frames by direction
 .6	dc.w	95,-18
 .7	dc.w	96,-18
 
-SPAstop	= *-SPAList	; SPAstop frames by direction
+SPAstop	= *-SPAList	; stop (93G $6E6)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -268,7 +268,7 @@ SPAstop	= *-SPAList	; SPAstop frames by direction
 .6	dc.w	157,4,158,-4
 .7	dc.w	159,4,160,-4
 
-SPApassf	= *-SPAList	; SPApassf frames by direction
+SPApassf	= *-SPAList	; (93G $738)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -281,7 +281,7 @@ SPApassf	= *-SPAList	; SPApassf frames by direction
 .6	dc.w	136,4,137,4,138,-20
 .7	dc.w	142,4,143,4,144,-20
 
-SPApassb	= *-SPAList	; SPApassb frames by direction
+SPApassb	= *-SPAList	; (93G $7AA)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -294,7 +294,7 @@ SPApassb	= *-SPAList	; SPApassb frames by direction
 .6	dc.w	136,4,135,4,134,-20
 .7	dc.w	142,4,141,4,140,-20
 
-SPAshotf	= *-SPAList	; SPAshotf frames by direction
+SPAshotf	= *-SPAList	; forehand shot (93G $81C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -307,7 +307,7 @@ SPAshotf	= *-SPAList	; SPAshotf frames by direction
 .6	dc.w	136,4,135,4,134,4,133,4,135,0,136,0,137,0,138,-20
 .7	dc.w	142,4,141,4,140,4,139,4,141,0,142,0,143,0,144,-20
 
-SPAshotb	= *-SPAList	; SPAshotb frames by direction
+SPAshotb	= *-SPAList	; backhand shot (93G $94E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -320,7 +320,7 @@ SPAshotb	= *-SPAList	; SPAshotb frames by direction
 .6	dc.w	136,4,137,4,138,4,138,4,137,0,136,0,135,0,134,-20
 .7	dc.w	142,4,143,4,144,4,144,4,143,0,142,0,141,0,140,-20
 
-SPAglideback	= *-SPAList	; SPAglideback frames by direction
+SPAglideback	= *-SPAList	; (93G $A80)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -333,7 +333,7 @@ SPAglideback	= *-SPAList	; SPAglideback frames by direction
 .6	dc.w	179,-8
 .7	dc.w	182,-8
 
-SPAskateback	= *-SPAList	; SPAskateback frames by direction
+SPAskateback	= *-SPAList	; (93G $AB2)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -346,7 +346,7 @@ SPAskateback	= *-SPAList	; SPAskateback frames by direction
 .6	dc.w	179,10,180,10,179,10,181,-10
 .7	dc.w	182,10,183,10,182,10,184,-10
 
-SPAsweepchk	= *-SPAList	; SPAsweepchk frames by direction
+SPAsweepchk	= *-SPAList	; sweep check (93G $B44)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -359,7 +359,7 @@ SPAsweepchk	= *-SPAList	; SPAsweepchk frames by direction
 .6	dc.w	269,4,270,8,269,-4
 .7	dc.w	271,4,272,8,271,-4
 
-SPAshoulderchkl	= *-SPAList	; SPAshoulderchkl frames by direction
+SPAshoulderchkl	= *-SPAList	; (93G $BB6)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -372,7 +372,7 @@ SPAshoulderchkl	= *-SPAList	; SPAshoulderchkl frames by direction
 .6	dc.w	247,-24
 .7	dc.w	248,-24
 
-SPAshoulderchkr	= *-SPAList	; SPAshoulderchkr frames by direction
+SPAshoulderchkr	= *-SPAList	; (93G $BE8)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -385,7 +385,7 @@ SPAshoulderchkr	= *-SPAList	; SPAshoulderchkr frames by direction
 .6	dc.w	255,-24
 .7	dc.w	256,-24
 
-SPAhipchkl	= *-SPAList	; SPAhipchkl frames by direction
+SPAhipchkl	= *-SPAList	; (93G $C1A)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -398,7 +398,7 @@ SPAhipchkl	= *-SPAList	; SPAhipchkl frames by direction
 .6	dc.w	231,-24
 .7	dc.w	232,-24
 
-SPAhipchkr	= *-SPAList	; SPAhipchkr frames by direction
+SPAhipchkr	= *-SPAList	; (93G $C4C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -411,7 +411,7 @@ SPAhipchkr	= *-SPAList	; SPAhipchkr frames by direction
 .6	dc.w	239,-24
 .7	dc.w	240,-24
 
-SPAburst	= *-SPAList	; SPAburst frames by direction
+SPAburst	= *-SPAList	; check button burst (93G $C7E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -424,7 +424,7 @@ SPAburst	= *-SPAList	; SPAburst frames by direction
 .6	dc.w	71,-24
 .7	dc.w	76,-24
 
-SPAHold	= *-SPAList	; SPAHold frames by direction
+SPAHold	= *-SPAList	; hold (93G $CB0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -437,7 +437,7 @@ SPAHold	= *-SPAList	; SPAHold frames by direction
 .6	dc.w	351,-30
 .7	dc.w	352,-30
 
-SPAHold2	= *-SPAList	; SPAHold2 frames by direction
+SPAHold2	= *-SPAList	; (93G $CE2)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -450,7 +450,7 @@ SPAHold2	= *-SPAList	; SPAHold2 frames by direction
 .6	dc.w	351,-30
 .7	dc.w	352,-30
 
-SPAflail	= *-SPAList	; SPAflail frames by direction
+SPAflail	= *-SPAList	; (93G $D14)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -463,7 +463,7 @@ SPAflail	= *-SPAList	; SPAflail frames by direction
 .6	dc.w	71,-30
 .7	dc.w	76,-30
 
-SPAfallfwd	= *-SPAList	; SPAfallfwd frames by direction
+SPAfallfwd	= *-SPAList	; (93G $D46)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -476,7 +476,7 @@ SPAfallfwd	= *-SPAList	; SPAfallfwd frames by direction
 .6	dc.w	329,6,330,6,331,100,332,8,343,-8
 .7	dc.w	333,6,334,6,335,100,336,8,344,-8
 
-SPAfallback	= *-SPAList	; SPAfallback frames by direction
+SPAfallback	= *-SPAList	; (93G $DF8)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -489,7 +489,7 @@ SPAfallback	= *-SPAList	; SPAfallback frames by direction
 .6	dc.w	297,6,298,6,299,100,300,8,343,-8
 .7	dc.w	301,6,302,6,303,100,304,8,344,-8
 
-SPAcelebrate	= *-SPAList	; SPAcelebrate frames by direction
+SPAcelebrate	= *-SPAList	; (93G $EAA)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -502,7 +502,7 @@ SPAcelebrate	= *-SPAList	; SPAcelebrate frames by direction
 .6	dc.w	197,12,198,40,197,-5
 .7	dc.w	199,12,200,40,199,-5
 
-SPApump	= *-SPAList	; SPApump frames by direction
+SPApump	= *-SPAList	; (93G $F1C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -515,62 +515,62 @@ SPApump	= *-SPAList	; SPApump frames by direction
 .6	dc.w	213,8,214,8,213,-8
 .7	dc.w	215,8,216,8,215,-8
 
-SPAfight	= *-SPAList	; SPAfight frames by direction
+SPAfight	= *-SPAList	; fight (93G $F8E)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	354,8,355,8,356,8,357,-6
 .3	dc.w	354,8,355,8,356,8,362,-6
 
-SPAfgrab	= *-SPAList	; SPAfgrab frames by direction
+SPAfgrab	= *-SPAList	; (93G $FC0)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	358,28,357,-4
 .3	dc.w	363,28,362,-4
 
-SPAfheld	= *-SPAList	; SPAfheld frames by direction
+SPAfheld	= *-SPAList	; (93G $FE2)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	358,30,357,-4
 .3	dc.w	363,30,362,-4
 
-SPAfhigh	= *-SPAList	; SPAfhigh frames by direction
+SPAfhigh	= *-SPAList	; (93G $1004)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	359,6,360,16,359,4,357,-16
 .3	dc.w	364,6,365,16,364,4,362,-16
 
-SPAflow	= *-SPAList	; SPAflow frames by direction
+SPAflow	= *-SPAList	; (93G $1036)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	359,6,361,16,359,4,357,-16
 .3	dc.w	364,6,366,16,364,4,362,-16
 
-SPAfhith	= *-SPAList	; SPAfhith frames by direction
+SPAfhith	= *-SPAList	; (93G $1068)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	368,16,357,-8
 .3	dc.w	368,16,362,-8
 
-SPAfhitl	= *-SPAList	; SPAfhitl frames by direction
+SPAfhitl	= *-SPAList	; (93G $108A)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	367,16,357,-8
 .3	dc.w	367,16,362,-8
 
-SPAffall	= *-SPAList	; SPAffall frames by direction
+SPAffall	= *-SPAList	; (93G $10AC)
 .t
 	dc.w	.0-.t,$8000,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	368,8,369,8,370,200,370,-2
 
-SPAwallright	= *-SPAList	; SPAwallright frames by direction
+SPAwallright	= *-SPAList	; (93G $1128)
 .t
 	dc.w	.0-.t,.1-.t,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
@@ -578,7 +578,7 @@ SPAwallright	= *-SPAList	; SPAwallright frames by direction
 .1	dc.w	377,8,378,8,379,8,380,-8
 .3	dc.w	380,8,379,8,378,8,377,-8
 
-SPAwallleft	= *-SPAList	; SPAwallleft frames by direction
+SPAwallleft	= *-SPAList	; (93G $1166)
 .t
 	dc.w	.0-.t,.1-.t,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0
@@ -586,27 +586,27 @@ SPAwallleft	= *-SPAList	; SPAwallleft frames by direction
 .1	dc.w	380,8,379,8,378,8,377,-8
 .3	dc.w	377,8,378,8,379,8,380,-8
 
-SPAfaceoff	= *-SPAList	; SPAfaceoff frames by direction
+SPAfaceoff	= *-SPAList	; faceoff pull (93G $11A4)
 .t
 	dc.w	.0-.t,.1-.t,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	1,2,258,10,257,-6
 .1	dc.w	21,2,266,10,265,-6
 
-SPAfaceoffr	= *-SPAList	; SPAfaceoffr frames by direction
+SPAfaceoffr	= *-SPAList	; faceoff ready (93G $11CE)
 .t
 	dc.w	.0-.t,.1-.t,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	1,-5
 .1	dc.w	21,-5
 
-SPAsiren	= *-SPAList	; SPAsiren frames by direction
+SPAsiren	= *-SPAList	; goal siren on the puck shadow (93G $11E8)
 .t
 	dc.w	.0-.t,$8000,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	1
 .0	dc.w	518,3,519,3,520,3,521,3,522,3,523,3,524,3,525,3,526,3,527,3,528,3,529,3,530,3,531,-3
 
-SPAstanley	= *-SPAList	; SPAstanley frames by direction
+SPAstanley	= *-SPAList	; (93G $1258)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -619,13 +619,13 @@ SPAstanley	= *-SPAList	; SPAstanley frames by direction
 .6	dc.w	223,-30
 .7	dc.w	224,-30
 
-SPAfinjury	= *-SPAList	; SPAfinjury frames by direction
+SPAfinjury	= *-SPAList	; fight injury (fight loser down) (93G $10CE)
 .t
 	dc.w	.0-.t,$8000,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	368,8,369,8,370,20,371,8,372,8,373,8,374,10,375,10,376,10,374,10,375,10,376,10,374,10,375,10,376,10,374,10,375,10,376,-400
 
-SPAflip	= *-SPAList	; SPAflip frames by direction
+SPAflip	= *-SPAList	; third fall animation (flip) (93G $1524)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -638,7 +638,7 @@ SPAflip	= *-SPAList	; SPAflip frames by direction
 .6	dc.w	562,6,563,6,564,6,565,6,299,100,300,8,343,-8
 .7	dc.w	558,6,559,6,560,6,561,6,303,100,304,8,344,-8
 
-SPAstumble	= *-SPAList	; SPAstumble frames by direction
+SPAstumble	= *-SPAList	; stumble instead of a fall (93G $13A0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -651,7 +651,7 @@ SPAstumble	= *-SPAList	; SPAstumble frames by direction
 .6	dc.w	584,6,585,6,586,8,585,6,584,-6
 .7	dc.w	587,6,588,6,589,8,588,6,587,-6
 
-SPAhook	= *-SPAList	; SPAhook frames by direction
+SPAhook	= *-SPAList	; hold/hook (Holdplayer, Acheck) (93G $12DC)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -664,7 +664,7 @@ SPAhook	= *-SPAList	; SPAhook frames by direction
 .6	dc.w	602,-30
 .7	dc.w	604,-30
 
-SPAhook2	= *-SPAList	; SPAhook2 frames by direction
+SPAhook2	= *-SPAList	; (93G $130E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -677,7 +677,7 @@ SPAhook2	= *-SPAList	; SPAhook2 frames by direction
 .6	dc.w	602,9,603,9,602,9,603,-9
 .7	dc.w	604,9,605,9,604,9,605,-9
 
-SPAcatch	= *-SPAList	; SPAcatch frames by direction
+SPAcatch	= *-SPAList	; player hit by a slow puck (93G $128A)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -690,13 +690,13 @@ SPAcatch	= *-SPAList	; SPAcatch frames by direction
 .6	dc.w	618,6,619,-6
 .7	dc.w	620,6,621,-6
 
-SPAbglass	= *-SPAList	; SPAbglass frames by direction
+SPAbglass	= *-SPAList	; the puck shadow over the glass (93G $1232)
 .t
 	dc.w	.0-.t,$8000,$8000,$8000,$8000,$8000,$8000,$8000
 	dc.w	0
 .0	dc.w	622,8,623,8,624,8,625,8,626,-1000
 
-SPAgdive	= *-SPAList	; SPAgdive frames by direction
+SPAgdive	= *-SPAList	; goalie dive (temp5 = 5 after a save) (93G $314)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -709,7 +709,7 @@ SPAgdive	= *-SPAList	; SPAgdive frames by direction
 .6	dc.w	655,8,656,48,655,-8
 .7	dc.w	657,8,658,48,657,-8
 
-SPAinjury1	= *-SPAList	; SPAinjury1 frames by direction
+SPAinjury1	= *-SPAList	; injured: no movement, no bounce (93G $1616)
 .t
 	dc.w	.0-.t,$8000,$8000,.3-.t,$8000,$8000,$8000,$8000
 	dc.w	0

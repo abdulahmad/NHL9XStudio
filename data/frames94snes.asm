@@ -306,7 +306,7 @@ SPAextra21	= *-SPAList	; SNES 94 sequence
 .5	dc.w	361,8,362,8,363,8,364,-8
 .6	dc.w	361,8,362,8,363,8,364,-8
 
-SPApflip	= *-SPAList	; SPApflip frames by direction
+SPApflip	= *-SPAList	; puck spin (93G $48A)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -319,7 +319,7 @@ SPApflip	= *-SPAList	; SPApflip frames by direction
 .6	dc.w	401,-4096
 .7	dc.w	401,-4096
 
-SPAglide	= *-SPAList	; SPAglide frames by direction
+SPAglide	= *-SPAList	; glide (93G $52C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -332,7 +332,7 @@ SPAglide	= *-SPAList	; SPAglide frames by direction
 .6	dc.w	31,-8
 .7	dc.w	36,-8
 
-SPAskatewp	= *-SPAList	; SPAskatewp frames by direction
+SPAskatewp	= *-SPAList	; (93G $55E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -345,7 +345,7 @@ SPAskatewp	= *-SPAList	; SPAskatewp frames by direction
 .6	dc.w	32,10,33,10,34,10,35,10,31,-15
 .7	dc.w	37,10,38,10,39,10,40,10,36,-15
 
-SPAskate	= *-SPAList	; SPAskate frames by direction
+SPAskate	= *-SPAList	; (93G $5F0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -384,7 +384,7 @@ SPAextra23	= *-SPAList	; SNES 94 sequence
 .6	dc.w	95,-12
 .7	dc.w	96,-12
 
-SPAstop	= *-SPAList	; SPAstop frames by direction
+SPAstop	= *-SPAList	; stop (93G $6E6)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	1
@@ -397,7 +397,7 @@ SPAstop	= *-SPAList	; SPAstop frames by direction
 .6	dc.w	157,4,158,-4
 .7	dc.w	159,4,160,-4
 
-SPApassf	= *-SPAList	; SPApassf frames by direction
+SPApassf	= *-SPAList	; (93G $738)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -410,7 +410,7 @@ SPApassf	= *-SPAList	; SPApassf frames by direction
 .6	dc.w	136,4,137,4,138,-20
 .7	dc.w	142,4,143,4,144,-20
 
-SPApassb	= *-SPAList	; SPApassb frames by direction
+SPApassb	= *-SPAList	; (93G $7AA)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -423,7 +423,7 @@ SPApassb	= *-SPAList	; SPApassb frames by direction
 .6	dc.w	136,4,135,4,134,-20
 .7	dc.w	142,4,141,4,140,-20
 
-SPAshotf	= *-SPAList	; SPAshotf frames by direction
+SPAshotf	= *-SPAList	; forehand shot (93G $81C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -436,7 +436,7 @@ SPAshotf	= *-SPAList	; SPAshotf frames by direction
 .6	dc.w	136,4,135,4,134,4,133,4,135,0,136,0,137,0,138,-20
 .7	dc.w	142,4,141,4,140,4,139,4,141,0,142,0,143,0,144,-20
 
-SPAshotb	= *-SPAList	; SPAshotb frames by direction
+SPAshotb	= *-SPAList	; backhand shot (93G $94E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -475,7 +475,7 @@ SPAextra25	= *-SPAList	; SNES 94 sequence
 .6	dc.w	138,55,137,2,136,2,135,2,134,-20
 .7	dc.w	144,55,143,2,142,2,141,2,140,-20
 
-SPAglideback	= *-SPAList	; SPAglideback frames by direction
+SPAglideback	= *-SPAList	; (93G $A80)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -514,7 +514,7 @@ SPAextra27	= *-SPAList	; SNES 94 sequence
 .6	dc.w	530,1,531,10,530,-8
 .7	dc.w	532,1,533,10,532,-8
 
-SPAsweepchk	= *-SPAList	; SPAsweepchk frames by direction
+SPAsweepchk	= *-SPAList	; sweep check (93G $B44)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -527,7 +527,7 @@ SPAsweepchk	= *-SPAList	; SPAsweepchk frames by direction
 .6	dc.w	277,4,278,8,277,-4
 .7	dc.w	279,4,280,8,279,-4
 
-SPAshoulderchkl	= *-SPAList	; SPAshoulderchkl frames by direction
+SPAshoulderchkl	= *-SPAList	; (93G $BB6)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -540,7 +540,7 @@ SPAshoulderchkl	= *-SPAList	; SPAshoulderchkl frames by direction
 .6	dc.w	255,-24
 .7	dc.w	256,-24
 
-SPAshoulderchkr	= *-SPAList	; SPAshoulderchkr frames by direction
+SPAshoulderchkr	= *-SPAList	; (93G $BE8)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -553,7 +553,7 @@ SPAshoulderchkr	= *-SPAList	; SPAshoulderchkr frames by direction
 .6	dc.w	263,-24
 .7	dc.w	264,-24
 
-SPAhipchkl	= *-SPAList	; SPAhipchkl frames by direction
+SPAhipchkl	= *-SPAList	; (93G $C1A)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -566,7 +566,7 @@ SPAhipchkl	= *-SPAList	; SPAhipchkl frames by direction
 .6	dc.w	239,-24
 .7	dc.w	240,-24
 
-SPAhipchkr	= *-SPAList	; SPAhipchkr frames by direction
+SPAhipchkr	= *-SPAList	; (93G $C4C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -579,7 +579,7 @@ SPAhipchkr	= *-SPAList	; SPAhipchkr frames by direction
 .6	dc.w	247,-24
 .7	dc.w	248,-24
 
-SPAburst	= *-SPAList	; SPAburst frames by direction
+SPAburst	= *-SPAList	; check button burst (93G $C7E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -592,7 +592,7 @@ SPAburst	= *-SPAList	; SPAburst frames by direction
 .6	dc.w	71,-24
 .7	dc.w	76,-24
 
-SPAHold	= *-SPAList	; SPAHold frames by direction
+SPAHold	= *-SPAList	; hold (93G $CB0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -644,7 +644,7 @@ SPAextra30	= *-SPAList	; SNES 94 sequence
 .6	dc.w	71,-90
 .7	dc.w	76,-90
 
-SPAfallback	= *-SPAList	; SPAfallback frames by direction
+SPAfallback	= *-SPAList	; (93G $DF8)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
