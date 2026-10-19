@@ -19,6 +19,11 @@ const { parseFrames } = require('../lib/parse-frames');
 const SRC93 = process.env.SNES93 || '/tmp/snes/93';
 const ROM94 = process.env.SNES94_ROM || '/tmp/snes/94/lst/nhl94snes.sfc';
 const OUT = path.join(__dirname, '..', 'data');
+// NHL 94 SNES sequences named by hand (see docs/AGENT-HANDOFF.md): generated name -> [name, comment].
+const KNOWN94 = {
+  SPAextra42: ['SPAcelebrate', 'On-ice celebrate (93 SNES SPAcelebrate vblank list; was SPAextra42)'],
+  SPAextra43: ['SPApump', 'Scorer pump (93 SNES SPApump vblank list; was SPAextra43)'],
+};
 
 function splitCode(line) {
   const idx = line.indexOf(';');
@@ -263,6 +268,9 @@ function main() {
       matched += 1;
       extra -= 1;
     }
+    // Sequences that no longer match by vblank list but are known by hand (the 93 SNES list differs in one time).
+    const known = KNOWN94[name];
+    if (known) { comment = known[1]; name = known[0]; }
     anims94.push({
       name,
       comment,
