@@ -240,6 +240,10 @@
       }
       // NHLPA 93: the raw PCM files, a collapsible list like NHL 92's DAC samples.
       if (game === 'nhlpa93' && INST() && INST().ready) out.push(...INST().entries());
+      // NHLPA 93: the crowd noise, generated from updatesound (PSG white noise; the game has no crowd stream or sample).
+      if (game === 'nhlpa93' && CROWD()) {
+        for (const l of CROWD().LEVELS.concat([CROWD().OFF])) out.push({ id: 'crowd-' + l.n, group: 'Crowd noise', label: l.name, sub: crowdSub(l) });
+      }
       return out;
     }
     // Tools first, so the sequencer and the MIDI import are the first thing in the list.
@@ -286,8 +290,19 @@
     return m[1] === 'inst' ? 'Instrument $' + n.toString(16).toUpperCase().padStart(2, '0') : 'Sample ' + m[2] + ' $' + n.toString(16).toUpperCase().padStart(2, '0');
   }
 
+  const CROWD = () => root.Nhl93Crowd;
+  const isCrowd = (id) => game === 'nhlpa93' && !!CROWD() && /^crowd-\d+$/.test(id);
+  const crowdLevel = (id) => { const n = Number(id.split('-')[1]); return n ? CROWD().LEVELS[n - 1] : CROWD().OFF; };
+  const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
+  function crowdSub(l) {
+    if (!l.n) return 'KillCrowd: PSG noise attenuation $F (off) · generated, not extracted';
+    const r = l.crowdlevel;
+    return 'PSG write ' + hex2(l.write) + ' (attenuation ' + l.att + ', -' + 2 * l.att + ' dB), Crowdlevel ' + r[0] + (r[1] == null ? '+' : '-' + r[1]) + ' · generated from updatesound, not extracted';
+  }
+
   function title(id) {
     if (isTool(id)) return toolName(id);
+    if (isCrowd(id)) return crowdLevel(id).name + ' · crowd noise (generated)';
     if (isInst(id)) return INST().title(id);
     if (isSnes()) {
       if (isSnes93() && snesApi().isPart(id)) return snesPartTitle(id);
@@ -663,6 +678,11 @@
   }
 
   function toggle(id) {
+    if (isCrowd(id)) {
+      if (gmPlay && gmPlay.id === id) { stopBuffer(); status(true); if (onChange) onChange(); return Promise.resolve(); }
+      if (INST()) INST().stop();
+      return playBuffer(id, CROWD().render(crowdLevel(id).att, 6, 44100), 44100);
+    }
     if (isInst(id)) {
       stop();
       stopBuffer();
@@ -1782,6 +1802,13 @@
       ];
     }
     if (isInst(id)) return INST().metaRows(id);
+    if (isCrowd(id)) {
+      const l = crowdLevel(id);
+      return [['Sound', l.name], ['Kind', 'generated, not extracted: the 68k writes the PSG noise channel directly'],
+        ['PSG writes', l.n ? '$C8 $01 (tone 2 period $18), ' + hex2(l.write) : '$E7 (white noise, rate = tone 2), $DF, $C8 $01, $FF'],
+        ['Noise', 'white, 16-bit LFSR, ' + CROWD().SHIFT_HZ.toFixed(0) + ' Hz shift rate'],
+        ['Source', l.n ? 'NHLPA93Genesis src/video93.asm:918-943 updatesound' : 'NHLPA93Genesis src/video93.asm:945-951 KillCrowd']];
+    }
     if (isTool(id)) {
       if (isNx()) {
         return id === TOOL_IMPORT
