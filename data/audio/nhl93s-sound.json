@@ -121,6 +121,24 @@
  ],
  "sfx": [
   {
+   "id": 128,
+   "names": [
+    {
+     "name": "crowd",
+     "note": "+1-7: crowd noise level, loops (updatesound)"
+    }
+   ]
+  },
+  {
+   "id": 136,
+   "names": [
+    {
+     "name": "crowdoff",
+     "note": "crowd noise off"
+    }
+   ]
+  },
+  {
    "id": 137,
    "names": [
     {
@@ -201,6 +219,15 @@
    ]
   },
   {
+   "id": 145,
+   "names": [
+    {
+     "name": "check2",
+     "note": "second check sound (93 $1D); the puck body sound has the same two"
+    }
+   ]
+  },
+  {
    "id": 146,
    "names": [
     {
@@ -237,11 +264,56 @@
    ]
   },
   {
+   "id": 150,
+   "names": [
+    {
+     "name": "puckwall2",
+     "note": "puck off the boards, variant 2 (SFXpuckwall1+1)"
+    }
+   ]
+  },
+  {
+   "id": 151,
+   "names": [
+    {
+     "name": "puckwall3",
+     "note": "variant 3 (SFXpuckwall1+2)"
+    }
+   ]
+  },
+  {
    "id": 152,
    "names": [
     {
      "name": "shotwiff",
      "note": "+0-3: missed shot (doshot)"
+    }
+   ]
+  },
+  {
+   "id": 153,
+   "names": [
+    {
+     "name": "shotwiff2",
+     "note": "missed shot, variant 2 (SFXshotwiff+1)"
+    }
+   ]
+  },
+  {
+   "id": 154,
+   "names": [
+    {
+     "name": "shotwiff3",
+     "note": "variant 3"
+    }
+   ]
+  },
+  {
+   "id": 155,
+   "names": [
+    {
+     "name": "shotwiff4",
+     "note": "variant 4"
     }
    ]
   },
@@ -255,6 +327,15 @@
    ]
   },
   {
+   "id": 157,
+   "names": [
+    {
+     "name": "stop2",
+     "note": "skate stop, second sound (SFXstop+1)"
+    }
+   ]
+  },
+  {
    "id": 158,
    "names": [
     {
@@ -264,11 +345,29 @@
    ]
   },
   {
+   "id": 159,
+   "names": [
+    {
+     "name": "playerwall2",
+     "note": "player hits the boards, second sound (SFXplayerwall+1)"
+    }
+   ]
+  },
+  {
    "id": 160,
    "names": [
     {
      "name": "siren",
      "note": "goal siren"
+    }
+   ]
+  },
+  {
+   "id": 161,
+   "names": [
+    {
+     "name": "horn",
+     "note": "horn at the end of a period (93G SFXhorn); nothing in the code sends it"
     }
    ]
   }

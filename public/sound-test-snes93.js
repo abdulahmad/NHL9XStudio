@@ -27,6 +27,21 @@
     SngPP: 'Power play song (unused)', SngFaceoff: 'Face-off song, once per period', SngTitle: 'Title song, also the game menu',
     SngEOP: 'End of Period song (unused)', SngEOG: 'End of Game song (unused)', SngPO: 'Playoffs music'
   };
+  /** The 93G sound a 93S effect name corresponds to ('93G $1C check1'), or ''. */
+  const TWIN_93G = {
+    whistle: 'whistle', crowdcheer: 'crowdcheer', crowdboo: 'crowdboo', oooh2: 'oooh2', bglass: 'bglass', shotfh: 'shotfh1', shotbh: 'shotbh1', shothard: 'shotfh1',
+    puckbody: 'puckbody', check: 'check1', check2: 'check2', hithigh: 'hithigh', hitlow: 'hitlow', puckpost: 'puckpost', puckwall1: 'puckwall1', puckwall2: 'puckwall2',
+    puckwall3: 'puckwall3', shotwiff: 'shotwiff', shotwiff2: 'shotwiff', shotwiff3: 'shotwiff', shotwiff4: 'shotwiff', stop: 'beep1', stop2: 'beep2',
+    playerwall: 'playerwall', playerwall2: 'playerwall2', siren: 'siren', horn: 'horn'
+  };
+  function twin93g(name) {
+    const N = root.Nhl93Names;
+    if (!name || !N) return '';
+    const first = String(name).split(' / ')[0];
+    const label = TWIN_93G[first];
+    const id = label ? N.SFX.findIndex((e) => e[0] === label) : -1;
+    return id < 0 ? '' : '93G $' + id.toString(16).toUpperCase() + ' ' + label;
+  }
   const CAT = () => root.NhlAudioCategories.CATEGORY;
   const hex2 = (n) => '$' + n.toString(16).toUpperCase().padStart(2, '0');
   const setOfInstrument = (n) => (n <= 9 ? 'boot' : 'game');
@@ -36,13 +51,13 @@
   function entries(data) {
     const out = [];
     // One song list, sorted by song number: the title and menu songs are in it with the game ones.
-    const songs = data.cueList.slice().sort((a, b) => a.song - b.song);
+    const songs = data.cueList.slice().sort((a, b) => a.cue - b.cue);
     for (const c of songs) {
       out.push({
         id: 'song-' + c.cue,
         group: CAT().songs,
-        label: c.song + ' · ' + c.name,
-        sub: (SONG_DESCRIPTIONS[c.name] || c.note) + ' · cue ' + hex2(c.cue) + ' · ' + c.set + ' samples'
+        label: c.cue + ' · ' + c.name,
+        sub: (SONG_DESCRIPTIONS[c.name] || c.note) + ' · ' + c.set + ' samples'
       });
     }
     for (let level = 1; level <= 7; level++) {
@@ -50,8 +65,12 @@
     }
     for (const id of data.effectIds) {
       if (id <= 0x87) continue;
-      const name = id === 0x88 ? 'crowdoff' : data.effectName(id);
-      out.push({ id: 'sound-game-' + id, group: CAT().sfx, label: hex2(id) + (name ? ' · ' + name : ''), sub: (id === 0x88 ? 'crowd noise off' : 'cue ' + hex2(id)) + (data.effect(id).loops ? ' · loops until Stop' : '') });
+      const name = data.effectName(id);
+      const twin = twin93g(name);
+      out.push({
+        id: 'sound-game-' + id, group: CAT().sfx, label: hex2(id) + (name ? ' · ' + name : ''),
+        sub: [id === 0x88 ? 'crowd noise off' : null, twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
+      });
     }
     for (const set of ['boot', 'game']) {
       data.samples(set).forEach((e) => {
@@ -67,10 +86,22 @@
       out.push({
         id: 'snes-inst-' + i.index, group: CAT().instruments, collapsible: true,
         label: hex2(i.index),
-        sub: setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + ' · ADSR ' + hex2(i.adsr1).slice(1) + ' ' + hex2(i.adsr2).slice(1) + ' · gain ' + hex2(i.gain).slice(1)
+        sub: setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + (gmOf(data, i.index) ? ' · ' + gmOf(data, i.index).text : '')
       });
     }
     return out;
+  }
+
+  /** The GM instrument an instrument is mapped to (data/audio/nhl93s-gm-map.json): { text, why, confidence, runnerUp } or null. */
+  function gmOf(data, inst) {
+    const map = data && data.gmMap;
+    const GM = root.Nhl92GmMap;
+    if (!map || !GM || inst == null) return null;
+    const set = setOfInstrument(inst);
+    const row = map.sets && map.sets[set] && map.sets[set][inst];
+    if (!row) return null;
+    const name = (r) => (r.drum != null ? 'GM drum ' + r.drum + ' (' + GM.drumName(r.drum) + ')' : 'GM program ' + r.program + ' (' + GM.PROGRAM_NAMES[r.program] + ')');
+    return { text: name(row), why: row.why, confidence: row.confidence, runnerUp: row.runnerUp ? name(row.runnerUp) : '' };
   }
 
   /** The instrument an Instruments or Samples row plays: a samples row plays the first instrument that uses it. */
@@ -247,6 +278,7 @@
     entries,
     isPart,
     partInstrument,
+    gmOf,
     probeSong,
     setOfInstrument,
     passInfo,

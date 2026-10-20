@@ -117,16 +117,21 @@ function main() {
   // cue numbers: what each StartSng* routine sends the sound program. The song names are the Sng* equates of ram93s.asm
   // (92 and 93G names: SngGoal, SngEOP, ...); songs 1-5 start through MusicCue, 6-9 write APUIO0 directly.
   const names = { 1: 'SngGoal', 2: 'SngPeriodStart', 3: 'SngLateGame', 4: 'SngPP', 5: 'SngFaceoff', 6: 'SngTitle', 7: 'SngEOP', 8: 'SngEOG', 9: 'SngPO' };
+  // the cue of each song is its Sng* equate in ram93s.asm; the starter must send exactly that
+  const ramText = fs.readFileSync(path.join(dir, 'src', 'ram93s.asm'), 'utf8');
   const cueOf = {};
   for (let n = 1; n <= 9; n++) {
-    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'Start' + names[n] + '.asm'), 'utf8');
-    const m = /lda\.[bw] #\$0*([0-9A-F]+)[ \t]*(?:;[^\n]*)?(?:\r?\n\s*jsl\.l MusicCue|\r?\n\s*sta\.w APUIO0)/.exec(text)
-      || /sep #\$20\s*(?:;[^\n]*)?\r?\n\s*lda\.b #\$0*([0-9A-F]+)\s*\r?\n\s*sta\.w APUIO0/.exec(text);
-    if (!m) throw new Error('Start' + names[n] + '.asm: cue number not found');
-    cueOf[n] = hex(m[1]);
+    const name = names[n];
+    const eq = new RegExp('^' + name + '\\s*=\\s*(\\d+)', 'm').exec(ramText);
+    if (!eq) throw new Error(name + ' is not an equate in ram93s.asm');
+    const text = fs.readFileSync(path.join(dir, 'src', 'routines', 'sound', 'Start' + name + '.asm'), 'utf8');
+    const sends = new RegExp('lda\\.[bw] #' + name + '\\b[ \\t]*(?:;[^\\n]*)?(?:\\r?\\n\\s*jsl\\.l MusicCue|\\r?\\n\\s*sta\\.w APUIO0)').test(text)
+      || new RegExp('lda\\.b #' + name + '\\s*\\r?\\n\\s*sta\\.w APUIO0').test(text);
+    if (!sends) throw new Error('Start' + name + '.asm does not send ' + name);
+    cueOf[n] = Number(eq[1]);
   }
   const expectCue = { 1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 3, 7: 2, 8: 9, 9: 1 };
-  for (const n of Object.keys(expectCue)) if (cueOf[n] !== expectCue[n]) throw new Error('Start' + names[n] + ' sends cue ' + cueOf[n] + ', expected ' + expectCue[n]);
+  for (const n of Object.keys(expectCue)) if (cueOf[n] !== expectCue[n]) throw new Error(names[n] + ' is cue ' + cueOf[n] + ', expected ' + expectCue[n]);
   const cues = [];
   for (let n = 1; n <= 9; n++) {
     const song = Number(Object.keys(cueOf).find((k) => cueOf[k] === n));
