@@ -426,7 +426,7 @@ assert.ok(snes93game.images.some((image) => image.id === 'faceoff'));
 assert.ok(snes93game.images.some((image) => image.id === 'refs'));
 assert.ok(GAMES.some((game) => game.id === 'nhl94snes' && game.kind === 'snes94' && game.jerseyRow === 4));
 const snes94images = GAMES.find((game) => game.id === 'nhl94snes').images.map((image) => image.id);
-for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'menufont', 'icefont', 'cards']) {
+for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'faceoff', 'teamblocks', 'easn', 'refs', 'refs2', 'bigfont', 'smallfont', 'faceoffsprites', 'zam', 'cards']) {
   assert.ok(snes94images.includes(id), id);
 }
 
@@ -735,12 +735,20 @@ if (retail94) {
   const windowFrame = openImage(retail94, game.images.find((image) => image.id === 'window'), game.snes, null);
   assert.strictEqual(windowFrame.renderFrame(1).width, 240);
   assert.strictEqual(windowFrame.renderFrame(1).height, 96);
-  const menuFont = openImage(retail94, game.images.find((image) => image.id === 'menufont'), game.snes, null);
-  assert.strictEqual(menuFont.renderFrame(1).width, 128);
-  assert.ok(inkCount(menuFont.renderFrame(1)) > 200);
-  const iceFont = openImage(retail94, game.images.find((image) => image.id === 'icefont'), game.snes, null);
-  assert.strictEqual(iceFont.renderFrame(1).width, 128);
-  assert.ok(inkCount(iceFont.renderFrame(1)) > 50);
+  const smallFont = openImage(retail94, game.images.find((image) => image.id === 'smallfont'), game.snes, null);
+  assert.strictEqual(smallFont.renderFrame(1).width, 256);
+  assert.ok(inkCount(smallFont.renderFrame(1)) > 200);
+  const bigFont = openImage(retail94, game.images.find((image) => image.id === 'bigfont'), game.snes, null);
+  assert.strictEqual(bigFont.renderFrame(1).width, 608);
+  assert.ok(inkCount(bigFont.renderFrame(1)) > 50);
+  // The pictures that use the game's own unpacked maps (the same maps as NHLPA 93).
+  const faceoff94 = openImage(retail94, game.images.find((image) => image.id === 'faceoff'), game.snes, null);
+  assert.strictEqual(faceoff94.renderFrame(1).width, 96);
+  assert.strictEqual(faceoff94.renderFrame(1).height, 80);
+  assert.ok(inkCount(faceoff94.renderFrame(1)) > 200);
+  assert.strictEqual(openImage(retail94, game.images.find((image) => image.id === 'refs'), game.snes, null).numFrames, 7);
+  assert.strictEqual(openImage(retail94, game.images.find((image) => image.id === 'refs2'), game.snes, null).numFrames, 17);
+  assert.strictEqual(openImage(retail94, game.images.find((image) => image.id === 'easn'), game.snes, null).renderFrame(1).width, 56);
   assert.strictEqual(small.numFrames, 37);
   const center = openImage(retail94, game.images.find((image) => image.id === 'center'), game.snes, null);
   assert.strictEqual(center.numFrames, 28);
