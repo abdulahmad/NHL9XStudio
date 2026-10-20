@@ -136,8 +136,9 @@
     const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
     // NHLPA 93: the 93 labels and ram93 equates, lined up with the NHL 92 names (lib/audio/nhl93-names.js).
-    const N93 = c.short === '93' && root.Nhl93Names ? root.Nhl93Names : null;
-    const songRec = (e) => (N93 ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
+    // NHL 94 Genesis shares the 93 effect table (sounds $00-$2F), and names its three shared songs by their equates.
+    const N93 = (c.short === '93' || c.short === '94') && root.Nhl93Names ? root.Nhl93Names : null;
+    const songRec = (e) => (N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
     const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
     return {
       rom: image,

@@ -2022,6 +2022,14 @@ async function ensureRom() {
 async function ensureRink() {
   if (!gameInfo || gameInfo.paletteKind !== 'snes') return null;
   if (rinkColors.has(gameInfo.id)) return rinkColors.get(gameInfo.id);
+  // NHL 94 SNES has its own rink palette in the ROM; the bundled Rink.snespal is NHLPA 93's.
+  if (gameInfo.snes && gameInfo.snes.rinkPalette) {
+    const rom = await ensureRom();
+    if (!rom) return null;
+    const own = Nhl92Snes.romRinkPalette(rom, gameInfo.snes.rinkPalette);
+    rinkColors.set(gameInfo.id, own);
+    return own;
+  }
   // The local server has an API; GitHub Pages serves the bundled copy (data/pals/snes/Rink.snespal).
   const response = await fetch(resolveUrl(useApi
     ? '/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent('Rink.snespal')
