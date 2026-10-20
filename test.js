@@ -421,7 +421,7 @@ for (const bank of nhl92.banks) {
 assert.ok(nhl92.images.some((image) => image.kind === 'jim'));
 assert.ok(GAMES.some((game) => game.id === 'nhlpa93snes' && game.kind === 'snes93'));
 const snes93game = GAMES.find((game) => game.id === 'nhlpa93snes');
-assert.strictEqual(snes93game.images.length, 15);
+assert.strictEqual(snes93game.images.length, 20);
 assert.ok(snes93game.images.some((image) => image.id === 'faceoff'));
 assert.ok(snes93game.images.some((image) => image.id === 'refs'));
 assert.ok(GAMES.some((game) => game.id === 'nhl94snes' && game.kind === 'snes94' && game.jerseyRow === 4));

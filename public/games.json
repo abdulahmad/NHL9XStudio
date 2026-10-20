@@ -5378,10 +5378,11 @@
         "rawTiles": true,
         "remap": [
           0,
-          3,
+          6,
           4,
-          3
+          6
         ],
+        "clear": true,
         "fileNames": [
           "Framer.chr",
           "Framer.smap"
@@ -5401,6 +5402,32 @@
         "fileNames": [
           "FaceOff.chr.pak",
           "FaceOff.smap"
+        ]
+      },
+      {
+        "id": "energybar",
+        "label": "Energy Bar",
+        "group": "Screens",
+        "kind": "snes93-tiles",
+        "tilesStart": 116440,
+        "tilesEnd": 117772,
+        "tileList": [
+          96,
+          97,
+          98
+        ],
+        "row": 4,
+        "remap": [
+          4,
+          3,
+          4,
+          3,
+          2,
+          1,
+          4
+        ],
+        "fileNames": [
+          "SmallFont.chr.pak (tiles $60-$62)"
         ]
       },
       {
@@ -5434,6 +5461,22 @@
         "fileNames": [
           "PlayoffTiles.chr.pak",
           "Arrows.smap"
+        ]
+      },
+      {
+        "id": "easn",
+        "label": "EASN",
+        "group": "Screens",
+        "kind": "snes93-map",
+        "mapStart": 492109,
+        "mapSize": 28,
+        "mapW": 7,
+        "mapH": 2,
+        "tilesStart": 160646,
+        "tilesEnd": 161074,
+        "fileNames": [
+          "RinkLogoTiles.chr.pak",
+          "EASN.smap"
         ]
       },
       {
@@ -5590,6 +5633,40 @@
         "fileNames": [
           "SmallFont.chr.pak",
           "SmallFont.smap"
+        ]
+      },
+      {
+        "id": "crowd",
+        "label": "Crowd",
+        "group": "Sprites",
+        "kind": "snes93-sprites",
+        "first": 659,
+        "last": 720,
+        "fileNames": [
+          "Sprites659_720.sanim"
+        ]
+      },
+      {
+        "id": "faceoffsprites",
+        "label": "Face Off sprites",
+        "group": "Sprites",
+        "kind": "snes93-sprites",
+        "first": 532,
+        "last": 541,
+        "teamPalette": true,
+        "fileNames": [
+          "Sprites532_605.sanim (frames 532-541)"
+        ]
+      },
+      {
+        "id": "zam",
+        "label": "Zamboni",
+        "group": "Sprites",
+        "kind": "snes93-sprites",
+        "first": 557,
+        "last": 557,
+        "fileNames": [
+          "Sprites532_605.sanim (frame 557)"
         ]
       }
     ],

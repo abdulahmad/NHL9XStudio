@@ -1399,6 +1399,28 @@
     }, 250);
   }
 
+  /** Detail of an NHLPA 93 SNES Samples or Instruments row (the play button and the volume are added by renderPanel). */
+  function snesPartDetail(box, id) {
+    const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
+    const inst = snesApi().partInstrument(snesData, id);
+    const isInstrument = id.startsWith('snes-inst-');
+    box.appendChild(make('p', 'st-kind', isInstrument ? 'NHLPA 93 (SNES) instrument' : 'NHLPA 93 (SNES) sample'));
+    box.appendChild(make('h3', null, title(id)));
+    if (isInstrument) {
+      const e = snesData.instruments[inst];
+      box.appendChild(make('p', 'st-note mono', snesApi().setOfInstrument(inst) + ' set · sample ' + hex2(e.sample) + ' · ADSR ' + hex2(e.adsr1) + ' ' + hex2(e.adsr2) + ' · gain ' + hex2(e.gain) + ' · pitch $' + e.pitch.toString(16).toUpperCase().padStart(4, '0')));
+    } else {
+      const m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
+      const e = snesData.samples(m[1])[Number(m[2])];
+      box.appendChild(make('p', 'st-note mono', m[1] + ' set · BRR ' + e.length + ' bytes (' + Math.round(e.length / 9) + ' blocks)' + (e.loops ? ' · loops' : '') + (inst == null ? ' · no instrument uses it, so it cannot be played' : ' · played through instrument ' + hex2(inst))));
+    }
+    const gm = snesApi().gmOf(snesData, inst);
+    if (gm) {
+      box.appendChild(make('p', 'st-note', 'Maps to ' + gm.text + ' (' + gm.confidence + ' confidence)' + (gm.runnerUp ? ' · runner-up ' + gm.runnerUp : '') + '. ' + gm.why));
+    }
+    box.appendChild(make('p', 'st-note', 'One note of the instrument on the game\'s own sound program, at the key the retail songs use it at. Space plays or stops.'));
+  }
+
   function renderPanel(box, id) {
     panel = box;
     if (roll) roll.destroy();
@@ -1416,22 +1438,6 @@
       INST().renderPanel(box, id);
       return;
     }
-    if (isSnes93() && snesApi().isPart(id)) {
-      const inst = snesApi().partInstrument(snesData, id);
-      box.appendChild(make('p', 'st-kind', id.startsWith('snes-inst-') ? 'NHLPA 93 (SNES) instrument' : 'NHLPA 93 (SNES) sample'));
-      box.appendChild(make('h3', null, title(id)));
-      if (id.startsWith('snes-inst-')) {
-        const e = snesData.instruments[inst];
-        box.appendChild(make('p', 'st-note mono', snesApi().setOfInstrument(inst) + ' set · sample $' + e.sample.toString(16).toUpperCase().padStart(2, '0') + ' · ADSR $' + e.adsr1.toString(16).toUpperCase().padStart(2, '0') + ' $' + e.adsr2.toString(16).toUpperCase().padStart(2, '0') + ' · gain $' + e.gain.toString(16).toUpperCase().padStart(2, '0') + ' · pitch $' + e.pitch.toString(16).toUpperCase().padStart(4, '0')));
-      } else {
-        const m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
-        const e = snesData.samples(m[1])[Number(m[2])];
-        box.appendChild(make('p', 'st-note mono', m[1] + ' set · BRR ' + e.length + ' bytes (' + Math.round(e.length / 9) + ' blocks)' + (e.loops ? ' · loops' : '') + (inst == null ? ' · no instrument uses it, so it cannot be played' : ' · played through instrument $' + inst.toString(16).toUpperCase().padStart(2, '0'))));
-      }
-      box.appendChild(make('p', 'st-note', 'One note of the instrument on the game\'s own sound program, at the key the retail songs use it at. Space plays or stops.'));
-      status(true);
-      return;
-    }
     if (isTool(id) && isSnes()) {
       if (id === TOOL_EDITOR) root.NhlSoundToolsSnes.render(box, id, host());
       else renderSnesImport(box, id);
@@ -1443,7 +1449,9 @@
       return;
     }
     const n = Number(id.split('-')[1]);
-    if (isSnes93()) {
+    if (isSnes93() && snesApi().isPart(id)) {
+      snesPartDetail(box, id);
+    } else if (isSnes93()) {
       const cue = Number(id.split('-').pop());
       if (id.startsWith('song-')) {
         const info = snesApi().songInfo(snesData, cue);

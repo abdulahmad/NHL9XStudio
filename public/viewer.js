@@ -2022,7 +2022,10 @@ async function ensureRom() {
 async function ensureRink() {
   if (!gameInfo || gameInfo.paletteKind !== 'snes') return null;
   if (rinkColors.has(gameInfo.id)) return rinkColors.get(gameInfo.id);
-  const response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent('Rink.snespal')));
+  // The local server has an API; GitHub Pages serves the bundled copy (data/pals/snes/Rink.snespal).
+  const response = await fetch(resolveUrl(useApi
+    ? '/api/games/' + gameInfo.id + '/palettes/' + encodeURIComponent('Rink.snespal')
+    : '/data/pals/' + (gameInfo.paletteDir || 'snes') + '/Rink.snespal'));
   if (!response.ok) return null;
   const colors = Nhl92Snes.decodeRinkPalette(await response.arrayBuffer());
   rinkColors.set(gameInfo.id, colors);
@@ -2163,7 +2166,22 @@ async function ensureImage(id) {
   } else if (image.kind && image.kind.indexOf('snes') === 0) {
     const rom = await ensureRom();
     if (!rom) return null;
-    parsed = Nhl92Snes.openImage(rom, image, gameInfo.snes, await ensureRink());
+    if (image.kind === 'snes93-sprites') {
+      // A run of frames of the player sprite sets, listed as pictures (NHL 93 Genesis lists FaceOff.anim, Zam.anim, Crowd.anim).
+      const sprites = await ensureBank('sprites');
+      if (!sprites) return null;
+      const count = image.last - image.first + 1;
+      parsed = {
+        numFrames: count,
+        combined: sprites.combined,
+        renderFrame: (n) => {
+          const frame = n >= 1 && n <= count ? sprites.renderFrame(image.first + n - 1) : null;
+          return frame ? Object.assign({}, frame, { frame: n, index: n - 1 }) : null;
+        }
+      };
+    } else {
+      parsed = Nhl92Snes.openImage(rom, image, gameInfo.snes, await ensureRink());
+    }
   } else {
     return null;
   }
