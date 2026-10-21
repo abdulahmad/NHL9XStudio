@@ -1273,6 +1273,7 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl93s-sample-match');
   require('./test/nhl93s-player');
   require('./test/nhl93s-midi');
+  require('./test/pc-audio-kms');
   require('./test/snes-gm-map');
   require('./test/snes-gm-analysis');
   require('./test/snes-sfx-midi');

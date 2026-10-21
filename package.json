@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/abdulahmad/NHL9XStudio#readme",
   "dependencies": {
-    "@dcorp80/z80cpu": "^0.2.1"
+    "@dcorp80/z80cpu": "^0.2.1",
+    "opl3": "^0.4.3"
   }
 }
