@@ -11,18 +11,20 @@ The Sound test runs NHL95Genesis `sound95.asm`: command-based driver (`SoundCmd`
 
 Retail ROM SHA-1: `09e87b076aa4cd6f057a1d65bb50fd889b509b44`. Refresh the slice with `node tools/extract-nhl9x-sound-fixture.js 95`.
 
-## Sequencer / MIDI (blocked)
+## Songs: table and format (lib/audio/nhl95-seq.js)
 
-NHLPA 93 and NHL 94 Genesis use **68k event streams** (`ProcessOneMusicTrack` in `sound93.asm` / `sound94.asm`): four-byte events, a long song table, and `lib/audio/nhl9x-stream.js` for edit, GM import/export, and `romWithSong`. The Sound test exposes **Sequencer** and **MIDI import** for those titles.
+An earlier note here said 95 has no song table. It has one: **the songs are bank items of type 3 in `SoundBanks` (`$D8EC`)**, found by `SndFindBankItem`. The bank is a word item count, then 4 bytes per item (type, id, size word), then the items back to back in that order, so an item's address is the bank + 2 + 4 × count + the sizes of the items before it. Bank 0 has 141 items: 43 patches (type 0), 24 samples (1), 72 songs (3) and 2 load lists (`$B`). Songs 0–3 are the menu songs (`StartSong`), `$32`–`$55` the team and arena songs (`sfxplay`), and the effects are songs too (`SfxTable` gives the song id of each effect). `ProcessOneMusicTrack` is a dead 94 leftover; the 95 sequencer is `SndUpdate` on the 68k.
 
-NHL 95 is different:
+Sequence format (`SndStartSeq`, `SndUpdate`): word N, N word loop markers (offsets from the data after the table), then delay, event, delay, event … The first delay is skipped. A delay is 1 byte, or 2 when bit 7 of the first is set (`(b & $7F) << 7 | next`). Events use MIDI status bytes with running status: `$9c` key, velocity, length (like a delay; the 68k keys the note off after that many ticks), `$Bc` controller, value (controller `$75` jumps to marker [value] at once), `$Cc` program (a patch id), `$Ec` one pitch-bend byte, `$FF` end; other statuses have no data. One tick per vblank at the retail tempo `$100`.
 
-| Piece | 93G / 94G | 95G (`sound95.asm`) |
-| --- | --- | --- |
-| Arena / team music | Event streams in the sound slice (`nhl9x-song.js` table at `$2870A` / `$2C648`) | `fmtune_id_*_cmdstream` blobs; `song()` routes **$32–$55** through `sfxplay`, not the 93/94 table |
-| Title / menu songs | Same stream driver | Songs **0–3** via `StartSong` → `SndStartSeq` (sound-bank type 3), not the 93/94 stream table |
-| UI | `nhl9x-stream.js` + `sound-tools-nx.js` | Deliberately excluded (`game !== 'nhl95'` in `sound-test-view.js`) |
+`lib/audio/nhl95-seq.js` reads the table (`items`, `songs`), parses and re-encodes every retail song byte for byte (`parse`, `encodeRaw`), converts to a model (notes, controllers, programs, bends; 16 channels; `fromRom`, `encode`) and builds a ROM copy that plays an edited song (`romWithSong`): bank 0 stays as it is except the type byte of the replaced item, and bank 1, after the image, holds the new song; `nhl95-68k-harness.js` sets it at boot (`opts.banks`). `test/nhl95-seq.js`: all 72 songs round-trip byte-exact, the model round-trips, and songs 0 and `$33` from the model, played from the copy, make the same YM2612 writes as retail; an edit changes them.
 
-`ProcessOneMusicTrack` still exists in 95 (and adds command `$3x`), but the bundled slice has **no pinned long song table** like 94’s `$2C648`, and retail team songs are **cmdstreams** referenced from `SfxTable` / the sound bank. Wiring 93/94’s sequencer would not be retail-accurate without a new **95 stream table** (from `NHL95Genesis` segmap + slice layout) or a **cmdstream encoder** (closer to NHL 92’s `nhl92-song.js`).
+Playback in the chain was silent before PR #119 (the Z80 was reset after the boot and lost its patches). The patches come from load list 0 (menus) or 1 (in game), and the harness loads the one a sound needs.
 
-**Next steps when unblocked:** locate or document the 95 song-pointer table (if any) for event streams; otherwise port cmdstream encode/decode for `$32–$55` and hook `nhl95-68k-harness.js` playback of edited ROM copies.
+## Sequencer / MIDI UI (still open)
+
+The Sound test still hides the Sequencer and MIDI import for 95 (`game !== 'nhl95'` in `sound-test-view.js`). What is missing for 93/94 parity:
+
+- A GM map for the 95 patches. `data/audio/nhl9x-gm-map.json` covers the 93/94 patch set; 95 has its own 43 bank patches, uploaded per load list. MIDI import needs it to choose patches, MIDI export to name programs.
+- `sound-tools-nx.js` and `nhl9x-stream.js` assume the 93/94 model (8 channels, CC7 only, signed 14-bit bends, `Nhl9xSong` timing). 95 needs its own branch there: `Nhl95Seq` for fromStream / encode / romWithSong, 16 channels, the raw bend byte and the other controllers, and the host playing `romWithSong(...).banks` through the harness.
+- Songs 0–3 use load list 0 and the rest list 1, so a new song has to say which patch set it is for.
