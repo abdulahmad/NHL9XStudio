@@ -36,7 +36,7 @@ JSON layout: `source`, `pitchTable` (128 words), `volumeCurve` (128 bytes), `set
 
 ## Not verified / open
 
-- **Nothing here has been listened to.** Playback is the next step; it is where the DSP model and the sequencer rules below get checked by ear.
+- **Nothing here has been listened to against a console or emulator capture.** Playback runs in NHL9X Studio (`docs/NHL94S-PLAYBACK.md`); ear checks are still open.
 - **Pitch offset.** `StartSoundVoice` adds the entry's word at +2 to the note's pitch. The organ entries have values around 1,375 and the first game sound 1,250. `songwav.py` leaves it out (pitch is `PitchTable[(note + noteOffset) & $7F]` alone). Which is right matters for tuning and for the GM map; step 3 should try both against the real driver.
 - **Note bit 7.** Note codes go up to `$D8`; the pitch uses `code & $7F`. What bit 7 does is not known.
 - **Drum track.** `StepTrack` treats track 9 specially: its note selects the sound (`note − $2F`) and the pitch is fixed (`$3F` + the entry's note offset). `songwav.py` doesn't do this; the parser doesn't interpret it either (it exposes the notes). Playback must.

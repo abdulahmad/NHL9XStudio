@@ -10,6 +10,7 @@
   const FRAME_RATE = 60.0988;
   const Player = () => root.NhlNhl93sPlayer;
   const SD = () => root.NhlNhl93sSoundData;
+  const SfxMidi = () => root.NhlSnesSfxMidi;
   const START_LAG = 0.09; // the first note sounds this long after the cue reaches the sound program
 
   const hex = (n) => '$' + n.toString(16).toUpperCase().padStart(2, '0');
@@ -34,6 +35,13 @@
     puckwall3: 'puckwall3', shotwiff: 'shotwiff', shotwiff2: 'shotwiff', shotwiff3: 'shotwiff', shotwiff4: 'shotwiff', stop: 'beep1', stop2: 'beep2',
     playerwall: 'playerwall', playerwall2: 'playerwall2', siren: 'siren', horn: 'horn'
   };
+  /** Extra UI notes for effects (names stay the SNES equates from ram93s.asm). */
+  const SFX_EXTRA = {
+    0x8d: 'forehand shot in SNES code; plays 93G backhand recording (sfx_shotbh_pcm)',
+    0x8e: 'backhand shot in SNES code; plays 93G forehand/slap recording (sfx_shotfh_pcm, partial match)',
+    0x90: 'check 1 of 2; vs 93G check PCM spectral match leans check2/hitboard (low confidence)',
+    0x91: 'check 2 of 2; 93G check/skating34 recording, shortened; retail driver keys off ~0.59 s'
+  };
   function twin93g(name) {
     const N = root.Nhl93Names;
     if (!name || !N) return '';
@@ -45,12 +53,28 @@
   const CAT = () => root.NhlAudioCategories.CATEGORY;
   const hex2 = (n) => '$' + n.toString(16).toUpperCase().padStart(2, '0');
   const setOfInstrument = (n) => (n <= 9 ? 'boot' : 'game');
-  const isPart = (id) => /^snes-(inst|sample)-/.test(id);
+  const isPart = (id) => /^snes-inst-/.test(id);
 
-  /** Catalog rows for the Sound test list: Songs, SFX, Samples and Instruments, the same headings every game uses. */
+  function sampleCount(set) {
+    return set === 'game' ? 19 : 9;
+  }
+
+  function instrumentInvalid(data, inst) {
+    const i = data.instruments[inst];
+    if (!i) return true;
+    const set = setOfInstrument(inst);
+    return i.sample < 0 || i.sample >= sampleCount(set);
+  }
+
+  function sampleOfInstrument(data, inst) {
+    const i = data.instruments[inst];
+    if (!i || instrumentInvalid(data, inst)) return null;
+    return data.samples(setOfInstrument(inst)).find((s) => s.index === i.sample);
+  }
+
+  /** Catalog rows for the Sound test list: Songs, SFX, and Instruments (one row per instrument; sample BRR info is on the row). */
   function entries(data) {
     const out = [];
-    // One song list, sorted by song number: the title and menu songs are in it with the game ones.
     const songs = data.cueList.slice().sort((a, b) => a.cue - b.cue);
     for (const c of songs) {
       out.push({
@@ -67,26 +91,20 @@
       if (id <= 0x87) continue;
       const name = data.effectName(id);
       const twin = twin93g(name);
+      const extra = SFX_EXTRA[id];
       out.push({
         id: 'sound-game-' + id, group: CAT().sfx, label: hex2(id) + (name ? ' · ' + name : ''),
-        sub: [id === 0x88 ? 'crowd noise off' : null, twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
-      });
-    }
-    for (const set of ['boot', 'game']) {
-      data.samples(set).forEach((e) => {
-        const used = data.instruments.filter((i) => setOfInstrument(i.index) === set && i.sample === e.index).map((i) => hex2(i.index));
-        out.push({
-          id: 'snes-sample-' + set + '-' + e.index, group: CAT().samples, collapsible: true,
-          label: set + ' ' + hex2(e.index),
-          sub: 'BRR · ' + e.length + ' bytes' + (e.loops ? ' · loops' : '') + (used.length ? ' · instrument ' + used.join(', ') : ' · no instrument')
-        });
+        sub: [id === 0x88 ? 'crowd noise off' : null, extra, twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
       });
     }
     for (const i of data.instruments) {
+      const invalid = instrumentInvalid(data, i.index);
+      const samp = invalid ? null : sampleOfInstrument(data, i.index);
+      const brr = samp ? ' · BRR ' + samp.length + ' bytes' + (samp.loops ? ' · loops' : '') : '';
       out.push({
         id: 'snes-inst-' + i.index, group: CAT().instruments, collapsible: true,
-        label: hex2(i.index),
-        sub: setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + (gmOf(data, i.index) ? ' · ' + gmOf(data, i.index).text : '')
+        label: hex2(i.index) + (invalid ? ' · invalid' : ''),
+        sub: (invalid ? 'sample ' + hex2(i.sample) + ' out of range' : setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + brr) + (gmOf(data, i.index) ? ' · ' + gmOf(data, i.index).text : '')
       });
     }
     return out;
@@ -104,14 +122,10 @@
     return { text: name(row), why: row.why, confidence: row.confidence, runnerUp: row.runnerUp ? name(row.runnerUp) : '' };
   }
 
-  /** The instrument an Instruments or Samples row plays: a samples row plays the first instrument that uses it. */
+  /** The instrument an Instruments row plays. */
   function partInstrument(data, id) {
-    let m = /^snes-inst-(\d+)$/.exec(id);
-    if (m) return Number(m[1]);
-    m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
-    if (!m) return null;
-    const hit = data.instruments.find((i) => setOfInstrument(i.index) === m[1] && i.sample === Number(m[2]));
-    return hit ? hit.index : null;
+    const m = /^snes-inst-(\d+)$/.exec(id);
+    return m ? Number(m[1]) : null;
   }
 
   /** A one-note song of an instrument, as { set, bytes, base } for startSession: the way the analysis plays a probe note. */
@@ -152,7 +166,6 @@
       const gm = await fetch(new URL('data/audio/nhl93s-gm-map.json', document.baseURI).href);
       data.gmMap = gm.ok ? await gm.json() : null;
     } catch (err) { data.gmMap = null; }
-    // The key each instrument is played at for its probe note: the median the retail songs use it at.
     try {
       const an = await fetch(new URL('data/audio/nhl93s-instrument-analysis.json', document.baseURI).href);
       const sets = an.ok ? (await an.json()).sets : null;
@@ -177,6 +190,62 @@
     return out;
   }
 
+  /** Log DSP key-ons into session.commands for the voice roll (effects; songs use commandsOf). */
+  function attachVoiceLog(session) {
+    if (session._voiceHook) return;
+    const spc = session.player.spc;
+    const dsp = spc.dsp;
+    const orig = dsp.write.bind(dsp);
+    const vs = [];
+    for (let i = 0; i < 8; i++) vs.push({ srcn: 0, vl: 0, vr: 0, pl: 0, pitch: 0 });
+    const endNote = (v, frame) => {
+      if (!v.cur) return;
+      const dur = frame - v.cur.frame;
+      if (dur > 0) v.cur.args.frames = dur;
+      session.commands.push(v.cur);
+      v.cur = null;
+    };
+    dsp.write = function (a, val) {
+      orig(a, val);
+      const v = val & 0xff;
+      a &= 0x7f;
+      const frame = session.player.stats.frames;
+      if (a === 0x4c) {
+        for (let k = 0; k < 8; k++) {
+          if (!(v & (1 << k))) continue;
+          endNote(vs[k], frame);
+          const set = session.sound ? 'game' : 'game';
+          const srcn = vs[k].srcn;
+          const inst = set === 'game' ? srcn + 10 : srcn;
+          vs[k].cur = { frame, name: 'keyOn', args: { voice: k, sample: inst, inst, pitch: vs[k].pitch || null } };
+        }
+      } else if (a === 0x5c) {
+        for (let j = 0; j < 8; j++) if (v & (1 << j)) endNote(vs[j], frame);
+      } else if (a < 0x80 && (a & 0x0f) <= 7) {
+        const q = vs[a >> 4];
+        switch (a & 0x0f) {
+          case 0: q.vl = v; break;
+          case 1: q.vr = v; break;
+          case 2: q.pl = v; break;
+          case 3:
+            q.pitch = ((v & 0x3f) << 8) | q.pl;
+            if (q.cur && q.cur.args) q.cur.args.pitch = q.pitch;
+            break;
+          case 4: q.srcn = v; break;
+          default: break;
+        }
+      }
+    };
+    session._voiceHook = orig;
+    session._voiceVs = vs;
+  }
+
+  function detachVoiceLog(session) {
+    if (!session._voiceHook) return;
+    session.player.spc.dsp.write = session._voiceHook;
+    session._voiceHook = null;
+  }
+
   /** A song (cue number as songName), one sound ({ set, n }) or an imported song ({ set, bytes, base }) on a fresh sound unit. */
   function startSession(data, songName, sound, custom) {
     const player = Player().create({ data });
@@ -186,13 +255,14 @@
       try {
         commands = commandsOf(data, data.timeline(7, { loops: 0, ram: data.customImage(custom.set, custom.bytes, custom.base, 7) }));
       } catch (err) { commands = []; }
-    } else if (sound) player.effect(sound.n);
-    else {
+    } else if (sound) {
+      player.effect(sound.n);
+      commands = [];
+    } else {
       player.cue(Number(songName));
       commands = commandsOf(data, data.timeline(Number(songName), { loops: 0 }));
     }
-    player.record();
-    return {
+    const session = {
       player,
       sound: sound || null,
       custom: custom || null,
@@ -206,6 +276,9 @@
       frames: 0,
       blocks: []
     };
+    if (sound) attachVoiceLog(session);
+    player.record();
+    return session;
   }
 
   function appendPcm(session, interleaved) {
@@ -268,6 +341,7 @@
   }
 
   function dispose(session) {
+    detachVoiceLog(session);
     try { session.player.spc.stopRecording(); } catch (err) { /* noop */ }
   }
 
@@ -278,6 +352,7 @@
     entries,
     isPart,
     partInstrument,
+    instrumentInvalid,
     gmOf,
     probeSong,
     setOfInstrument,

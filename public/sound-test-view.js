@@ -515,7 +515,8 @@
     const part = isSnes93() && snesApi().isPart(id);
     if (part) {
       const inst = snesApi().partInstrument(snesData, id);
-      if (inst == null) throw new Error('No instrument uses this sample, so the game never plays it');
+      if (inst == null) throw new Error('Unknown instrument');
+      if (snesApi().instrumentInvalid(snesData, inst)) throw new Error('Instrument ' + inst + ' points at a missing sample and cannot be played');
       imp = snesApi().probeSong(snesData, inst);
     }
     const songName = sm || imp ? null : id.slice(5);
@@ -1420,21 +1421,18 @@
     }, 250);
   }
 
-  /** Detail of an NHLPA 93 SNES Samples or Instruments row (the play button and the volume are added by renderPanel). */
+  /** Detail of an NHLPA 93 SNES instrument row (the play button and the volume are added by renderPanel). */
   function snesPartDetail(box, id) {
     const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
     const inst = snesApi().partInstrument(snesData, id);
-    const isInstrument = id.startsWith('snes-inst-');
-    box.appendChild(make('p', 'st-kind', isInstrument ? 'NHLPA 93 (SNES) instrument' : 'NHLPA 93 (SNES) sample'));
+    box.appendChild(make('p', 'st-kind', 'NHLPA 93 (SNES) instrument'));
     box.appendChild(make('h3', null, title(id)));
-    if (isInstrument) {
-      const e = snesData.instruments[inst];
-      box.appendChild(make('p', 'st-note mono', snesApi().setOfInstrument(inst) + ' set · sample ' + hex2(e.sample) + ' · ADSR ' + hex2(e.adsr1) + ' ' + hex2(e.adsr2) + ' · gain ' + hex2(e.gain) + ' · pitch $' + e.pitch.toString(16).toUpperCase().padStart(4, '0')));
-    } else {
-      const m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
-      const e = snesData.samples(m[1])[Number(m[2])];
-      box.appendChild(make('p', 'st-note mono', m[1] + ' set · BRR ' + e.length + ' bytes (' + Math.round(e.length / 9) + ' blocks)' + (e.loops ? ' · loops' : '') + (inst == null ? ' · no instrument uses it, so it cannot be played' : ' · played through instrument ' + hex2(inst))));
-    }
+    const e = snesData.instruments[inst];
+    const invalid = snesApi().instrumentInvalid(snesData, inst);
+    const set = snesApi().setOfInstrument(inst);
+    const samp = invalid ? null : snesData.samples(set).find((s) => s.index === e.sample);
+    const brr = samp ? ' · BRR ' + samp.length + ' bytes' + (samp.loops ? ' · loops' : '') : '';
+    box.appendChild(make('p', 'st-note mono', (invalid ? 'invalid · sample ' + hex2(e.sample) + ' out of range' : set + ' set · sample ' + hex2(e.sample) + brr) + ' · ADSR ' + hex2(e.adsr1) + ' ' + hex2(e.adsr2) + ' · gain ' + hex2(e.gain) + ' · pitch $' + e.pitch.toString(16).toUpperCase().padStart(4, '0')));
     const gm = snesApi().gmOf(snesData, inst);
     if (gm) {
       box.appendChild(make('p', 'st-note', 'Maps to ' + gm.text + ' (' + gm.confidence + ' confidence)' + (gm.runnerUp ? ' · runner-up ' + gm.runnerUp : '') + '. ' + gm.why));

@@ -1250,6 +1250,9 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl93s-sound-data');
   require('./test/nhl93s-player');
   require('./test/nhl93s-midi');
+  require('./test/nhl93s-gaps');
+  require('./test/nhl93s-pcm-check');
+  require('./test/nhl93s-voice-roll');
   require('./test/snes-gm-analysis');
   require('./test/snes-sfx-midi');
   require('./test/nhl92-68k-driver');

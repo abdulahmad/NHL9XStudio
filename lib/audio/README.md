@@ -50,4 +50,4 @@ API (optional local server):
 
 `tools/build-audio-catalog.js [--rom path] [--game id]` — refresh `data/audio/*.json`; ROM scan helps validate offsets (`lib/audio/genesis-scan.js`).
 
-SNES / PC: not implemented yet (`docs/DESIGN.md` §3).
+SNES: NHLPA 93 and NHL 94 sound packs, SPC700 player, Sound test UI, GM map, MIDI import/export (`docs/NHL93S-SOUND.md`, `docs/NHL94S-PLAYBACK.md`, `lib/audio/nhl93s-*.js`, `lib/audio/nhl94s-*.js`). PC (94PC/95PC AdLib / speech): not implemented yet (`docs/DESIGN.md` §3).
