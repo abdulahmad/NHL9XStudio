@@ -1278,6 +1278,7 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl92-z80-audio');
   require('./test/nhl92-sound-data');
   require('./test/nhl93-names');
+  require('./test/roll-snes-progressive');
   require('./test/nhl93-crowd');
   require('./test/m68k-cpu');
   require('./test/spc700-cpu');

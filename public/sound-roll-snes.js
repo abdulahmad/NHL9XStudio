@@ -201,11 +201,19 @@
       const barH = 5;
       g.font = '9px ' + mono;
       // Key-ons without a known length ('94 notes, effects) run until the voice's next key-on, at most one second.
+      // The log runs ahead of the audible time, so look past timeSec for each voice's next key-on. A note whose
+      // next key-on is not logged yet is still sounding: it gets the full second and is clipped at the now line,
+      // so it grows as it plays instead of staying a stub and then appearing whole.
       const nextOn = new Map();
-      for (let i = keyOns.length - 1; i >= 0; i--) {
-        const vi = keyOns[i].args && keyOns[i].args.voice;
-        if (nextOn.has(vi)) keyOns[i].gapFrames = nextOn.get(vi) - keyOns[i].frame;
-        nextOn.set(vi, keyOns[i].frame);
+      const aheadFrame = (timeSec + 1) * frameRate;
+      let iEnd = lo0;
+      while (iEnd < cmds.length && cmds[iEnd].frame <= aheadFrame) iEnd++;
+      for (let i = iEnd - 1; i >= lo0; i--) {
+        const c = cmds[i];
+        if (c.name !== 'keyOn') continue;
+        const vi = c.args && c.args.voice;
+        c.gapFrames = nextOn.has(vi) ? nextOn.get(vi) - c.frame : frameRate;
+        nextOn.set(vi, c.frame);
       }
       for (const c of keyOns) {
         const t = c.frame / frameRate;
