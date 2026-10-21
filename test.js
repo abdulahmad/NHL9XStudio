@@ -1300,6 +1300,7 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl9x-sound-chain');
   require('./test/nhl95-sound-chain');
   require('./test/nhl95-seq');
+  require('./test/nhl95-stream');
   require('./test/nhl9x-song-gm');
   require('./test/nhl9x-stream');
   require('./test/nhl9x-gm-audition');
