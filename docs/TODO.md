@@ -44,13 +44,13 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 ## Graphics / images
 - GAP-2 (93G): JIM inventory polish (optional). (`docs/AGENT-HANDOFF.md`, Backlog)
 - GAP-4 (95G): 27 `ArenaGfx*`, and a full extraction audit against `extractAssets95.js` (optional). (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md`)
-- GAP-5/6 (93S/94S): more Images-tab pictures (scouting, refs, the 94S framer) once the LoROM offsets are pinned. Several Genesis-parity pictures for 94S are still missing. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:111`)
+- GAP-5/6 (93S/94S): [x] 94S framer, energy bar, playoff arrows, and crowd sprite strip (658–720) pinned from NHL94SNES. Scouting backdrop is the existing EA Sports backdrop (`MenuBackMap`); dedicated scouting/JIM parity and 93S-only screens (NHLPA logo, playoff on 93S) unchanged. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:111`)
 - GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. (`docs/DESIGN.md`)
 - GAP-8 (94PC): extract the retail `HOCKEY.EXE` SPA pack to replace the interim data; tune 94PC hotspots and `frameIsDynamic`. (`docs/AGENT-HANDOFF.md`; PR #9)
 - Open visual issues (`docs/AGENT-HANDOFF.md`, Status 2026-10-20):
   - The 93S framer art is a two-shade ring, while 93G's is a four-shade bevel. Unresolved.
   - The 93G/93S Stanley Cup palette was reported wrong but has not been reproduced. We need to know what colour is expected.
-  - 94S has no crowd frames.
+  - [x] 94S crowd frames on the Images tab (sprite frames 658–720).
 
 ## Host / product
 - HOST-3: OPFS storage is not implemented. HOST-5: the 95 ISO shows a guidance message; mounting is not implemented. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:411`)

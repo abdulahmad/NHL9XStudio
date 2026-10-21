@@ -426,7 +426,7 @@ assert.ok(snes93game.images.some((image) => image.id === 'faceoff'));
 assert.ok(snes93game.images.some((image) => image.id === 'refs'));
 assert.ok(GAMES.some((game) => game.id === 'nhl94snes' && game.kind === 'snes94' && game.jerseyRow === 4));
 const snes94images = GAMES.find((game) => game.id === 'nhl94snes').images.map((image) => image.id);
-for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'faceoff', 'teamblocks', 'easn', 'refs', 'refs2', 'bigfont', 'smallfont', 'faceoffsprites', 'zam', 'cards']) {
+for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'faceoff', 'teamblocks', 'easn', 'refs', 'refs2', 'bigfont', 'smallfont', 'framer', 'energybar', 'playoff', 'faceoffsprites', 'zam', 'crowd', 'cards']) {
   assert.ok(snes94images.includes(id), id);
 }
 
@@ -756,6 +756,16 @@ if (retail94) {
   assert.strictEqual(shield.width, 48);
   assert.strictEqual(shield.height, 32);
   assert.ok(shield.pixels.some((pixel) => pixel));
+  const framer94 = openImage(retail94, game.images.find((image) => image.id === 'framer'), game.snes, null);
+  assert.strictEqual(framer94.renderFrame(1).width, 24);
+  assert.strictEqual(framer94.renderFrame(1).height, 24);
+  const playoff94 = openImage(retail94, game.images.find((image) => image.id === 'playoff'), game.snes, null);
+  assert.strictEqual(playoff94.renderFrame(1).width, 96);
+  assert.strictEqual(playoff94.renderFrame(1).height, 184);
+  assert.ok(inkCount(playoff94.renderFrame(1)) > 50);
+  const crowdSheet = parse94(retail94, game.snes);
+  const crowdFrame = crowdSheet.renderFrame(659);
+  assert.ok(inkCount(crowdFrame) > 0);
 }
 
 function spitHeader(type, width, height, xOffset, yOffset, xPos, yPos) {
