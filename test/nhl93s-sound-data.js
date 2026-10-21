@@ -81,4 +81,10 @@ assert.ok(checked > 300, 'compared ' + checked + ' key-ons');
   assert.ok(fx && fx.steps.length > 0 && fx.voice != null, 'an effect program');
   assert.ok(fx.steps.some((x) => x.type === 'sweep'), 'effects are pitch-sweep programs');
 }
+assert.deepStrictEqual(d.unreferenced, [], 'retail ROM has no extra BRR between sample directory gaps');
+for (const set of ['boot', 'game']) {
+  const list = d.samples(set);
+  for (const e of list) assert.strictEqual(e.end, e.start + e.length, set + ' sample ' + e.index);
+}
+
 console.log('nhl93s-sound-data: ok');

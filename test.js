@@ -1248,6 +1248,7 @@ if (!process.argv.includes('--core')) {
   require('./test/nhl94s-player');
   require('./test/nhl94s-midi');
   require('./test/nhl93s-sound-data');
+  require('./test/nhl93s-sample-match');
   require('./test/nhl93s-player');
   require('./test/nhl93s-midi');
   require('./test/snes-gm-analysis');
@@ -1288,6 +1289,14 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
     }
   });
   // NHLPA 93 ROMs of different revisions opened one after another (skipped without the ROMs).
+  const rollChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'snes93-roll.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) rollChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
+  rollChild.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('test/browser/snes93-roll.js failed');
+      process.exitCode = 1;
+    }
+  });
   const revChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'rev-switch.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
   if (quiet) revChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
   revChild.on('exit', (code) => {

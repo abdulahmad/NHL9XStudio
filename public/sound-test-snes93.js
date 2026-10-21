@@ -27,6 +27,13 @@
     SngPP: 'Power play song (unused)', SngFaceoff: 'Face-off song, once per period', SngTitle: 'Title song, also the game menu',
     SngEOP: 'End of Period song (unused)', SngEOG: 'End of Game song (unused)', SngPO: 'Playoffs music'
   };
+  /** Extra SFX notes (recording swaps, check match, retail key-off timing). Names stay from ram93s.asm. */
+  const SFX_NOTES = {
+    0x8d: 'plays the 93G backhand recording (sfx_shotbh_pcm); SNES forehand shot cue',
+    0x8e: 'plays the 93G forehand/slap recording (sfx_shotfh_pcm); SNES backhand shot cue',
+    0x90: '93G check1 (sfx_check_pcm / skating34) · correlation ~0.92 vs rendered sample (high confidence)',
+    0x91: '93G check recording (shortened); retail driver keys off ~0.59 s (not a studio bug)'
+  };
   /** The 93G sound a 93S effect name corresponds to ('93G $1C check1'), or ''. */
   const TWIN_93G = {
     whistle: 'whistle', crowdcheer: 'crowdcheer', crowdboo: 'crowdboo', oooh2: 'oooh2', bglass: 'bglass', shotfh: 'shotfh1', shotbh: 'shotbh1', shothard: 'shotfh1',
@@ -45,7 +52,8 @@
   const CAT = () => root.NhlAudioCategories.CATEGORY;
   const hex2 = (n) => '$' + n.toString(16).toUpperCase().padStart(2, '0');
   const setOfInstrument = (n) => (n <= 9 ? 'boot' : 'game');
-  const isPart = (id) => /^snes-(inst|sample)-/.test(id);
+  const isPart = (id) => /^snes-inst-/.test(id);
+  const isInvalidInstrument = (inst) => inst === 9;
 
   /** Catalog rows for the Sound test list: Songs, SFX, Samples and Instruments, the same headings every game uses. */
   function entries(data) {
@@ -69,24 +77,18 @@
       const twin = twin93g(name);
       out.push({
         id: 'sound-game-' + id, group: CAT().sfx, label: hex2(id) + (name ? ' · ' + name : ''),
-        sub: [id === 0x88 ? 'crowd noise off' : null, twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
-      });
-    }
-    for (const set of ['boot', 'game']) {
-      data.samples(set).forEach((e) => {
-        const used = data.instruments.filter((i) => setOfInstrument(i.index) === set && i.sample === e.index).map((i) => hex2(i.index));
-        out.push({
-          id: 'snes-sample-' + set + '-' + e.index, group: CAT().samples, collapsible: true,
-          label: set + ' ' + hex2(e.index),
-          sub: 'BRR · ' + e.length + ' bytes' + (e.loops ? ' · loops' : '') + (used.length ? ' · instrument ' + used.join(', ') : ' · no instrument')
-        });
+        sub: [id === 0x88 ? 'crowd noise off' : null, SFX_NOTES[id], twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
       });
     }
     for (const i of data.instruments) {
+      const set = setOfInstrument(i.index);
+      const samp = data.samples(set).find((e) => e.index === i.sample);
+      const invalid = isInvalidInstrument(i.index);
+      const brr = samp ? ' · BRR ' + samp.length + ' bytes' + (samp.loops ? ' · loops' : '') : '';
       out.push({
         id: 'snes-inst-' + i.index, group: CAT().instruments, collapsible: true,
-        label: hex2(i.index),
-        sub: setOfInstrument(i.index) + ' set · sample ' + hex2(i.sample) + (gmOf(data, i.index) ? ' · ' + gmOf(data, i.index).text : '')
+        label: hex2(i.index) + (invalid ? ' · invalid' : ''),
+        sub: [set + ' set · sample ' + hex2(i.sample) + brr, invalid ? 'sample $9A is out of range (unused table row)' : null, gmOf(data, i.index) ? gmOf(data, i.index).text : null].filter(Boolean).join(' · ')
       });
     }
     return out;
@@ -104,14 +106,13 @@
     return { text: name(row), why: row.why, confidence: row.confidence, runnerUp: row.runnerUp ? name(row.runnerUp) : '' };
   }
 
-  /** The instrument an Instruments or Samples row plays: a samples row plays the first instrument that uses it. */
+  /** The instrument a catalog row plays. */
   function partInstrument(data, id) {
-    let m = /^snes-inst-(\d+)$/.exec(id);
-    if (m) return Number(m[1]);
-    m = /^snes-sample-(\w+)-(\d+)$/.exec(id);
+    const m = /^snes-inst-(\d+)$/.exec(id);
     if (!m) return null;
-    const hit = data.instruments.find((i) => setOfInstrument(i.index) === m[1] && i.sample === Number(m[2]));
-    return hit ? hit.index : null;
+    const inst = Number(m[1]);
+    if (isInvalidInstrument(inst)) return null;
+    return inst;
   }
 
   /** A one-note song of an instrument, as { set, bytes, base } for startSession: the way the analysis plays a probe note. */
@@ -186,8 +187,20 @@
       try {
         commands = commandsOf(data, data.timeline(7, { loops: 0, ram: data.customImage(custom.set, custom.bytes, custom.base, 7) }));
       } catch (err) { commands = []; }
-    } else if (sound) player.effect(sound.n);
-    else {
+    } else if (sound) {
+      player.effect(sound.n);
+      const SfxMidi = root.NhlSnesSfxMidi;
+      if (SfxMidi && SfxMidi.capture && SfxMidi.notesToRollCommands) {
+        const cap = Player().create({ data });
+        cap.loadSet('game');
+        let queued = false;
+        const notes = SfxMidi.capture(cap.spc, () => {
+          if (!queued) { cap.effect(sound.n); queued = true; }
+          cap.runFrame();
+        }, { maxFrames: 700, minFrames: 10, done: () => cap.idle() });
+        commands = SfxMidi.notesToRollCommands(notes, FRAME_RATE, START_LAG);
+      }
+    } else {
       player.cue(Number(songName));
       commands = commandsOf(data, data.timeline(Number(songName), { loops: 0 }));
     }
@@ -277,6 +290,7 @@
     songInfo,
     entries,
     isPart,
+    isInvalidInstrument,
     partInstrument,
     gmOf,
     probeSong,
