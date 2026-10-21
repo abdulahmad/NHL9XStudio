@@ -37,7 +37,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - See also the 93 SNES section below.
 
 ### PC and long-term
-- No PC audio yet: 94PC/95PC `.KMS` (AdLib) music and `.VIV` announcer speech. (`docs/DESIGN.md` §3.2; `lib/audio/README.md`)
+- **PC audio:** [x] `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). Retail `.kms`/`.viv` files not on the VM — ear match and VIV unpack still open.
 - Longer-term goals: a full FM patch editor, SPC disassembly upload, importing back to ROM, tracker editing, and MT-32/GUS parity. (`docs/DESIGN.md` §3)
 - `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/DESIGN.md`)
 
