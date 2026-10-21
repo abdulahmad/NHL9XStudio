@@ -6,7 +6,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 
 ### Genesis
 - [x] **NHL 95 (95G) sound chain:** `nhl95-68k-harness.js`, bundled slice `$AF44–$7A000`, Sound test playback (songs/SFX; no 93/94-style sequencer yet). (`lib/audio/README.md`)
-- **93G / 94G sequencer:** per-note volume changes and the volume controller (`$3x` 7) are not handled. (`docs/NHL93-94-SOUND.md`, "Not done yet")
+- [x] **93G / 94G sequencer:** per-note key-on volume and MIDI CC 7 / stream `$3x` 7 in `lib/audio/nhl9x-stream.js` (native MIDI markers `v=`). (`docs/NHL93-94-SOUND.md`)
 - **93G revisions:** NHLPA 93 Rev A (`1992.OCT`, which runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled for sound, and PAL timing is not modelled. (`docs/NHL93-94-SOUND.md`)
 - **93G / 94G GM map:** the matches come from measurements; nobody has checked them by ear. (`docs/NHL93-94-SOUND.md`)
 - **NHL 92 gaps that are still open** (`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md`, "Gaps still open"; `docs/NHL92-SOUND-CHAIN.md`, "Not verified"):
