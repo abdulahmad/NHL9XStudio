@@ -93,6 +93,8 @@
     if (custom) player.startSongBytes(custom.bytes);
     else if (sound) player.playEntry(sound.n);
     else player.startSong(songName);
+    const edits = (custom && custom.soundEdits) || null;
+    if (edits) Object.keys(edits).forEach((k) => player.patchSound(Number(k), edits[k]));
     player.record();
     return {
       player,

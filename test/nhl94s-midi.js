@@ -153,4 +153,22 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
   a.forEach((f, i) => assert.ok(Math.abs(f - b[i]) <= 1, 'key-on ' + i + ' within a frame: ' + f + ' vs ' + b[i]));
 }
 
+// --- CC7 / CC10 import -> $DE volume and $DF pan (controllers $0B / $0C) ---
+{
+  const smf = Smf.write({
+    ppq: 480,
+    tempos: [{ tick: 0, bpm: 120 }],
+    tracks: [{
+      ch: 0,
+      controllers: [{ tick: 0, cc: 7, value: 100 }, { tick: 0, cc: 10, value: 0 }],
+      notes: [{ tick: 48, dur: 48, vel: 100, pitch: 60, program: 0 }]
+    }]
+  });
+  const r = Midi.fromSmf(smf, d, gm, { set: 'menu' });
+  const tr = SoundData.parseSong(r.bytes).tracks[0];
+  const evs = tr.events.filter((e) => e.type === 'volume' || e.type === 'controller');
+  assert.ok(evs.some((e) => e.type === 'volume'), 'volume $DE from CC7');
+  assert.ok(evs.filter((e) => e.type === 'controller' && e.controller === 0x0b).length === 1, 'pan left from CC10');
+}
+
 console.log('nhl94s midi: song format, native and GM MIDI round trips OK');
