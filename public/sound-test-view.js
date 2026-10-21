@@ -224,6 +224,7 @@
       return rows;
     }
     if (isNx()) {
+      // 95G: songs $32-$55 are bank cmdstreams (sound95.asm sfxplay), not nhl9x-stream event tables — see docs/NHL95-SOUND.md.
       if (game !== 'nhl95' && root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
         out.push({ id: TOOL_EDITOR, group: 'MIDI', label: toolName(TOOL_EDITOR), sub: 'edit, play on the retail drivers, export' });
         out.push({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, edit it as a ' + NX[game].label + ' song' });
