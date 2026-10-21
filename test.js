@@ -1350,6 +1350,15 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
       process.exitCode = 1;
     }
   });
+  // NHL 95 Sequencer / MIDI screen: MIDI import for a patch set, a retail song edited and played.
+  const seq95Child = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'nhl95-sequencer.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) seq95Child.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
+  seq95Child.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('test/browser/nhl95-sequencer.js failed');
+      process.exitCode = 1;
+    }
+  });
   const revChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'rev-switch.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
   if (quiet) revChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
   revChild.on('exit', (code) => {
