@@ -236,10 +236,10 @@
       }
       for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: CAT().sfx, label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || SFX_VBLANKS + ' vblanks' });
       // The game's patches (FM and PCM), played as a short scale: a collapsible list like NHL 92's instruments.
-      if (game !== 'nhl95' && nxMap && AUD() && root.Nhl9xStream) {
+      if (nxMap && AUD() && root.Nhl9xStream) {
         for (const e of nxMap.patches) {
           const to = gmText(e.target);
-          out.push({ id: 'inst-' + e.patch, group: 'Instruments', collapsible: true, label: AUD().patchLabel(e.patch), sub: firstSentence(e.character) + (to ? ' · Maps to ' + to : '') });
+          out.push({ id: 'inst-' + e.patch, group: 'Instruments', collapsible: true, label: instLabel(e.patch), sub: firstSentence(e.character) + (to ? ' · Maps to ' + to : '') });
         }
       }
       // NHLPA 93: the raw PCM files, a collapsible list like NHL 92's DAC samples.
@@ -275,12 +275,26 @@
   const instPatch = (id) => Number(id.split('-')[1]);
   const instEntry = (id) => (nxMap ? nxMap.patches.find((e) => e.patch === instPatch(id)) : null);
   const instCache = new Map();
+  /** Row name of a patch: 93/94 FM patch N or PCM patch $N; NHL 95 bank item N with its kind (nhl95-gm-map.json). */
+  function instLabel(p) {
+    if (game !== 'nhl95') return AUD().patchLabel(p);
+    const e = nxMap && nxMap.patches.find((x) => x.patch === p);
+    return 'Patch ' + p + (e ? ' · ' + e.kind.toUpperCase() : '');
+  }
+  /** NHL 95: the load list that has the patch uploaded (1 the game, else 0 the menus); null on 93/94. */
+  function instList(p) {
+    if (game !== 'nhl95') return null;
+    const e = nxMap.patches.find((x) => x.patch === p);
+    return e && e.loadLists && e.loadLists.indexOf(1) < 0 && e.loadLists.indexOf(0) >= 0 ? 0 : 1;
+  }
   /** { song, rom } of an instrument: the song model and the ROM copy that has it as the sequencer's song. */
   function instRun(id) {
     if (!instCache.has(id)) {
       const p = instPatch(id);
       const song = AUD().patchSong(nxNumber(), p, AUD().notesOf(AUD().plan(nxMap, 'n2g', p).picked));
-      instCache.set(id, { song, rom: root.Nhl9xStream.romWithSong(nxNumber(), rom, song).rom });
+      if (instList(p) != null) song.loadList = instList(p);
+      const copy = root.Nhl9xStream.romWithSong(nxNumber(), rom, song);
+      instCache.set(id, { song, rom: copy.rom, driverOpts: copy.driverOpts || null });
     }
     return instCache.get(id);
   }
@@ -316,7 +330,7 @@
       return id.replace(/^sound-/, 'Sound entry · ').replace(/-/g, ' ');
     }
     const n = Number(id.split('-')[1]);
-    if (isFmInst(id)) return 'Instrument · ' + AUD().patchLabel(n);
+    if (isFmInst(id)) return 'Instrument · ' + instLabel(n);
     if (isNx()) return (id.startsWith('song-') ? 'Song $' + n.toString(16).toUpperCase() + ' · ' + song94(n).name : 'SFX $' + n.toString(16).toUpperCase() + ' · ' + sfx94(n).name);
     return id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n);
   }
@@ -603,7 +617,7 @@
     if (INST()) INST().stop();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : isFmInst(id) ? instRun(id).rom : rom, true, id === TOOL_EDITOR && customRom ? customOpts : null);
+    const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : isFmInst(id) ? instRun(id).rom : rom, true, id === TOOL_EDITOR && customRom ? customOpts : isFmInst(id) ? instRun(id).driverOpts : null);
     live = Object.assign(sess, { id, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '', seeking: null, frozen: 0 });
     live.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
     startPrefetch(live);
@@ -1521,7 +1535,7 @@
       box.appendChild(make('p', 'st-note mono', snesData.songSet(name) + ' sample set · ' + snesData.song(name).trackCount + ' tracks'));
     } else if (isFmInst(id)) {
       box.appendChild(make('p', 'st-kind', NX[game].label + ' instrument'));
-      box.appendChild(make('h3', null, AUD().patchLabel(n)));
+      box.appendChild(make('h3', null, instLabel(n)));
     } else if (isNx()) {
       const rec = id.startsWith('song-') ? song94(n) : sfx94(n);
       box.appendChild(make('p', 'st-kind', (id.startsWith('song-') ? NX[game].label + ' song $' : NX[game].label + ' SFX $') + n.toString(16).toUpperCase()));
@@ -1849,11 +1863,12 @@
     const rows = [['Plays', title(id)]];
     if (isFmInst(id)) {
       const e = instEntry(id);
-      rows.push(['Patch', (n >= AUD().PCM_FIRST ? 'PCM sample, stream patch $' + n.toString(16).toUpperCase() : 'FM patch ' + n + ' (32 bytes in the song patch table)')]);
+      if (game === 'nhl95') rows.push(['Patch', 'SoundBanks bank 0 item ' + n + ' (' + (e ? e.kind.toUpperCase() : '?') + '), load list ' + instList(n)]);
+      else rows.push(['Patch', (n >= AUD().PCM_FIRST ? 'PCM sample, stream patch $' + n.toString(16).toUpperCase() : 'FM patch ' + n + ' (32 bytes in the song patch table)')]);
       if (e && e.target) rows.push(['General MIDI', gmText(e.target) + (e.confidence ? ' · ' + e.confidence + ' confidence' : '')]);
       rows.push(['Plays', instRun(id).song.notes.length + ' notes, ' + (instRun(id).song.ticks / 59.92).toFixed(1) + ' s']);
       rows.push(['Path', '68k driver → Z80 driver → YM2612 + SN76489']);
-      rows.push(['Source', 'data/audio/nhl9x-gm-map.json']);
+      rows.push(['Source', game === 'nhl95' ? 'data/audio/nhl95-gm-map.json' : 'data/audio/nhl9x-gm-map.json']);
       return rows;
     }
     if (isNx()) {
