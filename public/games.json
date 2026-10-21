@@ -5365,6 +5365,27 @@
         ]
       },
       {
+        "id": "scout",
+        "label": "Scouting report",
+        "group": "Screens",
+        "kind": "snes93-screen",
+        "start": 246688,
+        "end": 247476,
+        "mapW": 32,
+        "mapH": 16,
+        "mapSize": 1024,
+        "tiles": 1024,
+        "palFrom": {
+          "start": 27960,
+          "end": 29550,
+          "offset": 144,
+          "count": 64
+        },
+        "fileNames": [
+          "EASNBG.map.sjim (ScoutingReport.asm backdrop)"
+        ]
+      },
+      {
         "id": "framer",
         "label": "Framer",
         "group": "Screens",
@@ -5938,6 +5959,18 @@
         ]
       },
       {
+        "id": "scout",
+        "label": "Scouting report",
+        "group": "Screens",
+        "kind": "snes94-screen",
+        "tiles": 9826734,
+        "map": 10140309,
+        "palette": 10150177,
+        "fileNames": [
+          "MenuBackMap.map.lz (LoadScoutingScreen.asm)"
+        ]
+      },
+      {
         "id": "faceoff",
         "label": "Face Off",
         "group": "Screens",
@@ -6130,6 +6163,72 @@
         ]
       },
       {
+        "id": "framer",
+        "label": "Framer",
+        "group": "Screens",
+        "kind": "snes94-screen",
+        "tiles": 10256384,
+        "tilesEnd": 10256512,
+        "rawTiles": true,
+        "map": 10256512,
+        "rawMap": true,
+        "mapW": 3,
+        "mapH": 3,
+        "palette": 10149463,
+        "remap": [
+          0,
+          6,
+          4,
+          6
+        ],
+        "clear": true,
+        "fileNames": [
+          "FramerTiles.chr",
+          "FramerMap.asm"
+        ]
+      },
+      {
+        "id": "energybar",
+        "label": "Energy Bar",
+        "group": "Screens",
+        "kind": "snes94-tiles",
+        "tiles": 9871619,
+        "palette": 10149463,
+        "tileList": [
+          96,
+          97,
+          98
+        ],
+        "row": 4,
+        "remap": [
+          4,
+          3,
+          4,
+          3,
+          2,
+          1,
+          4
+        ],
+        "fileNames": [
+          "SmallFontTiles.chr.pairs (tiles $60-$62)"
+        ]
+      },
+      {
+        "id": "playoff",
+        "label": "Arrows",
+        "group": "Screens",
+        "kind": "snes94-playoff",
+        "tiles": 10152127,
+        "map": 10073894,
+        "palette": 10149927,
+        "mapW": 12,
+        "mapH": 23,
+        "fileNames": [
+          "PlayoffTiles.huf",
+          "PlayoffBracketMap.asm"
+        ]
+      },
+      {
         "id": "faceoffsprites",
         "label": "Face Off sprites",
         "group": "Sprites",
@@ -6150,6 +6249,17 @@
         "last": 448,
         "fileNames": [
           "SpriteFrames (frame 448)"
+        ]
+      },
+      {
+        "id": "crowd",
+        "label": "Crowd",
+        "group": "Sprites",
+        "kind": "snes93-sprites",
+        "first": 658,
+        "last": 720,
+        "fileNames": [
+          "SpriteFrames (658-720; showcrowd / SPAextra1)"
         ]
       },
       {

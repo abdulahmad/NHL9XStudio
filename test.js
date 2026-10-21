@@ -421,14 +421,19 @@ for (const bank of nhl92.banks) {
 assert.ok(nhl92.images.some((image) => image.kind === 'jim'));
 assert.ok(GAMES.some((game) => game.id === 'nhlpa93snes' && game.kind === 'snes93'));
 const snes93game = GAMES.find((game) => game.id === 'nhlpa93snes');
-assert.strictEqual(snes93game.images.length, 20);
+assert.strictEqual(snes93game.images.length, 21);
 assert.ok(snes93game.images.some((image) => image.id === 'faceoff'));
 assert.ok(snes93game.images.some((image) => image.id === 'refs'));
+assert.ok(snes93game.images.some((image) => image.id === 'nhlpa' && image.start === 0x60000));
+assert.ok(snes93game.images.some((image) => image.id === 'playoff' && image.mapStart === 0x57880));
+assert.ok(snes93game.images.some((image) => image.id === 'scout' && image.start === snes93game.images.find((image) => image.id === 'easnbg').start));
 assert.ok(GAMES.some((game) => game.id === 'nhl94snes' && game.kind === 'snes94' && game.jerseyRow === 4));
 const snes94images = GAMES.find((game) => game.id === 'nhl94snes').images.map((image) => image.id);
-for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'faceoff', 'teamblocks', 'easn', 'refs', 'refs2', 'bigfont', 'smallfont', 'framer', 'energybar', 'playoff', 'faceoffsprites', 'zam', 'crowd', 'cards']) {
+for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop', 'scout', 'ronbarr', 'stanley', 'window', 'logos', 'rink', 'center', 'letters', 'smallletters', 'faceoff', 'teamblocks', 'easn', 'refs', 'refs2', 'bigfont', 'smallfont', 'framer', 'energybar', 'playoff', 'faceoffsprites', 'zam', 'crowd', 'cards']) {
   assert.ok(snes94images.includes(id), id);
 }
+const snes94game = GAMES.find((game) => game.id === 'nhl94snes');
+assert.ok(snes94game.images.some((image) => image.id === 'scout' && image.map === snes94game.images.find((image) => image.id === 'eabackdrop').map));
 
 const pa93 = GAMES.find((game) => game.id === 'nhlpa93');
 const g94 = GAMES.find((game) => game.id === 'nhl94');
@@ -696,6 +701,14 @@ if (retail93) {
   const playoff = openImage(retail93, snesGame.images.find((image) => image.id === 'playoff'), null, null);
   assert.strictEqual(playoff.renderFrame(1).width, 96);
   assert.strictEqual(playoff.renderFrame(1).height, 184);
+  assert.ok(inkCount(playoff.renderFrame(1)) > 20);
+  const nhlpa = openImage(retail93, snesGame.images.find((image) => image.id === 'nhlpa'), null, null);
+  assert.strictEqual(nhlpa.renderFrame(1).width, 128);
+  assert.strictEqual(nhlpa.renderFrame(1).height, 80);
+  assert.ok(inkCount(nhlpa.renderFrame(1)) > 100);
+  const scout93 = openImage(retail93, snesGame.images.find((image) => image.id === 'scout'), null, null);
+  assert.strictEqual(scout93.renderFrame(1).width, 256);
+  assert.strictEqual(scout93.renderFrame(1).height, 128);
 }
 const retail94 = romIf('/tmp/snes/94/lst/nhl94snes.sfc');
 if (retail94) {
@@ -736,6 +749,10 @@ if (retail94) {
   const backdrop = openImage(retail94, game.images.find((image) => image.id === 'eabackdrop'), game.snes, null);
   assert.strictEqual(backdrop.renderFrame(1).height, 224);
   assert.ok(inkCount(backdrop.renderFrame(1)) > 200);
+  const scout94 = openImage(retail94, game.images.find((image) => image.id === 'scout'), game.snes, null);
+  assert.strictEqual(scout94.renderFrame(1).width, backdrop.renderFrame(1).width);
+  assert.strictEqual(scout94.renderFrame(1).height, backdrop.renderFrame(1).height);
+  assert.ok(inkCount(scout94.renderFrame(1)) > 200);
   const puck = openImage(retail94, game.images.find((image) => image.id === 'titlepuck'), game.snes, null);
   assert.strictEqual(puck.renderFrame(1).width, 256);
   assert.strictEqual(puck.renderFrame(1).height, 224);
