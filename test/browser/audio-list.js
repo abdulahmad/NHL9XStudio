@@ -27,8 +27,7 @@ async function open(page, url, game) {
       let g = await groups(page);
       assert.ok(g.some((x) => /^▾ Songs/.test(x)) && g.some((x) => /^▾ SFX/.test(x)), game + ': Songs and SFX start open: ' + g.join(' | '));
       const isSnes = game.endsWith('snes');
-      // NHL 95 has no Instruments rows: its 43 patches are bank items (nhl95-gm-map.json), not the 93/94 set the audition rows play.
-      if (!isSnes && game !== 'nhl95') assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
+      if (!isSnes) assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
       if (game === 'nhl95') assert.ok(g.some((x) => /MIDI/.test(x)), 'nhl95: MIDI tools listed: ' + g.join(' | '));
       const before = (await items(page)).length;
       // collapse SFX, then open it again
@@ -50,6 +49,17 @@ async function open(page, url, game) {
         await page.click('#sound-test-toggle');
         await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 30000 });
       } else if (game === 'nhl95') {
+        // The 43 SoundBanks patches (nhl95-gm-map.json): a menus (list 0) FM patch and a game (list 1) PCM patch play.
+        await page.$$eval('#catalog .group-label', (n) => n.find((x) => /Instruments/.test(x.textContent)).click());
+        const inst = await page.$$eval('#catalog .item .name', (n) => n.map((x) => x.textContent).filter((t) => /^Patch \d+/.test(t)));
+        assert.strictEqual(inst.length, 43, 'nhl95: Instruments list has ' + inst.length + ' entries');
+        for (const name of ['Patch 11 · FM', 'Patch 0 · PCM', 'Patch 19 · PSG']) {
+          await page.$$eval('#catalog .item', (n, t) => n.find((x) => x.querySelector('.name').textContent === t).click(), name);
+          await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
+          await page.click('#sound-test-toggle');
+          await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 45000 });
+          await page.click('#sound-test-toggle');
+        }
         await page.$$eval('#catalog .item', (n) => n.find((x) => /TeamSongs BOS/.test((x.querySelector('.name') || {}).textContent)).click());
         await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
         await page.click('#sound-test-toggle');

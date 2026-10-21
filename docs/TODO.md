@@ -158,5 +158,5 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 - [ ] SPF needs to be re-evaluated. Many correct ones should be identifiable by frame-matching against 93 and 94.
 
 ## Open (added 2026-10-21)
-- [ ] 95: instrument list.
+- [x] 95: instrument list. The 43 SoundBanks patches are in the Sound test Instruments group, each played on its load list (`test/nhl95-instruments.js`, `test/browser/audio-list.js`).
 - [ ] 94 PC: unpack PPV files.
