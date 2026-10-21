@@ -1331,6 +1331,14 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
     }
   });
   // NHLPA 93 ROMs of different revisions opened one after another (skipped without the ROMs).
+  const smokeChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'sound-smoke.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
+  if (quiet) smokeChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
+  smokeChild.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('test/browser/sound-smoke.js failed');
+      process.exitCode = 1;
+    }
+  });
   const rollChild = spawn(process.execPath, [path.join(__dirname, 'test', 'browser', 'snes93-roll.js')], { stdio: quiet ? ['ignore', 'pipe', 'inherit'] : 'inherit' });
   if (quiet) rollChild.stdout.on('data', (d) => quietLog.push(String(d).trimEnd()));
   rollChild.on('exit', (code) => {
