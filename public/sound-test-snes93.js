@@ -97,13 +97,9 @@
   /** The GM instrument an instrument is mapped to (data/audio/nhl93s-gm-map.json): { text, why, confidence, runnerUp } or null. */
   function gmOf(data, inst) {
     const map = data && data.gmMap;
-    const GM = root.Nhl92GmMap;
-    if (!map || !GM || inst == null) return null;
-    const set = setOfInstrument(inst);
-    const row = map.sets && map.sets[set] && map.sets[set][inst];
-    if (!row) return null;
-    const name = (r) => (r.drum != null ? 'GM drum ' + r.drum + ' (' + GM.drumName(r.drum) + ')' : 'GM program ' + r.program + ' (' + GM.PROGRAM_NAMES[r.program] + ')');
-    return { text: name(row), why: row.why, confidence: row.confidence, runnerUp: row.runnerUp ? name(row.runnerUp) : '' };
+    const M = root.NhlSnesGmMap;
+    if (!map || !M || inst == null) return null;
+    return M.describeEntry(map, setOfInstrument(inst), inst);
   }
 
   /** The instrument a catalog row plays. */
