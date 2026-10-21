@@ -30,12 +30,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
   - An instrument (BRR sample / ADSR) editor.
   
   (`docs/NHL94S-MIDI.md`, "Not done"; PR #52)
-- **94S playback, not ported:**
-  - `MusicDuck` and the volume fade.
-  - Replay recording (`recsfx*`).
-  - The game's effect routing (`PuckSfx`, `CollisionSfx`: which effect plays for which event, and its random pitch).
-  
-  (`docs/NHL94S-PLAYBACK.md`, "What is not ported"; PRs #49, #51)
+- **94S playback:** [x] `MusicDuck`, volume fade, `recsfx*`, `PuckSfx` / `CollisionSfx` in `lib/audio/nhl94s-player.js` and the 94 Sound test gameplay buttons (`docs/NHL94S-PLAYBACK.md`).
 - **94S / 93S accuracy by ear:** no capture from a console or emulator has been compared. (`docs/NHL94S-PLAYBACK.md`, "Not checked"; `docs/NHL94S-SOUND-DATA.md:39`)
 - **93S:** GM map accuracy by ear, PAL timing, and the tempo-fade model, which is checked only by length. (`docs/NHL93S-SOUND.md`, "Not covered")
 - **SNES DSP core, untested against hardware** (`docs/SNES-SOUND-CORE.md`):

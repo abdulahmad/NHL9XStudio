@@ -170,7 +170,43 @@
     try { session.player.spc.stopRecording(); } catch (err) { /* noop */ }
   }
 
+  /** Buttons for MusicDuck, fade, PuckSfx / CollisionSfx (NHL94SNES routines) while a session is live. */
+  function mountGameplay(box, getSession) {
+    const row = document.createElement('div');
+    row.className = 'st-note';
+    const mk = (label, fn) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ghost-btn';
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        const s = getSession();
+        if (!s || !s.player) return;
+        fn(s.player);
+      });
+      return b;
+    };
+    row.append(
+      mk('Duck music', (p) => p.setMusicDuck(1)),
+      mk('Unduck', (p) => p.setMusicDuck(0)),
+      mk('Fade out', (p) => p.fadeOutSound()),
+      mk('Puck SFX #3', (p) => p.puckSfx(3, 0x2800, 0x800)),
+      mk('Collision SFX', (p) => p.collisionSfx(0x2000, 0, 0x600, 0xa00))
+    );
+    const pre = document.createElement('pre');
+    pre.className = 'st-note mono';
+    pre.textContent = 'Replay slots (recsfx): play a puck or collision SFX while audio runs.';
+    const tick = setInterval(() => {
+      if (!box.isConnected) { clearInterval(tick); return; }
+      const s = getSession();
+      if (s && s.player && s.player.getReplaySfx) pre.textContent = 'recsfx: ' + JSON.stringify(s.player.getReplaySfx());
+    }, 500);
+    box.appendChild(row);
+    box.appendChild(pre);
+  }
+
   root.NhlSoundTestSnes = {
+    mountGameplay,
     RATE,
     displaySongName,
     entries,

@@ -27,7 +27,11 @@ Controllers handled: 7 (volume), `$0B/$0C` (left/right), `$32-$35` (echo voices,
 
 ## What is not ported
 
-`MusicDuck`, the volume fade, the replay recording (`recsfx*`), the puck and collision effect routing (`PuckSfx`, `CollisionSfx`: which effect the game plays for which event, and their random pitch), and the Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; it computes the same product).
+The Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; the hardware `MulFrac*` path is what the player uses).
+
+## Gameplay routing (ported)
+
+`MusicDuck` halves music voice levels (`setMusicDuck`; negative values quarter them). `FadeOutSound` sets `SoundFadeSpeed` to `$200` (`fadeOutSound`); `SoundUpdate` subtracts it from `SoundVolume` and calls `SoundInit` on underflow. `QueueSound` fills `recsfx` / `recsfx2` and the pitch/volume slots (`getReplaySfx`). `PuckSfx` and `CollisionSfx` are `puckSfx(n, vx, vy)` and `collisionSfx(vx1, vy1, vx2, vy2)` on the player. The NHL 94 Sound test panel exposes duck, fade, puck and collision tries while audio is playing.
 
 ## Sound effects
 
