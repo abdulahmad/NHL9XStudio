@@ -27,7 +27,9 @@ async function open(page, url, game) {
       let g = await groups(page);
       assert.ok(g.some((x) => /^▾ Songs/.test(x)) && g.some((x) => /^▾ SFX/.test(x)), game + ': Songs and SFX start open: ' + g.join(' | '));
       const isSnes = game.endsWith('snes');
-      if (!isSnes) assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
+      // NHL 95 has no Instruments rows: its 43 patches are bank items (nhl95-gm-map.json), not the 93/94 set the audition rows play.
+      if (!isSnes && game !== 'nhl95') assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
+      if (game === 'nhl95') assert.ok(g.some((x) => /MIDI/.test(x)), 'nhl95: MIDI tools listed: ' + g.join(' | '));
       const before = (await items(page)).length;
       // collapse SFX, then open it again
       await page.$$eval('#catalog .group-label', (n) => n.find((x) => /SFX/.test(x.textContent)).click());

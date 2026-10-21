@@ -16,10 +16,12 @@
   const Ref = () => root.Nhl92GmReference;
   const Tools = () => root.NhlSoundTools;
 
-  const COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a', '#7bdff2', '#c7f464'];
+  const COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a', '#7bdff2', '#c7f464', '#e9c46a', '#90caf9', '#a5d6a7', '#f48fb1', '#ce93d8', '#ffcc80', '#80deea', '#e6ee9c'];
   const STORE_KEY = 'nhl9x.sequencer.nx.';
-  const NOTE_LO = 12;
-  const NOTE_HI = 95;
+  // The roll's rows: notes 12-95 for NHLPA 93 / NHL 94; NHL 95 uses the whole MIDI range (its drum kit sits at 0-19,
+  // the PSG hi-hats at 96-120). Set per editor in renderEditor.
+  let NOTE_LO = 12;
+  let NOTE_HI = 95;
   const ROW_H = 8;
   const GUTTER = 38;
   const GRIDS = [4, 6, 8, 10, 12, 15, 16, 20];
@@ -51,14 +53,14 @@
   };
 
   // State kept while you move around the Sound test: one song per game.
-  const model = { songs: {}, names: {}, undo: [], channel: 0, patch: 11, len: 4, vel: 100, zoom: 4, report: [], loaded: {}, sel: [], mode: 'notes' };
+  const model = { songs: {}, names: {}, undo: [], channel: 0, patch: 11, len: 4, vel: 100, loadList: 0, zoom: 4, report: [], loaded: {}, sel: [], mode: 'notes' };
 
   function songFor(game) {
     if (!model.songs[game]) {
       let kept = null;
       try { kept = JSON.parse(root.localStorage.getItem(STORE_KEY + game) || 'null'); } catch (err) { kept = null; }
       if (kept && kept.song && Array.isArray(kept.song.notes) && kept.song.game === game) { model.songs[game] = kept.song; model.names[game] = kept.name || 'my-song'; }
-      else { model.songs[game] = Stream().emptySong(game); model.names[game] = 'my-song'; }
+      else { model.songs[game] = Stream().emptySong(game, game === 95 ? model.loadList : undefined); model.names[game] = 'my-song'; }
     }
     return model.songs[game];
   }
@@ -73,6 +75,19 @@
     fm.forEach((n) => { worst = Math.max(worst, fm.filter((m) => m.t <= n.t && m.t + m.dur > n.t).length); });
     return worst;
   };
+
+  /** NHL 95: which patch set (load list) a new or imported song is for: 0 the menus (songs 0-3), 1 in game. */
+  function loadListSelect(map, get, set, idName) {
+    const l = make('label', 'st-volume');
+    const sel = make('select');
+    sel.id = idName;
+    sel.setAttribute('aria-label', 'Patch set (load list)');
+    ((map && map.loadLists) || []).forEach((x) => sel.appendChild(Object.assign(make('option', null, 'List ' + x.list + ' · ' + x.name + ' (' + x.patches.length + ' patches)'), { value: String(x.list) })));
+    sel.value = String(get());
+    sel.addEventListener('change', () => set(Number(sel.value)));
+    l.append(make('span', null, 'Patch set'), sel);
+    return l;
+  }
 
   // --- MIDI import panel ------------------------------------------------------------------------------
 
@@ -89,6 +104,7 @@
     input.id = 'tool-import-file';
     input.setAttribute('aria-label', 'MIDI file');
     controls.appendChild(input);
+    if (gameOf(host) === 95) controls.appendChild(loadListSelect(host.map, () => model.loadList, (v) => { model.loadList = v; }, 'tool-import-list'));
     box.appendChild(controls);
     const out = make('div', 'se-out');
     box.appendChild(out);
@@ -107,7 +123,7 @@
           return;
         }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
-        const conv = Stream().fromGm(r.gm, host.map, gameOf(host), host.bank);
+        const conv = Stream().fromGm(r.gm, host.map, gameOf(host), host.bank, model.loadList);
         loadSong(gameOf(host), conv.song, r.name, r.report.concat(conv.report));
         host.openItem('tool-editor');
       } catch (err) {
@@ -123,9 +139,15 @@
     const label = host.label;
     const S = Stream();
     const map = host.map;
+    const is95 = game === 95;
+    const NCH = S.channelsOf ? S.channelsOf(game) : 8;
+    NOTE_LO = is95 ? 0 : 12;
+    NOTE_HI = is95 ? 127 : 95;
+    // Bends: NHL 93 / 94 store -8192..8191; NHL 95 the raw byte, 64 = none.
+    const BEND = is95 ? { lo: 0, hi: 127, mid: 64, span: 64 } : { lo: -8192, hi: 8191, mid: 0, span: 8192 };
     box.appendChild(make('p', 'st-kind', 'Tool'));
     box.appendChild(make('h3', null, 'Sequencer · new ' + label + ' song'));
-    box.appendChild(make('p', 'st-note', 'Eight channels on a grid of vblanks. Click an empty cell to add a note on the selected channel, click a note of that channel to remove it. ' +
+    box.appendChild(make('p', 'st-note', (is95 ? 'Sixteen' : 'Eight') + ' channels on a grid of vblanks. Click an empty cell to add a note on the selected channel, click a note of that channel to remove it. ' +
       'Play runs the song on the retail ' + label + ' drivers; Export writes MIDI or the event stream. Pitch bends from a retail song or an imported file are kept.'));
 
     const row1 = make('div', 'st-controls se-bar');
@@ -155,6 +177,12 @@
     importBtn.id = 'se-import';
     importBtn.setAttribute('aria-label', 'Import MIDI');
     row1.append(lab('Name', nameIn), lab('Grid', gridSel), gridNote, lab('Bars', barsIn), fresh, lab('Import MIDI', importBtn));
+    // NHL 95: the song's patch set. Changing it keeps the notes; the Instrument list shows that list's patches.
+    let listBox = null;
+    if (is95) {
+      listBox = loadListSelect(map, () => songFor(game).loadList, (v) => { model.loadList = v; edit(() => { songFor(game).loadList = v; }); fillPatches(); }, 'se-load-list');
+      row1.appendChild(listBox);
+    }
     box.appendChild(row1);
 
     const row2 = make('div', 'st-controls se-bar');
@@ -162,7 +190,7 @@
     chanBox.setAttribute('role', 'radiogroup');
     chanBox.setAttribute('aria-label', 'Channel');
     const chanBtns = [];
-    for (let c = 0; c < 8; c++) {
+    for (let c = 0; c < NCH; c++) {
       const b = make('button', 'ghost-btn se-chan', 'CH' + (c + 1));
       b.type = 'button';
       b.style.setProperty('--ch', COLORS[c]);
@@ -174,13 +202,25 @@
     const patchSel = make('select');
     patchSel.id = 'se-patch';
     patchSel.setAttribute('aria-label', 'Instrument');
-    const patchIds = [];
-    for (let p = 0; p < 32; p++) patchIds.push(p);
-    [96, 97, 98, 99, 100, 101, 102, 103, 106, 107, 108, 109, 110].forEach((p) => patchIds.push(p));
-    patchIds.forEach((p) => {
-      const e = map && map.patches.find((x) => x.patch === p);
-      patchSel.appendChild(Object.assign(make('option', null, (p >= 96 ? 'PCM $' + p.toString(16).toUpperCase() : 'FM ' + p) + (e ? ' · ≈ ' + e.target.name : '')), { value: String(p) }));
-    });
+    let filledFor = null;
+    function fillPatches() {
+      filledFor = is95 ? songFor(game).loadList : null;
+      const patchIds = [];
+      if (is95) patchIds.push(...root.Nhl95Stream.listPatches(map, songFor(game).loadList));
+      else {
+        for (let p = 0; p < 32; p++) patchIds.push(p);
+        [96, 97, 98, 99, 100, 101, 102, 103, 106, 107, 108, 109, 110].forEach((p) => patchIds.push(p));
+      }
+      patchSel.replaceChildren();
+      patchIds.forEach((p) => {
+        const e = map && map.patches.find((x) => x.patch === p);
+        const name = is95 ? (e ? e.name : 'Patch ' + p) : (p >= 96 ? 'PCM $' + p.toString(16).toUpperCase() : 'FM ' + p);
+        patchSel.appendChild(Object.assign(make('option', null, name + (e ? ' · ≈ ' + e.target.name : '')), { value: String(p) }));
+      });
+      if (!patchIds.includes(model.patch) && patchIds.length) model.patch = patchIds[0];
+      patchSel.value = String(model.patch);
+    }
+    fillPatches();
     patchSel.addEventListener('change', () => {
       model.patch = Number(patchSel.value);
       if (model.sel.length) edit(() => model.sel.forEach((n) => { n.patch = model.patch; }));
@@ -332,6 +372,10 @@
     }
     function refreshTools() {
       const s = song();
+      if (is95 && listBox) {
+        listBox.querySelector('select').value = String(s.loadList);
+        if (filledFor !== s.loadList) fillPatches();
+      }
       nameIn.value = model.names[game];
       gridSel.value = String(s.unit);
       gridNote.textContent = '= ' + (60 * SongLib().VBLANK_HZ / (s.unit * BEAT)).toFixed(0) + ' BPM per ' + BEAT + ' units';
@@ -438,7 +482,7 @@
         g.lineTo(lx + 0.5, h);
         g.stroke();
       }
-      for (let c = 0; c < 8; c++) {
+      for (let c = 0; c < NCH; c++) {
         g.fillStyle = COLORS[c];
         g.globalAlpha = c === model.channel ? 1 : 0.3;
         song().notes.forEach((n) => {
@@ -459,7 +503,7 @@
         chBends.forEach((b) => {
           const x = GUTTER + (b.t / unitTicks()) * px();
           g.lineTo(x, py);
-          py = h / 2 - (b.value / 8192) * (h / 2);
+          py = h / 2 - ((b.value - BEND.mid) / BEND.span) * (h / 2);
           g.lineTo(x, py);
         });
         g.lineTo(endX, py);
@@ -658,9 +702,9 @@
       if (t >= barTicks() * 200) return;
       const r = canvas.getBoundingClientRect();
       const frac = (ev.clientY - r.top) / r.height;
-      let value = Math.round((0.5 - frac) * 2 * 8192);
-      if (Math.abs(value) < 200) value = 0;
-      value = Math.max(-8192, Math.min(8191, value));
+      let value = Math.round(BEND.mid + (0.5 - frac) * 2 * BEND.span);
+      if (Math.abs(value - BEND.mid) < BEND.span / 40) value = BEND.mid;
+      value = Math.max(BEND.lo, Math.min(BEND.hi, value));
       edit(() => { song().bends.push({ t: t, ch: model.channel, value: value }); song().bends.sort((a, b) => a.t - b.t); });
     }
     function addOrRemove(t, note) {
@@ -693,7 +737,7 @@
     });
     fresh.addEventListener('click', () => {
       edit(() => {
-        model.songs[game] = Stream().emptySong(game);
+        model.songs[game] = Stream().emptySong(game, is95 ? model.loadList : undefined);
         model.names[game] = 'my-song';
         model.report = [];
         model.sel = [];
@@ -708,7 +752,7 @@
         const native = Stream().fromSmfNative(r.parsed);
         if (native) { native.song.game = game; edit(() => { model.songs[game] = native.song; model.names[game] = r.name; model.sel = []; model.report = native.report; }); return; }
         if (!r.gm.notes.length) throw new Error('the file has no notes');
-        const conv = Stream().fromGm(r.gm, map, game, host.bank);
+        const conv = Stream().fromGm(r.gm, map, game, host.bank, is95 ? song().loadList : undefined);
         edit(() => { model.songs[game] = conv.song; model.names[game] = r.name; model.sel = []; model.report = r.report.concat(conv.report); });
       } catch (err) {
         model.report = ['Could not import that file: ' + (err && err.message ? err.message : String(err))];
@@ -727,7 +771,7 @@
     };
     const FM_IDS = [];
     for (let i = 0; i < 32; i++) FM_IDS.push(i);
-    if (root.NhlPatchEditor && host.rom) {
+    if (root.NhlPatchEditor && host.rom && !is95) { // NHL 95's patches are bank items, not a 32-byte table
       pe = root.NhlPatchEditor.mount(peHost, {
         ids: FM_IDS,
         current: () => model.patch,
@@ -746,7 +790,8 @@
           s.ticks = 20 * u;
           s.patchEdits = song().patchEdits;
           if (host.editorPlaying) host.stopLive();
-          await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, s).rom));
+          const a = Stream().romWithSong(game, host.rom, s);
+          await host.playEditor(withEdits(a.rom), 0, a.driverOpts);
           refreshTools();
         }
       });
@@ -756,7 +801,8 @@
     async function toggleNhl() {
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       needNotes();
-      await host.playEditor(withEdits(Stream().romWithSong(game, host.rom, song()).rom), extras ? extras.cue() : 0);
+      const copy = Stream().romWithSong(game, host.rom, song());
+      await host.playEditor(withEdits(copy.rom), extras ? extras.cue() : 0, copy.driverOpts);
       refreshTools();
     }
     async function toggleGm() {
@@ -766,7 +812,8 @@
       await nextFrame();
       const gm = Stream().toGm(song(), map, host.bank).song;
       const buf = Ref().renderEvents(SongGm().gmEvents(gm));
-      const viz = host.songViz(Stream().romWithSong(game, host.rom, song()).rom);
+      const copy = Stream().romWithSong(game, host.rom, song());
+      const viz = host.songViz(copy.rom, copy.driverOpts);
       await host.playBuffer(id, buf, Ref().SAMPLE_RATE, viz);
       refreshTools();
     }

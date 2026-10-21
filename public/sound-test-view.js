@@ -40,7 +40,7 @@
   const snesApi = () => (isSnes93() ? root.NhlSoundTestSnes93 : root.NhlSoundTestSnes);
   const isNx = () => !!NX[game];
   const assetsReady = () => (isSnes() ? !!(snesData && snesApi()) : !!(rom && Ym));
-  const nxNumber = () => (game === 'nhlpa93' ? 93 : 94);
+  const nxNumber = () => (game === 'nhlpa93' ? 93 : game === 'nhl95' ? 95 : 94);
   const toolName = (id) => (isSnes() ? (id === TOOL_EDITOR ? 'Sequencer · new ' + (isSnes93() ? 'NHLPA 93' : 'NHL 94') + ' (SNES) song' : 'MIDI import → ' + (isSnes93() ? 'NHLPA 93' : 'NHL 94') + ' (SNES)') : isNx()
     ? (id === TOOL_EDITOR ? 'Sequencer · new ' + NX[game].label + ' song' : 'MIDI import → ' + NX[game].label)
     : (id === TOOL_EDITOR ? 'Sequencer · new NHL 92 song' : 'MIDI import → NHL 92'));
@@ -52,6 +52,7 @@
   let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
+  let customOpts = null; // NHL 95: harness options for that copy (extra bank, load list; nhl95-stream.js romWithSong)
   let gmPlay = null; // { id, source, startedAt, total }: a reference-synth playback in progress
   let toggles = {}; // id -> () => Promise, set by the tools panels (Space / Enter / double-click)
   const gmCache = new Map(); // song id -> rendered Float32Array
@@ -110,6 +111,7 @@
     nxBank = null;
     nxMap = null;
     customRom = null;
+    customOpts = null;
     loading = null;
     error = '';
     gmCache.clear();
@@ -131,7 +133,7 @@
     const cat = await res.json();
     let map = null;
     try {
-      const m = await fetch(new URL('data/audio/nhl9x-gm-map.json', document.baseURI).href);
+      const m = await fetch(new URL('data/audio/' + (game === 'nhl95' ? 'nhl95-gm-map.json' : 'nhl9x-gm-map.json'), document.baseURI).href);
       map = m.ok ? await m.json() : null;
     } catch (err) { map = null; }
     const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
@@ -224,8 +226,8 @@
       return rows;
     }
     if (isNx()) {
-      // 95G: songs are SoundBanks items in their own sequence format (lib/audio/nhl95-seq.js), not nhl9x-stream; the UI needs a 95 GM map — see docs/NHL95-SOUND.md.
-      if (game !== 'nhl95' && root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
+      // 95G: songs are SoundBanks items in their own format; nhl9x-stream hands game 95 to nhl95-stream.js (docs/NHL95-SOUND.md).
+      if ((game !== 'nhl95' || root.Nhl95Stream) && root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
         out.push({ id: TOOL_EDITOR, group: 'MIDI', label: toolName(TOOL_EDITOR), sub: 'edit, play on the retail drivers, export' });
         out.push({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, edit it as a ' + NX[game].label + ' song' });
       }
@@ -234,7 +236,7 @@
       }
       for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: CAT().sfx, label: '$' + s.id.toString(16).toUpperCase() + ' · ' + s.name, sub: s.desc || SFX_VBLANKS + ' vblanks' });
       // The game's patches (FM and PCM), played as a short scale: a collapsible list like NHL 92's instruments.
-      if (nxMap && AUD() && root.Nhl9xStream) {
+      if (game !== 'nhl95' && nxMap && AUD() && root.Nhl9xStream) {
         for (const e of nxMap.patches) {
           const to = gmText(e.target);
           out.push({ id: 'inst-' + e.patch, group: 'Instruments', collapsible: true, label: AUD().patchLabel(e.patch), sub: firstSentence(e.character) + (to ? ' · Maps to ' + to : '') });
@@ -487,7 +489,7 @@
   });
 
   /** A chain and its note tracker over `romImage`. withChip=false makes no audio: only the register writes (for the roll). */
-  function newSession(romImage, withChip) {
+  function newSession(romImage, withChip, driverOpts) {
     let chip;
     if (withChip) {
       chip = new Ym.Chip(Ym.module, Ym.api.create(), Ym.api);
@@ -495,7 +497,7 @@
     }
     const tracker = root.YmNoteTracker.create();
     // Read-only taps: the same YM2612 writes the chip gets, for the sequencer view.
-    const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false, driver: isNx() ? root[NX[game].driver] : undefined }, taps(tracker)));
+    const chain = Chain().create(Object.assign({ rom: romImage, chip, psg: root.NhlSn76489.create(), keepLogs: false, driver: isNx() ? root[NX[game].driver] : undefined, driverOpts: driverOpts || undefined }, taps(tracker)));
     chMuted.forEach((m, i) => { if (m) chain.setChannelMute(i, true); });
     return { chip, chain, tracker, held: new Array(6).fill(null) };
   }
@@ -601,7 +603,7 @@
     if (INST()) INST().stop();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : isFmInst(id) ? instRun(id).rom : rom, true);
+    const sess = newSession(id === TOOL_EDITOR && customRom ? customRom : isFmInst(id) ? instRun(id).rom : rom, true, id === TOOL_EDITOR && customRom ? customOpts : null);
     live = Object.assign(sess, { id, blocks: [], plan: planFor(id), chunks: [], offset: 0, queued: 0, done: false, message: '', seeking: null, frozen: 0 });
     live.resampler = root.NhlChipResampler.create(Chain().SAMPLE_RATE, ctx.sampleRate, pull);
     startPrefetch(live);
@@ -765,7 +767,7 @@
   function makeViz(spec) {
     if (!spec || !root.YmNoteTracker || !root.NhlSn76489) return null;
     if (spec.tracker) return { fixed: true, spec, tracker: spec.tracker, held: new Array(6).fill(null) };
-    return Object.assign({ fixed: false, spec, plan: spec.plan, minSrc: 0 }, newSession(spec.rom, false));
+    return Object.assign({ fixed: false, spec, plan: spec.plan, minSrc: 0 }, newSession(spec.rom, false, spec.driverOpts));
   }
 
   /** The roll's state during General MIDI playback: chain time follows the audio clock (plus the driver's start-up lead). */
@@ -805,11 +807,21 @@
   }
 
   /** NHL 93 / 94: a song or sound effect through the stream -> GM table and the plain reference synth (cached). */
+  /** NHL 95: a song, or an effect's song (SfxTable at $67890), as General MIDI by the 95 map. */
+  function gm95(id) {
+    const n = Number(id.split('-')[1]);
+    const songId = id.startsWith('song-') ? n : rom[0x67890 + n];
+    if (songId === 0xff || !root.Nhl95Seq.songs(rom).some((s) => s.id === songId)) return { notes: 0 };
+    const m = root.Nhl9xStream.fromStream(95, rom, songId);
+    const song = root.Nhl9xStream.toGm(m, nxMap).song;
+    return { notes: song.notes.length, song, seconds: m.ticks / root.Nhl9xSong.VBLANK_HZ };
+  }
+
   function nxGm(id) {
     if (!nxMap || !nxSlice || !root.Nhl9xSong) throw new Error('data/audio/nhl9x-gm-map.json did not load');
     const key = (id.startsWith('song-') ? 's' : 'f') + Number(id.split('-')[1]);
     if (gmCache.has(key)) return gmCache.get(key);
-    const g = root.Nhl9xSong.toGm(game === 'nhlpa93' ? 93 : 94, nxSlice, Number(id.split('-')[1]), nxMap);
+    const g = game === 'nhl95' ? gm95(id) : root.Nhl9xSong.toGm(game === 'nhlpa93' ? 93 : 94, nxSlice, Number(id.split('-')[1]), nxMap);
     const out = { notes: g.notes, song: g.song, seconds: g.seconds, buf: null };
     if (g.notes) out.buf = root.Nhl92GmReference.renderEvents(root.Nhl92SongGm.gmEvents(g.song));
     gmCache.set(key, out);
@@ -821,7 +833,7 @@
     const r = nxGm(id);
     if (!r.notes) throw new Error('This sound has no notes to export');
     const smf = root.Nhl92SongGm.toSmfSong(r.song);
-    const name = NX[game].short === '93' ? 'nhlpa93' : 'nhl94';
+    const name = NX[game].short === '93' ? 'nhlpa93' : NX[game].short === '95' ? 'nhl95' : 'nhl94';
     const tag = (id.startsWith('song-') ? 'song-' : 'sfx-') + Number(id.split('-')[1]).toString(16);
     smf.name = name + '-' + tag;
     root.NhlSoundTools.download(name + '-' + tag + '-gm.mid', root.Nhl92Smf.write(smf), 'audio/midi');
@@ -902,15 +914,15 @@
       toggles,
       playBuffer, stopBuffer,
       /** Viz spec for playBuffer: the retail drivers playing the sequencer's song (a ROM copy from Nhl92Song.romWithSong). */
-      songViz: (romCopy) => ({ rom: romCopy, plan: Chain().songPlan(isNx() ? root.Nhl9xStream.CUSTOM_SONG[nxNumber()] : root.Nhl92Song.CUSTOM_SONG, Infinity) }),
+      songViz: (romCopy, driverOpts) => ({ rom: romCopy, driverOpts, plan: Chain().songPlan(isNx() ? root.Nhl9xStream.CUSTOM_SONG[nxNumber()] : root.Nhl92Song.CUSTOM_SONG, Infinity) }),
       // NHL 93 / 94 sequencer: which game, its name, the stream reader's slice, the GM table and the 32 FM patches.
       get gameNumber() { return isNx() ? nxNumber() : 92; },
       get label() { return isNx() ? NX[game].label : 'NHL 92'; },
       get slice() { return nxSlice; },
-      get bank() { if (!nxBank && nxSlice) nxBank = root.Nhl9xSong.patches(nxNumber(), nxSlice); return nxBank; },
+      get bank() { if (game === 'nhl95') return null; if (!nxBank && nxSlice) nxBank = root.Nhl9xSong.patches(nxNumber(), nxSlice); return nxBank; },
       get bufferId() { return gmPlay ? gmPlay.id : ''; },
       /** Play the sequencer's song (a ROM copy with it in place) from `startSec` song seconds. */
-      playEditor(romCopy, startSec) { customRom = romCopy; return play(TOOL_EDITOR, startSec > 0 ? startSec + secondsOf(LEAD_FRAMES) : 0); },
+      playEditor(romCopy, startSec, driverOpts) { customRom = romCopy; customOpts = driverOpts || null; return play(TOOL_EDITOR, startSec > 0 ? startSec + secondsOf(LEAD_FRAMES) : 0); },
       stopLive: () => stop(),
       /** Select another Sound test list entry (a click on its row), e.g. after a conversion. */
       openItem(item) {
@@ -1581,8 +1593,8 @@
       b.title = 'Standard MIDI file with General MIDI sounds chosen by the ' + NX[game].label + ' → GM table';
       b.addEventListener('click', () => { exportNxMidi(id).catch(fail('Export MIDI')); });
       if (id.startsWith('song-') && root.Nhl9xStream && root.NhlSoundToolsNx) {
-        const model = () => root.Nhl9xStream.fromStream(nxNumber(), nxSlice, n, nxMap);
-        const nm = (NX[game].short === '93' ? 'nhlpa93' : 'nhl94') + '-song-' + n.toString(16);
+        const model = () => root.Nhl9xStream.fromStream(nxNumber(), game === 'nhl95' ? rom : nxSlice, n, nxMap);
+        const nm = (NX[game].short === '93' ? 'nhlpa93' : NX[game].short === '95' ? 'nhl95' : 'nhl94') + '-song-' + n.toString(16);
         const edit = make('button', 'ghost-btn', 'Edit in sequencer');
         edit.type = 'button';
         edit.title = 'Copy this song (notes, patches and pitch bends) into the sequencer to change it';
