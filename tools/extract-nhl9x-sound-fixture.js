@@ -25,6 +25,12 @@ const GAMES = {
     start: 0x1a264, end: 0x4b5c0, // sound94 (NHL94Genesis tools/segments.json); graphics94 starts at $4B5C0
     env: 'NHL94_ROM', files: ['roms/nhl94.bin', '../abdulahmad/nhl94genesis/lst/nhl94.bin', '../ea-nhl-disassembly-project/NHL94-Genesis/nhl94.bin'],
     out: 'nhl94-sound'
+  },
+  95: {
+    name: 'NHL 95 (Genesis, retail)', sha1: '09e87b076aa4cd6f057a1d65bb50fd889b509b44', size: 0x200000,
+    start: 0xaf44, end: 0x7a000, // sound95 (NHL95Genesis segmap95); driver, bank, PCM, FM patches
+    env: 'NHL95_ROM', files: ['roms/nhl95.bin', '/tmp/disasm/NHL95Genesis/lst/nhl95.bin'],
+    out: 'nhl95-sound'
   }
 };
 

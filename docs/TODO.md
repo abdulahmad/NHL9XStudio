@@ -5,7 +5,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 ## Music / sound
 
 ### Genesis
-- **NHL 95 (95G) has no real sound chain.** Only the old AUD-1 square-wave "Audio" sketch exists; there is no YM2612/Z80 path like 92/93/94. (`docs/AGENT-HANDOFF.md`: AUD-1 and the priority section; `public/viewer.js` `hasAudioTab`)
+- [x] **NHL 95 (95G) sound chain:** `nhl95-68k-harness.js`, bundled slice `$AF44–$7A000`, Sound test playback (songs/SFX; no 93/94-style sequencer yet). (`lib/audio/README.md`)
 - **93G / 94G sequencer:** per-note volume changes and the volume controller (`$3x` 7) are not handled. (`docs/NHL93-94-SOUND.md`, "Not done yet")
 - **93G revisions:** NHLPA 93 Rev A (`1992.OCT`, which runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled for sound, and PAL timing is not modelled. (`docs/NHL93-94-SOUND.md`)
 - **93G / 94G GM map:** the matches come from measurements; nobody has checked them by ear. (`docs/NHL93-94-SOUND.md`)

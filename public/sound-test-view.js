@@ -27,7 +27,8 @@
   let game = 'nhl92';
   const NX = {
     nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
-    nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' }
+    nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' },
+    nhl95: { label: 'NHL 95', short: '95', slice: 'nhl95-sound-slice.bin', start: 0xaf44, size: 0x7a000, catalog: 'nhl95.json', driver: 'Nhl95M68kHarness' }
   };
   const SNES94 = 'nhl94snes';
   const SNES93 = 'nhlpa93snes';
@@ -137,7 +138,7 @@
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
     // NHLPA 93: the 93 labels and ram93 equates, lined up with the NHL 92 names (lib/audio/nhl93-names.js).
     // NHL 94 Genesis shares the 93 effect table (sounds $00-$2F), and names its three shared songs by their equates.
-    const N93 = (c.short === '93' || c.short === '94') && root.Nhl93Names ? root.Nhl93Names : null;
+    const N93 = (c.short === '93' || c.short === '94' || c.short === '95') && root.Nhl93Names ? root.Nhl93Names : null;
     const songRec = (e) => (N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
     const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
     return {
@@ -145,7 +146,7 @@
       slice: image.subarray(c.start),
       map,
       data: {
-        songs: sounds.filter((e) => e.soundId >= 0x30).map(songRec),
+        songs: sounds.filter((e) => e.soundId >= 0x30 || (c.short === '95' && e.soundId <= 3)).map(songRec),
         sfx: sounds.filter((e) => e.soundId < 0x30).map(sfxRec)
       }
     };
@@ -223,7 +224,7 @@
       return rows;
     }
     if (isNx()) {
-      if (root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
+      if (game !== 'nhl95' && root.Nhl9xStream && root.NhlSoundToolsNx && root.Nhl92SongGm && root.Nhl92Smf && root.NhlSoundTools && nxMap) {
         out.push({ id: TOOL_EDITOR, group: 'MIDI', label: toolName(TOOL_EDITOR), sub: 'edit, play on the retail drivers, export' });
         out.push({ id: TOOL_IMPORT, group: 'MIDI', label: toolName(TOOL_IMPORT), sub: 'open a .mid, edit it as a ' + NX[game].label + ' song' });
       }
@@ -1327,6 +1328,11 @@
     }
     if (isNx()) {
       const n = Number(id.split('-')[1]);
+      if (game === 'nhl95') {
+        return id.startsWith('song-')
+          ? 'Boot (SoundCmd 0/9/6/7, SoundOff), then song(' + n + ') and SoundCmd 1 (SndUpdate) every vblank, until Stop.'
+          : 'Boot, one vblank, then sfx(' + n + ') and SoundCmd 1 every vblank, for ' + SFX_VBLANKS + ' vblanks.';
+      }
       return id.startsWith('song-')
         ? 'Boot (p_initialZ80, p_turnoff, p_music_vblank), then the game\'s song wrapper with $' + n.toString(16).toUpperCase() + ' (play_sfx_or_music_track) and p_music_vblank every vblank, until Stop.'
         : 'Boot, one vblank, then the game\'s sfx wrapper with $' + n.toString(16).toUpperCase() + ' and p_music_vblank every vblank, for ' + SFX_VBLANKS + ' vblanks.';

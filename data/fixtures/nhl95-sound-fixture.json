@@ -1,0 +1,9 @@
+{
+  "source": "NHL 95 Genesis sound segment (driver, bank, PCM, FM patches)",
+  "romSha1": "09e87b076aa4cd6f057a1d65bb50fd889b509b44",
+  "soundSlice": {
+    "romOffset": 44868,
+    "length": 454844
+  },
+  "syntheticRomSize": 499712
+}
