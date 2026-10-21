@@ -13,6 +13,9 @@ assert.deepStrictEqual(M.drumFor93(m93, 'boot', 36), { inst: 1, key: 19 });
 
 assert.strictEqual(M.instrumentForProgram94(m94, 'menu', 33), 2);
 assert.ok(M.idsForProgram(m94, 'menu', 17).includes(M.instrumentForProgram94(m94, 'menu', 17)));
+assert.strictEqual(M.instrumentForProgram94(m94, 'game', 16, 0), 11);
+assert.strictEqual(M.instrumentForProgram94(m94, 'game', 16, 127), 12);
+assert.strictEqual(M.instrumentForProgram94(m94, 'game', 16, 64), 11, 'tie at center prefers entry 11');
 assert.strictEqual(M.drumFor94(m94, 'menu', 36), 1);
 
 const d = M.describeEntry(m93, 'boot', 0);

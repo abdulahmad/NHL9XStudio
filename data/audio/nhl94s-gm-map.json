@@ -501,6 +501,7 @@
   "game": {
    "11": {
     "program": 16,
+    "pan": 32,
     "why": "SampleOrgan, panned left: drawbar organ, the arena organ. 4052 notes, MIDI 31-77 in 53 songs. Measured: sustained, attack 5 ms, -1 dB at key-off, brightness 1.8x, periodicity 1",
     "preferred": true,
     "confidence": "medium",
@@ -511,6 +512,7 @@
    },
    "12": {
     "program": 16,
+    "pan": 96,
     "why": "SampleOrgan, panned right. 3412 notes, MIDI 26-77 in 53 songs. Measured: sustained, attack 5 ms, -2 dB at key-off, brightness 1.8x, periodicity 1",
     "confidence": "medium",
     "runnerUp": {
