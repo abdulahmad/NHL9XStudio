@@ -86,7 +86,7 @@ Written up with numbers in `docs/NHL92-SOUND-CHAIN.md` § Not verified:
 - ymfm vs a real YM2612: prebuilt WASM, chip class and options unchecked; idle output +504.
 - Deployed GitHub Pages: a static `_site` built like the workflow passed under a subpath; the live site wasn't loaded.
 - ScriptProcessor underrun on slow clients.
-- **93G–95G audio** is still a placeholder (AUD-1); out of scope unless the user expands it.
+- **93G / 94G** use the full retail sound chain in the Sound test; **95G** is still the AUD-1 placeholder.
 
 ---
 

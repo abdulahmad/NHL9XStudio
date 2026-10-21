@@ -37,4 +37,14 @@ assert.deepStrictEqual(Array.from(Sfx.exportEffect93(d93, g93, 0xa0)), Array.fro
   assert.strictEqual(organ.notes[0].pitch, 84, 'the effect plays the organ two octaves above its tuned pitch');
   for (const n of [0, 3, 9, 13, 20, 21]) assert.ok(Smf.parse(Sfx.exportEffect94(d94, g94, 'game', n)).notes.length >= 1, 'game effect ' + n);
 }
+{
+  const P93 = require('../lib/audio/nhl93s-player');
+  const p2 = P93.create({ data: d93 });
+  p2.loadSet('game');
+  let q = false;
+  const cap = Sfx.capture(p2.spc, () => { if (!q) { p2.effect(0x8a); q = true; } p2.runFrame(); }, { maxFrames: 200, done: () => p2.idle() });
+  const roll = Sfx.notesToRollCommands(cap, 60.0988, 0.09);
+  assert.ok(roll.some((c) => c.name === 'keyOn' && c.args.pitch > 0));
+}
+
 console.log('snes-sfx-midi: ok');
