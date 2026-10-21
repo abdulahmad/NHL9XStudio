@@ -43,7 +43,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 
 ## Graphics / images
 - GAP-2 (93G): JIM inventory polish (optional). (`docs/AGENT-HANDOFF.md`, Backlog)
-- GAP-4 (95G): 27 `ArenaGfx*`, and a full extraction audit against `extractAssets95.js` (optional). (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md`)
+- GAP-4 (95G): [x] 27 `ArenaGfx*` in `genesis-images.js`, contiguous retail slices, decode test when ROM present (`docs/GAP-4-95G-ARENA.md`). Full dev `extractAssets95.js` bitwise audit still optional.
 - GAP-5/6 (93S/94S): [x] 94S framer, energy bar, playoff arrows, and crowd sprite strip (658–720) pinned from NHL94SNES. Scouting backdrop is the existing EA Sports backdrop (`MenuBackMap`); dedicated scouting/JIM parity and 93S-only screens (NHLPA logo, playoff on 93S) unchanged. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:111`)
 - GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. (`docs/DESIGN.md`)
 - GAP-8 (94PC): extract the retail `HOCKEY.EXE` SPA pack to replace the interim data; tune 94PC hotspots and `frameIsDynamic`. (`docs/AGENT-HANDOFF.md`; PR #9)
