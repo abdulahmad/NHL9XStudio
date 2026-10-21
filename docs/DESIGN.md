@@ -108,7 +108,7 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 
 ### 1.7 Known graphics gaps
 
-- **94S:** Several Genesis-parity pictures not yet in SNES catalog (need disassembly offsets).
+- **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
 - **94PC:** Full install under `pc94/`; **no** `nhl94pc` game profile or decoders in `pc95.js`.
 - **96G:** Out of scope for viewer game list.
 - **Editing / export / build:** View-only; no write path to ROM or extracted bins.
