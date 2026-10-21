@@ -82,7 +82,8 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
 {
   // 120 bpm, 480 per quarter: a brass note (program 61) of one quarter at key 60, then another at tick 480; a kick on channel 10
   const smf = Smf.write({ ppq: 480, tempos: [{ tick: 0, bpm: 120 }], tracks: [
-    { name: 'lead', ch: 0, notes: [{ tick: 0, dur: 480, pitch: 60, vel: 100, program: 61 }, { tick: 480, dur: 480, pitch: 62, vel: 100, program: 61 }] },
+    { name: 'lead', ch: 0, controllers: [{ tick: 0, controller: 7, value: 100 }, { tick: 0, controller: 10, value: 0 }],
+      notes: [{ tick: 0, dur: 480, pitch: 60, vel: 100, program: 61 }, { tick: 480, dur: 480, pitch: 62, vel: 100, program: 61 }] },
     { name: 'drums', ch: 9, notes: [{ tick: 0, dur: 100, pitch: 36, vel: 120 }, { tick: 240, dur: 100, pitch: 99, vel: 120 }] }
   ] });
   const r = Midi.fromSmf(smf, d, gm, { set: 'menu' });
@@ -92,6 +93,10 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
   const lead = song.tracks[0].events.filter((e) => e.type === 'note' || e.type === 'instrument');
   assert.strictEqual(lead[0].type, 'instrument');
   assert.strictEqual(lead[0].sound, 20, 'brass program -> the preferred brass entry');
+  const volEv = song.tracks[0].events.find((e) => e.type === 'volume');
+  const panL = song.tracks[0].events.find((e) => e.type === 'controller' && e.controller === 0x0b);
+  assert.ok(volEv, 'CC7 -> $DE volume');
+  assert.ok(panL && panL.value === 127, 'CC10 hard left -> $DF $0B');
   // tick length at tempo byte 160: floor(10080 / 160) = 63 -> 63/64 frame = 16.38 ms: 0.5 s = 30.5 ticks
   assert.ok(lead[1].duration === 31 || lead[1].duration === 30);
   assert.strictEqual(lead[1].code, 0x80 | ((60 - d.sound('menu', 20).noteOffset) & 0x7f), 'code = key - the entry\'s note offset');

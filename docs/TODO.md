@@ -25,9 +25,9 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 
 ### SNES
 - **94S MIDI:**
-  - Volume and pan controllers in imported MIDI files. `$DE`/`$DF` are written only by native import.
+  - [x] Volume and pan (MIDI CC7/CC10) in GM import → `$DE`/`$DF` (`lib/audio/smf.js`, `nhl94s-midi.js`).
   - Several sound entries per GM program, with panning.
-  - An instrument (BRR sample / ADSR) editor.
+  - [x] Basic SNES sound-entry editor (`public/sound-patch-editor-snes.js`: BRR preview, ADSR/GAIN).
   
   (`docs/NHL94S-MIDI.md`, "Not done"; PR #52)
 - **94S playback, not ported:**
@@ -54,7 +54,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 ## Graphics / images
 - GAP-2 (93G): JIM inventory polish (optional). (`docs/AGENT-HANDOFF.md`, Backlog)
 - GAP-4 (95G): 27 `ArenaGfx*`, and a full extraction audit against `extractAssets95.js` (optional). (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md`)
-- GAP-5/6 (93S/94S): more Images-tab pictures (scouting, refs, the 94S framer) once the LoROM offsets are pinned. Several Genesis-parity pictures for 94S are still missing. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:111`)
+- GAP-5/6 (93S/94S): more Images-tab pictures (scouting, refs, the 94S framer) once the LoROM offsets are pinned. Several Genesis-parity pictures for 94S are still missing. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:111`) — **open:** needs disasm-pinned LoROM offsets per asset (not done this pass).
 - GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. (`docs/DESIGN.md`)
 - GAP-8 (94PC): extract the retail `HOCKEY.EXE` SPA pack to replace the interim data; tune 94PC hotspots and `frameIsDynamic`. (`docs/AGENT-HANDOFF.md`; PR #9)
 - Open visual issues (`docs/AGENT-HANDOFF.md`, Status 2026-10-20):
