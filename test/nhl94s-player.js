@@ -121,4 +121,27 @@ function play(name, frames, opts) {
   assert.strictEqual(m.soundCount(), 1);
 }
 
+// --- 6. MusicDuck, fade, PuckSfx / CollisionSfx, recsfx* ---
+{
+  const p = Player.create({ data: d, seed: 0x1234 });
+  p.boot();
+  p.loadSet('game');
+  p.startSong('SongBrassBonanza');
+  p.setMusicDuck(1);
+  p.logCommands(true);
+  p.record();
+  const v = p.puckSfx(3, 0x3000, 0x1000);
+  assert.ok(v >= 0);
+  const rec = p.getReplaySfx();
+  assert.strictEqual(rec.recsfx, 3);
+  assert.ok(rec.recsfxpitch > 0);
+  p.collisionSfx(0x2000, 0, 0x400, 0x800);
+  const rec2 = p.getReplaySfx();
+  assert.strictEqual(rec2.recsfx, 0x0f);
+  assert.strictEqual(rec2.recsfx2, 3);
+  p.fadeOutSound();
+  p.runFrames(90);
+  assert.strictEqual(p.musicOn, false, 'fade to zero resets the sound');
+}
+
 console.log('nhl94s player: the real sound program plays the extracted songs OK');

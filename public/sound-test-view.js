@@ -1512,6 +1512,9 @@
       box.appendChild(make('h3', null, id.startsWith('song-') ? NAMES().songName(n) : NAMES().name(n)));
       box.appendChild(make('p', 'st-note', id.startsWith('song-') ? NAMES().SONG_DESCRIPTIONS[n] : sfxKinds(data.sfx[n]) + ' · ' + NAMES().describe(n)));
     }
+    if (isSnes94()) {
+      snesApi().mountGameplay(box, () => (live && live.snes && live.id === id ? live.session : null));
+    }
 
     const controls = make('div', 'st-controls');
     const btn = make('button', 'ghost-btn st-toggle', '▶ Play');
