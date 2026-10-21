@@ -150,3 +150,9 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 **What needs to be done:**
 - [x] Effects: `notesToRollCommands` + capture in `startSession` (`public/sound-test-snes93.js`). Songs still use the timeline.
 - [x] Browser: `test/browser/snes93-roll.js`.
+
+## 95 PC (user, Oct 20 2026)
+
+- [ ] Frames are indexed wrong on PC: they should start at 0, not 1.
+- [ ] Palette is incorrect: look at what the user's 95PC sprite-extract scripts do, and merge that with rinkpal.
+- [ ] SPF needs to be re-evaluated. Many correct ones should be identifiable by frame-matching against 93 and 94.
