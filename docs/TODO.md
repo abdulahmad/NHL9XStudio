@@ -156,3 +156,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 - [ ] Frames are indexed wrong on PC: they should start at 0, not 1.
 - [ ] Palette is incorrect: look at what the user's 95PC sprite-extract scripts do, and merge that with rinkpal.
 - [ ] SPF needs to be re-evaluated. Many correct ones should be identifiable by frame-matching against 93 and 94.
+
+## Open (added 2026-10-21)
+- [ ] 95: instrument list.
+- [ ] 94 PC: unpack PPV files.
