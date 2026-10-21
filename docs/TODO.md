@@ -124,8 +124,9 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 **Investigation:** Read as "why can't I pick the game's instruments from the instrument list in the song editor or MIDI import" (a guess at what you meant). The SNES song editor (`public/sound-tools-snes.js`) offers only the 128 General MIDI programs per track. The game's GM table (`data/audio/nhl93s-gm-map.json`) then picks a game instrument. You can't choose instrument `$0A`–`$1C` directly. If "list" means the main Sound test list instead, instruments are there, but in a collapsed group (`categories.js` `COLLAPSED`).
 
 **What needs to be done:**
-- In the SNES editor's instrument menu, add the game's own instruments next to the GM programs (93S `$00`–`$1C`, 94S sound entries).
-- Write them natively: the `$E0` INSTRUMENT command for 93S and the native import path for 94S. Write them into the MIDI export as a native track/program marker.
+- [x] 93S: the song editor's instrument menu lists the game's own instruments of the song's sound set (boot `$00`–`$08`, game `$0A`–`$1C`) next to the GM programs; they are written as the `$E0` INSTRUMENT command and kept in the editor's MIDI file as an `n93i:<channel>:<hex>` marker (`test/browser/snes93-game-instruments.js`, `test/nhl93s-midi.js`).
+- [ ] 94S: the same for its sound entries (not done).
+- [ ] 94S: write them through the native import path (93S done above).
 - If the request was about the collapsed group, consider expanding it by default for the SNES games.
 
 ### "why aren't all samples there"
