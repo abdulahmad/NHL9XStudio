@@ -21,6 +21,10 @@ Sequence format (`SndStartSeq`, `SndUpdate`): word N, N word loop markers (offse
 
 Playback in the chain was silent before PR #119 (the Z80 was reset after the boot and lost its patches). The patches come from load list 0 (menus) or 1 (in game), and the harness loads the one a sound needs.
 
+## GM map and the sequencer model (lib/audio/nhl95-stream.js)
+
+`data/audio/nhl95-gm-map.json` names the 43 bank patches (kind from byte 0: 0 FM, 2 PCM sample, 4 PSG; characters from the songs and `SfxTable` at `$67890` that use them), gives each a General MIDI target (low confidence, not auditioned) and holds the two load lists as the ROM has them, with a GM → patch table per list for MIDI import (only that list's patches). `lib/audio/nhl95-stream.js` is the sequencer model: 16 channels, every note carries its patch (program events are written where a channel's patch changes, reusing the retail ones), controllers kept as they are (95 uses 1, 18 and 116), the raw bend byte (64 = none, read as ±2 semitones for MIDI, an assumption), and `loadList` (0 menus, 1 in game) that says which patch set the song is for. `nhl9x-stream.js` hands game 95 to it (`fromStream`, `encode`, `romWithSong`, `toGm`, `fromGm(…, loadList)`, native MIDI with an `NHL95 v1` header). `romWithSong` returns `driverOpts` (`banks`, and `loadList: 0` for list 0) for the harness; the song is `$32` of the copy. `test/nhl95-stream.js`: the map matches the bank, every retail song survives the model, songs 0 and `$33` play like retail through it, native and GM MIDI round-trip, imported and edited songs play on both lists.
+
 ## Sequencer / MIDI UI (still open)
 
 The Sound test still hides the Sequencer and MIDI import for 95 (`game !== 'nhl95'` in `sound-test-view.js`). What is missing for 93/94 parity:
