@@ -921,6 +921,7 @@
       get snesData() { return snesData; },
       /** The SNES sequencer plays its converted song like an import. */
       playSnesEditor(imp, startSec) { snesImport = imp; return playSnes(TOOL_EDITOR, startSec || 0); },
+      getAudioContext: () => ctx,
       get paused() { return paused; },
       togglePause,
       /**

@@ -249,6 +249,20 @@
     row4.append(exMidi, exBin);
     box.appendChild(row4);
 
+    if (is94 && root.NhlSoundSnesInstEditor) {
+      const instBox = make('div', 'st-seq');
+      if (!model.soundEdits) model.soundEdits = {};
+      root.NhlSoundSnesInstEditor.mount(instBox, {
+        is94: true,
+        data: host.snesData,
+        set: () => song().set,
+        edits: model.soundEdits,
+        audioContext: () => host.getAudioContext && host.getAudioContext(),
+        onChange: () => store(game)
+      });
+      box.appendChild(instBox);
+    }
+
     const info = make('p', 'st-status mono se-info');
     info.id = 'sn-info';
     const hover = make('p', 'st-status mono se-hover');
@@ -321,7 +335,10 @@
       if (host.editorPlaying) { host.stopLive(); refreshTools(); return; }
       const r = convert();
       model.report = r.report.warnings || [];
-      await host.playSnesEditor({ name: song().name, bytes: r.bytes, base: r.base, block: r.block, set: r.report.set || song().set, report: r.report }, extras ? extras.cue() : 0);
+      await host.playSnesEditor({
+        name: song().name, bytes: r.bytes, base: r.base, block: r.block, set: r.report.set || song().set, report: r.report,
+        soundEdits: is94 && model.soundEdits ? model.soundEdits : null
+      }, extras ? extras.cue() : 0);
       refreshTools();
     }
     playBtn.onclick = () => play().catch((err) => { info.textContent = String(err && err.message ? err.message : err); });
