@@ -27,7 +27,7 @@ Controllers handled: 7 (volume), `$0B/$0C` (left/right), `$32-$35` (echo voices,
 
 ## What is not ported
 
-`MusicDuck`, the volume fade, the replay recording (`recsfx*`), the puck and collision effect routing (`PuckSfx`, `CollisionSfx`: which effect the game plays for which event, and their random pitch), and the Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; it computes the same product).
+The Mode 7 software multiplier (taken only when `Mode7InUse` bit 6 is set; it computes the same product). Duck, fade, replay record, and PuckSfx/CollisionSfx helpers: `nhl94s-player.js`, `lib/audio/nhl94s-game-sfx.js`.
 
 ## Sound effects
 

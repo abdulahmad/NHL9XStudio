@@ -1246,6 +1246,7 @@ if (!process.argv.includes('--core')) {
   require('./test/snes-spc');
   require('./test/nhl94s-sound-data');
   require('./test/nhl94s-player');
+  require('./test/nhl94s-game-sfx');
   require('./test/nhl94s-midi');
   require('./test/nhl93s-sound-data');
   require('./test/nhl93s-player');

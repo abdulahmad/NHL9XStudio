@@ -30,10 +30,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
   - An instrument (BRR sample / ADSR) editor.
   
   (`docs/NHL94S-MIDI.md`, "Not done"; PR #52)
-- **94S playback, not ported:**
-  - `MusicDuck` and the volume fade.
-  - Replay recording (`recsfx*`).
-  - The game's effect routing (`PuckSfx`, `CollisionSfx`: which effect plays for which event, and its random pitch).
+- **94S playback:** [x] `MusicDuck`, volume fade, `recsfx*`, and `PuckSfx`/`CollisionSfx` helpers (`lib/audio/nhl94s-game-sfx.js`, PR 2).
   
   (`docs/NHL94S-PLAYBACK.md`, "What is not ported"; PRs #49, #51)
 - **94S / 93S accuracy by ear:** no capture from a console or emulator has been compared. (`docs/NHL94S-PLAYBACK.md`, "Not checked"; `docs/NHL94S-SOUND-DATA.md:39`)
@@ -67,10 +64,10 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - Teams, schedules, ROM build and patches are not implemented. (`docs/DESIGN.md:13`)
 
 ## Stale docs
-- `lib/audio/README.md:53` says "SNES / PC: not implemented yet". SNES has been done since PRs #49–#56.
-- `docs/NHL94S-SOUND-DATA.md:39` calls playback "the next step". Playback landed in #49; only listening is still open.
-- `docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md` says "93G–95G audio is still a placeholder". 93G and 94G now use the full sound chain; only 95G is a placeholder.
-- `docs/AGENT-HANDOFF.md` says "93G–95G catalogs region-only". This is out of date for 93G and 94G.
+- [x] `lib/audio/README.md` — SNES section updated (2026-10-21).
+- [x] `docs/NHL94S-SOUND-DATA.md` — playback vs ear-check wording (2026-10-21).
+- [x] `docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md` — 95G placeholder only (2026-10-21).
+- [x] `docs/AGENT-HANDOFF.md` — 93G/94G sound chain (2026-10-21).
 
 ---
 
@@ -97,9 +94,9 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 - **Conclusion.** You heard it right: the SNES game uses the 93G *backhand* recording for forehand shots and the *forehand* (slap) recording for backhands. The label is correct for the SNES game logic; the recordings are swapped relative to 93G. Whether the SNES developers did this on purpose can't be known (guess: it was a mistake in the port).
 
 **What needs to be done:**
-- Keep the names, because they follow the SNES code.
-- Add the cross-game fact to the `$8D`/`$8E` notes, for example "forehand shot; plays the 93G backhand recording (`sfx_shotbh_pcm`)" and the reverse for `$8E`. That means a change to the equate comments in NHLPA93SNES `ram93s.asm`, or a `twin93g` override in `public/sound-test-snes93.js`.
-- Optionally pin the sample match in a test.
+- [x] Keep the names, because they follow the SNES code.
+- [x] Add the cross-game fact to the `$8D`/`$8E` notes in `public/sound-test-snes93.js` (`SFX_EXTRA`).
+- [ ] Optionally pin the sample match in a test.
 
 ### "$90 sounds like check2"
 **Investigation:**
@@ -110,7 +107,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
   - `sfx_check2_pcm` (from 92 `hitboard`), used by `$1D` and `$1F`.
 - The waveform match against both 93G files is weak (≤0.22), so this test can't settle which recording `$90` is (low confidence). The SNES label "check" means "check sound 1 of 2"; it is not a claim that it equals 93G `check1`.
 
-**What needs to be done:** Listen to `$90` next to the 93G check sounds, or compare spectral envelopes rather than raw waveforms. If it is the hitboard recording, add "93G `check2` (`sfx_check2_pcm`)" to its note. The "check" name can stay, since the SNES code calls it check 1 of 2.
+**What needs to be done:** [x] Spectral envelope comparison in `test/nhl93s-pcm-check.js` (slight lean to 93G `check2` / `sfx_check2_pcm`, low confidence); note on `$90` in Sound test UI. Ear check still open.
 
 ### "$91 sounds like check3 cut off"
 **Investigation:**
@@ -120,9 +117,9 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
   2. The effect keys off at about 0.59 s, before the sample ends (measured in the player). This is how the retail driver behaves, not a playback bug in NHL9X Studio (medium confidence).
 
 **What needs to be done:**
-- Note in the `$91` description that it is the 93G `check`/`check3` recording, shortened.
-- Leave playback alone unless a real capture shows that the key-off timing is wrong.
-- Optionally show the sample length against the note length in the details panel.
+- [x] Note on `$91` in Sound test UI (93G check recording, shortened; retail key-off ~0.59 s).
+- [x] Leave playback alone unless a real capture shows that the key-off timing is wrong.
+- [ ] Optionally show the sample length against the note length in the details panel.
 
 ### "why are instruments there twice"
 **Investigation:** In 93S the Instruments list and the Samples list are almost the same thing:
@@ -130,11 +127,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 - Instrument `$09` points at sample `$9A`, which doesn't exist. It is an unused or garbage entry.
 - A Samples row plays "the first instrument that uses it" (`partInstrument` in `public/sound-test-snes93.js`). So each sound shows up twice, once under Samples and once under Instruments, and both rows play the same probe note (high confidence that this is the duplication you saw).
 
-**What needs to be done:** Choose one of these:
-- (a) Merge the two lists, with one row per instrument that shows its sample, ADSR and pitch.
-- (b) Keep Samples as the raw BRR at its stored rate with no envelope, so it sounds different from the instrument, and say so.
-
-Either way, mark instrument `$09` as invalid (sample `$9A` is out of range).
+**What needs to be done:** [x] Merged Samples into Instruments (`public/sound-test-snes93.js`); instrument `$09` marked invalid (sample `$9A` out of range).
 
 ### "why cant instruments be in list"
 **Investigation:** Read as "why can't I pick the game's instruments from the instrument list in the song editor or MIDI import" (a guess at what you meant). The SNES song editor (`public/sound-tools-snes.js`) offers only the 128 General MIDI programs per track. The game's GM table (`data/audio/nhl93s-gm-map.json`) then picks a game instrument. You can't choose instrument `$0A`–`$1C` directly. If "list" means the main Sound test list instead, instruments are there, but in a collapsed group (`categories.js` `COLLAPSED`).
@@ -154,8 +147,8 @@ Either way, mark instrument `$09` as invalid (sample `$9A` is out of range).
 - Compared with 93G, SNES has fewer distinct recordings. For example, the 4 shot and 4 check variants collapse into 1–2 samples. So some 93G sounds don't exist in 93S at all.
 
 **What needs to be done:**
-- Find out what is missing: compare the list with the 93G PCM list and say which 93G recordings have no SNES equivalent.
-- Decode the gap regions, list them as "unreferenced" if they are valid BRR, and end each sample at its BRR end flag rather than at the next sample's start.
+- [ ] Find out what is missing: compare the list with the 93G PCM list and say which 93G recordings have no SNES equivalent.
+- [x] Sample ends use the BRR end flag (`lib/audio/nhl93s-sound-data.js`); gap decode documented in `test/nhl93s-gaps.js` (pinned regions are tiny BRR fragments only).
 
 ### "visualizer is missing"
 **Investigation:**
@@ -165,5 +158,5 @@ Either way, mark instrument `$09` as invalid (sample `$9A` is out of range).
 - Songs should draw (guess: unverified in a browser).
 
 **What needs to be done:**
-- For 93S effects, and for songs too, build the roll from live DSP voice writes instead of the static timeline. `lib/audio/snes-sfx-midi.js` `capture` already logs key-on and key-off, `srcn`, pitch and volume per voice. Hook the same capture into the live session and push `keyOn` commands (voice, inst = `srcn + 10` for the game set, frames) into `session.commands`.
-- Add a browser check that the 93S roll has notes for one song and one effect.
+- [x] Live DSP voice log for 93S effects in `public/sound-test-snes93.js` (`attachVoiceLog`); songs still use the static timeline.
+- [x] `test/nhl93s-voice-roll.js` covers effect + song note counts; browser check still open.

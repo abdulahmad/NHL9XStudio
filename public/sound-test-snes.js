@@ -170,11 +170,25 @@
     try { session.player.spc.stopRecording(); } catch (err) { /* noop */ }
   }
 
+  const GameSfx = () => root.NhlNhl94sGameSfx;
+
+  /** Play a game-set sound with PuckSfx velocity/pitch (vx/vy are 16-bit puck velocities). */
+  function playPuckSfx(session, n, vx, vy, seed) {
+    return GameSfx().puckSfx(session.player, n, vx, vy, seed);
+  }
+
+  /** Play collision sound $0F with CollisionSfx routing. */
+  function playCollisionSfx(session, vxA, vyA, vxB, vyB, seed) {
+    return GameSfx().collisionSfx(session.player, vxA, vyA, vxB, vyB, seed);
+  }
+
   root.NhlSoundTestSnes = {
     RATE,
     displaySongName,
     entries,
     passInfo,
+    playPuckSfx,
+    playCollisionSfx,
     loadPack,
     startSession,
     pull,
