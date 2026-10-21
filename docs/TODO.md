@@ -33,7 +33,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
   - the power-on phase of the rate counter;
   - GAIN, end-block and filter edge cases.
   
-  The two-way SNES instrument ↔ GM mapping is planned, and its hooks exist.
+  [x] Two-way SNES instrument ↔ GM mapping in `lib/audio/snes-gm-map.js` (93S/94S JSON maps, MIDI import, Sound test labels). (`docs/SNES-SOUND-CORE.md`)
 - See also the 93 SNES section below.
 
 ### PC and long-term

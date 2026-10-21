@@ -152,12 +152,12 @@ On a live DSP: `dsp.playSample(voice, { srcn, pitch, adsr1, adsr2, gain, volL, v
 
 `NhlSnesDsp.decodeBrr(bytes, offset)` decodes a sample to Int16 (`{ samples, blocks, endFlag, loopFlag }`) for waveform display and analysis without running the DSP.
 
-### Room for the two-way instrument ↔ GM mapping
+### SNES instrument ↔ GM mapping
 
-The existing maps (`data/audio/nhl92-gm-map.json`, `nhl9x-gm-map.json`, documented in `NHL92-GM-MAP.md`) work because an instrument is a small record of parameters plus a human-checkable reason. The SNES version fits the same shape without touching the cores, since an instrument on this hardware is fully described by values the hooks above already take and report:
+The committed maps are `data/audio/nhl93s-gm-map.json` and `data/audio/nhl94s-gm-map.json` (measurements in `snes-gm-analysis.js`, rebuilt by `tools/build-snes-gm-analysis.js`). Shared lookups and validation live in `lib/audio/snes-gm-map.js`:
 
-- **Instrument record (SNES → GM):** `srcn` or a game's instrument id, the sample's `sampleStart`/`sampleLoop`, a root `pitch` (the pitch register value at which the sample sounds the note it is meant to), `adsr1`/`adsr2` or `gain`, volume. These are exactly the `playSample` arguments and `voiceState` fields, so measuring an instrument (render it with `renderVoice`, analyse the WAV or `decodeBrr` output) and auditioning a mapping use the same code.
-- **GM → SNES:** a GM note becomes `pitchShift(rootPitch, note - rootNote)` on the mapped instrument; a drum note maps to an instrument and a fixed pitch.
-- **Editable JSON with reasons**, like the existing maps, can sit next to the data without any change to the cores. The cores take plain numbers, never a mapping object.
+- **SNES → GM:** `describeEntry(map, set, id)` and `toGmTarget(row)` for UI labels; `idsForProgram` for the reverse direction.
+- **GM → SNES:** `instrumentForProgram` / `drumFor` (game 93 or 94) for MIDI import (`nhl93s-midi.js`, `nhl94s-midi.js`).
+- **Pitch:** melodic notes use MIDI = game note index + 12 (NHLPA '93); NHL '94 adds each sound entry's `noteOffset` when playing.
 
-No format is fixed here on purpose: the instrument tables of the two games are only read in step 2, and the schema should follow what they contain.
+The DSP hooks above (`playSample`, `voiceState`, `decodeBrr`) are what future chip-lab audition would use to compare a mapped GM program with the game's instrument; nothing in the cores reads the JSON directly.
