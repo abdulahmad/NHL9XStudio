@@ -11,6 +11,10 @@ const el = (id) => document.getElementById(id);
 function isPcGame(kind) {
   return kind === 'pc95' || kind === 'pc94';
 }
+/** The frame number shown to the user: PC sprite frames are 0-based like the game's own index (GetHot), others 1-based. */
+function shownFrame(n) {
+  return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
+}
 /** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 94 SNES, and NHLPA 93 SNES. */
 function hasSoundTest(info) {
   return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined');
@@ -1099,7 +1103,7 @@ function renderList() {
       if (state.mode === 'spf') {
         sub.textContent = entry.end == null
           ? 'from ' + entry.start
-          : entry.start + '–' + entry.end + ' · ' + entry.count + ' frames' +
+          : shownFrame(entry.start) + '–' + shownFrame(entry.end) + ' · ' + entry.count + ' frames' +
             (entry.stride ? ' · 8 facings' : '');
       } else {
         const faces = entry.uniqueDirections === 1 ? '1 shared sequence' : entry.uniqueDirections + ' facings';
@@ -1181,7 +1185,7 @@ function renderFilmstrip() {
     button.dataset.step = String(item.index);
     const canvas = document.createElement('canvas');
     const label = document.createElement('span');
-    label.textContent = String(item.step.frame);
+    label.textContent = String(shownFrame(item.step.frame));
     button.append(canvas, label);
     if (lazyPaint) filmstripPaintQueue.push({ canvas, frameNumber: item.step.frame });
     else {
@@ -1252,7 +1256,7 @@ function renderMeta() {
   } else if (state.mode === 'spf') {
     const spf = catalog.spfs.find((s) => s.name === state.spf);
     rows.push(['SPF', spf.name]);
-    rows.push(['Range', spf.start + '–' + spf.end]);
+    rows.push(['Range', shownFrame(spf.start) + '–' + shownFrame(spf.end)]);
     rows.push(['Stride', spf.stride ? String(spf.stride) : 'flat']);
   } else if (state.mode === 'image') {
     const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
@@ -1264,7 +1268,7 @@ function renderMeta() {
   }
   if (frame) {
     const owner = spfAt(frame.frame);
-    rows.push(['Frame', String(frame.frame)]);
+    rows.push(['Frame', String(shownFrame(frame.frame))]);
     rows.push(['Index', String(frame.index)]);
     if (state.mode !== 'image' && (state.mode !== 'frame' || state.bank === spritesBankId())) {
       rows.push(['In SPF', owner ? owner.name : '—']);
@@ -1288,7 +1292,7 @@ function renderMeta() {
     dd.textContent = v;
     detail.append(dt, dd);
   }
-  el('detail-title').textContent = frame ? 'Frame ' + frame.frame : 'Frame';
+  el('detail-title').textContent = frame ? 'Frame ' + shownFrame(frame.frame) : 'Frame';
   const soundData = !!soundPanel();
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
@@ -1441,7 +1445,7 @@ function renderCaption() {
     }
     cap.textContent = gameInfo && !gameInfo.pixels
       ? (gameInfo.hint || (gameInfo.title + ' names are loaded. Add the ROM at Sprite-Viewer/' + gameInfo.romHint + ' and restart the server to draw the frames.'))
-      : 'Frame ' + step.frame + ' is outside this bank.';
+      : 'Frame ' + shownFrame(step.frame) + ' is outside this bank.';
     return;
   }
   const facing = catalog.directions[state.dir];
@@ -1449,7 +1453,7 @@ function renderCaption() {
   bits.push(seq.title);
   if (seq.directions) bits.push(facing.short + ' ' + facing.name.toLowerCase());
   bits.push('step ' + (state.step + 1) + '/' + seq.steps.length);
-  bits.push('frame ' + step.frame);
+  bits.push('frame ' + shownFrame(step.frame));
   if (state.mode === 'spa') {
     const shown = stepTicks(step);
     bits.push(shown == null ? 'holds' : shown + ' vblanks');
