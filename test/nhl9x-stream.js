@@ -64,6 +64,23 @@ for (const g of [93, 94]) {
   const patches = p.events.filter((e) => e.kind === 'patch').map((e) => [e.t, e.ch, e.patch]);
   assert.deepStrictEqual(patches, [[0, 0, 11], [0, 1, 13], [40, 7, 17], [40, 7, 106]]);
   assert.deepStrictEqual(p.events.filter((e) => e.kind === 'bend').map((e) => [e.t, e.bend]), [[30, 4096], [60, 0]]);
+  // Channel volume (CC 7 / stream $3c) survives encode -> parse.
+  {
+    const volSong = Stream.emptySong(94);
+    volSong.notes = [
+      { t: 10, dur: 40, ch: 0, note: 60, vel: 100, patch: 11 },
+      { t: 50, dur: 40, ch: 0, note: 64, vel: 100, patch: 11 }
+    ];
+    volSong.controllers = [{ t: 0, ch: 0, val: 64 }, { t: 40, ch: 0, val: 127 }];
+    volSong.ticks = 100;
+    const encV = Stream.encode(volSong, 0x4b5c0);
+    const pV = Song.parse(94, encV.bytes, Song.GAMES[94].start);
+    assert.deepStrictEqual(pV.events.filter((e) => e.kind === 'ctl').map((e) => [e.t, e.ch, e.val]), [[0, 0, 64], [40, 0, 127]]);
+    const onV = pV.events.filter((e) => e.kind === 'on');
+    assert.deepStrictEqual(onV.map((e) => [e.t, e.vel]), [[10, 100], [50, 100]]);
+    const gmV = Stream.toGm(volSong, map, Song.patches(94, slices[94]));
+    assert.ok(gmV.song.notes.some((n) => n.tick > 0 && n.vel < 80), 'first note is quieter under CC7');
+  }
   // Each patch select sits right before its own key on.
   const order = p.events.filter((e) => e.ch === 7).map((e) => e.kind + (e.patch != null ? e.patch : e.note));
   assert.deepStrictEqual(order.slice(0, 4), ['patch17', 'on38', 'patch106', 'on70']);
@@ -237,7 +254,7 @@ console.log('nhl9x-stream: ok');
 // --- Native MIDI: every retail song of both games survives export and import -----------------------
 {
   const Smf = require('../lib/audio/smf');
-  const key = (s) => JSON.stringify([s.ticks, s.loopTick, s.notes.map((x) => [x.t, x.dur, x.ch, x.note, x.vel, x.patch].join()).sort(), s.bends.map((x) => [x.t, x.ch, x.value].join()).sort()]);
+  const key = (s) => JSON.stringify([s.ticks, s.loopTick, s.notes.map((x) => [x.t, x.dur, x.ch, x.note, x.vel, x.patch].join()).sort(), (s.controllers || []).map((x) => [x.t, x.ch, x.val].join()).sort(), s.bends.map((x) => [x.t, x.ch, x.value].join()).sort()]);
   let songs = 0;
   let mixed = 0;
   for (const g of [93, 94]) {

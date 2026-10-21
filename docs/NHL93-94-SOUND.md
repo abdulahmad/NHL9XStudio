@@ -135,7 +135,6 @@ map either: they come from measurements, as the 92 ones do.
 
 ## Not done yet
 
-- Per-note volume changes and the volume controller (`$3x` 7) in the sequencer. No retail 93/94 stream uses a controller, and notes already carry their own velocity.
 - NHLPA 93 Rev A (`1992.OCT`, runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled; the
   slice is the retail v1.1 ROM. PAL timing is not modelled.
 - The Audio tab (old square-wave sketch) is hidden for these two games, like NHL 92.
