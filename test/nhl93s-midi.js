@@ -146,4 +146,14 @@ for (const cue of [4, 1]) {
   assert.ok(r.report.compressed && r.report.compressed.from > r.report.capacity, 'it needed compressing: ' + JSON.stringify(r.report.compressed));
   assert.ok(!r.report.tooBig && r.bytes.length <= r.report.capacity);
 }
+// The song editor's game instruments: an "n93i:<channel>:<hex>" marker picks the instrument instead of the GM map.
+{
+  const tune = (markers) => Smf.write({ ppq: 480, tempos: [{ tick: 0, bpm: 120 }], name: 'gi', markers, tracks: [
+    { name: 't1', ch: 0, notes: [60, 64, 67].map((p, i) => ({ tick: i * 480, dur: 400, pitch: p, vel: 100, program: 0 })) }] });
+  const inst = (r) => r.model.channels.flatMap((c) => c.events).filter((e) => e.type === 'command' && e.code === 0xe0).map((e) => e.params[0]);
+  const viaGm = inst(Midi.fromSmf(tune([]), d, gm, { set: 'game' }));
+  const fixed = Midi.fromSmf(tune([{ tick: 0, text: 'n93i:0:c' }]), d, gm, { set: 'game' });
+  assert.deepStrictEqual(inst(fixed), [0x0c], 'game instrument $0C chosen directly (GM map gave ' + viaGm + ')');
+  assert.notDeepStrictEqual(viaGm, [0x0c]);
+}
 console.log('nhl93s-midi: ok');

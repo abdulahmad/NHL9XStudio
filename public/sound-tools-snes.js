@@ -85,6 +85,8 @@
     if (drumCh === 9 && next < TRACKS) { slot.set(9, next); s.drumTrack = next; next++; }
     s.programs = new Array(TRACKS).fill(0);
     const seen = new Set();
+    // The game's own instruments chosen in this editor come back from their "n93i:<channel>:<hex>" markers (as 128 + id).
+    p.markers.forEach((m) => { const x = /^n93i:(\d+):([0-9a-f]+)$/i.exec(m.text); const t = x ? slot.get(Number(x[1])) : null; if (t != null) { seen.add(t); s.programs[t] = GAME_INST + parseInt(x[2], 16); if (root.NhlSoundTestSnes93) s.set = root.NhlSoundTestSnes93.setOfInstrument(parseInt(x[2], 16)); } });
     p.programs.slice().sort((a, b) => a.tick - b.tick).forEach((pr) => { const t = slot.get(pr.ch); if (t != null && !seen.has(t)) { seen.add(t); s.programs[t] = pr.program; } });
     let dropped = 0;
     p.notes.forEach((n) => {
@@ -101,11 +103,22 @@
     return s;
   }
 
-  function toSmfBytes(song) {
+  /** NHLPA 93: a track program of GAME_INST + id plays the game's instrument id directly (no GM mapping). */
+  const GAME_INST = 128;
+  const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
+  function toSmfBytes(song, gmMap) {
     const tracks = [];
+    const markers = [];
     for (let t = 0; t < TRACKS; t++) {
       const drum = t === song.drumTrack;
-      const notes = song.notes.filter((n) => n.ch === t).map((n) => ({ tick: n.t, dur: n.dur, pitch: n.pitch, vel: n.vel, program: song.programs[t] }));
+      let program = song.programs[t];
+      if (!drum && program >= GAME_INST) {
+        const id = program - GAME_INST;
+        const e = gmMap && gmMap.sets && gmMap.sets[song.set] && gmMap.sets[song.set][String(id)];
+        markers.push({ tick: 0, text: 'n93i:' + t + ':' + id.toString(16) });
+        program = e && e.program != null ? e.program : 0; // the GM file still names a close General MIDI program
+      }
+      const notes = song.notes.filter((n) => n.ch === t).map((n) => ({ tick: n.t, dur: n.dur, pitch: n.pitch, vel: n.vel, program }));
       if (!notes.length) continue;
       const bends = drum ? [] : song.bends.filter((b) => b.ch === t).map((b) => ({ tick: b.t, semis: b.semis }));
       tracks.push({ name: drum ? 'drums' : 'track ' + (t + 1), ch: drum ? 9 : t, notes, bends, bendRange: BEND_RANGE });
@@ -113,7 +126,7 @@
     if (!tracks.length) throw new Error('Add some notes first');
     const tempos = song.tempos.slice();
     tempos[0] = { tick: 0, bpm: song.bpm };
-    return root.Nhl92Smf.write({ ppq: PPQ, tempos, name: song.name, tracks });
+    return root.Nhl92Smf.write({ ppq: PPQ, tempos, name: song.name, tracks, markers });
   }
 
   /** Called from a retail song panel: copy the song into the editor. */
@@ -188,6 +201,20 @@
     progSel.id = 'sn-program';
     progSel.setAttribute('aria-label', 'Instrument of this track');
     for (let p = 0; p < 128; p++) progSel.appendChild(Object.assign(make('option', null, p + ' · ' + (programNames[p] || 'program ' + p)), { value: String(p) }));
+    // NHLPA 93: the game's own instruments of the song's sound set, written as the $E0 INSTRUMENT command directly.
+    const gameGroup = make('optgroup');
+    gameGroup.label = 'Game instruments (this sound set)';
+    if (!is94) progSel.appendChild(gameGroup);
+    function fillGameInstruments(set) {
+      if (is94 || gameGroup.dataset.set === set) return;
+      gameGroup.dataset.set = set;
+      gameGroup.textContent = '';
+      const snes = root.NhlSoundTestSnes93;
+      for (const i of host.snesData.instruments || []) {
+        if (snes && (snes.setOfInstrument(i.index) !== set || snes.isInvalidInstrument(i.index))) continue;
+        gameGroup.appendChild(Object.assign(make('option', null, hex2(i.index) + ' · game instrument (' + set + ' set)'), { value: String(GAME_INST + i.index) }));
+      }
+    }
     progSel.addEventListener('change', () => edit(() => { song().programs[model.track] = Number(progSel.value); }));
     const drumBox = make('input');
     drumBox.type = 'checkbox';
@@ -240,7 +267,7 @@
     const undoBtn = button('Undo', () => undo());
     const clearBtn = button('Clear track', () => edit(() => { song().notes = song().notes.filter((n) => n.ch !== model.track); song().bends = song().bends.filter((b) => b.ch !== model.track); model.sel = []; }));
     const clearBends = button('Clear bends', () => edit(() => { song().bends = []; }));
-    const exMidi = button('Export MIDI (GM)', () => { try { Tools().download(safe(song().name) + '-gm.mid', toSmfBytes(song()), 'audio/midi'); } catch (err) { info.textContent = err.message; } });
+    const exMidi = button('Export MIDI (GM)', () => { try { Tools().download(safe(song().name) + '-gm.mid', toSmfBytes(song(), host.snesData.gmMap), 'audio/midi'); } catch (err) { info.textContent = err.message; } });
     const exBin = button('Export song (.bin)', () => {
       try { const r = convert(); Tools().download((is94 ? 'nhl94s-' : 'nhl93s-') + safe(song().name) + '.bin', is94 ? r.bytes : r.block, 'application/octet-stream'); } catch (err) { info.textContent = err.message; }
     });
@@ -327,7 +354,7 @@
 
     /** The song as the game's own format: the same conversion the MIDI import tool runs. */
     function convert() {
-      const r = M().fromSmf(toSmfBytes(song()), host.snesData, host.snesData.gmMap, { set: song().set, loop: song().loop });
+      const r = M().fromSmf(toSmfBytes(song(), host.snesData.gmMap), host.snesData, host.snesData.gmMap, { set: song().set, loop: song().loop });
       if (!is94 && r.report.tooBig) throw new Error(r.report.warnings[r.report.warnings.length - 1]);
       return r;
     }
@@ -353,6 +380,7 @@
       lenSel.value = String(model.len);
       velIn.value = String(model.vel);
       modeSel.value = model.mode;
+      fillGameInstruments(s.set);
       progSel.value = String(s.programs[model.track]);
       drumBox.checked = s.drumTrack === model.track;
       progSel.disabled = s.drumTrack === model.track;
@@ -487,7 +515,7 @@
       const bends = s.bends.filter((b) => b.ch === n.ch && b.t >= n.t && b.t < n.t + n.dur);
       const lines = [
         (drum ? 'Drum key ' : '') + noteName(n.pitch) + ' (MIDI ' + n.pitch + ') · track ' + (n.ch + 1),
-        drum ? 'Instrument: the game\'s drum for this key' : 'Instrument ' + s.programs[n.ch] + ' · ' + (programNames[s.programs[n.ch]] || ''),
+        drum ? 'Instrument: the game\'s drum for this key' : s.programs[n.ch] >= GAME_INST ? 'Game instrument ' + hex2(s.programs[n.ch] - GAME_INST) : 'Instrument ' + s.programs[n.ch] + ' · ' + (programNames[s.programs[n.ch]] || ''),
         'Starts bar ' + (Math.floor(unit / BAR) + 1) + ' beat ' + (Math.floor((unit % BAR) / BEAT) + 1) + ' (' + secs(n.t) + ')',
         'Length ' + (n.dur / UNIT) + ' units (' + secs(n.dur) + ')',
         'Velocity ' + n.vel
