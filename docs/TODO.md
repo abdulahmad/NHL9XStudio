@@ -153,7 +153,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 
 ## 95 PC (user, Oct 20 2026)
 
-- [ ] Frames are indexed wrong on PC: they should start at 0, not 1.
+- [x] Frames are indexed wrong on PC: they should start at 0, not 1. PC frame numbers (filmstrip, title, details, SPF ranges, caption) now show the game's 0-based index (`shownFrame` in `public/viewer.js`).
 - [ ] Palette is incorrect: look at what the user's 95PC sprite-extract scripts do, and merge that with rinkpal.
 - [ ] SPF needs to be re-evaluated. Many correct ones should be identifiable by frame-matching against 93 and 94.
 
