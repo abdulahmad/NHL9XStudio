@@ -474,7 +474,11 @@ assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.bin' && imag
 assert.ok(g95.images.some((image) => image.id === 'CardGuyHebert.bin' && image.paletteAt));
 assert.ok(g95.images.some((image) => image.id === 'logoANA.map.jim'));
 assert.ok(g95.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
-assert.strictEqual(g95.images.filter((image) => /^ArenaGfx/.test(image.id)).length, 27);
+const g95Arenas = g95.images.filter((image) => /^ArenaGfx/.test(image.id));
+assert.strictEqual(g95Arenas.length, 27);
+for (let ai = 1; ai < g95Arenas.length; ai++) {
+  assert.strictEqual(g95Arenas[ai].start, g95Arenas[ai - 1].end, g95Arenas[ai].id + ' follows previous arena slice');
+}
 assert.strictEqual(g95.banks.length, sheetGameBanks(g95.images).length);
 assert.strictEqual(g95.banks.filter((bank) => bank.kind === 'frames').length, 2);
 assert.ok(g95.banks.some((bank) => bank.id === 'FaceOff.anim' && bank.kind === 'frames'));
@@ -601,6 +605,14 @@ if (genesis95) {
   );
   assert.ok(face.numFrames >= 2);
   assert.ok(inkCount(face.renderFrame(1)) > 20);
+  g95Arenas.forEach((spec) => {
+    assert.strictEqual(spec.end - spec.start, genesis95.subarray(spec.start, spec.end).length, spec.id + ' byte length');
+    const pal = genesis95.subarray(spec.paletteAt, spec.paletteAt + 128);
+    const arena = decodeJim(genesis95.subarray(spec.start, spec.end), pal);
+    const frame = arena.renderFrame(1);
+    assert.ok(frame.width >= 32 && frame.height >= 16, spec.id + ' decodes to a frame');
+    assert.ok(inkCount(frame) > 80, spec.id + ' has rink art pixels');
+  });
 }
 const revA93 = romIf(path.join(toolsRoot, 'JIM-Tools', 'nhlpa93retailRevA.bin'));
 if (revA93) {
