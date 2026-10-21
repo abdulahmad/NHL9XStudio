@@ -26,5 +26,8 @@
   "dependencies": {
     "@dcorp80/z80cpu": "^0.2.1",
     "opl3": "^0.4.3"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
   }
 }
