@@ -22,7 +22,7 @@ Every retail track ends with a stop or a loop, and the retail tool leaves paddin
 
 ## Export
 
-- **GM**: notes, a program per track from `data/audio/nhl94s-gm-map.json` (organ songs: drawbar organ), channel 10 for the drum track with GM percussion keys, tempo changes (`$DD`), pitch bends in semitones (bend range from the sound entry), and loop start/end markers. For other programs.
+- **GM**: notes, a program per track from `data/audio/nhl94s-gm-map.json` (organ songs: drawbar organ), channel 10 for the drum track with GM percussion keys, tempo changes (`$DD`), pitch bends in semitones (bend range from the sound entry), loop start/end markers, and **CC10** when a track switches between panned sound entries (or when retail `$DF` pan controllers change). For other programs.
 - **Native**: one MIDI track per game track, notes at the game's own key numbers, and every other event in a marker `n94:<hex bytes>`. Importing it gives the same song: same events on the same ticks (tested on all 56). Notes that start on the same tick come back in key order, which does not change how they sound.
 
 ## Import
@@ -30,7 +30,7 @@ Every retail track ends with a stop or a loop, and the retail tool leaves paddin
 `fromSmf(bytes, data, gmMap, { set, tempo, loop })`:
 
 - A native file is read back exactly.
-- Any other file (format 0 or 1): channel 10 is the drum track (track 9), other channels fill tracks 0-8 and 10-15. Each program change picks a sound entry through the map's `families` (GM programs to the few programs the game has) and the preferred entry for it; each note becomes `code = key - noteOffset`; drum keys go through `drums`; times go through the tempo map to ticks (default tempo byte 160, about one tick a frame). Every track ends with a stop at the song's end tick (or a mark and a loop jump with `loop`).
+- Any other file (format 0 or 1): channel 10 is the drum track (track 9), other channels fill tracks 0-8 and 10-15. Each program change picks a sound entry through the map's `families` (GM programs to the few programs the game has); when several entries share the same GM program (the game-set left and right arena organs both use drawbar organ), **CC10** picks the closest `pan` in the map. Each note becomes `code = key - noteOffset`; drum keys go through `drums`; times go through the tempo map to ticks (default tempo byte 160, about one tick a frame). Every track ends with a stop at the song's end tick (or a mark and a loop jump with `loop`).
 - Report: tracks, notes, instruments used, length, and warnings: notes dropped (no sound for that drum key or program in the chosen set), more than 8 notes at once (the sound unit has 8 voices; the oldest are cut), more than 15 melodic channels.
 - `set` is `menu` (band sounds: kick, snare, hats, toms, brass, guitars, bass, orchestra hit, timpani, organ) or `game` (the arena organ and the clap).
 
@@ -54,4 +54,4 @@ See [SEQUENCER-EDITOR.md](SEQUENCER-EDITOR.md).
 
 ## Not done
 
-Volume controller and pan from the MIDI file (`$DE` / `$DF` are written only by native import), several sound entries per GM program with panning, and instrument (sample / ADSR) editing.
+Instrument (sample / ADSR) editing beyond the basic sound-entry panel.

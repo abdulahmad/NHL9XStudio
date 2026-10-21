@@ -151,6 +151,30 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
   const b = run((p) => p.startSongBytes(r.bytes));
   assert.strictEqual(a.length, b.length);
   a.forEach((f, i) => assert.ok(Math.abs(f - b[i]) <= 1, 'key-on ' + i + ' within a frame: ' + f + ' vs ' + b[i]));
+  const insts = (song) => song.tracks.flatMap((t) => t.events.filter((e) => e.type === 'instrument').map((e) => e.sound));
+  const brassRt = Midi.fromSmf(Midi.toSmf(d, gm, 'SongBrassBonanza', {}), d, gm, { set: 'game' });
+  assert.deepStrictEqual(insts(SoundData.parseSong(brassRt.bytes)), insts(d.song('SongBrassBonanza')), 'SongBrassBonanza: GM pan picks left/right organ entries');
+}
+
+// --- GM program 16: CC10 picks game organ entry 11 vs 12 ---
+{
+  const mk = (pan) => Smf.write({
+    ppq: 480,
+    tempos: [{ tick: 0, bpm: 120 }],
+    tracks: [{
+      ch: 0,
+      controllers: [{ tick: 0, cc: 10, value: pan }],
+      notes: [{ tick: 0, dur: 480, vel: 100, pitch: 60, program: 16 }]
+    }]
+  });
+  const left = Midi.fromSmf(mk(0), d, gm, { set: 'game' });
+  const right = Midi.fromSmf(mk(127), d, gm, { set: 'game' });
+  const li = left.model.tracks[0].events.find((e) => e.type === 'instrument');
+  const ri = right.model.tracks[0].events.find((e) => e.type === 'instrument');
+  assert.strictEqual(li && li.sound, 11);
+  assert.strictEqual(ri && ri.sound, 12);
+  const exported = Smf.parse(Midi.toSmf(d, gm, 'SongBirthday', {}));
+  assert.ok((exported.controllers || []).some((c) => c.cc === 10), 'GM export writes CC10 when organ entries change');
 }
 
 // --- CC7 / CC10 import -> $DE volume and $DF pan (controllers $0B / $0C) ---
