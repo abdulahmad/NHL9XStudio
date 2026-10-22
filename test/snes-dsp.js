@@ -421,3 +421,27 @@ console.log('snes dsp: echo read, FIR taps, write, write disable, wrap and feedb
   assert.deepStrictEqual(full(), full());
 }
 console.log('snes dsp: render hooks, WAV output and determinism OK');
+
+// --- listener voice mute: a muted voice keeps running but is left out of the mix (live, both ways) ---
+{
+  const rms = (s) => Math.sqrt(s.reduce((a, v) => a + v * v, 0) / s.length);
+  const two = (mute) => {
+    const { d } = rig(FLAT);
+    d.playSample(0, { srcn: 0, pitch: 0x1000, gain: 0x7f, volL: 0x40, volR: 0x40 });
+    d.playSample(1, { srcn: 0, pitch: 0x1000, gain: 0x7f, volL: 0x40, volR: 0x40 });
+    if (mute != null) d.setVoiceMute(mute, true);
+    return d;
+  };
+  const both = rms(two(null).render(4000));
+  const d1 = two(1);
+  assert.strictEqual(d1.muteMask, 2);
+  const one = rms(d1.render(4000));
+  assert.ok(both > 1000 && Math.abs(one - both / 2) < both * 0.02, 'muting one of two equal voices halves the RMS: ' + both + ' -> ' + one);
+  assert.ok(d1.voiceState(1).playing && d1.read(0x18) > 0, 'the muted voice still runs (ENVX)');
+  d1.setVoiceMute(0, true);
+  assert.strictEqual(rms(d1.render(2000)), 0, 'all playing voices muted: silence');
+  d1.setVoiceMute(0, false); d1.setVoiceMute(1, false);
+  assert.strictEqual(d1.muteMask, 0);
+  assert.ok(Math.abs(rms(d1.render(2000)) - both) < both * 0.02, 'unmuted: back to full level');
+}
+console.log('snes dsp: listener voice mute OK');

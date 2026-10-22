@@ -25,8 +25,9 @@
 
   /**
    * @param {HTMLElement} container
-   * @param {{ frameRate: number, state: function, voiceLabel?: function }} opts
+   * @param {{ frameRate: number, state: function, voiceLabel?: function, isMuted?: function, onToggle?: function }} opts
    *   state() -> null or { frame, commands, timeSec }
+   *   isMuted(i) / onToggle(i): optional; a click on voice lane i (0-7) calls onToggle, and muted lanes are drawn dimmed
    */
   function mount(container, opts) {
     const frameRate = opts.frameRate;
@@ -53,6 +54,8 @@
     events.hidden = true;
     const note = make('p', 'st-seq-note', 'From the main CPU sequencer commands the ported player sends to the SPC700 program (right edge = now). SFX and ducking are not ported.');
     container.append(head, wrap, events, note);
+    const mutable = !!(opts.onToggle && opts.isMuted);
+    if (mutable) note.textContent += ' Click a lane to mute or unmute that voice.';
 
     const pitchRange = { lo: -6, hi: 6, init: false };
     let mode = 'roll';
@@ -103,6 +106,46 @@
       return { gutter, x0: gutter, x1: L.w - 4, laneTop: (i) => 16 + i * (L.laneH + 2) };
     }
 
+    /** Muted voice lanes are covered and struck through so they read as off (their notes are still drawn under). */
+    function dimMuted(L, G) {
+      if (!mutable) return;
+      for (let i = 0; i < NAMES.length; i++) {
+        if (!opts.isMuted(i)) continue;
+        const top = G.laneTop(i);
+        g.fillStyle = 'rgba(16,20,24,0.72)';
+        g.fillRect(G.x0, top, G.x1 - G.x0, L.laneH);
+        g.strokeStyle = C.muted;
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(G.x0 + 6, top + L.laneH / 2 + 0.5);
+        g.lineTo(G.x1 - 6, top + L.laneH / 2 + 0.5);
+        g.stroke();
+        g.fillStyle = C.muted;
+        g.font = (L.small ? 9 : 10) + 'px ' + mono;
+        g.fillText('muted', 6, top + L.laneH - 5);
+      }
+    }
+
+    /** Voice lane under a canvas y (CSS px), or -1. */
+    function laneAt(y) {
+      const L = size();
+      const G = geometry(L);
+      for (let i = 0; i < NAMES.length; i++) if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) return i;
+      return -1;
+    }
+
+    canvas.addEventListener('mousemove', (ev) => {
+      if (!mutable) return;
+      const r = canvas.getBoundingClientRect();
+      canvas.style.cursor = laneAt(ev.clientY - r.top) >= 0 ? 'pointer' : '';
+    });
+    canvas.addEventListener('click', (ev) => {
+      if (!mutable) return;
+      const r = canvas.getBoundingClientRect();
+      const i = laneAt(ev.clientY - r.top);
+      if (i >= 0) { opts.onToggle(i); draw(); }
+    });
+
     function draw() {
       const st = opts.state();
       if (mode === 'events') {
@@ -143,6 +186,7 @@
         g.textAlign = 'center';
         g.fillText('Press Play to see voice activity', (G.x0 + G.x1) / 2, G.laneTop(3) + L.laneH / 2 + 4);
         g.textAlign = 'left';
+        dimMuted(L, G);
         return;
       }
 
@@ -240,6 +284,7 @@
         }
       }
 
+      dimMuted(L, G);
       g.strokeStyle = C.text;
       g.lineWidth = 2;
       g.beginPath();
@@ -261,7 +306,7 @@
     }
 
     raf = root.requestAnimationFrame(loop);
-    return { destroy, draw };
+    return { destroy, draw, laneAt };
   }
 
   root.NhlSoundRollSnes = { mount };
