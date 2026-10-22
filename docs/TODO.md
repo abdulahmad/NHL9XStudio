@@ -5,7 +5,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 ## Music / sound
 
 ### Genesis
-- [x] **NHL 95 (95G) sound chain:** `nhl95-68k-harness.js`, bundled slice `$AF44–$7A000`, Sound test playback (songs/SFX). [ ] Sequencer / MIDI UI: song table, format, encoder and ROM-copy playback are in `lib/audio/nhl95-seq.js`; the UI needs a 95 GM map and a 95 branch in sound-tools-nx — see `docs/NHL95-SOUND.md` § Sequencer.
+- [x] **NHL 95 (95G) sound chain:** `nhl95-68k-harness.js`, bundled slice `$AF44–$7A000`, Sound test playback (songs/SFX). [x] Sequencer / MIDI UI: Sequencer · new NHL 95 song and MIDI import → NHL 95 (16 channels, patch set from load list 0/1, ROM-copy playback, GM/native MIDI export), #120-#122; the 43 SoundBanks patches in the Instruments list, #124 (`test/browser/nhl95-sequencer.js`, `docs/NHL95-SOUND.md` § Sequencer).
 - [x] **93G / 94G sequencer:** per-note key-on volume and MIDI CC 7 / stream `$3x` 7 in `lib/audio/nhl9x-stream.js` (native MIDI markers `v=`). (`docs/NHL93-94-SOUND.md`)
 - **93G revisions:** NHLPA 93 Rev A (`1992.OCT`, which runs the track slots twice every 6th frame at 50 Hz) and Rev B are not bundled for sound, and PAL timing is not modelled. (`docs/NHL93-94-SOUND.md`)
 - **93G / 94G GM map:** the matches come from measurements; nobody has checked them by ear. (`docs/NHL93-94-SOUND.md`)
