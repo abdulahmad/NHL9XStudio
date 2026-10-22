@@ -61,7 +61,16 @@ withBrowser('jed', async ({ url, newPage }) => {
   const act = await download(page, '#jed-export-act');
   assert.strictEqual(act.name, 'CGYV.ACT');
   assert.strictEqual(act.bytes.length, 768);
-  assert.strictEqual(act.bytes[(128 + 5) * 3], 252);
+  { // sprite-colour space: identical to lib/pc-jersey toAct on the edited file (= EA-NHL-Tools createPal merge)
+    const J = require('../../lib/pc-jersey');
+    const pals = path.join(ROOT, 'test', 'fixtures', 'PAL-To-ACT');
+    const base = { rink: fs.readFileSync(path.join(pals, 'rinkpalShadowfixed.act')), jersey: fs.readFileSync(path.join(pals, 'createjerseyShadowfixed.act')) };
+    const edited = J.openFile(out.bytes);
+    edited.bytes[2 * 448 + 15] = 63;
+    assert.ok(Buffer.from(J.toAct(edited, 2, base)).equals(act.bytes), 'ACT = sprite palette');
+    const untouched = fs.readFileSync(path.join(FIX, 'createPal', 'NHL95PAL', 'AWAYPALS', 'CGY-01-createPal.ACT'));
+    assert.ok(!untouched.equals(act.bytes) || !J.slotSources(edited, 2)[5].length, 'edit shows in the ACT');
+  }
   const bin = await download(page, '#jed-export-bin');
   assert.strictEqual(bin.name, 'CGYV.BIN');
   assert.strictEqual(bin.bytes.length, 448);
@@ -75,11 +84,11 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.ok(out.bytes.subarray(2 * 448, 3 * 448).equals(bin.bytes), 'bin import');
   await upload(page, '#jed-import-bin-btn', { name: 'bad.bin', mimeType: 'application/octet-stream', buffer: Buffer.alloc(100) });
   assert.match(await page.textContent('#jed-status'), /448 bytes/);
-  await page.locator('#jed-team-list .item').nth(0).click();
+  await page.click('#jed-revert');
   await upload(page, '#jed-import-act-btn', { name: 'CGYV.ACT', mimeType: 'application/octet-stream', buffer: act.bytes });
+  assert.match(await page.textContent('#jed-status'), /team colours set/);
   out = await download(page, '#jed-export-file');
-  assert.ok(out.bytes.subarray(0, 192).equals(bin.bytes.subarray(0, 192)), 'ACT import sets colours');
-  assert.ok(out.bytes.subarray(192, 448).equals(away.subarray(192, 448)), 'ACT import keeps the map');
+  assert.ok(out.bytes.subarray(2 * 448, 3 * 448).equals(bin.bytes), 'ACT import restores the edit, map untouched');
 
   // NHL 94 PC: 26 teams, identical export; sprites when present
   const files94 = [fix('HOMEPALS94.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS94.BIN', 'AWAYPALS.BIN')];
@@ -96,6 +105,11 @@ withBrowser('jed', async ({ url, newPage }) => {
     assert.ok(thumbs > 500, 'preview strip lists the frames (' + thumbs + ')');
     assert.ok(await page.$eval('#jed-canvas', (c) => c.width > 1), 'preview frame drawn');
     await page.click('#jed-next');
+    const nbs = await page.locator('#jed-left .jed-nb, #jed-right .jed-nb').count();
+    assert.ok(nbs >= 2, 'neighbouring frames shown (' + nbs + ')');
+    const was = await page.inputValue('#jed-frame');
+    await page.locator('#jed-right .jed-nb').first().click();
+    assert.strictEqual(Number(await page.inputValue('#jed-frame')), Number(was) + 1, 'clicking a neighbour selects it');
     await page.locator('#jed-team-list .item').nth(3).click();
     if (process.env.NHL_JED_SHOT) await page.screenshot({ path: process.env.NHL_JED_SHOT, fullPage: false });
   } else console.log('jed: no NHL 94 PC sprites on disk, preview not checked');
