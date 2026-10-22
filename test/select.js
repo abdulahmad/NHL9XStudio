@@ -43,6 +43,8 @@ const RULES = [
   { re: /^test\/fixtures\/ANIM-To-BMP\//, tests: ['core', 'browser:load-errors'], why: 'image fixtures' },
   // CPU cores.
   { re: /^lib\/audio\/(m68k-cpu|nhl9[2-5x]-68k-[\w-]+)\.js$/, tests: M68K, why: '68000 core / drivers' },
+  // The Z80 harness clock is shared by every Genesis chain (92-95), so its long-run test and all chain suites run.
+  { re: /^lib\/audio\/nhl92-z80-harness\.js$/, tests: [...Z80, 'nhl9x-sound-chain', 'nhl95-sound-chain'], why: 'Z80 harness (all Genesis chains)' },
   { re: /^lib\/audio\/(z80[\w-]*|nhl92-z80[\w-]*)\.js$/, tests: Z80, why: 'Z80 core / driver' },
   { re: /^lib\/audio\/(spc700-cpu|snes-dsp|snes-spc)\.js$/, tests: SPC, why: 'SPC700 / S-DSP' },
   { re: /^tools\/fingerprint-site\.js$/, tests: ['fingerprint-site'], why: 'fingerprint tool' },
