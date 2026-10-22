@@ -49,6 +49,7 @@
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
   let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
+  const voiceMuted = new Array(8).fill(false); // SNES roll lanes (S-DSP voices 1-8) the listener muted; kept across plays, loops and seeks
   const chMuted = [false, false, false, false, false, false, false]; // roll lanes (FM1-FM6, PSG) the listener muted (click a lane); kept across plays
   let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
@@ -552,6 +553,7 @@
       const pullFn = (n) => snesApi().pull(session, n);
       live = { id, snes: true, session, pullFn, blocks: [], done: false, message: '', seeking: null };
       live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
+      applyVoiceMutes(live);
       startPrefetch(live);
       status(true);
       if (onChange) onChange();
@@ -574,6 +576,7 @@
     const pullFn = (n) => snesApi().pull(session, n);
     live = { id, snes: true, session, pullFn, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
+    applyVoiceMutes(live);
     startPrefetch(live);
     if (startSec > 0) seekSnes(startSec);
     status(true);
@@ -1009,7 +1012,7 @@
       mountRoll(container) {
         if (roll) roll.destroy();
         if (isSnes() && root.NhlSoundRollSnes) {
-          roll = root.NhlSoundRollSnes.mount(container, { frameRate: snesApi().frameRate(), state: seqState, voiceLabel: (c) => (c.args && c.args.sample != null ? (isSnes93() ? 'inst ' : 'SRCN ') + c.args.sample : null) });
+          roll = root.NhlSoundRollSnes.mount(container, { frameRate: snesApi().frameRate(), state: seqState, voiceLabel: (c) => (c.args && c.args.sample != null ? (isSnes93() ? 'inst ' : 'SRCN ') + c.args.sample : null), isMuted: (i) => voiceMuted[i], onToggle: toggleVoice });
           return roll;
         }
         roll = root.NhlSoundRoll && root.YmNoteTracker
@@ -1128,6 +1131,19 @@
     const entry = nxMap.patches.find((e) => e.sig && e.patch !== 103 && fits(e.sig));
     if (!entry) return null;
     return '$' + entry.patch.toString(16).toUpperCase() + (entry.target ? ' · ' + entry.target.name : '');
+  }
+
+  /** S-DSP of a live SNES session (null for a pre-rendered Samples row). */
+  const snesDsp = (s) => (s && s.snes && s.session && s.session.player && s.session.player.spc ? s.session.player.spc.dsp : null);
+  /** Apply the listener's SNES voice mutes to a session's DSP (new runs, restarts and backward seeks start here too). */
+  function applyVoiceMutes(s) {
+    const dsp = snesDsp(s);
+    if (dsp && dsp.setVoiceMute) voiceMuted.forEach((m, i) => dsp.setVoiceMute(i, m));
+  }
+  /** Click on a SNES roll lane: mute or unmute that S-DSP voice in the live run (and in later plays). */
+  function toggleVoice(i) {
+    voiceMuted[i] = !voiceMuted[i];
+    applyVoiceMutes(live);
   }
 
   /** Click on a roll lane: mute or unmute that FM channel in the live chain (and in later plays). */
@@ -1837,7 +1853,9 @@
       roll = root.NhlSoundRollSnes.mount(seq, {
         frameRate: snesApi().frameRate(),
         state: seqState,
-        voiceLabel: (c) => (c.args && c.args.sample != null ? (isSnes93() ? 'inst ' : 'SRCN ') + c.args.sample : null)
+        voiceLabel: (c) => (c.args && c.args.sample != null ? (isSnes93() ? 'inst ' : 'SRCN ') + c.args.sample : null),
+        isMuted: (i) => voiceMuted[i],
+        onToggle: toggleVoice
       });
     } else if (root.NhlSoundRoll && root.YmNoteTracker) {
       const seq = make('div', 'st-seq');

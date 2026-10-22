@@ -59,6 +59,7 @@ const RULES = [
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.
   { re: /^public\/sound-test-snes93\.js$/, tests: ['nhl93s-samples', ...[...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b)], why: '93S Audio list' },
+  { re: /^public\/(sound-roll-snes|sound-roll|sound-test-view)\.js$/, tests: ['roll-snes-progressive', ...[...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b)], why: 'sound rolls (click-to-mute wiring)' },
   { re: /^public\/sound-editor-extras\.js$/, tests: ['editor-extras', 'browser:audio-list', 'browser:nhl95-sequencer'], why: 'editor extras' },
   { re: /^public\/(audio-engine|chip-lab|sound-[\w-]+)\.(js|css|html)$/, tests: [...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b), why: 'sound UI' },
   { re: /^public\//, tests: BROWSER.map((b) => 'browser:' + b), why: 'viewer' },
