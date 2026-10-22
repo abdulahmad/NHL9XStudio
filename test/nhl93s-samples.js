@@ -49,3 +49,50 @@ for (const i of d.instruments) {
   assert.ok(samples.some((r) => r.id === 'snes-sample-' + A.setOfInstrument(i.index) + '-' + i.sample), 'removed instrument ' + i.index + ' has its Samples row');
 }
 console.log('nhl93s-samples: 28 samples listed and playable, 3 instruments kept');
+
+// ---- pitch: each Samples row plays at the pitch the game keys the sample on (not native 32 kHz) ----
+global.NhlSpc700Cpu = global.NhlSpc700Cpu || require('../lib/audio/spc700-cpu');
+global.NhlSnesSpc = global.NhlSnesSpc || require('../lib/audio/snes-spc');
+global.NhlNhl93sPlayer = global.NhlNhl93sPlayer || require('../lib/audio/nhl93s-player');
+global.NhlSnesSfxMidi = global.NhlSnesSfxMidi || require('../lib/audio/snes-sfx-midi');
+global.NhlNhl93sMidi = global.NhlNhl93sMidi || require('../lib/audio/nhl93s-midi');
+{
+  const Dsp = global.NhlSnesDsp;
+  assert.strictEqual(Dsp.hzFromPitch(0x1000), 32000, 'S-DSP pitch $1000 is 32 kHz');
+  assert.strictEqual(Dsp.hzFromPitch(0x0800), 16000, 'rate = 32000 * pitch / $1000');
+  const P = global.NhlNhl93sPlayer;
+  const capture = (start) => {
+    const p = P.create({ data: d });
+    let q = false;
+    return global.NhlSnesSfxMidi.capture(p.spc, () => { if (!q) { start(p); q = true; } p.runFrame(); }, { maxFrames: 400, minFrames: 10, done: () => p.idle() });
+  };
+  const audible = (pcm) => { let last = 0; for (let i = 0; i < pcm.length; i++) if (Math.abs(pcm[i]) > 64) last = i; return last / 2 / A.RATE; };
+  const an = require('../data/audio/nhl93s-instrument-analysis.json').sets;
+  d.probeMidi = {};
+  for (const s of Object.keys(an)) for (const n of Object.keys(an[s])) d.probeMidi[n] = an[s][n].probeMidi;
+  for (const set of ['game', 'boot']) {
+    for (const e of d.samples(set)) {
+      const sp = A.samplePitch(set, e.index);
+      assert.notStrictEqual(sp.pitch, 0x1000, set + ' ' + e.index + ' has a game pitch');
+      const cue = /^cue \$([0-9A-F]+)/.exec(sp.from);
+      const inst = /^instrument \$([0-9A-F]+)/.exec(sp.from);
+      let notes;
+      if (cue) notes = capture((p) => { p.loadSet('game'); p.effect(parseInt(cue[1], 16)); });
+      else {
+        const c = A.probeSong(d, parseInt(inst[1], 16));
+        notes = capture((p) => p.playCustom(c.set, c.bytes, c.base));
+      }
+      const note = notes.find((x) => x.srcn === e.index);
+      assert.ok(note, set + ' ' + e.index + ': the game keys the sample on');
+      assert.strictEqual(note.pitch0, sp.pitch, set + ' ' + e.index + ': row pitch is the pitch the game writes (' + sp.from + ')');
+      assert.ok(A.entries(d).find((r) => r.id === 'snes-sample-' + set + '-' + e.index).sub.includes('pitch $' + sp.pitch.toString(16).toUpperCase().padStart(4, '0')), 'note shows the pitch');
+      // Ear proxy: a one-shot sample lasts as long as the cue's note (unless the cue keys it off early).
+      if (cue && !e.loops) {
+        const row = audible(A.renderSample(d, set, e.index));
+        const game = (note.t1 - note.t0);
+        assert.ok(row >= game - 0.03 && (row <= game + 0.03 || /^\$9[01]/.test('$' + cue[1])), set + ' ' + e.index + ' lasts ' + row.toFixed(3) + ' s vs cue ' + game.toFixed(3) + ' s');
+      }
+    }
+  }
+}
+console.log('nhl93s-samples pitch: rows play at the game pitch; one-shot lengths match their cues');
