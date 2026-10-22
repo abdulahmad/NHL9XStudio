@@ -195,4 +195,15 @@ const noteCount = (song) => song.tracks.reduce((n, t) => n + t.events.filter((e)
   assert.ok(evs.filter((e) => e.type === 'controller' && e.controller === 0x0b).length === 1, 'pan left from CC10');
 }
 
+// --- the song editor's game sound entries: an "n94i:<channel>:<hex>:<set>" marker picks the entry instead of the GM map ---
+{
+  const tune = (markers) => Smf.write({ ppq: 480, tempos: [{ tick: 0, bpm: 120 }], name: 'gi', markers, tracks: [
+    { name: 't1', ch: 0, notes: [60, 64, 67].map((p, i) => ({ tick: i * 480, dur: 400, pitch: p, vel: 100, program: 0 })) }] });
+  const inst = (r) => r.model.tracks.flatMap((t) => t.events).filter((e) => e.type === 'instrument').map((e) => e.value);
+  const viaGm = inst(Midi.fromSmf(tune([]), d, gm, { set: 'menu' }));
+  const pick = viaGm[0] === 3 ? 4 : 3;
+  const fixed = inst(Midi.fromSmf(tune([{ tick: 0, text: 'n94i:0:' + pick.toString(16) + ':menu' }]), d, gm, { set: 'menu' }));
+  assert.deepStrictEqual(fixed, [pick], 'sound entry ' + pick + ' chosen directly (GM map gave ' + viaGm + ')');
+}
+
 console.log('nhl94s midi: song format, native and GM MIDI round trips OK');

@@ -125,8 +125,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 
 **What needs to be done:**
 - [x] 93S: the song editor's instrument menu lists the game's own instruments of the song's sound set (boot `$00`–`$08`, game `$0A`–`$1C`) next to the GM programs; they are written as the `$E0` INSTRUMENT command and kept in the editor's MIDI file as an `n93i:<channel>:<hex>` marker (`test/browser/snes93-game-instruments.js`, `test/nhl93s-midi.js`).
-- [ ] 94S: the same for its sound entries (not done).
-- [ ] 94S: write them through the native import path (93S done above).
+- [x] 94S: the song editor's instrument menu lists the sound entries of the song's set (menu / game; not the six streamed game sounds 22-27) next to the GM programs; a track set to one is written as `$DC n` by the GM import path and kept in the editor's MIDI file as an `n94i:<channel>:<hex>:<set>` marker (`test/browser/snes94-game-instruments.js`, `test/nhl94s-midi.js`).
 - If the request was about the collapsed group, consider expanding it by default for the SNES games.
 
 ### "why aren't all samples there"
