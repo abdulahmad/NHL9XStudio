@@ -217,6 +217,38 @@ console.log('nhl9x stream: instrument edits written into the ROM copy are what t
     const full = tr.dacHits.filter((h) => h.sig.length === 10 && h.sig.every((v, i) => v === ref[i]));
     assert.ok(full.length >= 4, 'full-volume hits carry the $6A fingerprint (' + full.length + ')');
     assert.ok(tr.dacHits.every((h) => h.t1 >= h.t0 && h.writes > 0));
+    // NHLPA 93 song 50: the driver holds the sample's last byte on $2A after it runs out and re-enables $2B for the next
+    // one, so a hit ends at the sample's real length and back-to-back samples are separate hits.
+    {
+      const chip93 = await ym.createChip();
+      const t93 = Tracker.create();
+      const c93 = Chain.create({ rom: roms[93], driver: DRIVER[93], chip: chip93, keepLogs: false, onYmWrite: (t, p, v) => t93.writePort(t, p, v) });
+      c93.step(null);
+      c93.step([{ song: 50 }]);
+      for (let f = 2; f < 300; f++) c93.step(null);
+      chip93.dispose();
+      assert.ok(t93.dacHits.length >= 2, 'held last byte / $2B restart split the samples (' + t93.dacHits.length + ')');
+      const sec = (h) => (h.t1 - h.t0) / 3579545;
+      assert.ok(t93.dacHits.every((h) => sec(h) < 0.5), 'each hit lasts about one sample, not until the next one (' + t93.dacHits.map(sec).join(', ') + ')');
+      assert.ok(t93.dacSpans[0].t1 == null || t93.dacSpans[0].t1 > t93.dacHits[0].t1, 'the DAC stays enabled after the hit ends');
+    }
+    // Synthetic: a sample of 100 writes, a 2000-write hold of its last byte, the same sample retriggered via $2B twice.
+    {
+      const t = Tracker.create();
+      let now = 0;
+      const sample = () => { for (let i = 0; i < 100; i++) t.write((now += 400), 0, 0x2a, 0x40 + (i % 50)); };
+      t.write(now, 0, 0x2b, 0x80);
+      sample();
+      const end = now;
+      for (let i = 0; i < 2000; i++) t.write((now += 400), 0, 0x2a, 0x40 + 49);
+      t.write(now, 0, 0x2b, 0x80);
+      sample();
+      t.write(now, 0, 0x2b, 0x80);
+      sample();
+      assert.strictEqual(t.dacHits.length, 3, 'a retrigger is a new hit, held bytes are not');
+      assert.strictEqual(t.dacHits[0].t1, end, 'the hit ends at the last sample byte');
+      assert.ok(t.dacHits.every((h) => h.writes >= 99 && h.writes <= 100));
+    }
     console.log('nhl9x-stream: DAC hits are tracked and fingerprinted; patch 20 = kick, $6A = snare, import uses both OK');
   })().catch((e) => { console.error(e); process.exit(1); });
 }
