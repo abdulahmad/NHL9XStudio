@@ -20,6 +20,7 @@
       <input type="file" id="jed-folder" hidden multiple webkitdirectory>
       <input type="file" id="jed-files" hidden multiple>
       <input type="file" id="jed-import-bin" hidden accept=".bin">
+      <input type="file" id="jed-import-file" hidden accept=".bin,.o94,.o95">
       <input type="file" id="jed-import-act" hidden accept=".act">
     </div>
   </header>
@@ -46,15 +47,19 @@
         </div>
       </div>
       <div class="jed-io" role="group" aria-label="Import and export">
-        <button type="button" id="jed-export-file" class="ghost-btn" title="The whole HOMEPALS/AWAYPALS file for this side">Export file</button>
-        <button type="button" id="jed-export-bin" class="ghost-btn" title="This team and side: one 448-byte palette record">Export .bin</button>
-        <button type="button" id="jed-import-bin-btn" class="ghost-btn" title="Replace this team and side with a 448-byte record (or 192 bytes of colours)">Import .bin</button>
+        <button type="button" id="jed-undo" class="ghost-btn" title="Undo the last edit (Ctrl+Z)" disabled>Undo</button>
+        <button type="button" id="jed-redo" class="ghost-btn" title="Redo (Ctrl+Shift+Z or Ctrl+Y)" disabled>Redo</button>
+        <button type="button" id="jed-export-file" class="ghost-btn" title="The whole HOMEPALS.BIN (every team) with your edits">Export homepals.bin</button>
+        <button type="button" id="jed-import-file-btn" class="ghost-btn" title="Replace the whole HOMEPALS.BIN (every team); NHL 94 PC 11,648 or NHL 95 PC 12,544 bytes">Import homepals.bin</button>
+        <button type="button" id="jed-export-bin" class="ghost-btn" title="The jersey on screen: this team and side as one 448-byte record (team_side.bin)">Export jersey</button>
+        <button type="button" id="jed-import-bin-btn" class="ghost-btn" title="Replace the jersey on screen (this team and side) with a 448-byte record, or 192 bytes of colours only">Import jersey</button>
         <button type="button" id="jed-export-act" class="ghost-btn" title="Adobe Color Table in sprite-colour space: entry i = what raw sprite pixel i shows (EA-NHL-Tools createPal). Load it on a raw sprite in Photoshop.">Export .ACT</button>
         <button type="button" id="jed-import-act-btn" class="ghost-btn" title="768 or 772-byte sprite-space ACT: each team colour is read from the lowest sprite index (144–250) that shows it (÷4); conflicts are reported">Import .ACT</button>
         <button type="button" id="jed-revert" class="ghost-btn" title="Undo every edit to this team and side">Revert team</button>
       </div>
       <h2>Jersey spots <span class="muted">click to pick its colour · Paint mode assigns the selected colour</span></h2>
       <label class="check"><input type="checkbox" id="jed-paint"> Paint mode</label>
+      <label class="check"><input type="checkbox" id="jed-hover-outline" checked> Outline on sprite when hovering a spot</label>
       <div id="jed-zones" class="jed-zones"></div>
     </section>
     <section class="jed-col jed-preview" aria-label="Preview">
@@ -64,10 +69,11 @@
         <label>Frame <input type="number" id="jed-frame" min="0" value="0"></label>
         <button type="button" id="jed-next" class="ghost-btn" aria-label="Next frame">▶</button>
         <input type="range" id="jed-frame-slider" min="0" value="0" aria-label="Frame">
-        <label>Scale <input type="range" id="jed-scale" min="1" max="10" value="5"></label>
+        <label>Scale <input type="range" id="jed-scale" min="1" max="30" step="1" value="13"> <output id="jed-scale-val" class="mono">13×</output></label>
         <label class="check"><input type="checkbox" id="jed-skip-empty" checked> Hide empty</label>
       </div>
-      <div class="jed-stage" id="jed-stage"><div id="jed-left" class="jed-nbs"></div><canvas id="jed-canvas" width="1" height="1"></canvas><div id="jed-right" class="jed-nbs"></div></div>
+      <div class="jed-stage" id="jed-stage"><div id="jed-left" class="jed-nbs"></div><span class="jed-mainwrap" id="jed-mainwrap"><canvas id="jed-canvas" width="1" height="1" title="Click a jersey pixel to give its spot the selected colour"></canvas><canvas id="jed-overlay" width="1" height="1" aria-hidden="true"></canvas></span><div id="jed-right" class="jed-nbs"></div></div>
+      <div id="jed-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Resize the frame grid" title="Drag to resize the frame grid"></div>
       <div id="jed-strip" class="jed-strip" aria-label="All frames"></div>
     </section>
   </main>

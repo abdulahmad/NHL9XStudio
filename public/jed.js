@@ -11,6 +11,7 @@
     files: { home: null, away: null }, // { file, original: Uint8Array, name }
     side: 'home', team: 0, color: 0,
     sprites: null, rink: null, base: null, frame: 0, frames: [], spriteNote: '',
+    history: { undo: [], redo: [] }, hover: null,
     sources: null // { kind: 'local', map } | { kind: 'server', id }
   };
   const SIDE_FILE = { home: 'HOMEPALS.BIN', away: 'AWAYPALS.BIN' };
@@ -115,9 +116,47 @@
     if (S.sprites) for (let n = 1; n <= S.sprites.numFrames; n++) S.frames.push(n);
     const sides = ['home', 'away'].filter((s) => S.files[s]).map((s) => S.files[s].name).join(' + ');
     status('NHL ' + S.game + ' PC · ' + sides + ' · ' + J.teamCount(cur().file) + ' teams × 448 bytes');
-    S.frame = firstFrame();
+    S.frame = defaultFrame();
+    resetHistory();
     buildStrip();
     renderAll();
+  }
+
+  // ---- undo / redo: whole-file snapshots of the side being edited (a 12 KB copy each) ----------------------------
+  const UNDO_MAX = 200;
+  let lastKey = null, lastAt = 0;
+  /** Call before any change. `key` coalesces a run of the same edit (slider drags) into one undo step. */
+  function remember(key) {
+    const now = Date.now();
+    if (key && key === lastKey && now - lastAt < 1500) { lastAt = now; return; }
+    lastKey = key || null; lastAt = now;
+    S.history.undo.push({ side: S.side, team: S.team, bytes: new Uint8Array(cur().file.bytes) });
+    if (S.history.undo.length > UNDO_MAX) S.history.undo.shift();
+    S.history.redo = [];
+    renderUndo();
+  }
+  function swap(from, to) {
+    const step = from.pop(); if (!step) return;
+    const f = S.files[step.side]; if (!f) return;
+    to.push({ side: step.side, team: step.team, bytes: new Uint8Array(f.file.bytes) });
+    f.file.bytes.set(step.bytes);
+    S.side = step.side; S.team = step.team; lastKey = null;
+    renderAll(); renderUndo();
+  }
+  function undo() { swap(S.history.undo, S.history.redo); }
+  function redo() { swap(S.history.redo, S.history.undo); }
+  function renderUndo() {
+    $('jed-undo').disabled = !S.history.undo.length; $('jed-redo').disabled = !S.history.redo.length;
+    $('jed-undo').title = 'Undo the last edit (Ctrl+Z) · ' + S.history.undo.length + ' step(s)';
+  }
+  function resetHistory() { S.history = { undo: [], redo: [] }; lastKey = null; renderUndo(); }
+  function sideName() { return S.side === 'home' ? 'homepals' : 'awaypals'; }
+  function renderLabels() {
+    const n = sideName();
+    $('jed-export-file').textContent = 'Export ' + n + '.bin';
+    $('jed-export-file').title = 'The whole ' + n.toUpperCase() + '.BIN (every team) with your edits';
+    $('jed-import-file-btn').textContent = 'Import ' + n + '.bin';
+    $('jed-import-file-btn').title = 'Replace the whole ' + n.toUpperCase() + '.BIN (every team); NHL 94 PC 11,648 or NHL 95 PC 12,544 bytes';
   }
 
   // ---- editing UI ----------------------------------------------------------------------------------------------
@@ -173,36 +212,73 @@
     if (S.rink && S.rink[target]) return S.rink[target].map((v) => v / 4);
     return null;
   }
+  function zoneButton(z, map, colors) {
+    const t = map[z.sprite];
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'jed-zone'; b.dataset.sprite = String(z.sprite);
+    const sw = document.createElement('i'); const c = zoneColor(t, colors);
+    sw.style.background = c ? rgb8(c) : 'repeating-linear-gradient(45deg,#555 0 3px,#333 3px 6px)';
+    const label = document.createElement('span'); label.textContent = z.short || z.name;
+    const idx = document.createElement('small'); idx.textContent = t >= 128 && t < 192 ? '#' + (t - 128) : 'rink ' + t;
+    b.title = z.name + ' · sprite index ' + z.sprite + ' → game palette ' + t;
+    b.append(sw, label, idx);
+    b.addEventListener('click', () => {
+      if ($('jed-paint').checked) { assignSpot(z.sprite); }
+      else if (t >= 128 && t < 192) { S.color = t - 128; renderSwatches(); renderColor(); }
+    });
+    b.addEventListener('mouseenter', () => { if ($('jed-hover-outline').checked) { S.hover = z.sprite; drawOverlay(); } });
+    b.addEventListener('mouseleave', () => { if (S.hover === z.sprite) { S.hover = null; drawOverlay(); } });
+    return b;
+  }
+  /** Zones grouped: "waist 2 light/medium/dark" share one row (dark, medium, light); others are single rows. */
+  function zoneGroups() {
+    const SHADES = ['dark', 'medium', 'light'];
+    const groups = []; const byBase = new Map();
+    for (const z of J.ZONES) {
+      const words = z.name.split(' '); const last = words[words.length - 1];
+      const base = SHADES.includes(last) ? words.slice(0, -1).join(' ') : z.name;
+      let g = byBase.get(base);
+      if (!g) { g = { base, zones: [] }; byBase.set(base, g); groups.push(g); }
+      g.zones.push(Object.assign({ short: SHADES.includes(last) ? last : '' }, z));
+    }
+    for (const g of groups) g.zones.sort((x, y) => SHADES.indexOf(x.short) - SHADES.indexOf(y.short));
+    return groups;
+  }
+  function pixelGrid(box, title, list, cols, map, colors) {
+    const h = document.createElement('div'); h.className = 'jed-grid-title'; h.textContent = title; box.appendChild(h);
+    const g = document.createElement('div'); g.className = 'jed-pixgrid'; g.style.gridTemplateColumns = 'repeat(' + cols + ', 28px)';
+    for (const z of list) g.appendChild(zoneButton(z, map, colors));
+    box.appendChild(g);
+  }
   function renderZones() {
     const box = $('jed-zones'); box.innerHTML = '';
     const map = J.getMap(cur().file, S.team);
     const colors = J.getColors(cur().file, S.team);
-    for (const z of J.ZONES.concat(J.CREST)) {
-      const t = map[z.sprite];
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'jed-zone';
-      const sw = document.createElement('i'); const c = zoneColor(t, colors);
-      sw.style.background = c ? rgb8(c) : 'repeating-linear-gradient(45deg,#555 0 3px,#333 3px 6px)';
-      const label = document.createElement('span'); label.textContent = z.name;
-      const idx = document.createElement('small'); idx.textContent = t >= 128 && t < 192 ? '#' + (t - 128) : 'rink ' + t;
-      b.title = 'Sprite index ' + z.sprite + ' → game palette ' + t;
-      b.append(sw, label, idx);
-      b.addEventListener('click', () => {
-        if ($('jed-paint').checked) { J.setMap(cur().file, S.team, z.sprite, 128 + S.color); edited(); }
-        else if (t >= 128 && t < 192) { S.color = t - 128; renderSwatches(); renderColor(); }
-      });
-      box.appendChild(b);
+    for (const g of zoneGroups()) {
+      if (g.zones.length === 1 && !g.zones[0].short) { box.appendChild(zoneButton(Object.assign({}, g.zones[0], { short: g.base }), map, colors)); continue; }
+      const row = document.createElement('div'); row.className = 'jed-zgroup';
+      const name = document.createElement('b'); name.textContent = g.base; row.appendChild(name);
+      for (const z of g.zones) row.appendChild(zoneButton(Object.assign({}, z, { short: z.short || z.name.slice(g.base.length + 1) }), map, colors));
+      box.appendChild(row);
     }
+    pixelGrid(box, 'Crest (4 × 5, sprite 192–196, 208–212, 224–228, 240–244)', J.CREST, 5, map, colors);
+    pixelGrid(box, 'Centre-ice logo colours (4 × 6, sprite 197–202 … 245–250)', J.ICE, 6, map, colors);
+  }
+  /** Point sprite colour `sprite` at the selected team colour (JED painting). */
+  function assignSpot(sprite) {
+    if (J.getMap(cur().file, S.team)[sprite] === 128 + S.color) return;
+    remember(); J.setMap(cur().file, S.team, sprite, 128 + S.color); edited();
   }
 
   function setChannel(i, v) {
     const c = J.getColors(cur().file, S.team)[S.color]; c[i] = Number(v);
+    remember('c' + S.side + S.team + ':' + S.color);
     J.setColor(cur().file, S.team, S.color, c); edited();
   }
   function edited() { renderSwatches(); renderColor(); renderZones(); renderPreview(true); }
 
   function renderAll() {
     if (!cur()) return;
-    renderTeams(); renderSwatches(); renderColor(); renderZones(); renderPreview(true);
+    renderTeams(); renderLabels(); renderSwatches(); renderColor(); renderZones(); renderPreview(true); renderUndo();
   }
 
   // ---- preview -------------------------------------------------------------------------------------------------
@@ -219,6 +295,8 @@
   }
   function hasPixels(n) { const f = S.sprites && S.sprites.renderFrame(n); return Boolean(f && f.width && f.height); }
   function visibleFrames() { return $('jed-skip-empty').checked ? S.frames.filter(hasPixels) : S.frames; }
+  const DEFAULT_FRAME = 369; // as shown in the Frame box (0-based); S.frame is 1-based
+  function defaultFrame() { const v = visibleFrames(); return v.includes(DEFAULT_FRAME + 1) ? DEFAULT_FRAME + 1 : firstFrame(); }
   function firstFrame() { const v = visibleFrames(); return v.length ? v[0] : 0; }
 
   function drawFrame(canvas, n, pal, scale) {
@@ -268,6 +346,8 @@
     const pal = teamPalette();
     const scale = Number($('jed-scale').value);
     drawFrame(canvas, S.frame, pal, scale);
+    $('jed-scale-val').textContent = scale + '×';
+    drawOverlay();
     const frames = visibleFrames();
     const at = frames.indexOf(S.frame);
     renderNeighbours(frames, at, pal, scale);
@@ -284,11 +364,49 @@
       pending = requestAnimationFrame(() => { for (const t of strip.children) if (t.dataset.visible) paintThumb(t, pal); });
     }
   }
+  /** Outline, on the big frame, every pixel whose sprite colour is S.hover (spot hover or sprite hover). */
+  function drawOverlay() {
+    const o = $('jed-overlay'); const scale = Number($('jed-scale').value);
+    const f = S.sprites && S.frame && S.sprites.renderFrame(S.frame);
+    if (!f || !f.width) { o.width = 1; o.height = 1; return; }
+    o.width = f.width * scale; o.height = f.height * scale;
+    o.style.width = o.width + 'px'; o.style.height = o.height + 'px';
+    const ctx = o.getContext('2d'); ctx.clearRect(0, 0, o.width, o.height);
+    if (S.hover == null) return;
+    const on = (x, y) => x >= 0 && y >= 0 && x < f.width && y < f.height && f.pixels[y * f.width + x] === S.hover;
+    ctx.fillStyle = 'rgba(255,0,255,0.25)';
+    ctx.beginPath();
+    let count = 0;
+    for (let y = 0; y < f.height; y++) for (let x = 0; x < f.width; x++) {
+      if (!on(x, y)) continue; count++;
+      const X = x * scale, Y = y * scale;
+      ctx.fillRect(X, Y, scale, scale);
+      if (!on(x, y - 1)) { ctx.moveTo(X, Y); ctx.lineTo(X + scale, Y); }
+      if (!on(x, y + 1)) { ctx.moveTo(X, Y + scale); ctx.lineTo(X + scale, Y + scale); }
+      if (!on(x - 1, y)) { ctx.moveTo(X, Y); ctx.lineTo(X, Y + scale); }
+      if (!on(x + 1, y)) { ctx.moveTo(X + scale, Y); ctx.lineTo(X + scale, Y + scale); }
+    }
+    ctx.lineWidth = Math.max(2, scale / 5); ctx.strokeStyle = '#ff00ff'; ctx.stroke();
+    ctx.lineWidth = 1; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+    o.dataset.outlined = String(count);
+  }
+  /** Sprite colour under the mouse on the big frame if it is a team-mapped spot (144..250), else null. */
+  function spriteAt(e) {
+    const f = S.sprites && S.frame && S.sprites.renderFrame(S.frame);
+    if (!f || !f.width || f.dynamic === false) return null;
+    const c = $('jed-canvas'); const r = c.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * f.width), y = Math.floor((e.clientY - r.top) / r.height * f.height);
+    if (x < 0 || y < 0 || x >= f.width || y >= f.height) return null;
+    const p = f.pixels[y * f.width + x];
+    return p >= J.SPRITE_FIRST && p < J.SPRITE_END ? p : null;
+  }
+  function spotName(p) { const z = J.ZONES.concat(J.CREST, J.ICE).find((q) => q.sprite === p); return z ? z.name : 'sprite colour ' + p; }
+
   /** Neighbouring frames either side of the selected one, as many as fit the stage width. Click to select. */
   function renderNeighbours(frames, at, pal, scale) {
     const left = $('jed-left'), right = $('jed-right'); left.innerHTML = ''; right.innerHTML = '';
     if (at < 0) return;
-    const nbScale = Math.max(1, Math.round(scale / 2));
+    const nbScale = Math.max(1, Math.min(4, Math.round(scale / 3)));
     const stage = $('jed-stage').clientWidth || 0;
     const main = $('jed-canvas').width * scale;
     const slot = 40 * nbScale + 12; // a typical player frame is ~32-40 px wide
@@ -337,21 +455,33 @@
     $('jed-picker').oninput = (e) => {
       if (!cur()) return;
       const v = e.target.value; const c = [1, 3, 5].map((o) => J.to6(parseInt(v.substr(o, 2), 16)));
-      J.setColor(cur().file, S.team, S.color, c); edited();
+      remember('c' + S.side + S.team + ':' + S.color); J.setColor(cur().file, S.team, S.color, c); edited();
     };
-    $('jed-export-file').onclick = guard(() => { if (cur()) download(J.exportFile(cur().file), cur().name.replace(/\.o9\d$/i, '.BIN')); });
-    $('jed-export-bin').onclick = guard(() => { if (cur()) download(J.getRecord(cur().file, S.team), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.BIN'); });
+    $('jed-export-file').onclick = guard(() => { if (cur()) download(J.exportFile(cur().file), sideName().toUpperCase() + '.BIN'); });
+    $('jed-import-file-btn').onclick = guard(async () => {
+      if (!cur()) return; const f = await readFile($('jed-import-file')); if (!f) return;
+      const file = J.openFile(f.bytes, S.side);
+      if (file.game !== S.game) throw new Error(f.name + ' is NHL ' + file.game + ' PC; the open files are NHL ' + S.game + ' PC');
+      remember(); cur().file.bytes.set(file.bytes); status('Imported ' + f.name + ' as ' + sideName().toUpperCase() + '.BIN'); renderAll();
+    });
+    $('jed-export-bin').onclick = guard(() => { if (cur()) download(J.getRecord(cur().file, S.team), teamCode() + '_' + S.side + '.bin'); });
+    $('jed-undo').onclick = undo; $('jed-redo').onclick = redo;
+    const canvas = $('jed-canvas');
+    canvas.addEventListener('mousemove', (e) => { const p = spriteAt(e); if (p !== S.hover) { S.hover = p; drawOverlay(); } canvas.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ') → click to set colour ' + S.color; });
+    canvas.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
+    canvas.addEventListener('click', (e) => { const p = spriteAt(e); if (p != null) { assignSpot(p); S.hover = p; drawOverlay(); status(spotName(p) + ' now uses colour ' + S.color); } });
     $('jed-export-act').onclick = guard(() => {
       if (!cur()) return; if (!S.base) throw new Error('The base palettes (jed-pals/*.act) did not load');
       download(J.toAct(cur().file, S.team, S.base, false), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.ACT');
     });
     $('jed-import-bin-btn').onclick = guard(async () => {
       if (!cur()) return; const f = await readFile($('jed-import-bin')); if (!f) return;
-      J.setRecord(cur().file, S.team, f.bytes); status('Imported ' + f.name + ' into ' + teamCode() + ' ' + S.side); edited();
+      J.setRecord(J.openFile(cur().file.bytes), S.team, f.bytes); remember(); J.setRecord(cur().file, S.team, f.bytes); status('Imported ' + f.name + ' into ' + teamCode() + ' ' + S.side); edited();
     });
     $('jed-import-act-btn').onclick = guard(async () => {
       if (!cur()) return; const f = await readFile($('jed-import-act')); if (!f) return;
-      const r = J.fromAct(cur().file, S.team, f.bytes);
+      J.fromAct(J.openFile(cur().file.bytes), S.team, f.bytes); // validate first
+      remember(); const r = J.fromAct(cur().file, S.team, f.bytes);
       let msg = 'Imported ' + f.name + ' (sprite colours 144–250) into ' + teamCode() + ' ' + S.side + ': ' + r.set.length + ' team colours set';
       if (r.conflicts.length) {
         msg += '; ' + r.conflicts.length + ' conflict(s), the lowest sprite index wins: ' + r.conflicts.map((c) => 'colour ' + c.slot + ' from ' +
@@ -359,7 +489,7 @@
       }
       status(msg, r.conflicts.length > 0); edited();
     });
-    $('jed-revert').onclick = () => { if (!cur()) return; J.setRecord(cur().file, S.team, J.getRecord(J.openFile(cur().original), S.team)); edited(); };
+    $('jed-revert').onclick = () => { if (!cur()) return; remember(); J.setRecord(cur().file, S.team, J.getRecord(J.openFile(cur().original), S.team)); edited(); };
     $('jed-prev').onclick = () => stepFrame(-1);
     $('jed-next').onclick = () => stepFrame(1);
     $('jed-frame-slider').oninput = (e) => { const v = visibleFrames(); S.frame = v[Number(e.target.value)] || S.frame; renderPreview(false); };
@@ -367,6 +497,11 @@
     $('jed-scale').oninput = () => renderPreview(false);
     $('jed-skip-empty').onchange = () => { buildStrip(); if (!visibleFrames().includes(S.frame)) S.frame = firstFrame(); renderPreview(false); };
     document.addEventListener('keydown', (e) => {
+      if (cur() && (e.ctrlKey || e.metaKey) && !/textarea/i.test(e.target.tagName)) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' && !e.shiftKey) { undo(); e.preventDefault(); return; }
+        if ((k === 'z' && e.shiftKey) || k === 'y') { redo(); e.preventDefault(); return; }
+      }
       if (!cur() || /input|select|textarea/i.test(e.target.tagName)) return;
       const n = J.teamCount(cur().file);
       if (e.key === 'ArrowUp') { S.team = (S.team + n - 1) % n; renderAll(); e.preventDefault(); }
@@ -390,7 +525,24 @@
     if (want && pcs.some((g) => g.id === want)) { sel.value = want; await guard(loadServer)(want); }
   }
 
+  /** Splitter between the big preview and the frame grid; default 4 rows of thumbnails, size kept in localStorage. */
+  function wireSplit() {
+    const KEY = 'jed.stripHeight', strip = $('jed-strip'), bar = $('jed-split');
+    const set = (h) => { strip.style.setProperty('--strip-h', Math.round(h) + 'px'); };
+    const saved = Number(localStorage.getItem(KEY)); if (saved > 40) set(saved);
+    bar.addEventListener('pointerdown', (e) => {
+      bar.setPointerCapture(e.pointerId); bar.classList.add('drag');
+      const y0 = e.clientY, h0 = strip.getBoundingClientRect().height;
+      const col = strip.parentElement.getBoundingClientRect().height;
+      const move = (m) => set(Math.max(90, Math.min(col - 220, h0 - (m.clientY - y0))));
+      const up = () => { bar.classList.remove('drag'); bar.removeEventListener('pointermove', move); bar.removeEventListener('pointerup', up);
+        localStorage.setItem(KEY, String(Math.round(strip.getBoundingClientRect().height))); if (cur()) renderPreview(false); };
+      bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up);
+    });
+  }
+
   wire();
+  wireSplit();
   loadBase();
   detectServer();
   window.addEventListener('resize', () => { if (cur()) renderPreview(false); });
