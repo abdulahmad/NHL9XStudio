@@ -1,0 +1,35 @@
+name: Tests
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies (with Playwright)
+        run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Prepare ANIM golden BMPs
+        working-directory: test/fixtures/ANIM-To-BMP
+        run: |
+          for f in Sprites.anim Puck.anim Zam.anim Crowd.anim; do
+            node animToBmp.js "$f"
+          done
+      - run: node tools/build-manifest.js
+      # Pull requests run only the tests the PR's changes can affect (diff vs the base branch); a manual run does --all.
+      - if: github.event_name == 'pull_request'
+        run: node test.js --base "origin/${{ github.base_ref }}"
+      - if: github.event_name != 'pull_request'
+        run: node test.js --all

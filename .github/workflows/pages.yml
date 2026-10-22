@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -27,7 +29,9 @@ jobs:
             node animToBmp.js "$f"
           done
       - run: node tools/build-manifest.js
-      - run: node test.js
+      # Pull requests run their change-aware tests in tests.yml. Here only the tests the pushed
+      # commits can affect run (diff vs the previous main); an unknown base (manual run, new branch) runs everything.
+      - run: node test.js --base "${{ github.event.before }}"
       - name: Assemble static site
         run: |
           mkdir -p _site/anim
