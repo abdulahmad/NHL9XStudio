@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install runtime dependencies (opl3, z80cpu; no Playwright, so browser tests skip)
+        run: npm ci --omit=dev
       - name: Prepare ANIM golden BMPs
         working-directory: test/fixtures/ANIM-To-BMP
         run: |
