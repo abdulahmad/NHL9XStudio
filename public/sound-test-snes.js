@@ -9,6 +9,10 @@
   const Player = () => root.NhlNhl94sPlayer;
   const SD = () => root.NhlNhl94sSoundData;
 
+  // Crowdlevel values for the list: the floor, two quieter steps, $1F4 (SampleCrowd1 joins in), and the $380 cap.
+  const CROWD_LEVELS = [0, 0x100, 0x1f4, 0x280, 0x380].map((level, i) => ({ n: i + 1, name: 'crowd' + (i + 1), level }));
+  const crowdOf = (id) => { const m = /^crowd94-(\d+)$/.exec(id); return m ? CROWD_LEVELS[Number(m[1]) - 1] || null : null; };
+
   const STREAM_NAMES = ['Period end', 'Goal', 'Big hit', 'Save', 'Puck on body', 'Puck on glass'];
 
   function displaySongName(name) {
@@ -54,6 +58,10 @@
         });
       });
     }
+    // Crowd noise: sounds $12 + $13 held at a Crowdlevel by updatesound (NhlNhl94sPlayer.crowd).
+    for (const c of CROWD_LEVELS) {
+      out.push({ id: 'crowd94-' + c.n, group: 'Crowd noise', label: c.name, sub: 'Crowdlevel $' + c.level.toString(16).toUpperCase() + ' · game sounds $12 + $13 (SampleCrowd1 / SampleCrowd2), gain and pitch from updatesound · loops until Stop' });
+    }
     return out;
   }
 
@@ -91,6 +99,7 @@
     player.loadSet(custom ? custom.set : sound ? sound.set : data.songSet(songName) === 'game' ? 'game' : 'menu');
     player.logCommands(true);
     if (custom) player.startSongBytes(custom.bytes);
+    else if (sound && sound.crowd != null) player.crowd(sound.crowd);
     else if (sound) player.playEntry(sound.n);
     else player.startSong(songName);
     const edits = (custom && custom.soundEdits) || null;
@@ -212,6 +221,8 @@
     RATE,
     displaySongName,
     entries,
+    crowdOf,
+    CROWD_LEVELS,
     passInfo,
     loadPack,
     startSession,

@@ -144,4 +144,29 @@ function play(name, frames, opts) {
   assert.strictEqual(p.musicOn, false, 'fade to zero resets the sound');
 }
 
+// --- crowd noise: sounds $12 + $13 held at a Crowdlevel by updatesound; louder at the cap than at the floor, off on crowd(null) ---
+{
+  const crowdRms = (level) => {
+    const p = Player.create({ data: d });
+    p.boot();
+    p.loadSet('game');
+    p.crowd(level);
+    p.runFrames(20);
+    p.record();
+    p.runFrames(60);
+    const pcm = p.stopRecording();
+    const v = p.voices();
+    assert.ok(v[0].state && v[1].state, 'crowd sounds sit on voices 0 and 1');
+    p.crowd(null);
+    p.runFrames(120);
+    assert.ok(p.voices()[1].state === 0, 'crowd(null) releases the crowd');
+    let sum = 0;
+    for (let i = 0; i < pcm.length; i++) sum += pcm[i] * pcm[i];
+    return Math.sqrt(sum / pcm.length);
+  };
+  const lo = crowdRms(0), hi = crowdRms(0x380);
+  assert.ok(lo > 20, 'crowd at Crowdlevel 0 is non-silent (rms ' + lo.toFixed(1) + ')');
+  assert.ok(hi > lo * 2, 'crowd at $380 is louder than at 0 (' + hi.toFixed(1) + ' vs ' + lo.toFixed(1) + ')');
+}
+
 console.log('nhl94s player: the real sound program plays the extracted songs OK');

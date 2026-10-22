@@ -1,4 +1,4 @@
-// NHLPA 93 Genesis crowd noise: the levels updatesound (video93.asm:918-943) can reach, and the noise render.
+// NHLPA 93 Genesis crowd noise: the levels updatesound (video93.asm:921-946) can reach, and the noise render.
 const assert = require('assert');
 const C = require('../lib/audio/nhl93-crowd');
 assert.strictEqual(C.TONE2_PERIOD, 0x18);
@@ -15,3 +15,24 @@ const a = C.render(1, 0.5), b = C.render(11, 0.5);
 const rms = (x) => Math.sqrt(x.reduce((s, v) => s + v * v, 0) / x.length);
 assert.ok(rms(a) > rms(b) * 7 && rms(a) < rms(b) * 11, 'crowd11 is 20 dB louder than crowd1');
 assert.ok(a.some((v) => v > 0) && a.some((v) => v < 0));
+
+// NHL 92 / 94 / 95 Genesis run the same updatesound / KillCrowd, so the sound test lists the same crowd levels for them.
+// Per game: the view names a source for it, the cited routine (when the disassembly sits next to the repo) writes the same
+// PSG bytes, and its loudest level renders non-silent noise.
+const fs = require('fs');
+const path = require('path');
+const view = fs.readFileSync(path.join(__dirname, '../public/sound-test-view.js'), 'utf8');
+const psgBytes = (lines) => lines.filter((l) => /asound/i.test(l)).map((l) => (/#\$([0-9a-f]+)|#(\d+)/i.exec(l) || []).slice(1).find(Boolean)).map((v) => v == null ? 'asv' : (/^\d+$/.test(v) && v.length < 2 ? Number(v) : parseInt(v, 16)));
+const routines = {};
+for (const g of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95']) {
+  const m = new RegExp(g + ": \\['([^ ]+) (\\S+?):(\\d+)-(\\d+)', '[^ ]+ \\S+?:(\\d+)-(\\d+)'\\]").exec(view);
+  assert.ok(m, g + ': crowd source listed in sound-test-view.js');
+  const file = path.join(__dirname, '../..', m[1], m[2]);
+  if (fs.existsSync(file)) {
+    const src = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+    routines[g] = [psgBytes(src.slice(m[3] - 1, m[4])), psgBytes(src.slice(m[5] - 1, m[6]))];
+  }
+  const loud = C.render(C.LEVELS[10].att, 0.25);
+  assert.ok(rms(loud) > 0.1, g + ': crowd11 is non-silent');
+}
+if (routines.nhlpa93) for (const g in routines) assert.deepStrictEqual(routines[g], routines.nhlpa93, g + ': same PSG writes as NHLPA 93');
