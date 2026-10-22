@@ -303,6 +303,8 @@
 
   /** Heading of an NHLPA 93 (SNES) Samples or Instruments row. */
   function snesPartTitle(id) {
+    const smp = snesApi().sampleOf(snesData, id);
+    if (smp) return snesApi().sampleLabel(snesData, smp.set, smp.n).replace(/^\S+ · /, '') + ' · ' + smp.set + ' sample $' + smp.n.toString(16).toUpperCase().padStart(2, '0');
     const m = /^snes-inst-(\d+)$/.exec(id);
     const n = Number(m[1]);
     return 'Instrument $' + n.toString(16).toUpperCase().padStart(2, '0');
@@ -333,7 +335,7 @@
     if (isInst(id)) return INST().title(id);
     if (isSnes()) {
       if (crowd94(id)) return crowd94(id).name + ' · crowd noise (Crowdlevel $' + crowd94(id).level.toString(16).toUpperCase() + ')';
-      if (isSnes93() && snesApi().isPart(id)) return snesPartTitle(id);
+      if (isSnes93() && (snesApi().isPart(id) || snesApi().isSample(id))) return snesPartTitle(id);
       if (isSnes93() && id.startsWith('song-')) return snesApi().songInfo(snesData, id.slice(5)).name + ' · cue $' + Number(id.slice(5)).toString(16).toUpperCase().padStart(2, '0');
       if (isSnes93()) return (snesData.effectName(Number(id.split('-')[2])) || 'Sound') + ' · cue $' + Number(id.split('-')[2]).toString(16).toUpperCase();
       if (id.startsWith('song-')) return id.slice(5) + ' · ' + snesApi().displaySongName(id.slice(5));
@@ -540,6 +542,21 @@
     const sm = /^sound-(\w+)-(\d+)$/.exec(id);
     let imp = id === TOOL_IMPORT || id === TOOL_EDITOR ? snesImport : null;
     if ((id === TOOL_IMPORT || id === TOOL_EDITOR) && !imp) throw new Error('Open a MIDI file first');
+    const smp = isSnes93() && snesApi().isSample(id) ? snesApi().sampleOf(snesData, id) : null;
+    if (smp) {
+      stop();
+      stopBuffer();
+      ensureContext();
+      if (ctx.state === 'suspended') await ctx.resume();
+      const session = snesApi().startSampleSession(snesData, smp.set, smp.n);
+      const pullFn = (n) => snesApi().pull(session, n);
+      live = { id, snes: true, session, pullFn, blocks: [], done: false, message: '', seeking: null };
+      live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
+      startPrefetch(live);
+      status(true);
+      if (onChange) onChange();
+      return;
+    }
     const part = isSnes93() && snesApi().isPart(id);
     if (part) {
       const inst = snesApi().partInstrument(snesData, id);
@@ -570,6 +587,7 @@
   function seekSnes(sec) {
     const s = live;
     if (!s || !s.snes) return;
+    if (!s.session.player) return; // a Samples row is rendered whole; nothing to run ahead
     const target = Math.max(0, Math.round(sec * snesApi().frameRate()));
     if (target < s.session.frames) {
       restart(s.id, sec);
@@ -1072,7 +1090,7 @@
       const sec = snesSeconds(live);
       return {
         frame: live.session.frames,
-        commands: live.session.commands || live.session.player.commands || [],
+        commands: live.session.commands || (live.session.player && live.session.player.commands) || [],
         timeSec: sec
       };
     }
@@ -1295,6 +1313,10 @@
         setBar(Math.min(1, secs / total), text);
         time.textContent = text;
       }
+      if (!shown.session.player) { // a Samples row: one BRR sample rendered on the S-DSP voice model
+        box.textContent = (message || 'Playing') + ' · BRR sample · S-DSP, 32 kHz';
+        return;
+      }
       const keyOns = shown.session.player.stats.keyOns;
       if (shown.seeking) {
         const sk = shown.seeking;
@@ -1342,6 +1364,7 @@
   }
 
   function describe(id) {
+    if (isSnes93() && snesApi().isSample(id)) return 'Decode the BRR sample on the S-DSP voice model at its native rate (pitch $1000, 32 kHz), with the standard instrument envelope; a looping sample plays its loop for ' + '2 s, then is keyed off.';
     if (isSnes93() && snesApi().isPart(id)) return 'Boot the game\'s own SPC700 program, upload the ' + snesApi().setOfInstrument(snesApi().partInstrument(snesData, id)) + ' sample set, then play one note of the instrument (a probe song at the key the retail songs use it at).';
     if (isSnes93()) {
       const cue = Number(id.split('-').pop());
@@ -1468,6 +1491,18 @@
   }
 
   /** Detail of an NHLPA 93 SNES Samples or Instruments row (the play button and the volume are added by renderPanel). */
+  function snesSampleDetail(box, id) {
+    const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
+    const smp = snesApi().sampleOf(snesData, id);
+    box.appendChild(make('p', 'st-kind', 'NHLPA 93 (SNES) BRR sample'));
+    box.appendChild(make('h3', null, title(id)));
+    if (!smp) return;
+    const e = smp.entry;
+    box.appendChild(make('p', 'st-note mono', smp.set + ' set · sample ' + hex2(smp.n) + ' · BRR ' + e.length + ' bytes (' + e.length / 9 + ' blocks)' + (e.loops ? ' · loops from block ' + e.loopBlock : ' · one shot') + ' · ' + snesApi().sampleUsers(snesData, smp.set, smp.n)));
+    if (e.name) box.appendChild(make('p', 'st-note', 'Disassembly: Extracted/Sound/' + e.name + '.bin, label ' + e.name + ' (NHLPA93SNES src/data/sound/gamesound.asm).'));
+    box.appendChild(make('p', 'st-note', 'The raw sample at 32 kHz with the standard instrument envelope. Space plays or stops.'));
+  }
+
   function snesPartDetail(box, id) {
     const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
     const m = /^snes-inst-(\d+)$/.exec(id);
@@ -1519,7 +1554,9 @@
       return;
     }
     const n = Number(id.split('-')[1]);
-    if (isSnes93() && snesApi().isPart(id)) {
+    if (isSnes93() && snesApi().isSample(id)) {
+      snesSampleDetail(box, id);
+    } else if (isSnes93() && snesApi().isPart(id)) {
       snesPartDetail(box, id);
     } else if (isSnes93()) {
       const cue = Number(id.split('-').pop());
@@ -1824,6 +1861,9 @@
   function metaRows(id) {
     if (!assetsReady()) return [['Audio', error || 'loading']];
     if (isSnes() && id === TOOL_EDITOR) return [['Tool', title(id)], ['Song', 'eight tracks of notes; one GM instrument per track'], ['Plays on', 'the game\'s own SPC700 sound program, through the GM import'], ['Exports', 'MIDI (GM) and the game\'s song format'], ['Notes', isSnes93() ? 'docs/NHL93S-SOUND.md' : 'docs/NHL94S-MIDI.md']];
+    if (isSnes93() && snesApi().isSample(id)) {
+      return [['Entry', title(id)], ['Path', 'BRR sample → S-DSP voice, pitch $1000'], ['Output', '32 kHz stereo'], ['Source', 'data/audio/nhl93s-sound.json'], ['Notes', 'docs/NHL93S-SOUND.md']];
+    }
     if (isSnes93() && snesApi().isPart(id)) {
       const inst = snesApi().partInstrument(snesData, id);
       const rows = [['Entry', title(id)]];

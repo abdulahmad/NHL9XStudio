@@ -57,7 +57,11 @@
   const isPart = (id) => /^snes-inst-/.test(id);
   const isInvalidInstrument = (inst) => inst === 9;
 
-  /** Catalog rows for the Sound test list: Songs, SFX, Samples and Instruments, the same headings every game uses. */
+  /**
+   * Catalog rows for the Sound test list: Songs, SFX, Samples and Instruments, the same headings every game uses.
+   * Samples lists every BRR sample of both sets (game set by its GameSampleDir label); Instruments keeps only the rows
+   * that are more than their sample (keepInstrument).
+   */
   function entries(data) {
     const out = [];
     // One song list, sorted by song number: the title and menu songs are in it with the game ones.
@@ -82,7 +86,13 @@
         sub: [id === 0x88 ? 'crowd noise off' : null, SFX_NOTES[id], twin, data.effect(id).loops ? 'loops until Stop' : null].filter(Boolean).join(' · ') || 'cue ' + hex2(id)
       });
     }
+    for (const set of ['game', 'boot']) {
+      for (const e of data.samples(set)) {
+        out.push({ id: 'snes-sample-' + set + '-' + e.index, group: CAT().samples, label: sampleLabel(data, set, e.index), sub: sampleSub(data, set, e) });
+      }
+    }
     for (const i of data.instruments) {
+      if (!keepInstrument(i)) continue;
       const set = setOfInstrument(i.index);
       const samp = data.samples(set).find((e) => e.index === i.sample);
       const invalid = isInvalidInstrument(i.index);
@@ -90,10 +100,69 @@
       out.push({
         id: 'snes-inst-' + i.index, group: CAT().instruments, collapsible: true,
         label: hex2(i.index) + (invalid ? ' · invalid' : ''),
-        sub: [set + ' set · sample ' + hex2(i.sample) + brr, invalid ? 'sample $9A is out of range (unused table row)' : null, gmOf(data, i.index) ? gmOf(data, i.index).text : null].filter(Boolean).join(' · ')
+        sub: [set + ' set · sample ' + hex2(i.sample) + brr, !invalid ? 'envelope ADSR ' + hex2(i.adsr1) + ' ' + hex2(i.adsr2) + ' differs from the Samples row' : null, invalid ? 'sample $9A is out of range (unused table row)' : null, gmOf(data, i.index) ? gmOf(data, i.index).text : null].filter(Boolean).join(' · ')
       });
     }
     return out;
+  }
+
+  const isSample = (id) => /^snes-sample-(game|boot)-\d+$/.test(id);
+  /** { set, n, entry } of a Samples row, or null. */
+  function sampleOf(data, id) {
+    const m = /^snes-sample-(game|boot)-(\d+)$/.exec(id);
+    if (!m) return null;
+    const entry = data.samples(m[1]).find((e) => e.index === Number(m[2]));
+    return entry ? { set: m[1], n: entry.index, entry } : null;
+  }
+  /** The instruments of a set that play sample n. */
+  function instrumentsOf(data, set, n) {
+    return data.instruments.filter((i) => !isInvalidInstrument(i.index) && setOfInstrument(i.index) === set && i.sample === n);
+  }
+  function sampleUsers(data, set, n) {
+    const list = instrumentsOf(data, set, n).map((i) => hex2(i.index));
+    return list.length ? 'instrument ' + list.join(', ') : 'no instrument';
+  }
+  /** What the disassembly says a game sample is for, beyond its name (samples $11 and $12 are music). */
+  const SAMPLE_NOTES = { 0x11: 'music: fanfare lead (songs 4-8)', 0x12: 'music: fanfare drum (songs 4-7)' };
+  function sampleLabel(data, set, n) {
+    const e = data.samples(set).find((x) => x.index === n);
+    return hex2(n) + ' · ' + (e && e.name ? e.name : set + ' sample ' + hex2(n));
+  }
+  function sampleSub(data, set, e) {
+    const inst = instrumentsOf(data, set, e.index)[0];
+    const gm = inst ? gmOf(data, inst.index) : null;
+    return [set + ' set', set === 'game' ? SAMPLE_NOTES[e.index] : null, 'BRR ' + e.length + ' bytes (' + e.length / 9 + ' blocks)',
+      e.loops ? 'loops from block ' + e.loopBlock : 'one shot', sampleUsers(data, set, e.index), gm ? gm.text : null].filter(Boolean).join(' · ');
+  }
+  /** The envelope every Samples row plays with: the one nearly all instruments use (ADSR $8F $E0, gain $B8). */
+  const STD_ENV = { adsr1: 0x8f, adsr2: 0xe0, gain: 0xb8 };
+  /**
+   * An instrument row stays in Instruments only when it is more than its sample: $09 (the crowd-noise row, pending
+   * cleanup) and any instrument whose envelope differs from STD_ENV, which a Samples row would not reproduce.
+   */
+  function keepInstrument(i) {
+    return isInvalidInstrument(i.index) || i.adsr1 !== STD_ENV.adsr1 || i.adsr2 !== STD_ENV.adsr2 || i.gain !== STD_ENV.gain;
+  }
+  const SAMPLE_LOOP_SECONDS = 2; // a looping sample sounds this long, then is keyed off
+  /**
+   * One BRR sample decoded on the S-DSP voice model at its native rate (pitch $1000 = 32 kHz, one BRR sample per output
+   * sample), with the loop the directory gives. Returns interleaved stereo Int16 at RATE.
+   */
+  function renderSample(data, set, n) {
+    const e = data.samples(set).find((x) => x.index === n);
+    if (!e) throw new Error('No ' + set + ' sample ' + hex2(n));
+    const Dsp = root.NhlSnesDsp;
+    const oneShot = (e.length / 9) * 16;
+    const keyOffAt = e.loops ? Math.round(SAMPLE_LOOP_SECONDS * RATE) : oneShot + 64;
+    const r = Dsp.renderVoice({ brr: e.brr, loopBlock: e.loops ? e.loopBlock : 0, pitch: 0x1000, adsr1: STD_ENV.adsr1, adsr2: STD_ENV.adsr2, gain: STD_ENV.gain,
+      volL: 0x7f, volR: 0x7f, keyOffAt, samples: keyOffAt + Math.round(0.1 * RATE) });
+    return r.samples;
+  }
+  /** A session that plays one rendered sample (no sound program runs), with the same pull/heardSeconds surface. */
+  function startSampleSession(data, set, n) {
+    const session = { player: null, sample: { set, n }, data, commands: [], chunks: [], offset: 0, queued: 0, done: true, frames: 0, blocks: [] };
+    appendPcm(session, renderSample(data, set, n));
+    return session;
   }
 
   /** The GM instrument an instrument is mapped to (data/audio/nhl93s-gm-map.json): { text, why, confidence, runnerUp } or null. */
@@ -279,6 +348,7 @@
   }
 
   function dispose(session) {
+    if (!session.player) return;
     try { session.player.spc.stopRecording(); } catch (err) { /* noop */ }
   }
 
@@ -288,6 +358,14 @@
     songInfo,
     entries,
     isPart,
+    isSample,
+    sampleOf,
+    sampleUsers,
+    sampleLabel,
+    keepInstrument,
+    STD_ENV,
+    renderSample,
+    startSampleSession,
     isInvalidInstrument,
     partInstrument,
     gmOf,

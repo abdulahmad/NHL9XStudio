@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const SUITES = [
   'chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-data', 'nhl93-names', 'roll-snes-progressive',
   'nhl93-crowd', 'm68k-cpu', 'spc700-cpu', 'snes-dsp', 'snes-spc', 'nhl94s-sound-data', 'nhl94s-player', 'nhl94s-midi',
-  'nhl93s-sound-data', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'snes-gm-map',
+  'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey',
@@ -58,6 +58,7 @@ const RULES = [
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.
+  { re: /^public\/sound-test-snes93\.js$/, tests: ['nhl93s-samples', ...[...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b)], why: '93S Audio list' },
   { re: /^public\/sound-editor-extras\.js$/, tests: ['editor-extras', 'browser:audio-list', 'browser:nhl95-sequencer'], why: 'editor extras' },
   { re: /^public\/(audio-engine|chip-lab|sound-[\w-]+)\.(js|css|html)$/, tests: [...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b), why: 'sound UI' },
   { re: /^public\//, tests: BROWSER.map((b) => 'browser:' + b), why: 'viewer' },
