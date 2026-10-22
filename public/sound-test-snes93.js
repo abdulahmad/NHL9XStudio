@@ -128,10 +128,41 @@
     const e = data.samples(set).find((x) => x.index === n);
     return hex2(n) + ' · ' + (e && e.name ? e.name : set + ' sample ' + hex2(n));
   }
+  /**
+   * The S-DSP pitch each Samples row plays at ($1000 = 32 kHz, rate = 32000 * pitch / $1000): the pitch the game keys the
+   * sample on. In-game samples: the start pitch of the SFX cue that uses the sample (its $82 sweep word, as the sound
+   * program writes it to the DSP). Music-only samples ($11/$12) and boot samples: the pitch the game plays the
+   * sample's instrument at for its probe note (the median key the retail songs use it at), measured by running the
+   * sound program. test/nhl93s-samples.js re-measures every entry on the emulated sound unit.
+   */
+  const SAMPLE_PITCH = {
+    game: {
+      0x00: [0x1e00, 'cue $89 whistle (sweeps up to $2140)'], 0x01: [0x0340, 'cue $8A crowdcheer'], 0x02: [0x0340, 'cue $90 check'],
+      0x03: [0x0340, 'cue $91 check2'], 0x04: [0x02e0, 'cue $8C oooh2'], 0x05: [0x0700, 'cue $92 hithigh'], 0x06: [0x0480, 'cue $8D shotfh'],
+      0x07: [0x0480, 'cue $8E shotbh'], 0x08: [0x02e0, 'cue $8B crowdboo'], 0x09: [0x01c0, 'cue $95 puckwall1'], 0x0a: [0x0240, 'cue $94 puckpost'],
+      0x0b: [0x0630, 'cue $98 shotwiff'], 0x0c: [0x0528, 'cue $99 shotwiff2'], 0x0d: [0x0320, 'cue $9C stop'], 0x0e: [0x0400, 'cue $9E playerwall'],
+      0x0f: [0x0ac0, 'cue $A1 horn'], 0x10: [0x0d00, 'cue $A0 siren (sweeps)'],
+      0x11: [0x107f, 'instrument $1B at MIDI 44'], 0x12: [0x0781, 'instrument $1C at MIDI 35']
+    },
+    boot: {
+      0x00: [0x04bc, 'instrument $00 at MIDI 27'], 0x01: [0x05f5, 'instrument $01 at MIDI 31'], 0x02: [0x05f5, 'instrument $02 at MIDI 31'],
+      0x03: [0x0fcc, 'instrument $03 at MIDI 59'], 0x04: [0x0716, 'instrument $04 at MIDI 34'], 0x05: [0x05f5, 'instrument $05 at MIDI 31'],
+      0x06: [0x085e, 'instrument $06 at MIDI 60'], 0x07: [0x186a, 'instrument $07 at MIDI 57'], 0x08: [0x07f3, 'instrument $08 at MIDI 36']
+    }
+  };
+  /** { pitch, from } the Samples row plays at ($1000 when the game never keys the sample on). */
+  function samplePitch(set, n) {
+    const p = SAMPLE_PITCH[set] && SAMPLE_PITCH[set][n];
+    return p ? { pitch: p[0], from: p[1] } : { pitch: 0x1000, from: 'not keyed on by the game: native 32 kHz' };
+  }
+  function pitchNote(set, n) {
+    const p = samplePitch(set, n);
+    return 'pitch $' + p.pitch.toString(16).toUpperCase().padStart(4, '0') + ' (' + Math.round(32000 * p.pitch / 0x1000) + ' Hz, ' + p.from + ')';
+  }
   function sampleSub(data, set, e) {
     const inst = instrumentsOf(data, set, e.index)[0];
     const gm = inst ? gmOf(data, inst.index) : null;
-    return [set + ' set', set === 'game' ? SAMPLE_NOTES[e.index] : null, 'BRR ' + e.length + ' bytes (' + e.length / 9 + ' blocks)',
+    return [set + ' set', set === 'game' ? SAMPLE_NOTES[e.index] : null, pitchNote(set, e.index), 'BRR ' + e.length + ' bytes (' + e.length / 9 + ' blocks)',
       e.loops ? 'loops from block ' + e.loopBlock : 'one shot', sampleUsers(data, set, e.index), gm ? gm.text : null].filter(Boolean).join(' · ');
   }
   /** The envelope every Samples row plays with: the one nearly all instruments use (ADSR $8F $E0, gain $B8). */
@@ -152,9 +183,11 @@
     const e = data.samples(set).find((x) => x.index === n);
     if (!e) throw new Error('No ' + set + ' sample ' + hex2(n));
     const Dsp = root.NhlSnesDsp;
-    const oneShot = (e.length / 9) * 16;
+    const pitch = samplePitch(set, n).pitch;
+    // Output samples (32 kHz) the sample lasts at this pitch: 16 BRR samples per block, stepped by pitch / $1000.
+    const oneShot = Math.ceil((e.length / 9) * 16 * 0x1000 / pitch);
     const keyOffAt = e.loops ? Math.round(SAMPLE_LOOP_SECONDS * RATE) : oneShot + 64;
-    const r = Dsp.renderVoice({ brr: e.brr, loopBlock: e.loops ? e.loopBlock : 0, pitch: 0x1000, adsr1: STD_ENV.adsr1, adsr2: STD_ENV.adsr2, gain: STD_ENV.gain,
+    const r = Dsp.renderVoice({ brr: e.brr, loopBlock: e.loops ? e.loopBlock : 0, pitch, adsr1: STD_ENV.adsr1, adsr2: STD_ENV.adsr2, gain: STD_ENV.gain,
       volL: 0x7f, volR: 0x7f, keyOffAt, samples: keyOffAt + Math.round(0.1 * RATE) });
     return r.samples;
   }
@@ -365,6 +398,8 @@
     keepInstrument,
     STD_ENV,
     renderSample,
+    samplePitch,
+    SAMPLE_PITCH,
     startSampleSession,
     isInvalidInstrument,
     partInstrument,
