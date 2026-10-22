@@ -67,3 +67,56 @@ if (printPins) {
   fs.writeFileSync(PIN_FILE, JSON.stringify(newPins, null, 2) + '\n');
   console.log('nhl95 sound chain: wrote initial YM log pins');
 }
+
+// --- YM2612 timers, DAC and PSG (the 95 driver polls the timer flags; songs drive the PSG) -------------------------
+{
+  const Z80 = require('../lib/audio/nhl92-z80-harness');
+  const tm = Z80.createYmTimers();
+  tm.write(0, 0x24, 0xff); tm.write(0, 0x25, 0x03); // TA = $3FF: one sample
+  tm.write(0, 0x27, 0x05); // load and enable A
+  assert.strictEqual(tm.status(10), 0, 'Timer A not yet over');
+  assert.strictEqual(tm.status(Z80.T_PER_YM_SAMPLE + 1), 1, 'Timer A flag after (1024 - TA) samples');
+  tm.write(100, 0x27, 0x15); // reset the A flag, keep it running
+  assert.strictEqual(tm.status(101), 0, 'flag cleared by $27 bit 4');
+  tm.write(200, 0x26, 0xff); tm.write(200, 0x27, 0x0a); // Timer B: 16 samples
+  assert.strictEqual(tm.status(200 + 16 * Z80.T_PER_YM_SAMPLE + 1) & 2, 2, 'Timer B flag');
+
+  // DAC: before the timers, Z80 $1586 never saw Timer A and no sample byte reached $2A.
+  const dacWrites = (kind, id) => run(kind, id, 300).z.ym.filter((w) => w.part === 0 && w.reg === 0x2a).length;
+  const d35 = dacWrites('song', G.pcmSong);
+  assert.ok(d35 > 1000, 'song $35 streams PCM to $2A (' + d35 + ')');
+  assert.ok(dacWrites('sfx', 0x2c) > 1000, 'sfx $2C (song $11) streams PCM to $2A');
+
+  // PSG: song 0 plays noise drums; the level sits under the FM and channel 6 mutes it.
+  const psgApi = require('../lib/audio/sn76489');
+  assert.ok(Math.abs(psgApi.volToGain(1) - Math.pow(10, -0.1)) < 1e-9, 'SN76489 attenuation is 2 dB a step');
+  const silentChip = { write() {}, reset() {}, generateStereo: (n) => ({ left: new Float32Array(n), right: new Float32Array(n) }) };
+  const psgRun = (mute) => {
+    const chain = Chain.create({ rom, driver: G.driver, keepLogs: false, chip: silentChip, psg: psgApi.create() });
+    if (mute) chain.setChannelMute(6, true);
+    chain.step(null);
+    chain.step([{ song: 0 }]);
+    for (let f = 2; f < 300; f++) chain.step(null);
+    return chain;
+  };
+  const loud = psgRun(false);
+  assert.ok(loud.psgWrites > 100 && loud.psgPeak > 0, 'song 0 writes the PSG');
+  assert.ok(loud.psgPeak < 6000, 'song 0 PSG peak ' + loud.psgPeak + ' stays well under one FM channel at full scale');
+  const quiet = psgRun(true);
+  assert.strictEqual(quiet.psgWrites, loud.psgWrites, 'muted PSG still takes its writes');
+  assert.strictEqual(quiet.psgPeak, 0, 'muted PSG is out of the mix');
+  console.log('nhl95 sound chain: YM timers, DAC streaming, PSG level and mute OK');
+}
+
+// Names: 95 menu songs and team-song labels come from the 95 source, not the 94 tables.
+{
+  const assert = require('assert');
+  const N = require('../lib/audio/nhl93-names.js');
+  assert.deepStrictEqual(N.SONGS95.map((s) => s[0]).filter((_, i) => i !== 1), ['SngTitle', 'SngEOP', 'SngScouting']);
+  const cat = require('../data/audio/nhl95.json');
+  const lab = (id) => cat.entries.find((e) => e.soundId === id && e.type === 'song').label;
+  assert.strictEqual(lab(0x46), 'ChooseSong, TeamSongs (25 teams: all but CGY, PHI and SJ)');
+  assert.strictEqual(lab(0x3A), 'ChooseSong, TeamSongs ANH');
+  assert.strictEqual(lab(0x4F), 'ChooseSong, RandomSongs');
+  console.log('nhl95 names: menu songs and TeamSongs labels OK');
+}

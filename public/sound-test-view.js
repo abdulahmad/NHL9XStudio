@@ -48,7 +48,7 @@
   let data = null;
   let gmMap = null; // data/audio/nhl92-gm-map.json (lane labels, GM playback); null if it failed to load
   let nxSlice = null; // NHL 93 / 94: the sound segment bytes (Nhl9xSong reads the event streams from it)
-  const chMuted = [false, false, false, false, false, false]; // roll lanes the listener muted (click a lane); kept across plays
+  const chMuted = [false, false, false, false, false, false, false]; // roll lanes (FM1-FM6, PSG) the listener muted (click a lane); kept across plays
   let nxBank = null; // the 32 FM patches of the loaded game (patchLabel)
   let nxMap = null; // NHL 93 / 94: data/audio/nhl9x-gm-map.json
   let customRom = null; // ROM copy with the sequencer's song as song 4 (see Nhl92Song.romWithSong)
@@ -141,7 +141,7 @@
     // NHLPA 93: the 93 labels and ram93 equates, lined up with the NHL 92 names (lib/audio/nhl93-names.js).
     // NHL 94 Genesis shares the 93 effect table (sounds $00-$2F), and names its three shared songs by their equates.
     const N93 = (c.short === '93' || c.short === '94' || c.short === '95') && root.Nhl93Names ? root.Nhl93Names : null;
-    const songRec = (e) => (N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
+    const songRec = (e) => (N93 && c.short === '95' && e.soundId <= 3 ? { id: e.soundId, name: N93.SONGS95[e.soundId][0], desc: N93.SONGS95[e.soundId][2], group: 'Music', blurb: 'NHL95Genesis song() callers' } : N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), group: e.group, blurb: e.blurb });
     const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
     return {
       rom: image,

@@ -43,7 +43,14 @@ for (const L of [0, 1]) {
 const ymLog = (image, opts, id, frames) => {
   const h = crypto.createHash('sha1');
   let n = 0;
-  const chain = Chain.create({ rom: image, driver, keepLogs: false, driverOpts: opts, onYmWrite: (t, port, value) => { h.update(port + ',' + value + ';'); n++; } });
+  // Timer reloads ($24-$27) and DAC bytes ($2A) follow Z80 timing (the YM timers run in T-states), which shifts by a
+  // few cycles when the song sits elsewhere in the ROM copy; the music is the rest of the log.
+  let reg = -1;
+  const chain = Chain.create({ rom: image, driver, keepLogs: false, driverOpts: opts, onYmWrite: (t, port, value) => {
+    if (port === 0) { reg = value; return; }
+    if (port === 1 && ((reg >= 0x24 && reg <= 0x27) || reg === 0x2a)) return;
+    h.update(port + ',' + (port === 1 || port === 3 ? reg + '=' : '') + value + ';'); n++;
+  } });
   chain.step(null);
   chain.step([{ song: id }]);
   for (let f = 2; f < frames; f++) chain.step(null);

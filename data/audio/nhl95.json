@@ -471,327 +471,327 @@
     },
     {
       "id": "snd-32",
-      "label": "ChooseSong, TeamSongs BOS",
+      "label": "ChooseSong, TeamSongs BUF / NJ / NYI / NYR / WSH / WPG / ASE / ASW",
       "group": "Music",
       "type": "song",
       "soundId": 50,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
     },
     {
       "id": "snd-33",
-      "label": "ChooseSong, TeamSongs BUF",
+      "label": "ChooseSong, TeamSongs BUF / PHI, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 51,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal, late game"
     },
     {
       "id": "snd-34",
-      "label": "ChooseSong, TeamSongs BUF, RandomSongs",
+      "label": "ChooseSong, TeamSongs CGY / PIT / TOR",
       "group": "Music",
       "type": "song",
       "soundId": 52,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
     },
     {
       "id": "snd-35",
-      "label": "ChooseSong, TeamSongs CGY",
+      "label": "ChooseSong, TeamSongs CGY / LA / OTW",
       "group": "Music",
       "type": "song",
       "soundId": 53,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, home goal"
     },
     {
       "id": "snd-36",
-      "label": "ChooseSong, TeamSongs CGY",
+      "label": "ChooseSong, TeamSongs CHI",
       "group": "Music",
       "type": "song",
       "soundId": 54,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal"
     },
     {
       "id": "snd-37",
-      "label": "ChooseSong, TeamSongs CGY",
+      "label": "ChooseSong, TeamSongs CHI / NJ / PHI",
       "group": "Music",
       "type": "song",
       "soundId": 55,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
     },
     {
       "id": "snd-38",
-      "label": "ChooseSong, TeamSongs CHI",
+      "label": "ChooseSong, TeamSongs DET / NJ",
       "group": "Music",
       "type": "song",
       "soundId": 56,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
     },
     {
       "id": "snd-39",
-      "label": "ChooseSong, TeamSongs CHI",
+      "label": "ChooseSong, TeamSongs CHI / DET / LA / OTW",
       "group": "Music",
       "type": "song",
       "soundId": 57,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
     },
     {
       "id": "snd-3a",
-      "label": "ChooseSong, TeamSongs CHI",
+      "label": "ChooseSong, TeamSongs ANH",
       "group": "Music",
       "type": "song",
       "soundId": 58,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start"
     },
     {
       "id": "snd-3b",
-      "label": "ChooseSong, TeamSongs DET",
+      "label": "ChooseSong, TeamSongs EDM",
       "group": "Music",
       "type": "song",
       "soundId": 59,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start"
     },
     {
       "id": "snd-3c",
-      "label": "ChooseSong, TeamSongs DET",
+      "label": "ChooseSong, TeamSongs FLA",
       "group": "Music",
       "type": "song",
       "soundId": 60,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
     },
     {
       "id": "snd-3d",
-      "label": "ChooseSong, TeamSongs DET",
+      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 61,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
     },
     {
       "id": "snd-3e",
-      "label": "ChooseSong, TeamSongs EDM",
+      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 62,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, home goal"
     },
     {
       "id": "snd-3f",
-      "label": "ChooseSong, TeamSongs EDM",
+      "label": "ChooseSong, TeamSongs DET / LA / MTL / WSH / WPG",
       "group": "Music",
       "type": "song",
       "soundId": 63,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off, late game"
     },
     {
       "id": "snd-40",
-      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
+      "label": "ChooseSong, TeamSongs ANH / BOS / LA",
       "group": "Music",
       "type": "song",
       "soundId": 64,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, late game"
     },
     {
       "id": "snd-41",
-      "label": "ChooseSong, TeamSongs HFD",
+      "label": "ChooseSong, TeamSongs NYI, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 65,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal, late game"
     },
     {
       "id": "snd-42",
-      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
+      "label": "ChooseSong, TeamSongs BOS / DAL / NYI / NYR / STL / VAN / ASE / ASW",
       "group": "Music",
       "type": "song",
       "soundId": 66,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
     },
     {
       "id": "snd-43",
-      "label": "ChooseSong, TeamSongs LA",
+      "label": "ChooseSong, TeamSongs MTL / STL / VAN",
       "group": "Music",
       "type": "song",
       "soundId": 67,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
     },
     {
       "id": "snd-44",
-      "label": "ChooseSong, TeamSongs LA",
+      "label": "ChooseSong, TeamSongs MTL",
       "group": "Music",
       "type": "song",
       "soundId": 68,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal"
     },
     {
       "id": "snd-45",
-      "label": "ChooseSong, TeamSongs LA",
+      "label": "ChooseSong, TeamSongs FLA / HFD / PHI / PIT",
       "group": "Music",
       "type": "song",
       "soundId": 69,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
     },
     {
       "id": "snd-46",
-      "label": "ChooseSong, TeamSongs LA",
+      "label": "ChooseSong, TeamSongs (25 teams: all but CGY, PHI and SJ)",
       "group": "Music",
       "type": "song",
       "soundId": 70,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: visitor power play"
     },
     {
       "id": "snd-47",
-      "label": "ChooseSong, TeamSongs NYI",
+      "label": "ChooseSong, TeamSongs PIT, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 71,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal, late game"
     },
     {
       "id": "snd-48",
-      "label": "ChooseSong, TeamSongs NYI",
+      "label": "ChooseSong, TeamSongs FLA / QUE",
       "group": "Music",
       "type": "song",
       "soundId": 72,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
     },
     {
       "id": "snd-49",
-      "label": "ChooseSong, TeamSongs NYI, RandomSongs",
+      "label": "ChooseSong, TeamSongs ANH / CGY / QUE",
       "group": "Music",
       "type": "song",
       "soundId": 73,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, visitor power play, late game"
     },
     {
       "id": "snd-4a",
-      "label": "ChooseSong, TeamSongs DAL",
+      "label": "ChooseSong, TeamSongs OTW / SJ / WSH",
       "group": "Music",
       "type": "song",
       "soundId": 74,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, late game"
     },
     {
       "id": "snd-4b",
-      "label": "ChooseSong, TeamSongs DAL",
+      "label": "ChooseSong, TeamSongs SJ",
       "group": "Music",
       "type": "song",
       "soundId": 75,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
     },
     {
       "id": "snd-4c",
-      "label": "ChooseSong, TeamSongs MTL",
+      "label": "ChooseSong, TeamSongs SJ",
       "group": "Music",
       "type": "song",
       "soundId": 76,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal"
     },
     {
       "id": "snd-4d",
-      "label": "ChooseSong, TeamSongs MTL",
+      "label": "ChooseSong, TeamSongs SJ",
       "group": "Music",
       "type": "song",
       "soundId": 77,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: visitor power play"
     },
     {
       "id": "snd-4e",
-      "label": "ChooseSong, TeamSongs MTL",
+      "label": "ChooseSong, TeamSongs CHI / SJ, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 78,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: late game"
     },
     {
       "id": "snd-4f",
-      "label": "ChooseSong, TeamSongs MTL",
+      "label": "ChooseSong, RandomSongs",
       "group": "Music",
       "type": "song",
       "soundId": 79,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs"
     },
     {
       "id": "snd-50",
-      "label": "ChooseSong, TeamSongs NJ",
+      "label": "ChooseSong, TeamSongs STL",
       "group": "Music",
       "type": "song",
       "soundId": 80,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal"
     },
     {
       "id": "snd-51",
-      "label": "ChooseSong, TeamSongs NJ",
+      "label": "ChooseSong, TeamSongs BOS / DAL / EDM / NYR / TB / ASE / ASW",
       "group": "Music",
       "type": "song",
       "soundId": 81,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off, late game"
     },
     {
       "id": "snd-52",
-      "label": "ChooseSong, TeamSongs NJ",
+      "label": "ChooseSong, TeamSongs OTW / TB",
       "group": "Music",
       "type": "song",
       "soundId": 82,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, home goal"
     },
     {
       "id": "snd-53",
-      "label": "ChooseSong, TeamSongs NYR / ASE / ASW",
+      "label": "ChooseSong, TeamSongs TOR",
       "group": "Music",
       "type": "song",
       "soundId": 83,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
     },
     {
       "id": "snd-54",
-      "label": "ChooseSong, TeamSongs NYR / ASE / ASW",
+      "label": "ChooseSong, TeamSongs ANH / VAN",
       "group": "Music",
       "type": "song",
       "soundId": 84,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off, home goal"
     },
     {
       "id": "snd-55",
-      "label": "ChooseSong, TeamSongs NYR / ASE / ASW",
+      "label": "ChooseSong, TeamSongs FLA / MTL / WPG",
       "group": "Music",
       "type": "song",
       "soundId": 85,
       "playable": true,
-      "blurb": "NHL95Genesis equals.inc / SfxTable"
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, home goal"
     }
   ]
 }
