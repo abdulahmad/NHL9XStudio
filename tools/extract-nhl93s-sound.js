@@ -15,7 +15,7 @@
  *   - the ROM's SHA-1 (nhlpa93retail.sfc);
  *   - the stream addresses ($868000 and $818000, from docs/file-map.md) and that each stream parses to its end block;
  *   - block 1 of the boot stream starts with Extracted/Sound/driver.spc700 (code and tables) and the fmtune_* / sfx_* files make up the rest, the sample blocks equal Extracted/Sound/bootsamples.brr and
- *     Extracted/Sound/gamesamples.brr (run `npm run assets` in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
+ *     the in-game sample files the GameSamples incbins name (one Extracted/Sound/<name>_brr.bin per sample; older checkouts: gamesamples.brr) (run `npm run assets` in the NHLPA93SNES checkout first: it writes Extracted/), the instrument and sample-directory blocks equal the db/dw lines of src/data/sound/*.asm;
  *   - the cue numbers the StartSng* routines send, and the SFX numbers in src/ram93s.asm.
  */
 const fs = require('fs');
@@ -59,6 +59,21 @@ function asmNumbers(text) {
   return out;
 }
 
+/**
+ * The in-game sample set as the disassembly splits it (src/data/sound/gamesound.asm): the files the GameSamples incbins
+ * read, in order (a looping sample is incbin'd in two slices of one file), and the label of each GameSampleDir entry's
+ * start (`dw GSAMP(sfx_whistle_brr),...` gives sfx_whistle_brr). Older checkouts with one gamesamples.brr give no names.
+ */
+function gameSampleFiles(dir) {
+  const text = fs.readFileSync(path.join(dir, 'src', 'data', 'sound', 'gamesound.asm'), 'utf8');
+  const body = text.slice(text.indexOf('GameSamples:'), text.indexOf('GameSamplesEnd:'));
+  const files = [];
+  for (const m of body.matchAll(/incbin\s+"[^"]*\/Extracted\/Sound\/([\w.]+)"/g)) if (m[1] !== 'gamesamples.brr' && !files.includes(m[1])) files.push(m[1]);
+  const names = [...text.matchAll(/^\s*dw\s+GSAMP\((\w+)\)/gm)].map((m) => m[1]);
+  if (files.length && names.length !== 19) throw new Error('gamesound.asm: expected 19 GSAMP directory entries, found ' + names.length);
+  return { files, names: files.length ? names : [] };
+}
+
 function main() {
   const args = process.argv.slice(2);
   const check = args.includes('--check');
@@ -86,10 +101,12 @@ function main() {
   const code = data('driver.spc700');
   same(boot.blocks[0].bytes.subarray(0, code.length), code, 'Extracted/Sound/driver.spc700');
   let rest = 0;
-  for (const f of fs.readdirSync(path.join(dir, 'Extracted', 'Sound'))) if (/^(fmtune_.*_cmdstream|sfx_.*)\.bin$/.test(f)) rest += data(f).length;
+  for (const f of fs.readdirSync(path.join(dir, 'Extracted', 'Sound'))) if (/^(fmtune_.*_cmdstream|sfx_.*)\.bin$/.test(f) && !/_brr\.bin$/.test(f)) rest += data(f).length;
   if (code.length + rest !== boot.blocks[0].bytes.length) throw new Error('driver.spc700 + fmtune_* + sfx_* files do not add up to the driver block');
   same(boot.blocks[3].bytes, data('bootsamples.brr'), 'Extracted/Sound/bootsamples.brr');
-  same(game.blocks[1].bytes, data('gamesamples.brr'), 'Extracted/Sound/gamesamples.brr');
+  const gameSamples = gameSampleFiles(dir);
+  same(game.blocks[1].bytes, gameSamples.files.length ? Buffer.concat(gameSamples.files.map(data)) : data('gamesamples.brr'),
+    gameSamples.files.length ? 'Extracted/Sound/' + gameSamples.files.join(' + ') : 'Extracted/Sound/gamesamples.brr');
   if (boot.blocks[0].addr !== 0x0400 || boot.blocks[1].addr !== 0x2b00 || boot.blocks[2].addr !== 0x2c00 || boot.blocks[3].addr !== 0x2c30) throw new Error('unexpected boot block addresses');
   if (game.blocks[0].addr !== 0x2c00 || game.blocks[1].addr !== 0x2c50) throw new Error('unexpected game block addresses');
 
@@ -161,7 +178,8 @@ function main() {
     boot: { entry: boot.entry, blocks: boot.blocks.map((b) => ({ addr: b.addr, data: b64(b.bytes) })) },
     game: { entry: game.entry, blocks: game.blocks.map((b) => ({ addr: b.addr, data: b64(b.bytes) })) },
     cues,
-    sfx: sfxNames
+    sfx: sfxNames,
+    gameSampleNames: gameSamples.names
   };
   const text = JSON.stringify(pack, null, 1) + '\n';
   if (check) {

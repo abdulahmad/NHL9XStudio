@@ -371,5 +371,26 @@
     }
    ]
   }
+ ],
+ "gameSampleNames": [
+  "sfx_whistle_brr",
+  "sfx_crowdcheer_brr",
+  "sfx_check_brr",
+  "sfx_check2_brr",
+  "sfx_oooh_brr",
+  "sfx_hithigh_brr",
+  "sfx_shotfh_brr",
+  "sfx_shotbh_brr",
+  "sfx_crowdboo_brr",
+  "sfx_puckwall_brr",
+  "sfx_puckpost_brr",
+  "sfx_shotwiff_brr",
+  "sfx_shotwiff2_brr",
+  "sfx_stop_brr",
+  "sfx_playerwall_brr",
+  "sfx_a1_brr",
+  "sfx_siren_brr",
+  "sample_11_brr",
+  "sample_12_brr"
  ]
 }
