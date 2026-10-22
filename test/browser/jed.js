@@ -36,7 +36,9 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);
   assert.strictEqual(await page.locator('#jed-team-list .item').count(), 28);
   assert.strictEqual(await page.locator('#jed-swatches .jed-sw').count(), 64);
-  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 68);
+  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 92); // 48 zones + 20 crest + 24 centre-ice
+  assert.strictEqual(await page.locator('#jed-zones .jed-zgroup').count() > 10, true, 'light/medium/dark rows');
+  assert.strictEqual(await page.textContent('#jed-export-file'), 'Export homepals.bin');
 
   // unedited export: identical
   let out = await download(page, '#jed-export-file');
@@ -56,6 +58,18 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.strictEqual(out.bytes[2 * 448 + 15], 63);
   out.bytes[2 * 448 + 15] = away[2 * 448 + 15];
   assert.ok(out.bytes.equals(away), 'only the edited byte changed');
+  assert.strictEqual(await page.textContent('#jed-import-file-btn'), 'Import awaypals.bin');
+  // undo / redo (button and Ctrl+Z)
+  await page.click('#jed-undo');
+  out = await download(page, '#jed-export-file');
+  assert.ok(out.bytes.equals(away), 'undo');
+  await page.click('#jed-redo');
+  out = await download(page, '#jed-export-file');
+  assert.strictEqual(out.bytes[2 * 448 + 15], 63, 'redo');
+  await page.click('#jed-team-list'); await page.keyboard.press('Control+z');
+  out = await download(page, '#jed-export-file');
+  assert.ok(out.bytes.equals(away), 'Ctrl+Z');
+  await page.keyboard.press('Control+Shift+z');
 
   // ACT and .bin exports for the selected team / side
   const act = await download(page, '#jed-export-act');
@@ -72,7 +86,7 @@ withBrowser('jed', async ({ url, newPage }) => {
     assert.ok(!untouched.equals(act.bytes) || !J.slotSources(edited, 2)[5].length, 'edit shows in the ACT');
   }
   const bin = await download(page, '#jed-export-bin');
-  assert.strictEqual(bin.name, 'CGYV.BIN');
+  assert.strictEqual(bin.name, 'CGY_away.bin');
   assert.strictEqual(bin.bytes.length, 448);
 
   // revert, then import the edited .bin back: same edit; import the ACT into team 0: its colours change
@@ -82,6 +96,11 @@ withBrowser('jed', async ({ url, newPage }) => {
   await upload(page, '#jed-import-bin-btn', { name: 'CGYV.BIN', mimeType: 'application/octet-stream', buffer: bin.bytes });
   out = await download(page, '#jed-export-file');
   assert.ok(out.bytes.subarray(2 * 448, 3 * 448).equals(bin.bytes), 'bin import');
+  // whole-file import for this side, and undo of it
+  await upload(page, '#jed-import-file-btn', { name: 'AWAYPALS.BIN', mimeType: 'application/octet-stream', buffer: fs.readFileSync(path.join(FIX, 'HOMEPALS95.BIN')) });
+  out = await download(page, '#jed-export-file');
+  assert.ok(out.bytes.equals(fs.readFileSync(path.join(FIX, 'HOMEPALS95.BIN'))), 'awaypals.bin import');
+  await page.click('#jed-undo');
   await upload(page, '#jed-import-bin-btn', { name: 'bad.bin', mimeType: 'application/octet-stream', buffer: Buffer.alloc(100) });
   assert.match(await page.textContent('#jed-status'), /448 bytes/);
   await page.click('#jed-revert');
@@ -104,6 +123,57 @@ withBrowser('jed', async ({ url, newPage }) => {
     const thumbs = await page.locator('#jed-strip .jed-thumb').count();
     assert.ok(thumbs > 500, 'preview strip lists the frames (' + thumbs + ')');
     assert.ok(await page.$eval('#jed-canvas', (c) => c.width > 1), 'preview frame drawn');
+    assert.strictEqual(await page.inputValue('#jed-frame'), '369', 'default frame 369');
+    assert.strictEqual(await page.textContent('#jed-scale-val'), '13×');
+    assert.strictEqual(await page.getAttribute('#jed-scale', 'max'), '30');
+    // hover a spot: its pixels are outlined; hover / click the sprite: JED painting
+    const shown = await page.evaluate(() => { const c = document.getElementById('jed-canvas'); return { w: c.width, h: c.height }; });
+    const spot = await page.evaluate(() => {
+      for (const b of document.querySelectorAll('#jed-zones .jed-zone')) { b.dispatchEvent(new MouseEvent('mouseenter')); if (Number(document.getElementById('jed-overlay').dataset.outlined) > 0) return Number(b.dataset.sprite); }
+      return null;
+    });
+    assert.ok(spot != null, 'some spot is outlined on frame 369');
+    await page.mouse.move(0, 0);
+    // find a team pixel on the big frame and click it
+    const hit = await page.evaluate(() => {
+      const c = document.getElementById('jed-canvas'), r = c.getBoundingClientRect();
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+        const px = r.left + (x + 0.5) * r.width / c.width, py = r.top + (y + 0.5) * r.height / c.height;
+        c.dispatchEvent(new MouseEvent('mousemove', { clientX: px, clientY: py, bubbles: true }));
+        if (Number(document.getElementById('jed-overlay').dataset.outlined) > 0) return { px, py };
+      }
+      return null;
+    });
+    assert.ok(hit, 'hovering the sprite outlines a spot');
+    await page.locator('#jed-swatches .jed-sw').nth(63).click();
+    const before = (await download(page, '#jed-export-file')).bytes;
+    await page.mouse.click(hit.px, hit.py);
+    const after = (await download(page, '#jed-export-file')).bytes;
+    const diff = []; for (let i = 0; i < after.length; i++) if (after[i] !== before[i]) diff.push(i);
+    assert.ok(diff.length <= 1 && (!diff.length || after[diff[0]] === 128 + 63), 'sprite click repoints one spot (' + diff + ')');
+    await page.keyboard.press('Control+z');
+    assert.ok((await download(page, '#jed-export-file')).bytes.equals(before), 'undo sprite paint');
+    assert.ok(shown.w > 1);
+    // layout: fills the viewport, the zone list is not clipped, the splitter resizes the grid
+    for (const [w, h] of [[1920, 1080], [1280, 800]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.waitForTimeout(200);
+      const m = await page.evaluate(() => {
+        const r = (id) => document.getElementById(id).getBoundingClientRect();
+        return { main: document.querySelector('.jed-main').getBoundingClientRect().bottom, zones: r('jed-zones'), edit: document.querySelector('.jed-edit').getBoundingClientRect(), strip: r('jed-strip'), stage: r('jed-stage'), scroll: document.documentElement.scrollHeight };
+      });
+      assert.ok(m.scroll <= h + 1 && m.main <= h + 1 && m.main > h - 40, w + 'x' + h + ' fills the viewport ' + JSON.stringify(m));
+      assert.ok(m.zones.bottom <= m.edit.bottom + 1 && m.zones.height > 100, w + 'x' + h + ' zone list fits its column');
+      assert.ok(m.stage.height > m.strip.height * 0.6 && m.strip.height > 250, w + 'x' + h + ' preview / grid sizes');
+      if (process.env.NHL_JED_SHOT) await page.screenshot({ path: process.env.NHL_JED_SHOT.replace(/\.png$/, '-' + w + 'x' + h + '.png') });
+    }
+    const bar = await page.$eval('#jed-split', (b) => { const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 4 }; });
+    const h0 = await page.$eval('#jed-strip', (e) => e.getBoundingClientRect().height);
+    await page.mouse.move(bar.x, bar.y); await page.mouse.down(); await page.mouse.move(bar.x, bar.y + 100, { steps: 5 }); await page.mouse.up();
+    const h1 = await page.$eval('#jed-strip', (e) => e.getBoundingClientRect().height);
+    assert.ok(Math.abs(h0 - 100 - h1) < 6, 'splitter resizes the grid ' + h0 + ' -> ' + h1);
+    assert.strictEqual(Number(await page.evaluate(() => localStorage.getItem('jed.stripHeight'))), Math.round(h1));
+    await page.setViewportSize({ width: 1920, height: 1080 }); await page.fill('#jed-scale', '6'); await page.dispatchEvent('#jed-scale', 'input');
     await page.click('#jed-next');
     const nbs = await page.locator('#jed-left .jed-nb, #jed-right .jed-nb').count();
     assert.ok(nbs >= 2, 'neighbouring frames shown (' + nbs + ')');
