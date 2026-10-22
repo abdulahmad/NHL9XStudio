@@ -34,7 +34,7 @@
    *   state() -> null (nothing playing) or { tracker, src } with src the audible source sample
    *   patchLabel(burst) -> text or null: names the patch a lane loaded last (tagged in the lane's corner)
    *   dacLabel(hit) -> text or null: names the PCM sample a DAC hit ({sig, writes, peak}) plays (shown on the hit and in the gutter)
-   *   isMuted(i) / onToggle(i): optional; a click on an FM lane (0-5) calls onToggle, and muted lanes are drawn dimmed
+   *   isMuted(i) / onToggle(i): optional; a click on a lane (FM 0-5, PSG 6) calls onToggle, and muted lanes are drawn dimmed
    */
   function mount(container, opts) {
     const rate = opts.chain.SAMPLE_RATE;
@@ -62,7 +62,7 @@
     events.hidden = true;
     events.setAttribute('aria-live', 'off');
     const note = make('p', 'st-seq-note', 'From the YM2612 writes the Z80 driver makes, at the position you hear (right edge). ' +
-      'FM6 shows DAC while $2B bit 7 is set. The PSG lane stays empty: this driver never writes it.');
+      'FM6 shows DAC while $2B bit 7 is set. The PSG lane ticks on every SN76489 write (empty when the driver never writes it).');
     container.append(head, wrap, events, note);
     const mutable = !!(opts.onToggle && opts.isMuted);
     if (mutable) {
@@ -146,7 +146,7 @@
 
     function gutterText(L, G, i, readout, keyed, dac) {
       const top = G.laneTop(i);
-      if (mutable && i < 6 && opts.isMuted(i)) { keyed = false; dac = false; readout = 'muted'; }
+      if (mutable && opts.isMuted(i)) { keyed = false; dac = false; readout = 'muted'; }
       g.textBaseline = 'alphabetic';
       g.font = '600 ' + (L.small ? 10 : 11) + 'px ' + mono;
       g.fillStyle = i < 6 ? COLORS[i] : C.muted;
@@ -168,7 +168,7 @@
     /** Muted FM lanes are covered so they read as off (their notes are still tracked). */
     function dimMuted(L, G) {
       if (!mutable) return;
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < NAMES.length; i++) {
         if (!opts.isMuted(i)) continue;
         g.fillStyle = 'rgba(16,20,24,0.72)';
         g.fillRect(G.x0, G.laneTop(i), G.x1 - G.x0, L.laneH);
@@ -539,7 +539,7 @@
       const L = size();
       const G = geometry(L);
       let over = false;
-      for (let i = 0; i < 6; i++) if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) over = true;
+      for (let i = 0; i < NAMES.length; i++) if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) over = true;
       canvas.style.cursor = over ? 'pointer' : '';
     });
     canvas.addEventListener('click', (ev) => {
@@ -548,7 +548,7 @@
       const y = ev.clientY - r.top;
       const L = size();
       const G = geometry(L);
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < NAMES.length; i++) {
         if (y >= G.laneTop(i) && y < G.laneTop(i) + L.laneH) {
           opts.onToggle(i);
           idleDrawn = false;

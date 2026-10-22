@@ -1,10 +1,10 @@
 {
   "note": "SHA-1 prefix of YM2612 write log (300 frames). NHL95_PIN_PRINT=1 to regenerate.",
   "ymLogHashes": {
-    "song 32": "f6557068d85cf821",
-    "song 35": "4ee6a26e60a2bbf0",
-    "sfx 0": "680f18ab53c92f7d",
-    "sfx b": "1f6e8f664d381226",
-    "sfx 1c": "297f45ba560b671e"
+    "song 32": "afbc5186b1cf2878",
+    "song 35": "a09ffda7570eb6d3",
+    "sfx 0": "8e3919a6054e828a",
+    "sfx b": "34343ccd1470a7e1",
+    "sfx 1c": "0f54fdb08bb3b5ee"
   }
 }
