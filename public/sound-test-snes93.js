@@ -24,13 +24,15 @@
 
   const SONG_DESCRIPTIONS = {
     SngGoal: 'Home goal song', SngPeriodStart: 'Period start song', SngLateGame: 'Late game song, once in the third period',
-    SngPP: 'Power play song (unused)', SngFaceoff: 'Face-off song, once per period', SngTitle: 'Title song, also the game menu',
-    SngEOP: 'End of Period song (unused)', SngEOG: 'End of Game song (unused)', SngPO: 'Playoffs music'
+    SngPP: 'Power play song', SngFaceoff: 'Face-off song, once per period', SngTitle: 'Title song, also the game menu',
+    SngEOP: 'End of Period song', SngEOG: 'End of Game song', SngPO: 'Playoffs music'
   };
+  /** Songs the game never plays: shown as 'SngEOP (unused)' in the list. */
+  const UNUSED_SONGS = new Set(['SngPP', 'SngEOP', 'SngEOG']);
   /** Extra SFX notes (recording swaps, check match, retail key-off timing). Names stay from ram93s.asm. */
   const SFX_NOTES = {
-    0x8d: 'plays the 93G backhand recording (sfx_shotbh_pcm); SNES forehand shot cue',
-    0x8e: 'plays the 93G forehand/slap recording (sfx_shotfh_pcm); SNES backhand shot cue',
+    0x8d: 'forehand shot cue (93S doshot, as 92) · recording is 92 sam_pass1, the light pass shot; 93G kept only its first 500 bytes as its backhand (sfx_shotbh_pcm)',
+    0x8e: 'backhand shot cue (93S doshot, as 92) · recording is 92 sam_pass2, the beefier pass shot (92 backhand); it starts like the 92/93G slap (sfx_shotfh_pcm) but is a different take',
     0x90: '93G check1 (sfx_check_pcm / skating34) · correlation ~0.92 vs rendered sample (high confidence)',
     0x91: '93G check recording (shortened); retail driver keys off ~0.59 s (not a studio bug)'
   };
@@ -64,12 +66,12 @@
       out.push({
         id: 'song-' + c.cue,
         group: CAT().songs,
-        label: c.cue + ' · ' + c.name,
+        label: c.cue + ' · ' + c.name + (UNUSED_SONGS.has(c.name) ? ' (unused)' : ''),
         sub: (SONG_DESCRIPTIONS[c.name] || c.note) + ' · ' + c.set + ' samples'
       });
     }
     for (let level = 1; level <= 7; level++) {
-      out.push({ id: 'sound-game-' + (0x80 + level), group: CAT().sfx, label: hex2(0x80 + level) + ' · crowd' + level, sub: 'crowd noise level ' + level + ' · loops until Stop' });
+      out.push({ id: 'sound-game-' + (0x80 + level), group: CAT().sfx, label: hex2(0x80 + level) + ' · crowd' + level + (level === 7 ? ' (same as crowd6)' : ''), sub: 'crowd noise level ' + level + ' · loops until Stop' });
     }
     for (const id of data.effectIds) {
       if (id <= 0x87) continue;
