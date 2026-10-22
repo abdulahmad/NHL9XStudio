@@ -87,6 +87,8 @@
     const seen = new Set();
     // The game's own instruments chosen in this editor come back from their "n93i:<channel>:<hex>" markers (as 128 + id).
     p.markers.forEach((m) => { const x = /^n93i:(\d+):([0-9a-f]+)$/i.exec(m.text); const t = x ? slot.get(Number(x[1])) : null; if (t != null) { seen.add(t); s.programs[t] = GAME_INST + parseInt(x[2], 16); if (root.NhlSoundTestSnes93) s.set = root.NhlSoundTestSnes93.setOfInstrument(parseInt(x[2], 16)); } });
+    // NHL 94: "n94i:<channel>:<entry hex>:<set>" (the sound entry of that set, as 128 + entry).
+    p.markers.forEach((m) => { const x = /^n94i:(\d+):([0-9a-f]+):(\w+)$/i.exec(m.text); const t = x ? slot.get(Number(x[1])) : null; if (t != null) { seen.add(t); s.programs[t] = GAME_INST + parseInt(x[2], 16); s.set = x[3]; } });
     p.programs.slice().sort((a, b) => a.tick - b.tick).forEach((pr) => { const t = slot.get(pr.ch); if (t != null && !seen.has(t)) { seen.add(t); s.programs[t] = pr.program; } });
     let dropped = 0;
     p.notes.forEach((n) => {
@@ -103,7 +105,7 @@
     return s;
   }
 
-  /** NHLPA 93: a track program of GAME_INST + id plays the game's instrument id directly (no GM mapping). */
+  /** A track program of GAME_INST + id plays the game's own instrument (93S) or sound entry (94S) id directly (no GM mapping). */
   const GAME_INST = 128;
   const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
   function toSmfBytes(song, gmMap) {
@@ -115,7 +117,7 @@
       if (!drum && program >= GAME_INST) {
         const id = program - GAME_INST;
         const e = gmMap && gmMap.sets && gmMap.sets[song.set] && gmMap.sets[song.set][String(id)];
-        markers.push({ tick: 0, text: 'n93i:' + t + ':' + id.toString(16) });
+        markers.push({ tick: 0, text: song.game === 'nhl94snes' ? 'n94i:' + t + ':' + id.toString(16) + ':' + song.set : 'n93i:' + t + ':' + id.toString(16) });
         program = e && e.program != null ? e.program : 0; // the GM file still names a close General MIDI program
       }
       const notes = song.notes.filter((n) => n.ch === t).map((n) => ({ tick: n.t, dur: n.dur, pitch: n.pitch, vel: n.vel, program }));
@@ -204,11 +206,21 @@
     // NHLPA 93: the game's own instruments of the song's sound set, written as the $E0 INSTRUMENT command directly.
     const gameGroup = make('optgroup');
     gameGroup.label = 'Game instruments (this sound set)';
-    if (!is94) progSel.appendChild(gameGroup);
+    progSel.appendChild(gameGroup);
     function fillGameInstruments(set) {
-      if (is94 || gameGroup.dataset.set === set) return;
+      if (gameGroup.dataset.set === set) return;
       gameGroup.dataset.set = set;
       gameGroup.textContent = '';
+      if (is94) {
+        // NHL 94: the set's sound entries (not the six streamed game sounds 22-27), written as $DC n directly.
+        const d = host.snesData;
+        const names = d.sampleList(set);
+        d.sounds(set).forEach((snd, i) => {
+          if (set === 'game' && i >= 22 && i <= 27) return;
+          gameGroup.appendChild(Object.assign(make('option', null, hex2(i) + ' · ' + (names[snd.sample] || 'sample ' + snd.sample) + ' (' + set + ' set)'), { value: String(GAME_INST + i) }));
+        });
+        return;
+      }
       const snes = root.NhlSoundTestSnes93;
       for (const i of host.snesData.instruments || []) {
         if (snes && (snes.setOfInstrument(i.index) !== set || snes.isInvalidInstrument(i.index))) continue;
