@@ -73,6 +73,17 @@ async function open(page, url, game) {
         await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
         await page.click('#sound-test-toggle');
         await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 45000 });
+        if (game === 'nhlpa93snes') {
+          // Samples: the 28 BRR samples by their disassembly names; the whistle (a looping sample) plays
+          await page.click('#sound-test-toggle');
+          await page.$$eval('#catalog .group-label', (n) => n.find((x) => /Samples/.test(x.textContent)).click());
+          const names = await items(page);
+          assert.strictEqual(names.filter((t) => /_brr$|boot sample/.test(t)).length, 28, 'nhlpa93snes: Samples lists 28 samples');
+          await page.$$eval('#catalog .item', (n) => n.find((x) => /sfx_whistle_brr/.test((x.querySelector('.name') || {}).textContent)).click());
+          await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
+          await page.click('#sound-test-toggle');
+          await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 30000 });
+        }
       }
     }
     const bad = page.problems.filter((p) => !OPTIONAL.test(p));

@@ -1,0 +1,51 @@
+/**
+ * NHLPA 93 SNES Audio tab, Samples list (public/sound-test-snes93.js): every BRR sample of both sets is listed by its
+ * disassembly name and plays with its loop; Instruments keeps only the rows that are more than their sample.
+ */
+const assert = require('assert');
+global.self = global;
+global.NhlSnesDsp = require('../lib/audio/snes-dsp');
+global.NhlNhl93sSoundData = require('../lib/audio/nhl93s-sound-data');
+global.NhlAudioCategories = require('../lib/audio/categories');
+require('../public/sound-test-snes93.js');
+const A = global.NhlSoundTestSnes93;
+const pack = require('../data/audio/nhl93s-sound.json');
+const d = global.NhlNhl93sSoundData.load(pack);
+const rows = A.entries(d);
+
+const NAMES = ['sfx_whistle_brr', 'sfx_crowdcheer_brr', 'sfx_check_brr', 'sfx_check2_brr', 'sfx_oooh_brr', 'sfx_hithigh_brr', 'sfx_shotfh_brr',
+  'sfx_shotbh_brr', 'sfx_crowdboo_brr', 'sfx_puckwall_brr', 'sfx_puckpost_brr', 'sfx_shotwiff_brr', 'sfx_shotwiff2_brr', 'sfx_stop_brr',
+  'sfx_playerwall_brr', 'sfx_a1_brr', 'sfx_siren_brr', 'sample_11_brr', 'sample_12_brr'];
+assert.deepStrictEqual(pack.gameSampleNames, NAMES, 'pack carries the GameSampleDir labels');
+
+const samples = rows.filter((r) => r.group === 'Samples');
+assert.strictEqual(samples.length, 19 + 9, 'Samples lists 19 game and 9 boot samples');
+NAMES.forEach((n, i) => assert.ok(samples.find((r) => r.id === 'snes-sample-game-' + i).label.endsWith(n), 'game sample ' + i + ' is ' + n));
+assert.ok(/fanfare lead/.test(samples.find((r) => r.id === 'snes-sample-game-17').sub), '$11 is the fanfare lead');
+assert.ok(/fanfare drum/.test(samples.find((r) => r.id === 'snes-sample-game-18').sub), '$12 is the fanfare drum');
+assert.ok(samples.find((r) => r.id === 'snes-sample-boot-0').label.endsWith('boot sample $00'), 'boot samples are named neutrally');
+
+// loops as the directory gives them (game $00/$0F/$10/$11), all on 9-byte blocks
+const loops = d.samples('game').filter((e) => e.loops).map((e) => e.index);
+assert.deepStrictEqual(loops, [0, 15, 16, 17], 'looping game samples');
+for (const set of ['game', 'boot']) for (const e of d.samples(set)) if (e.loops) assert.strictEqual(e.loop, e.start + e.loopBlock * 9, set + ' ' + e.index + ' loop on a block');
+
+// a looping sample keeps sounding past its BRR length; a one-shot one goes quiet
+const peak = (pcm, from) => { let m = 0; for (let i = from * 2; i < pcm.length; i++) m = Math.max(m, Math.abs(pcm[i])); return m; };
+const whistle = A.renderSample(d, 'game', 0);
+assert.ok(peak(whistle, 32000) > 1000, 'the whistle loop still sounds after 1 s');
+const shot = A.renderSample(d, 'game', 6);
+assert.ok(peak(shot, 0) > 1000 && peak(shot, shot.length / 2 - 200) < 50, 'a one-shot sample plays and ends');
+const s = A.startSampleSession(d, 'boot', 3);
+const out = A.pull(s, 4000);
+assert.ok(out.left.some((v) => Math.abs(v) > 0.01), 'a boot sample session plays');
+
+// Instruments: only rows that are more than their sample
+const inst = rows.filter((r) => r.group === 'Instruments').map((r) => r.id);
+assert.deepStrictEqual(inst, ['snes-inst-8', 'snes-inst-9', 'snes-inst-25'], 'Instruments keeps $08, $09 and $19');
+for (const i of d.instruments) {
+  if (inst.includes('snes-inst-' + i.index)) continue;
+  assert.ok(i.adsr1 === A.STD_ENV.adsr1 && i.adsr2 === A.STD_ENV.adsr2 && i.gain === A.STD_ENV.gain, 'removed instrument ' + i.index + ' had the standard envelope');
+  assert.ok(samples.some((r) => r.id === 'snes-sample-' + A.setOfInstrument(i.index) + '-' + i.sample), 'removed instrument ' + i.index + ' has its Samples row');
+}
+console.log('nhl93s-samples: 28 samples listed and playable, 3 instruments kept');
