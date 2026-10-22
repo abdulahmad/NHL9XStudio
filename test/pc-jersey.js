@@ -1,5 +1,6 @@
 /** lib/pc-jersey.js: NHL 94 PC / NHL 95 PC HOMEPALS / AWAYPALS (the JED files): detection, byte-identical export,
- *  single-palette .bin and .ACT round trips, and agreement with the Studio's team palette (lib/pc95.js). */
+ *  single-palette .bin and sprite-space .ACT round trips, byte equality with EA-NHL-Tools createPal ACTs, and
+ *  agreement with the Studio's sprite palette and render (lib/pc95.js). */
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -68,39 +69,93 @@ for (const name of Object.keys(FILES)) {
   same(J.getRecord(c, 2), r94, '94 record into 95 file');
 }
 
-// --- .ACT: layout (EA-NHL-Tools binToAct teamPal: colours at 128..191, * 4), round trip, trailer, rounding ---
+// --- .ACT in sprite-colour space (EA-NHL-Tools binToAct createPal, which PPV-To-BMP applies to raw sprites) ---
+const PALS = path.join(__dirname, 'fixtures', 'PAL-To-ACT');
+const BASE = {
+  rink: fs.readFileSync(path.join(PALS, 'rinkpalShadowfixed.act')),
+  jersey: fs.readFileSync(path.join(PALS, 'createjerseyShadowfixed.act')),
+  rinkPlain: fs.readFileSync(path.join(PALS, 'rinkpal.act'))
+};
+for (const n of ['rinkpalShadowfixed.act', 'createjerseyShadowfixed.act', 'rinkpal.act']) {
+  same(fs.readFileSync(path.join(__dirname, '..', 'public', 'jed-pals', n)), fs.readFileSync(path.join(PALS, n)), 'public/jed-pals/' + n + ' = fixture');
+}
+// byte-for-byte equal to the createPal ACTs EA-NHL-Tools ships in PPV-To-BMP/Palettes (test/fixtures/pc-jersey/createPal).
+// Exception: NHL 95 HOMEPALS ANA, whose shipped ACT was built from a different HOMEPALS (5 crest/white entries differ).
+const EA_DIFFERS = { 'HOMEPALS95.BIN': ['ana'] };
+const CREATE = path.join(FIX, 'createPal');
 for (const name of Object.keys(FILES)) {
   const bytes = read(name);
   const f = J.openFile(bytes);
+  const [game] = FILES[name];
+  const side = name.slice(0, 8);
+  let matched = 0;
   for (let t = 0; t < J.teamCount(f); t++) {
-    const act = J.toAct(f, t);
+    const act = J.toAct(f, t, BASE);
     assert.strictEqual(act.length, 768);
-    for (let i = 0; i < 768; i++) {
-      const idx = Math.floor(i / 3);
-      const want = idx >= 128 && idx < 192 ? bytes[t * 448 + (i - 384)] * 4 : 0;
-      assert.strictEqual(act[i], want, name + ' team ' + t + ' act byte ' + i);
+    const code = f.teams[t].code;
+    const ea = fs.readFileSync(path.join(CREATE, 'NHL' + game + 'PAL', side, code.toUpperCase() + '-01-createPal.ACT'));
+    if ((EA_DIFFERS[name] || []).includes(code)) assert.ok(!Buffer.from(act).equals(ea), name + ' ' + code + ' known difference still there');
+    else { same(act, ea, name + ' ' + code + ' = EA-NHL-Tools createPal'); matched++; }
+    // = the Studio's sprite palette (lib/pc95.js buildTeamPalette, used by the Frame tab), incl. the static game palette
+    const studio = Pc.buildTeamPalette(J.getRecord(f, t), null);
+    const ours = J.spritePalette(f, t, BASE);
+    for (let i = 0; i < 256; i++) {
+      assert.deepStrictEqual(ours[i], studio[i], name + ' ' + code + ' sprite colour ' + i);
+      assert.deepStrictEqual(ours.game[i], studio.game[i], name + ' ' + code + ' game colour ' + i);
     }
-    // agrees with the Studio's team palette (game palette 128..191)
-    const pal = Pc.buildTeamPalette(J.getRecord(f, t), null).game;
-    for (let i = 128; i < 192; i++) assert.deepStrictEqual(pal[i], [act[i * 3], act[i * 3 + 1], act[i * 3 + 2]], 'game palette ' + i);
   }
+  assert.ok(matched >= J.teamCount(f) - 1, name + ' matched ' + matched);
   const g = J.openFile(bytes);
-  for (let t = 0; t < J.teamCount(g); t++) J.fromAct(g, t, J.toAct(f, t));
+  for (let t = 0; t < J.teamCount(g); t++) J.fromAct(g, t, J.toAct(f, t, BASE));
   same(J.exportFile(g), bytes, name + ' ACT round trip identical');
-  const trailer = J.toAct(f, 4, true);
+  const trailer = J.toAct(f, 4, BASE, true);
   assert.strictEqual(trailer.length, 772);
   J.fromAct(g, 4, trailer);
   same(J.exportFile(g), bytes, name + ' 772-byte ACT round trip identical');
 }
 {
   const f = J.openFile(read('HOMEPALS95.BIN'));
-  const act = J.toAct(f, 0);
-  act[128 * 3] = 255; act[128 * 3 + 1] = 6; act[128 * 3 + 2] = 1; // not multiples of 4: nearest 6-bit, clamped
-  J.fromAct(f, 0, act);
-  assert.deepStrictEqual(J.getColors(f, 0)[0], [63, 2, 0]);
+  const src = J.slotSources(f, 0);
+  const slot = src.findIndex((x) => x.length >= 2);
+  assert.ok(slot >= 0, 'some team colour shows at two sprite indices');
+  const act = J.toAct(f, 0, BASE);
+  const [first, second] = src[slot];
+  act[first * 3] = 255; act[first * 3 + 1] = 6; act[first * 3 + 2] = 1; // nearest 6-bit, clamped
+  act[second * 3] = 0; act[second * 3 + 1] = 0; act[second * 3 + 2] = 0;
+  act[10 * 3] = 77; // a non-team entry: ignored
+  const before = J.getRecord(f, 0);
+  const r = J.fromAct(f, 0, act);
+  assert.deepStrictEqual(J.getColors(f, 0)[slot], [63, 2, 0], 'lowest sprite index wins');
+  assert.deepStrictEqual(r.conflicts.map((c) => c.slot), [slot], 'conflict reported');
+  assert.strictEqual(r.conflicts[0].used, first);
+  const after = J.getRecord(f, 0);
+  for (let i = 0; i < 448; i++) if (i < slot * 3 || i >= slot * 3 + 3) assert.strictEqual(after[i], before[i], 'only that slot changes ' + i);
   assert.throws(() => J.fromAct(f, 0, new Uint8Array(767)), /768 bytes/);
   const short = new Uint8Array(772); short[769] = 16;
-  assert.throws(() => J.fromAct(f, 0, short), /128\.\.191/);
+  assert.throws(() => J.fromAct(f, 0, short), /144\.\.250/);
+  assert.throws(() => J.toAct(f, 0, {}), /palette/);
+}
+// rendering a real sprite through the ACT (pixel i -> ACT entry i) equals the Studio's preview render
+{
+  const PC94 = [process.env.NHL_PC94_DIR, path.join(__dirname, '..', 'pc94'), path.join(__dirname, '..', '..', 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94')]
+    .filter(Boolean).find((d) => fs.existsSync(path.join(d, '000_049.PPV')));
+  if (PC94) {
+    const files = ['000_049.PPV', '050_099.PPV'].map((n) => ({ name: n, data: new Uint8Array(fs.readFileSync(path.join(PC94, n))) }));
+    const bank = Pc.openSpriteBundle(Pc.encodeBundle(files), 'nhl94pc');
+    const f = J.openFile(read('HOMEPALS94.BIN'));
+    let drawn = 0;
+    for (let n = 1; n <= 100; n++) {
+      const fr = bank.renderFrame(n); if (!fr || !fr.width) continue;
+      const act = J.toAct(f, 3, BASE);
+      const studio = fr.dynamic === false ? Pc.buildTeamPalette(J.getRecord(f, 3), null).game : Pc.buildTeamPalette(J.getRecord(f, 3), null);
+      for (const p of fr.pixels) {
+        if (p === 255 || fr.dynamic === false) continue;
+        assert.deepStrictEqual([act[p * 3], act[p * 3 + 1], act[p * 3 + 2]], studio[p], 'frame ' + n + ' pixel ' + p);
+      }
+      drawn++;
+    }
+    assert.ok(drawn > 10, 'sprites rendered ' + drawn);
+  } else console.log('pc-jersey: no NHL 94 PC sprites on disk, sprite render check skipped');
 }
 
 // --- map: low half is a near-identity remap (shadow / blade fixes), jersey zones point at team colours ---
