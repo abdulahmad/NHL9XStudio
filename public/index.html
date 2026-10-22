@@ -111,6 +111,8 @@
         </label>
         <label class="check" title="Matches updateanim: the expiring vblank still shows this picture, and a new picture cannot appear until 4 vblanks after the last change."><input id="min-gap" type="checkbox" checked> Game timing</label>
         <label class="check" id="transparent-field" title="Starts the way this picture is drawn. Color 0 on every palette row except the first can be see-through."><input id="transparent" type="checkbox"> Transparency</label>
+        <button type="button" id="export-frame" title="Save the shown frame as a PNG at 1:1 size in the selected palette, with color 0 see-through and no marks.">Export frame (PNG)</button>
+        <button type="button" id="export-all" title="Save every frame in this file as PNGs (1:1, selected palette, see-through color 0) in one ZIP.">Export all frames (ZIP)</button>
         <label class="field grow" id="frame-field">
           <span>Step <b id="frame-readout">1</b></span>
           <input id="frame" type="range" min="1" max="1" value="1" title="Scrub through every step in the current sequence">
@@ -165,6 +167,7 @@
   <script src="lib/snespak.js"></script>
   <script src="lib/snes.js"></script>
   <script src="lib/pc95.js"></script>
+  <script src="lib/zip-store.js"></script>
   <script src="lib/audio/genesis-constants.js"></script>
   <script src="lib/audio/genesis-92-sequence.js"></script>
   <script src="lib/audio/genesis-events.js"></script>

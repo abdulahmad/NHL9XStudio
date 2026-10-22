@@ -478,6 +478,70 @@ function bitmapFor(frame, colors) {
   return canvas;
 }
 
+/** Native 1:1 bitmap of a frame in the selected palette, color 0 see-through, no marks (the stage's bitmapFor path). */
+function exportCanvas(frame, colors) {
+  const saved = state.transparentOverride;
+  const savedMode = state.mode;
+  state.transparentOverride = true;
+  state.mode = 'image'; // bitmapFor only honors the override in image mode
+  try {
+    const src = bitmapFor(frame, colors);
+    const out = document.createElement('canvas');
+    out.width = src.width;
+    out.height = src.height;
+    out.getContext('2d').drawImage(src, 0, 0);
+    return out;
+  } finally {
+    state.transparentOverride = saved;
+    state.mode = savedMode;
+  }
+}
+
+function exportBase() {
+  const strip = (s) => String(s || '').replace(/\.[^.]+$/, '').replace(/[^A-Za-z0-9_-]+/g, '_');
+  const pal = state.paletteName ? (isEmbeddedLine(state.paletteName) ? 'line' + state.paletteName[1] : strip(state.paletteName)) : 'embedded';
+  return strip(spriteBank()) + '_' + pal;
+}
+
+function canvasPng(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encode failed'))), 'image/png'));
+}
+
+function saveBlob(name, blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+const pad3 = (n) => String(n).padStart(3, '0');
+
+async function exportFrame() {
+  const step = sequence().steps[state.step];
+  const colors = activeColors();
+  const frame = step && colors ? renderedFrame(step.frame) : null;
+  if (!frame || !frame.width) throw new Error('no frame shown');
+  saveBlob(exportBase() + '_frame' + pad3(shownFrame(step.frame)) + '.png', await canvasPng(exportCanvas(frame, colors)));
+}
+
+async function exportAllFrames() {
+  const anim = currentAnim();
+  const colors = activeColors();
+  if (!anim || !colors) throw new Error('nothing loaded');
+  const entries = [];
+  for (let f = 1; f <= anim.numFrames; f++) {
+    const frame = renderedFrame(f);
+    if (!frame || !frame.width || !frame.height) continue;
+    const blob = await canvasPng(exportCanvas(frame, colors));
+    entries.push({ name: exportBase() + '_frame' + pad3(shownFrame(f)) + '.png', data: new Uint8Array(await blob.arrayBuffer()) });
+  }
+  if (!entries.length) throw new Error('no frames to export');
+  saveBlob(exportBase() + '_frames.zip', new Blob([NhlZipStore.zipStore(entries)], { type: 'application/zip' }));
+}
+
 function renderedFrame(frameNumber) {
   const anim = currentAnim();
   if (!anim || frameNumber < 1 || frameNumber > anim.numFrames) return null;
@@ -1509,6 +1573,9 @@ function renderTransport() {
   const transparent = el('transparent');
   const showTransparent = state.mode === 'image';
   el('transparent-field').classList.toggle('is-hidden', !showTransparent);
+  const showExport = state.mode === 'image' || state.mode === 'frame';
+  el('export-frame').classList.toggle('is-hidden', !showExport);
+  el('export-all').classList.toggle('is-hidden', !showExport);
   if (showTransparent) {
     const frame = renderedFrame(sequence().steps[state.step] ? sequence().steps[state.step].frame : 1);
     transparent.checked = frame ? imageTransparencyOn(frame) : false;
@@ -1784,6 +1851,8 @@ function wire() {
     state.holdKey = '';
     state.acc = 0;
   });
+  el('export-frame').addEventListener('click', () => exportFrame().catch((e) => alert('Export failed: ' + e.message)));
+  el('export-all').addEventListener('click', () => exportAllFrames().catch((e) => alert('Export failed: ' + e.message)));
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
     bitmaps.clear();
