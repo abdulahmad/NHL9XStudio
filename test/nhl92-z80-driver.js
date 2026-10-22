@@ -490,3 +490,22 @@ const golden = require('../lib/audio/nhl92-z80-golden');
     console.log('nhl92 z80 driver: golden ' + file + ' matches ' + result.count + ' retail YM writes');
   }
 }
+
+// Long playback: the T-state clock must not wrap. tstates() was `edges >> 1`, which goes negative once the edge count
+// passes 2^31 (~17,975 frames, ~5 min: NHL 92 SngTitle pass 3 at 0:17.5). The chain then asked run() for ~2^31 T-states
+// and the Z80 never got back in step with the frames, so the music froze on one note. Fast-forward with stall().
+{
+  const FRAME_T = 59736;
+  const z = harness.create({ program: PROGRAM });
+  z.reset();
+  z.run(FRAME_T);
+  z.stall(18100 * FRAME_T - z.tstates()); // past frame 17975, without emulating five minutes
+  for (let f = 18100; f < 18110; f++) {
+    const before = z.tstates();
+    assert.ok(before >= f * FRAME_T, 'tstates stays positive and monotonic past 2^31 edges: ' + before);
+    z.run((f + 1) * FRAME_T - before);
+    const after = z.tstates();
+    assert.ok(after >= (f + 1) * FRAME_T && after - (f + 1) * FRAME_T < 64, 'frame ' + f + ' ran one frame: ' + (after - before));
+  }
+  console.log('nhl92 z80 driver: T-state clock keeps counting past 2^31 edges (frame 18100+)');
+}
