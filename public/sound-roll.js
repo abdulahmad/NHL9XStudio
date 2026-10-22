@@ -403,6 +403,15 @@
         g.fillStyle = DAC_COLOR;
         g.fillRect(x0, y, x1 - x0, barH);
         g.globalAlpha = 1;
+        // Each sample start (a retrigger of the same sample too) gets a notch, like an FM key-on.
+        if (xOf(s0) >= G.x0 + 1) {
+          g.fillStyle = DAC_COLOR;
+          g.globalAlpha = 0.5;
+          g.fillRect(Math.round(x0), dacTop + 2, 1, L.laneH - 4);
+          g.globalAlpha = 1;
+          g.fillStyle = C.bg;
+          g.fillRect(Math.round(x0) + 1, y, 1, barH);
+        }
         const text = hitName(h) + (semis == null ? '' : ' ' + (h.writes / ((sampleAt(h.t1) - sampleAt(h.t0)) / rate) / 1000).toFixed(1) + 'k');
         g.font = '600 9px ' + mono;
         if (x1 - x0 >= text.length * 5.6 + 6) {
