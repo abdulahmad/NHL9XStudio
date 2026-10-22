@@ -1090,7 +1090,7 @@
       const sec = snesSeconds(live);
       return {
         frame: live.session.frames,
-        commands: live.session.commands || live.session.player.commands || [],
+        commands: live.session.commands || (live.session.player && live.session.player.commands) || [],
         timeSec: sec
       };
     }
@@ -1312,6 +1312,10 @@
         const text = clock(Math.min(secs, total)) + ' / ' + clock(total) + (info.loops ? ' · loops until Stop' : '');
         setBar(Math.min(1, secs / total), text);
         time.textContent = text;
+      }
+      if (!shown.session.player) { // a Samples row: one BRR sample rendered on the S-DSP voice model
+        box.textContent = (message || 'Playing') + ' · BRR sample · S-DSP, 32 kHz';
+        return;
       }
       const keyOns = shown.session.player.stats.keyOns;
       if (shown.seeking) {
