@@ -15,11 +15,11 @@ const SUITES = [
   'nhl93s-sound-data', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
-  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export',
+  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey',
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch'];
-const NON_SOUND = ['fingerprint-site'];
+const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -40,6 +40,7 @@ const RULES = [
   { re: /^test\/(m68k-driver-ops|m68k-singlestep)\.js$/, tests: ['m68k-cpu'], why: '68000 test helper' },
   { re: /^test\/(spc700-driver-ops|spc700-singlestep)\.js$/, tests: ['spc700-cpu'], why: 'SPC700 test helper' },
   { re: /^test\/([\w-]+)\.js$/, tests: (m) => SUITES.includes(m[1]) ? [m[1]] : ALL, why: 'test file' },
+  { re: /^test\/fixtures\/pc-jersey\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey palette fixtures' },
   { re: /^test\/fixtures\/ANIM-To-BMP\//, tests: ['core', 'browser:load-errors'], why: 'image fixtures' },
   // CPU cores.
   { re: /^lib\/audio\/(m68k-cpu|nhl9[2-5x]-68k-[\w-]+)\.js$/, tests: M68K, why: '68000 core / drivers' },
@@ -49,6 +50,9 @@ const RULES = [
   { re: /^tools\/build-manifest\.js$/, tests: ['core'], why: 'manifest tool' },
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
+  // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.
+  { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'browser:jed'], why: 'jersey palette format' },
+  { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed'], why: 'jersey editor page' },
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.
