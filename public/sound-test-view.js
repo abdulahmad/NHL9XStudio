@@ -37,6 +37,7 @@
   const isSnes94 = () => game === SNES94;
   const isSnes93 = () => game === SNES93;
   const isSnes = () => isSnes94() || isSnes93(); // both SNES games share the live SPC700 playback; each has its own data layer
+  const crowd94 = (id) => (isSnes94() && snesApi() && snesApi().crowdOf ? snesApi().crowdOf(id) : null); // NHL 94 SNES crowd noise row
   const snesApi = () => (isSnes93() ? root.NhlSoundTestSnes93 : root.NhlSoundTestSnes);
   const isNx = () => !!NX[game];
   const assetsReady = () => (isSnes() ? !!(snesData && snesApi()) : !!(rom && Ym));
@@ -244,10 +245,8 @@
       }
       // NHLPA 93: the raw PCM files, a collapsible list like NHL 92's DAC samples.
       if (game === 'nhlpa93' && INST() && INST().ready) out.push(...INST().entries());
-      // NHLPA 93: the crowd noise, generated from updatesound (PSG white noise; the game has no crowd stream or sample).
-      if (game === 'nhlpa93' && CROWD()) {
-        for (const l of CROWD().LEVELS.concat([CROWD().OFF])) out.push({ id: 'crowd-' + l.n, group: 'Crowd noise', label: l.name, sub: crowdSub(l) });
-      }
+      // Genesis 93/94/95: the crowd noise, generated from updatesound (PSG white noise; no crowd stream or sample).
+      out.push(...crowdEntries());
       return out;
     }
     // Tools first, so the sequencer and the MIDI import are the first thing in the list.
@@ -259,6 +258,7 @@
     for (const s of data.sfx) out.push({ id: 'sfx-' + s.id, group: CAT().sfx, label: NAMES().name(s.id), sub: sfxKinds(s) + ' · ' + NAMES().describe(s.id) });
     // DAC samples and instruments: collapsible lists (collapsed until opened), played through the Z80 driver.
     if (INST() && INST().ready) out.push(...INST().entries());
+    out.push(...crowdEntries()); // NHL 92: the same PSG crowd noise (video.asm updatesound)
     return out;
   }
 
@@ -309,7 +309,16 @@
   }
 
   const CROWD = () => root.Nhl93Crowd;
-  const isCrowd = (id) => game === 'nhlpa93' && !!CROWD() && /^crowd-\d+$/.test(id);
+  // Every Genesis game runs the same updatesound / KillCrowd PSG writes (byte-identical routines), so one renderer serves all four.
+  const CROWD_SRC = {
+    nhl92: ['NHL92Genesis src/video.asm:783-808', 'NHL92Genesis src/video.asm:810-816'],
+    nhlpa93: ['NHLPA93Genesis src/video93.asm:921-946', 'NHLPA93Genesis src/video93.asm:948-954'],
+    nhl94: ['NHL94Genesis src/display94.asm:1014-1041', 'NHL94Genesis src/display94.asm:1042-1049'],
+    nhl95: ['NHL95Genesis src/sound95.asm:1508-1535', 'NHL95Genesis src/sound95.asm:1705-1711']
+  };
+  const hasCrowd = () => !!CROWD_SRC[game] && !!CROWD();
+  const crowdEntries = () => (hasCrowd() ? CROWD().LEVELS.concat([CROWD().OFF]).map((l) => ({ id: 'crowd-' + l.n, group: 'Crowd noise', label: l.name, sub: crowdSub(l) })) : []);
+  const isCrowd = (id) => hasCrowd() && /^crowd-\d+$/.test(id);
   const crowdLevel = (id) => { const n = Number(id.split('-')[1]); return n ? CROWD().LEVELS[n - 1] : CROWD().OFF; };
   const hex2 = (v) => '$' + v.toString(16).toUpperCase().padStart(2, '0');
   function crowdSub(l) {
@@ -323,6 +332,7 @@
     if (isCrowd(id)) return crowdLevel(id).name + ' · crowd noise (generated)';
     if (isInst(id)) return INST().title(id);
     if (isSnes()) {
+      if (crowd94(id)) return crowd94(id).name + ' · crowd noise (Crowdlevel $' + crowd94(id).level.toString(16).toUpperCase() + ')';
       if (isSnes93() && snesApi().isPart(id)) return snesPartTitle(id);
       if (isSnes93() && id.startsWith('song-')) return snesApi().songInfo(snesData, id.slice(5)).name + ' · cue $' + Number(id.slice(5)).toString(16).toUpperCase().padStart(2, '0');
       if (isSnes93()) return (snesData.effectName(Number(id.split('-')[2])) || 'Sound') + ' · cue $' + Number(id.split('-')[2]).toString(16).toUpperCase();
@@ -537,12 +547,13 @@
       if (inst == null) throw new Error(bad && snesApi().isInvalidInstrument(Number(bad[1])) ? 'Instrument $09 is invalid (sample $9A is out of range)' : 'This instrument cannot be played');
       imp = snesApi().probeSong(snesData, inst);
     }
-    const songName = sm || imp ? null : id.slice(5);
+    const c94 = crowd94(id);
+    const songName = sm || imp || c94 ? null : id.slice(5);
     stop();
     stopBuffer();
     ensureContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const session = snesApi().startSession(snesData, songName, sm ? { set: sm[1], n: Number(sm[2]) } : null, imp ? { set: imp.set, bytes: imp.bytes, base: imp.base } : null);
+    const session = snesApi().startSession(snesData, songName, c94 ? { set: 'game', crowd: c94.level } : sm ? { set: sm[1], n: Number(sm[2]) } : null, imp ? { set: imp.set, bytes: imp.bytes, base: imp.base } : null);
     const pullFn = (n) => snesApi().pull(session, n);
     live = { id, snes: true, session, pullFn, blocks: [], done: false, message: '', seeking: null };
     live.resampler = root.NhlChipResampler.create(snesApi().RATE, ctx.sampleRate, pullFn);
@@ -1338,6 +1349,7 @@
         ? 'Boot the game\'s own SPC700 program, upload the ' + snesData.cueList.find((c) => c.cue === cue).set + ' sample set (SPCBootUpload / SPCGameUpload), then send cue $' + cue.toString(16).toUpperCase() + ' on port 0 as the vblank handler does, one video frame at a time, until the order list ends or Stop.'
         : 'Boot the game\'s own SPC700 program, upload the in-game sample set, then send cue $' + cue.toString(16).toUpperCase() + ' on port 0 (QueueSound) and run video frames until the effect program ends.';
     }
+    if (crowd94(id)) return 'Boot the extracted SPC700 program, upload the game BRR samples, queue game sounds $12 and $13 (SampleCrowd1 on voice 0, SampleCrowd2 on voice 1) as puckfaceoff2 does, then every video frame run updatesound with Crowdlevel held at $' + crowd94(id).level.toString(16).toUpperCase() + ' (voice 1 gain and pitch rise with the level; voice 0 joins from $1F4) before SoundUpdate.';
     if (isSnes94()) {
       if (id.startsWith('song-')) {
         const name = id.slice(5);
@@ -1522,6 +1534,10 @@
         const fx = cue > 0x88 ? snesData.effect(cue) : null;
         box.appendChild(make('p', 'st-note mono', 'game sample set · cue $' + cue.toString(16).toUpperCase() + (fx && fx.voice != null ? ' · voice ' + (fx.voice < 0 ? 'any free' : fx.voice) : '')));
       }
+    } else if (crowd94(id)) {
+      box.appendChild(make('p', 'st-kind', 'NHL 94 (SNES) crowd noise'));
+      box.appendChild(make('h3', null, title(id)));
+      box.appendChild(make('p', 'st-note mono', 'game sample set · sounds $12 + $13 · loops until Stop'));
     } else if (isSnes94() && id.startsWith('sound-')) {
       box.appendChild(make('p', 'st-kind', 'NHL 94 (SNES) sound effect'));
       box.appendChild(make('h3', null, title(id)));
@@ -1825,6 +1841,7 @@
       return rows.concat([['Source', 'data/audio/nhl93s-sound.json'], ['Notes', 'docs/NHL93S-SOUND.md']]);
     }
     if (isSnes94() && id === TOOL_IMPORT) return [['Tool', title(id)], ['In', 'Standard MIDI file (format 0 or 1), or a native export'], ['Out', 'a song in the game\'s format, played on the SPC700 program'], ['Mapping', 'data/audio/nhl94s-gm-map.json'], ['Notes', 'docs/NHL94S-MIDI.md']];
+    if (crowd94(id)) return [['Sound', crowd94(id).name], ['Crowdlevel', '$' + crowd94(id).level.toString(16).toUpperCase()], ['Path', 'QueueSound $12 + $13 → updatesound (gain, pitch) → SoundUpdate → SPC700 program → S-DSP'], ['Samples', 'SampleCrowd1 (voice 0), SampleCrowd2 (voice 1)'], ['Source', 'NHL94SNES src/routines/display/updatesound.asm, src/routines/checks/puckfaceoff2.asm']];
     if (isSnes94()) {
       if (id.startsWith('sound-')) return [['Entry', title(id)], ['Path', 'PlaySound → StartSoundVoice → SPC700 program → S-DSP'], ['Output', '32 kHz stereo, live'], ['Source', 'data/audio/nhl94s-sound.json'], ['Notes', 'docs/NHL94S-PLAYBACK.md']];
       const name = id.slice(5);
@@ -1847,7 +1864,7 @@
       return [['Sound', l.name], ['Kind', 'generated, not extracted: the 68k writes the PSG noise channel directly'],
         ['PSG writes', l.n ? '$C8 $01 (tone 2 period $18), ' + hex2(l.write) : '$E7 (white noise, rate = tone 2), $DF, $C8 $01, $FF'],
         ['Noise', 'white, 16-bit LFSR, ' + CROWD().SHIFT_HZ.toFixed(0) + ' Hz shift rate'],
-        ['Source', l.n ? 'NHLPA93Genesis src/video93.asm:918-943 updatesound' : 'NHLPA93Genesis src/video93.asm:945-951 KillCrowd']];
+        ['Source', l.n ? CROWD_SRC[game][0] + ' updatesound' : CROWD_SRC[game][1] + ' KillCrowd']];
     }
     if (isTool(id)) {
       if (isNx()) {
