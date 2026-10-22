@@ -1,5 +1,7 @@
 /* JED-style jersey palette editor for NHL 94 PC and NHL 95 PC (HOMEPALS.BIN / AWAYPALS.BIN). Format: lib/pc-jersey.js.
- * Preview: the Studio's PC sprite decoder (lib/pc95.js openSpriteBundle) and team palette (buildTeamPalette). */
+ * Preview: the Studio's PC sprite decoder (lib/pc95.js openSpriteBundle), coloured with J.spritePalette: the same
+ * createPal merge EA-NHL-Tools binToAct writes for PPV-To-BMP (rinkpalShadowfixed + team colours through the record's
+ * map, createjerseyShadowfixed 0..143 and 251..255). Export .ACT writes exactly that palette. */
 (function () {
   'use strict';
   const J = NhlPcJersey;
@@ -8,7 +10,7 @@
     game: null, // '94' | '95'
     files: { home: null, away: null }, // { file, original: Uint8Array, name }
     side: 'home', team: 0, color: 0,
-    sprites: null, rink: null, frame: 0, frames: [], spriteNote: '',
+    sprites: null, rink: null, base: null, frame: 0, frames: [], spriteNote: '',
     sources: null // { kind: 'local', map } | { kind: 'server', id }
   };
   const SIDE_FILE = { home: 'HOMEPALS.BIN', away: 'AWAYPALS.BIN' };
@@ -57,7 +59,6 @@
     S.rink = catalog.rinkFile ? rinkPalette(map.get(catalog.rinkFile)) : null;
     S.sprites = parts.length ? Nhl95Pc.openSpriteBundle(Nhl95Pc.encodeBundle(parts), gameId()) : null;
     S.spriteNote = S.sprites ? parts.length + ' sprite sheet(s)' : 'No PPV sprite sheets loaded — open the game folder for a preview';
-    if (S.sprites && !S.rink) S.spriteNote += ' · no RINKPAL, non-jersey colours are black';
     afterLoad();
   }
 
@@ -168,6 +169,7 @@
 
   function zoneColor(target, colors) {
     if (target >= 128 && target < 192) return colors[target - 128];
+    if (S.base && target < 256) { const k = target * 3; return [S.base.rink[k] / 4, S.base.rink[k + 1] / 4, S.base.rink[k + 2] / 4]; }
     if (S.rink && S.rink[target]) return S.rink[target].map((v) => v / 4);
     return null;
   }
@@ -205,8 +207,15 @@
 
   // ---- preview -------------------------------------------------------------------------------------------------
   function teamPalette() {
-    const pal = Nhl95Pc.buildTeamPalette(J.getRecord(cur().file, S.team), S.rink);
-    return pal;
+    if (S.base) return J.spritePalette(cur().file, S.team, S.base);
+    return Nhl95Pc.buildTeamPalette(J.getRecord(cur().file, S.team), S.rink);
+  }
+  async function loadBase() {
+    const get = async (n) => { try { return await fetchBytes('jed-pals/' + n); } catch (err) { return null; } };
+    const [rink, jersey, rinkPlain] = await Promise.all(['rinkpalShadowfixed.act', 'createjerseyShadowfixed.act', 'rinkpal.act'].map(get));
+    S.base = rink && jersey ? { rink, jersey, rinkPlain } : null;
+    if (!S.base) status('Could not load jed-pals/*.act; the preview falls back to the Studio palette and .ACT export is off', true);
+    if (cur()) renderAll();
   }
   function hasPixels(n) { const f = S.sprites && S.sprites.renderFrame(n); return Boolean(f && f.width && f.height); }
   function visibleFrames() { return $('jed-skip-empty').checked ? S.frames.filter(hasPixels) : S.frames; }
@@ -257,9 +266,11 @@
     const canvas = $('jed-canvas');
     if (!S.sprites || !S.frame || !cur()) { canvas.width = 1; canvas.height = 1; return; }
     const pal = teamPalette();
-    drawFrame(canvas, S.frame, pal, Number($('jed-scale').value));
+    const scale = Number($('jed-scale').value);
+    drawFrame(canvas, S.frame, pal, scale);
     const frames = visibleFrames();
     const at = frames.indexOf(S.frame);
+    renderNeighbours(frames, at, pal, scale);
     $('jed-frame').value = String(S.frame - 1); $('jed-frame').max = String(S.frames.length - 1);
     if (at >= 0) $('jed-frame-slider').value = String(at);
     const strip = $('jed-strip');
@@ -271,6 +282,25 @@
     if (recolor) {
       cancelAnimationFrame(pending);
       pending = requestAnimationFrame(() => { for (const t of strip.children) if (t.dataset.visible) paintThumb(t, pal); });
+    }
+  }
+  /** Neighbouring frames either side of the selected one, as many as fit the stage width. Click to select. */
+  function renderNeighbours(frames, at, pal, scale) {
+    const left = $('jed-left'), right = $('jed-right'); left.innerHTML = ''; right.innerHTML = '';
+    if (at < 0) return;
+    const nbScale = Math.max(1, Math.round(scale / 2));
+    const stage = $('jed-stage').clientWidth || 0;
+    const main = $('jed-canvas').width * scale;
+    const slot = 40 * nbScale + 12; // a typical player frame is ~32-40 px wide
+    const each = Math.max(0, Math.min(8, Math.floor((stage - main - 24) / 2 / slot)));
+    const add = (box, n, front) => {
+      const c = document.createElement('canvas'); c.className = 'jed-nb'; c.dataset.frame = String(n); c.title = 'Frame ' + (n - 1);
+      drawFrame(c, n, pal, nbScale); c.addEventListener('click', () => { S.frame = n; renderPreview(false); });
+      if (front) box.prepend(c); else box.append(c);
+    };
+    for (let k = 1; k <= each; k++) {
+      if (at - k >= 0) add(left, frames[at - k], true);
+      if (at + k < frames.length) add(right, frames[at + k], false);
     }
   }
   function stepFrame(d) {
@@ -311,14 +341,23 @@
     };
     $('jed-export-file').onclick = guard(() => { if (cur()) download(J.exportFile(cur().file), cur().name.replace(/\.o9\d$/i, '.BIN')); });
     $('jed-export-bin').onclick = guard(() => { if (cur()) download(J.getRecord(cur().file, S.team), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.BIN'); });
-    $('jed-export-act').onclick = guard(() => { if (cur()) download(J.toAct(cur().file, S.team, false), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.ACT'); });
+    $('jed-export-act').onclick = guard(() => {
+      if (!cur()) return; if (!S.base) throw new Error('The base palettes (jed-pals/*.act) did not load');
+      download(J.toAct(cur().file, S.team, S.base, false), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.ACT');
+    });
     $('jed-import-bin-btn').onclick = guard(async () => {
       if (!cur()) return; const f = await readFile($('jed-import-bin')); if (!f) return;
       J.setRecord(cur().file, S.team, f.bytes); status('Imported ' + f.name + ' into ' + teamCode() + ' ' + S.side); edited();
     });
     $('jed-import-act-btn').onclick = guard(async () => {
       if (!cur()) return; const f = await readFile($('jed-import-act')); if (!f) return;
-      J.fromAct(cur().file, S.team, f.bytes); status('Imported ' + f.name + ' colours 128–191 into ' + teamCode() + ' ' + S.side); edited();
+      const r = J.fromAct(cur().file, S.team, f.bytes);
+      let msg = 'Imported ' + f.name + ' (sprite colours 144–250) into ' + teamCode() + ' ' + S.side + ': ' + r.set.length + ' team colours set';
+      if (r.conflicts.length) {
+        msg += '; ' + r.conflicts.length + ' conflict(s), the lowest sprite index wins: ' + r.conflicts.map((c) => 'colour ' + c.slot + ' from ' +
+          c.used + ' (also ' + c.sources.filter((x) => x.index !== c.used).map((x) => x.index + '=' + x.rgb.join('/')).join(', ') + ')').join('; ');
+      }
+      status(msg, r.conflicts.length > 0); edited();
     });
     $('jed-revert').onclick = () => { if (!cur()) return; J.setRecord(cur().file, S.team, J.getRecord(J.openFile(cur().original), S.team)); edited(); };
     $('jed-prev').onclick = () => stepFrame(-1);
@@ -352,5 +391,7 @@
   }
 
   wire();
+  loadBase();
   detectServer();
+  window.addEventListener('resize', () => { if (cur()) renderPreview(false); });
 })();
