@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jersey editor (NHL 94 / 95 PC) — NHL9X Studio</title>
+  <link rel="stylesheet" href="viewer.css">
+  <link rel="stylesheet" href="jed.css">
+</head>
+<body class="jed">
+  <header class="jed-head">
+    <div>
+      <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Jersey editor</h1>
+      <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
+    </div>
+    <div class="jed-actions" role="group" aria-label="Files">
+      <select id="jed-server" hidden aria-label="Game on this server"></select>
+      <button type="button" id="jed-open-folder" class="ghost-btn" title="An NHL 94 PC or 95 PC install folder: HOMEPALS/AWAYPALS plus the PPV sprites for the preview">Open game folder…</button>
+      <button type="button" id="jed-open-files" class="ghost-btn" title="HOMEPALS.BIN and/or AWAYPALS.BIN (plus PPV sheets and RINKPAL for the preview)">Open files…</button>
+      <input type="file" id="jed-folder" hidden multiple webkitdirectory>
+      <input type="file" id="jed-files" hidden multiple>
+      <input type="file" id="jed-import-bin" hidden accept=".bin">
+      <input type="file" id="jed-import-act" hidden accept=".act">
+    </div>
+  </header>
+  <main class="jed-main">
+    <section class="jed-col jed-teams" aria-label="Team">
+      <div class="pin-options" role="group" aria-label="Side">
+        <button type="button" id="jed-home" aria-pressed="true">Home</button>
+        <button type="button" id="jed-away" aria-pressed="false">Away</button>
+      </div>
+      <div id="jed-team-list" class="jed-team-list" role="listbox" aria-label="Teams" tabindex="0"></div>
+      <p class="keys">↑ ↓ team · ← → home / away</p>
+    </section>
+    <section class="jed-col jed-edit" aria-label="Palette">
+      <h2>Team palette <span class="muted">64 colours · game palette 128–191 · 6-bit VGA (0–63)</span></h2>
+      <div id="jed-swatches" class="jed-swatches" role="listbox" aria-label="Colours"></div>
+      <div class="jed-color" id="jed-color">
+        <div class="jed-big" id="jed-big"></div>
+        <div class="jed-rgb">
+          <p><b id="jed-color-name">Colour</b> <span class="mono muted" id="jed-hex"></span></p>
+          <label>R <input type="range" min="0" max="63" id="jed-r"><input type="number" min="0" max="63" id="jed-rn"></label>
+          <label>G <input type="range" min="0" max="63" id="jed-g"><input type="number" min="0" max="63" id="jed-gn"></label>
+          <label>B <input type="range" min="0" max="63" id="jed-b"><input type="number" min="0" max="63" id="jed-bn"></label>
+          <label>Picker <input type="color" id="jed-picker" title="Snapped to the nearest 6-bit VGA colour"></label>
+        </div>
+      </div>
+      <div class="jed-io" role="group" aria-label="Import and export">
+        <button type="button" id="jed-export-file" class="ghost-btn" title="The whole HOMEPALS/AWAYPALS file for this side">Export file</button>
+        <button type="button" id="jed-export-bin" class="ghost-btn" title="This team and side: one 448-byte palette record">Export .bin</button>
+        <button type="button" id="jed-import-bin-btn" class="ghost-btn" title="Replace this team and side with a 448-byte record (or 192 bytes of colours)">Import .bin</button>
+        <button type="button" id="jed-export-act" class="ghost-btn" title="Adobe Color Table, team colours at 128–191 (×4)">Export .ACT</button>
+        <button type="button" id="jed-import-act-btn" class="ghost-btn" title="768 or 772-byte ACT; colours 128–191 (÷4)">Import .ACT</button>
+        <button type="button" id="jed-revert" class="ghost-btn" title="Undo every edit to this team and side">Revert team</button>
+      </div>
+      <h2>Jersey spots <span class="muted">click to pick its colour · Paint mode assigns the selected colour</span></h2>
+      <label class="check"><input type="checkbox" id="jed-paint"> Paint mode</label>
+      <div id="jed-zones" class="jed-zones"></div>
+    </section>
+    <section class="jed-col jed-preview" aria-label="Preview">
+      <h2>Preview <span class="muted" id="jed-preview-note"></span></h2>
+      <div class="jed-frame-bar">
+        <button type="button" id="jed-prev" class="ghost-btn" aria-label="Previous frame">◀</button>
+        <label>Frame <input type="number" id="jed-frame" min="0" value="0"></label>
+        <button type="button" id="jed-next" class="ghost-btn" aria-label="Next frame">▶</button>
+        <input type="range" id="jed-frame-slider" min="0" value="0" aria-label="Frame">
+        <label>Scale <input type="range" id="jed-scale" min="1" max="10" value="5"></label>
+        <label class="check"><input type="checkbox" id="jed-skip-empty" checked> Hide empty</label>
+      </div>
+      <div class="jed-stage"><canvas id="jed-canvas" width="1" height="1"></canvas></div>
+      <div id="jed-strip" class="jed-strip" aria-label="All frames"></div>
+    </section>
+  </main>
+  <script src="lib/snespak.js"></script>
+  <script src="lib/pc95.js"></script>
+  <script src="lib/pc-jersey.js"></script>
+  <script src="jed.js"></script>
+</body>
+</html>
