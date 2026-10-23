@@ -1,0 +1,113 @@
+/** lib/pc-rink.js: NHL 95 PC centre ice .TIL / .MAP. Synthetic round trips, BlitTileMap semantics (flips, the rotated
+ *  second copy, 255 transparent, clipping), the palette ranges, quantize / tile / dedupe and the 1024-tile limit; the
+ *  away colours 59..63 the rink palette overwrites (lib/pc-jersey.js). With NHL_PC95_DIR (an NHL 95 PC install or
+ *  extracted CD) it also round-trips all 26 retail arenas byte-identically. Game files are never committed. */
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const R = require('../lib/pc-rink');
+const J = require('../lib/pc-jersey');
+
+const tile = (fill) => new Uint8Array(64).fill(fill);
+const same = (a, b, msg) => assert.ok(Buffer.from(a).equals(Buffer.from(b)), msg);
+
+// --- format ---
+const t0 = tile(1); t0[0] = 2; // top-left marker
+const t1 = tile(R.CLEAR); t1[9] = 3;
+const til = R.writeTil([t0, t1]);
+assert.strictEqual(til.length, 128);
+assert.throws(() => R.parseTil(new Uint8Array(65)), /multiple of 64/);
+const map = { w: 2, h: 1, flag: 16, cells: Uint16Array.from([0, 1 | R.HFLIP]) };
+const mb = R.writeMap(map);
+assert.deepStrictEqual(Array.from(mb), [2, 0, 1, 0, 16, 0, 0, 0, 1, 0x20]);
+const back = R.parseMap(mb); assert.strictEqual(back.w, 2); assert.deepStrictEqual(Array.from(back.cells), [0, 0x2001]);
+assert.throws(() => R.parseMap(Uint8Array.from([9, 0, 9, 0, 16, 0])), /does not fit/);
+
+// --- blit: placement, flips, 255 skipped, rotated second copy, clipping ---
+const base = new Uint8Array(R.PX_W * R.PX_H).fill(7);
+let px = R.composite(base, map, [t0, t1], [10, 20, -1, -1]);
+const at = (p, x, y) => p[y * R.PX_W + x];
+assert.strictEqual(at(px, 80, 160), 2, 'tile 0 top-left at (10, 20)');
+assert.strictEqual(at(px, 81, 160), 1);
+assert.strictEqual(at(px, 88 + 6, 161), 3, 'tile 1 mirrored: pixel (1,1) lands at (6,1)');
+assert.strictEqual(at(px, 88 + 1, 161), 7, '255 is transparent');
+assert.strictEqual(base[0], 7, 'input untouched');
+px = R.composite(base, map, [t0, t1], [10, 20, 30, 40]);
+assert.strictEqual(at(px, 30 * 8 + 7, 40 * 8 + 7), 2, 'second copy: tile 0 rotated 180 degrees at (x2, y2)');
+assert.strictEqual(at(px, 29 * 8 + 1, 40 * 8 + 6), 3, 'second copy: tile 1 one tile left, mirror cancelled, flipped');
+px = R.composite(base, map, [t0, t1], [47, 73, -1, -1]); // the game does not clip; we do
+assert.strictEqual(at(px, 47 * 8, 73 * 8), 2);
+
+// --- palette ranges (LoadTeamPalette) ---
+assert.ok(R.usable(0) && R.usable(127) && R.usable(128) && R.usable(191) && R.usable(251) && R.usable(254));
+for (let i = 192; i <= 250; i++) assert.ok(!R.usable(i), 'away ' + i);
+assert.strictEqual(R.rangeOf(150).source, 'home');
+assert.strictEqual(R.rangeOf(255).source, 'clear');
+const rinkAct = new Uint8Array(768); for (let i = 0; i < 768; i++) rinkAct[i] = i % 256;
+const home = Array.from({ length: 64 }, (_, i) => [i, 0, 0]), away = Array.from({ length: 64 }, () => [0, 63, 0]);
+const pal = R.gamePalette(rinkAct, home, away);
+assert.deepStrictEqual(pal[130], [8, 0, 0]);
+assert.deepStrictEqual(pal[250], [0, 252, 0]);
+assert.deepStrictEqual(pal[251], [rinkAct[753], rinkAct[754], rinkAct[755]], '251..255 stay rink colours');
+assert.deepStrictEqual(pal[10], [30, 31, 32]);
+
+// jersey side: NHL 95 PC away colours 59..63 are rink colours in the game
+const FIX = path.join(__dirname, 'fixtures', 'pc-jersey');
+const plain = new Uint8Array(fs.readFileSync(path.join(__dirname, '..', 'public', 'jed-pals', 'rinkpal.act')));
+const aw = J.openFile(new Uint8Array(fs.readFileSync(path.join(FIX, 'AWAYPALS95.BIN'))));
+assert.ok(J.awayOverwritten('95', 'away', 59) && !J.awayOverwritten('95', 'away', 58) && !J.awayOverwritten('95', 'home', 63) && !J.awayOverwritten('94', 'away', 63));
+const gpAway = J.gamePalette(aw, 0, { rink: plain }, 'away'), gpHome = J.gamePalette(aw, 0, { rink: plain }, 'home');
+for (let s = 59; s < 64; s++) assert.deepStrictEqual(gpAway[128 + s], Array.from(plain.subarray((192 + s) * 3, (192 + s) * 3 + 3)), 'away slot ' + s);
+assert.deepStrictEqual(gpHome[128 + 59], J.getColors(aw, 0)[59].map(J.to8));
+
+// --- editor model: build / export ---
+const m = R.modelFrom(map, [t0, t1], [10, 20, -1, -1]);
+assert.deepStrictEqual(R.bounds(m), { x: 10, y: 20, w: 2, h: 1 });
+const ex = R.exportFiles(m, { map, tiles: [t0, t1], place: [10, 20, -1, -1] });
+same(ex.map, mb, 'unedited map is byte-identical'); same(ex.til, til, 'unedited til is byte-identical');
+m.cells[22 * R.W + 13] = 0; // a gap row and a column
+let b = R.build(m);
+assert.deepStrictEqual([b.map.w, b.map.h], [4, 3]);
+assert.strictEqual(b.tiles.length, 3, 'two tiles + one transparent gap tile');
+assert.strictEqual(b.map.cells[1], 1, 'stored mirror bit resolved and re-found as the same tile ' + b.map.cells[1].toString(16));
+// a mirrored copy of a tile dedupes to the same tile with the flip bit
+const asym = tile(4); asym[0] = 5;
+const m2 = { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [asym, R.flipped(asym, true, false)], place: [0, 0, -1, -1], flag: 16 };
+m2.cells[0] = 0; m2.cells[1] = 1;
+b = R.build(m2);
+assert.strictEqual(b.tiles.length, 1); assert.strictEqual(b.map.cells[1], R.HFLIP);
+assert.throws(() => R.build({ cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: [0, 0, -1, -1] }), /No tiles/);
+
+// --- import: quantize to allowed colours, cut into tiles, dedupe, 1024 limit ---
+const allowed = []; for (let i = 0; i < 256; i++) if (R.usable(i) && i !== R.CLEAR) allowed.push(i);
+const w = 24, h = 16, rgba = new Uint8Array(w * h * 4);
+for (let i = 0; i < w * h; i++) rgba.set(i % w < 8 ? [0, 252, 0, 255] : i % w < 16 ? [8, 0, 0, 255] : [0, 0, 0, 0], i * 4);
+const idx = R.quantize(rgba, pal, allowed);
+assert.ok(R.usable(idx[0]) && idx[0] < 192 || idx[0] > 250, 'green never picks an away colour (' + idx[0] + ')');
+assert.strictEqual(idx[8], 130, 'exact home colour');
+assert.strictEqual(idx[16], R.CLEAR, 'transparent');
+const empty = { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: [0, 0, -1, -1], flag: 16 };
+const im = R.placeImage(empty, idx, w, h, 5, 6);
+assert.strictEqual(im.tiles.length, 2, 'duplicates removed, empty tiles skipped');
+assert.strictEqual(im.cells[6 * R.W + 7], -1);
+assert.strictEqual(empty.tiles.length, 0, 'input model untouched');
+const big = new Uint8Array(R.PX_W * R.PX_H); let seed = 1; for (let i = 0; i < big.length; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; big[i] = (seed >> 16) & 127; }
+assert.throws(() => R.placeImage(empty, big, R.PX_W, R.PX_H, 0, 0), /at most 1024/);
+
+// --- retail (local only) ---
+const DIR = process.env.NHL_PC95_DIR;
+if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
+  for (const a of R.ARENAS) {
+    const mapB = new Uint8Array(fs.readFileSync(path.join(DIR, a + '.MAP'))), tilB = new Uint8Array(fs.readFileSync(path.join(DIR, a + '.TIL')));
+    const orig = { map: R.parseMap(mapB), tiles: R.parseTil(tilB), place: R.PLACEMENT[95][a] };
+    const mm = R.modelFrom(orig.map, orig.tiles, orig.place);
+    const e = R.exportFiles(mm, orig);
+    same(e.map, mapB, a + '.MAP'); same(e.til, tilB, a + '.TIL');
+    const rb = R.build(mm);
+    assert.ok(rb.tiles.length <= orig.tiles.length, a + ' rebuilt tiles');
+    same(R.composite(base, orig.map, orig.tiles, orig.place), R.composite(base, rb.map, rb.tiles, rb.place), a + ' rebuilt renders the same');
+    for (const t of orig.tiles) for (const p of t) assert.ok(p === R.CLEAR || R.usable(p), a + ' retail colour ' + p);
+  }
+  console.log('pc-rink: 26 retail arenas round-trip');
+} else console.log('pc-rink: NHL_PC95_DIR not set, retail round trip skipped');
+console.log('pc-rink: ok');

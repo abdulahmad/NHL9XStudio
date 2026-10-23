@@ -3,14 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jersey editor (NHL 94 / 95 PC) — NHL9X Studio</title>
+  <title>Jersey & centre ice editor (NHL 94 / 95 PC) — NHL9X Studio</title>
   <link rel="stylesheet" href="viewer.css">
   <link rel="stylesheet" href="jed.css">
 </head>
 <body class="jed">
   <header class="jed-head">
     <div>
-      <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Jersey editor</h1>
+      <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Jersey &amp; centre ice editor</h1>
+      <nav class="jed-tabs" role="tablist" aria-label="Editor">
+        <button type="button" role="tab" id="tab-jerseys" aria-selected="true">Jerseys</button>
+        <button type="button" role="tab" id="tab-ice" aria-selected="false">Centre ice</button>
+      </nav>
       <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
@@ -77,9 +81,81 @@
       <div id="jed-strip" class="jed-strip" aria-label="All frames"></div>
     </section>
   </main>
+  <main class="ice-main" id="ice-main" hidden>
+    <section class="jed-col" aria-label="Arena">
+      <h2>Arena <span class="muted">home team's rink</span></h2>
+      <div id="ice-team-list" class="jed-team-list" role="listbox" aria-label="Arenas"></div>
+      <label class="ice-field">Away team (preview) <select id="ice-away"></select></label>
+      <fieldset class="ice-place"><legend>Placement (tiles)</legend>
+        <label>x <input type="number" id="ice-x" class="ice-edit" min="0" max="47"></label>
+        <label>y <input type="number" id="ice-y" class="ice-edit" min="0" max="73"></label>
+        <label>x2 <input type="number" id="ice-x2" class="ice-edit" min="-1" max="47"></label>
+        <label>y2 <input type="number" id="ice-y2" class="ice-edit" min="-1" max="73"></label>
+      </fieldset>
+      <p class="muted">x2 &gt; 0: second copy, rotated 180°, bottom-right tile at (x2, y2). Placement lives in the JSON; HOCKEY.EXE is not changed.</p>
+      <button type="button" id="ice-retail" class="ghost-btn">Reload from game files</button>
+    </section>
+    <section class="jed-col" aria-label="Palette and tiles">
+      <h2>Rink palette <span class="muted">256 colours as in a game</span></h2>
+      <div id="ice-swatches" class="ice-swatches" role="listbox" aria-label="Colours"></div>
+      <ul class="ice-legend">
+        <li><i class="src-rink"></i>0–127 rink (fixed)</li>
+        <li><i class="src-home"></i>128–191 home team (changes per home team)</li>
+        <li><i class="src-away"></i>192–250 away team (changes every game, not allowed)</li>
+        <li><i class="src-fixed"></i>251–254 rink (fixed; overwrite away 59–63)</li>
+        <li><i class="src-clear"></i>255 transparent</li>
+      </ul>
+      <p id="ice-color" class="ice-colorline"></p>
+      <h2>Tiles <span id="ice-count" class="muted"></span></h2>
+      <div id="ice-tiles" class="ice-tiles"></div>
+      <div class="ice-tilebox">
+        <canvas id="ice-tile-edit" width="192" height="192" title="Click: paint · right-click / Alt: transparent"></canvas>
+        <div class="ice-tilebtns">
+          <button type="button" id="ice-new-tile" class="ghost-btn ice-edit">New tile</button>
+          <button type="button" id="ice-mirror" class="ghost-btn ice-edit">Mirror</button>
+          <button type="button" id="ice-flip" class="ghost-btn ice-edit">Flip</button>
+        </div>
+      </div>
+    </section>
+    <section class="jed-col ice-view" aria-label="Rink">
+      <p id="ice-warn" class="ice-warn" hidden>NHL 94 PC: view only. Its tile pixel order is not decoded yet, so the logos may look scrambled and editing is off.</p>
+      <div class="ice-toolbar">
+        <div class="pin-options" role="group" aria-label="Tool">
+          <button type="button" data-tool="paint" aria-pressed="true" class="ice-edit">Paint</button>
+          <button type="button" data-tool="place" aria-pressed="false" class="ice-edit">Place tile</button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="ice-edit">Erase tile</button>
+          <button type="button" data-tool="move" aria-pressed="false" class="ice-edit">Move logo</button>
+          <button type="button" data-tool="pick" aria-pressed="false">Pick colour</button>
+        </div>
+        <label>Zoom <select id="ice-zoom"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option></select></label>
+        <label><input type="checkbox" id="ice-grid" checked> Grid</label>
+        <button type="button" id="ice-undo" class="ghost-btn">Undo</button>
+        <button type="button" id="ice-redo" class="ghost-btn">Redo</button>
+      </div>
+      <div class="ice-scroll"><canvas id="ice-rink"></canvas></div>
+      <p id="ice-note" class="muted"></p>
+      <div class="jed-io">
+        <button type="button" id="ice-import-image" class="ghost-btn ice-edit" title="PNG, BMP, GIF, JPEG: matched to the allowed colours, cut into 8×8 tiles, duplicates removed, max 1024">Import image…</button>
+        <label class="muted"><input type="checkbox" id="ice-q-home" checked> use home colours</label>
+        <label class="muted"><input type="checkbox" id="ice-q-replace" checked> replace logo</label>
+        <button type="button" id="ice-import-til" class="ghost-btn ice-edit">Import .TIL / .MAP…</button>
+        <button type="button" id="ice-import-json" class="ghost-btn ice-edit">Import placement…</button>
+        <button type="button" id="ice-export-til" class="ghost-btn">Export .TIL</button>
+        <button type="button" id="ice-export-map" class="ghost-btn">Export .MAP</button>
+        <button type="button" id="ice-export-json" class="ghost-btn">Export placement JSON</button>
+        <button type="button" id="ice-export-logo" class="ghost-btn">Logo PNG</button>
+        <button type="button" id="ice-export-rink" class="ghost-btn">Rink PNG</button>
+      </div>
+      <input type="file" id="ice-image-file" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
+      <input type="file" id="ice-tilmap-file" hidden accept=".til,.map">
+      <input type="file" id="ice-json-file" hidden accept=".json">
+    </section>
+  </main>
   <script src="lib/snespak.js"></script>
   <script src="lib/pc95.js"></script>
   <script src="lib/pc-jersey.js"></script>
+  <script src="lib/pc-rink.js"></script>
   <script src="jed.js"></script>
+  <script src="ice.js"></script>
 </body>
 </html>

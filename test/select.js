@@ -15,11 +15,11 @@ const SUITES = [
   'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
-  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey',
+  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink',
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey'];
+const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed', 'jed-ice'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -53,8 +53,11 @@ const RULES = [
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.
-  { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'browser:jed'], why: 'jersey palette format' },
-  { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed'], why: 'jersey editor page' },
+  { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'pc-rink', 'browser:jed', 'browser:jed-ice'], why: 'jersey palette format' },
+  { re: /^lib\/pc-rink\.js$/, tests: ['pc-rink', 'browser:jed-ice'], why: 'centre ice .TIL / .MAP format' },
+  { re: /^test\/pc-rink\.js$/, tests: ['pc-rink'], why: 'centre ice tests' },
+  { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed', 'browser:jed-ice'], why: 'jersey editor page' },
+  { re: /^public\/ice\.js$/, tests: ['browser:jed-ice'], why: 'centre ice tab' },
   { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },
   // Image / parser libraries and data: the core checks only.
