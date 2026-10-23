@@ -650,6 +650,6 @@
   wireSplit();
   wireTips();
   loadBase();
-  detectServer();
+  Shared.serverReady = detectServer();
   window.addEventListener('resize', () => { if (cur()) renderPreview(false); });
 })();

@@ -128,4 +128,30 @@ if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
   assert.throws(() => R.placeImage(empty, mock, R.PX_W, R.PX_H, 0, 0), /1024/, 'the whole rink without a mask is over 1024');
   console.log('pc-rink: 26 retail arenas round-trip; full-rink diff import ' + R.tileCount(mm) + ' tiles');
 } else console.log('pc-rink: NHL_PC95_DIR not set, retail round trip skipped');
+
+// blocks: mirror / flip / 180 via cell bits (tile pixels untouched), 90 / 270 add rotated tiles; tile delete / unused
+{
+  const t0 = new Uint8Array(64).fill(255); t0[0] = 1; // pixel top-left
+  const t1 = new Uint8Array(64).fill(255); t1[7] = 2;
+  const m = { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [t0, t1, new Uint8Array(64)], place: [0, 0, -1, -1], flag: 16 };
+  m.cells[0] = 0; m.cells[1] = 1; m.cells[R.W] = 0; // 2x2 block: [0 1 / 0 -]
+  const b = R.grab(m, { x: 0, y: 0, w: 2, h: 2 });
+  const h = R.transform(m, b, 'h');
+  assert.deepStrictEqual(Array.from(h.cells), [1 | R.HFLIP, 0 | R.HFLIP, -1, 0 | R.HFLIP]);
+  const r180 = R.transform(m, b, '180');
+  assert.deepStrictEqual(Array.from(r180.cells), [-1, 0 | R.HFLIP | R.VFLIP, 1 | R.HFLIP | R.VFLIP, 0 | R.HFLIP | R.VFLIP]);
+  assert.strictEqual(m.tiles.length, 3, 'bits only: no new tiles');
+  const before = R.renderMap(R.build(m).map, R.build(m).tiles).pixels;
+  const m2 = R.cloneModel(m); R.clearRect(m2, { x: 0, y: 0, w: 2, h: 2 }); R.stamp(m2, r180, 0, 0);
+  const after = R.renderMap(R.build(m2).map, R.build(m2).tiles).pixels;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) assert.strictEqual(after[y * 16 + x], before[(15 - y) * 16 + 15 - x], '180 = rotated pixels');
+  const m3 = R.cloneModel(m); const r90 = R.transform(m3, b, '90');
+  assert.strictEqual(r90.w, 2); assert.ok(m3.tiles.length > 3, '90 adds rotated tiles');
+  R.clearRect(m3, { x: 0, y: 0, w: 2, h: 2 }); R.stamp(m3, r90, 0, 0);
+  const p90 = R.renderMap(R.build(m3).map, R.build(m3).tiles).pixels;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) assert.strictEqual(p90[x * 16 + (15 - y)], before[y * 16 + x], '90 cw');
+  const u = R.removeUnused(m); assert.strictEqual(u.removed, 1); assert.strictEqual(u.model.tiles.length, 2);
+  const d = R.deleteTile(m, 0); assert.strictEqual(d.cleared, 2); assert.strictEqual(d.model.cells[1], 0); assert.strictEqual(d.model.tiles.length, 2);
+  assert.strictEqual(R.usersOf(m, 0), 2);
+}
 console.log('pc-rink: ok');

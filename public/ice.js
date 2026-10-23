@@ -38,7 +38,7 @@
       I.model = { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: place.slice(), flag: 16 };
       I.rinkNote += 'No ' + name + '.TIL / .MAP in what you opened. ';
     }
-    I.undo = []; I.redo = []; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); I.loadedFor = S.game + name;
+    I.undo = []; I.redo = []; I.sel = null; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); I.loadedFor = S.game + name;
     renderAll();
   }
 
@@ -68,6 +68,7 @@
       for (let y = 0; y <= R.H; y++) { ctx.moveTo(0, y * 8 * z + 0.5); ctx.lineTo(c.width, y * 8 * z + 0.5); }
       ctx.stroke();
     }
+    if (I.sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(I.sel.x * 8 * z + 1, I.sel.y * 8 * z + 1, I.sel.w * 8 * z - 2, I.sel.h * 8 * z - 2); ctx.setLineDash([]); }
     if (bb) { ctx.strokeStyle = '#f5b301'; ctx.lineWidth = 2; ctx.strokeRect(bb.x * 8 * z, bb.y * 8 * z, bb.w * 8 * z, bb.h * 8 * z); }
     const p = I.model.place;
     if (bb && p[2] > 0) { ctx.strokeStyle = '#4cc3ff'; ctx.setLineDash([4, 3]); ctx.strokeRect((p[2] - bb.w + 1) * 8 * z, (p[3] - bb.h + 1) * 8 * z, bb.w * 8 * z, bb.h * 8 * z); ctx.setLineDash([]); }
@@ -135,6 +136,9 @@
     I.pal = palette();
     document.querySelectorAll('.ice-edit').forEach((el) => { el.disabled = I.ro; });
     renderTeams(); renderSwatches(); renderTiles(); renderTileEdit(); renderPlace(); renderRink();
+    document.querySelectorAll('.ice-needsel').forEach((el) => { el.disabled = I.ro || !I.sel; });
+    $('ice-paste').disabled = I.ro || !I.clip;
+    $('ice-sel-info').textContent = I.sel ? 'Selection ' + I.sel.w + ' × ' + I.sel.h + ' at ' + I.sel.x + ', ' + I.sel.y : (I.clip ? 'Clipboard ' + I.clip.w + ' × ' + I.clip.h : '');
     $('ice-undo').disabled = I.ro || !I.undo.length; $('ice-redo').disabled = I.ro || !I.redo.length;
     $('ice-note').textContent = I.rinkNote + (I.ro ? '' : 'Arena ' + code() + ' (home team ' + teamName(I.team) + '), away preview ' + teamName(I.away) + '.');
   }
@@ -172,6 +176,13 @@
     else if (I.tool === 'place') { if (!I.model.tiles[I.tile]) { I.model.tiles.push(new Uint8Array(64).fill(R.CLEAR)); I.tile = I.model.tiles.length - 1; } I.model.cells[k] = I.tile; }
     else if (I.tool === 'erase') I.model.cells[k] = -1;
     else if (I.tool === 'move') I.drag = { x: p.x, y: p.y };
+    else if (I.tool === 'select') {
+      const s = I.sel;
+      if (s && p.x >= s.x && p.y >= s.y && p.x < s.x + s.w && p.y < s.y + s.h) { // move the block as a whole
+        const b = R.grab(I.model, s); R.clearRect(I.model, s);
+        I.drag = { block: b, under: R.cloneModel(I.model), x: p.x, y: p.y, sx: s.x, sy: s.y }; R.stamp(I.model, b, s.x, s.y);
+      } else { I.undo.pop(); I.drag = { from: p }; I.sel = { x: p.x, y: p.y, w: 1, h: 1 }; }
+    }
     $('ice-rink').setPointerCapture(e.pointerId); I.down = true; renderAll();
   }
   function onMove(e) {
@@ -179,9 +190,42 @@
     if (I.tool === 'paint') { paintAt(p); renderRink(); renderTileEdit(); }
     else if (I.tool === 'place') { I.model.cells[p.y * R.W + p.x] = I.tile; renderRink(); }
     else if (I.tool === 'erase') { I.model.cells[p.y * R.W + p.x] = -1; renderRink(); }
-    else if (I.tool === 'move' && I.drag && (p.x !== I.drag.x || p.y !== I.drag.y)) { moveBy(p.x - I.drag.x, p.y - I.drag.y); I.drag = { x: p.x, y: p.y }; renderPlace(); renderRink(); }
+    else if (I.tool === 'select' && I.drag && I.drag.from) {
+      const a = I.drag.from; I.sel = { x: Math.min(a.x, p.x), y: Math.min(a.y, p.y), w: Math.abs(a.x - p.x) + 1, h: Math.abs(a.y - p.y) + 1 }; renderRink();
+    } else if (I.tool === 'select' && I.drag && I.drag.block) {
+      const d = I.drag, x = d.sx + p.x - d.x, y = d.sy + p.y - d.y; if (x === I.sel.x && y === I.sel.y) return;
+      I.model = R.cloneModel(d.under); R.stamp(I.model, d.block, x, y); I.sel = { x, y, w: d.block.w, h: d.block.h }; renderPlace(); renderRink();
+    } else if (I.tool === 'move' && I.drag && (p.x !== I.drag.x || p.y !== I.drag.y)) { moveBy(p.x - I.drag.x, p.y - I.drag.y); I.drag = { x: p.x, y: p.y }; renderPlace(); renderRink(); }
   }
-  function onUp() { if (!I.down) return; I.down = false; I.drag = null; renderAll(); }
+  function onUp() {
+    if (!I.down) return; I.down = false;
+    if (I.drag && I.drag.block && I.sel.x === I.drag.sx && I.sel.y === I.drag.sy) I.undo.pop(); // clicked, did not move
+    I.drag = null; renderAll();
+  }
+  // ---- blocks -------------------------------------------------------------------------------------------------
+  function blockOp(op) {
+    if (I.ro || !I.sel) return; remember();
+    const b = R.grab(I.model, I.sel); R.clearRect(I.model, I.sel);
+    const nb = R.transform(I.model, b, op); const x = Math.min(I.sel.x, R.W - nb.w), y = Math.min(I.sel.y, R.H - nb.h);
+    R.stamp(I.model, nb, Math.max(0, x), Math.max(0, y)); I.sel = R.clipRect({ x: Math.max(0, x), y: Math.max(0, y), w: nb.w, h: nb.h });
+    const added = I.model.tiles.length - I.undo[I.undo.length - 1].tiles.length;
+    X.status({ h: 'Mirrored', v: 'Flipped', 180: 'Rotated 180°', 90: 'Rotated 90°', 270: 'Rotated 270°' }[op] + ' the ' + nb.w + ' × ' + nb.h + ' block' +
+      (added ? ' (' + added + ' rotated tiles added)' : ' with the cells\' mirror / flip bits (tile pixels unchanged)'));
+    renderAll();
+  }
+  function copySel(cut) {
+    if (I.ro || !I.sel) return; I.clip = R.grab(I.model, I.sel);
+    if (cut) { remember(); R.clearRect(I.model, I.sel); }
+    X.status((cut ? 'Cut ' : 'Copied ') + I.clip.w + ' × ' + I.clip.h + ' cells'); renderAll();
+  }
+  function paste() {
+    if (I.ro || !I.clip) return; remember();
+    const x = I.sel ? I.sel.x : 0, y = I.sel ? I.sel.y : 0; R.stamp(I.model, I.clip, x, y);
+    I.sel = R.clipRect({ x, y, w: I.clip.w, h: I.clip.h }); I.tool = 'select';
+    document.querySelectorAll('[data-tool]').forEach((o) => o.setAttribute('aria-pressed', String(o.dataset.tool === 'select')));
+    X.status('Pasted ' + I.clip.w + ' × ' + I.clip.h + ' cells at ' + x + ', ' + y + '; drag inside the selection to move it'); renderAll();
+  }
+  function clearSel() { if (I.ro || !I.sel) return; remember(); R.clearRect(I.model, I.sel); renderAll(); }
   function editTile(e) {
     if (I.ro) return; const t = I.model.tiles[I.tile]; if (!t) return;
     const c = $('ice-tile-edit'), r = c.getBoundingClientRect();
@@ -263,6 +307,32 @@
     $('ice-new-tile').addEventListener('click', () => { remember(); I.model.tiles.push(new Uint8Array(64).fill(R.CLEAR)); I.tile = I.model.tiles.length - 1; I.tool = 'place'; renderAll(); });
     $('ice-mirror').addEventListener('click', () => { const t = I.model.tiles[I.tile]; if (!t) return; remember(); I.model.tiles[I.tile] = R.flipped(t, true, false); renderAll(); });
     $('ice-flip').addEventListener('click', () => { const t = I.model.tiles[I.tile]; if (!t) return; remember(); I.model.tiles[I.tile] = R.flipped(t, false, true); renderAll(); });
+    $('ice-sel-logo').addEventListener('click', () => { const b = R.bounds(I.model); I.sel = b ? { x: b.x, y: b.y, w: b.w, h: b.h } : null; I.tool = 'select';
+      document.querySelectorAll('[data-tool]').forEach((o) => o.setAttribute('aria-pressed', String(o.dataset.tool === 'select'))); renderAll(); });
+    $('ice-copy').addEventListener('click', () => copySel(false)); $('ice-cut').addEventListener('click', () => copySel(true));
+    $('ice-paste').addEventListener('click', paste); $('ice-clear').addEventListener('click', clearSel);
+    document.querySelectorAll('[data-xf]').forEach((b) => b.addEventListener('click', () => blockOp(b.dataset.xf)));
+    document.addEventListener('keydown', (e) => {
+      if ($('ice-main').hidden || /^(INPUT|SELECT|TEXTAREA)$/.test((e.target.tagName || ''))) return;
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && k === 'c') { copySel(false); e.preventDefault(); }
+      else if ((e.ctrlKey || e.metaKey) && k === 'x') { copySel(true); e.preventDefault(); }
+      else if ((e.ctrlKey || e.metaKey) && k === 'v') { paste(); e.preventDefault(); }
+      else if (e.key === 'Delete' || e.key === 'Backspace') { clearSel(); e.preventDefault(); }
+      else if (e.key === 'Escape') { I.sel = null; renderAll(); }
+    });
+    $('ice-del-tile').addEventListener('click', () => {
+      if (I.ro || !I.model.tiles[I.tile]) return; const n = R.usersOf(I.model, I.tile);
+      if (n && !window.confirm(n + ' cell' + (n > 1 ? 's use' : ' uses') + ' tile ' + I.tile + '; they will become empty. Delete it?')) return;
+      remember(); const r = R.deleteTile(I.model, I.tile); I.model = r.model; const t = I.tile; I.tile = Math.min(I.tile, I.model.tiles.length - 1);
+      X.status('Deleted tile ' + t + (r.cleared ? '; ' + r.cleared + ' cell' + (r.cleared > 1 ? 's' : '') + ' that used it are now empty' : '') + '; later tiles renumbered'); renderAll();
+    });
+    $('ice-unused').addEventListener('click', () => {
+      if (I.ro) return; const r = R.removeUnused(I.model);
+      if (!r.removed) { X.status('No unused tiles: every tile is used by a cell'); return; }
+      remember(); I.model = r.model; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL);
+      X.status('Removed ' + r.removed + ' unused tile' + (r.removed > 1 ? 's' : '') + '; ' + I.model.tiles.length + ' left, map renumbered (Undo restores them)'); renderAll();
+    });
     $('ice-import-image').addEventListener('click', X.guard(async () => { const f = await file($('ice-image-file')); if (f) await importImage(f); }));
     $('ice-mask').addEventListener('click', X.guard(async () => {
       const f = await file($('ice-mask-file')); if (!f) return;

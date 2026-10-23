@@ -118,6 +118,8 @@
           <button type="button" id="ice-new-tile" class="ghost-btn ice-edit">New tile</button>
           <button type="button" id="ice-mirror" class="ghost-btn ice-edit">Mirror</button>
           <button type="button" id="ice-flip" class="ghost-btn ice-edit">Flip</button>
+          <button type="button" id="ice-del-tile" class="ghost-btn ice-edit" title="Remove the selected tile from the tile set; later tiles are renumbered and cells that use it become empty">Delete tile</button>
+          <button type="button" id="ice-unused" class="ghost-btn ice-edit" title="Drop every tile no cell uses and renumber the map">Remove unused tiles</button>
         </div>
       </div>
     </section>
@@ -129,12 +131,26 @@
           <button type="button" data-tool="place" aria-pressed="false" class="ice-edit">Place tile</button>
           <button type="button" data-tool="erase" aria-pressed="false" class="ice-edit">Erase tile</button>
           <button type="button" data-tool="move" aria-pressed="false" class="ice-edit">Move logo</button>
+          <button type="button" data-tool="select" aria-pressed="false" class="ice-edit" title="Drag a rectangle of cells; drag inside it to move it as a whole">Select</button>
           <button type="button" data-tool="pick" aria-pressed="false">Pick colour</button>
         </div>
         <label class="ice-zoom">Zoom <input type="range" id="ice-zoom" min="1" max="16" value="2"> <output id="ice-zoom-val">2×</output></label>
         <label><input type="checkbox" id="ice-grid" checked> Grid</label>
         <button type="button" id="ice-undo" class="ghost-btn">Undo</button>
         <button type="button" id="ice-redo" class="ghost-btn">Redo</button>
+      </div>
+      <div class="ice-blockbar" id="ice-blockbar">
+        <button type="button" id="ice-sel-logo" class="ghost-btn ice-edit" title="Select every placed cell as one block">Select logo</button>
+        <button type="button" id="ice-copy" class="ghost-btn ice-edit ice-needsel" title="Ctrl+C">Copy</button>
+        <button type="button" id="ice-cut" class="ghost-btn ice-edit ice-needsel" title="Ctrl+X">Cut</button>
+        <button type="button" id="ice-paste" class="ghost-btn ice-edit" title="Ctrl+V: pastes at the selection's top-left (or the top-left of the rink); drag it with Select">Paste</button>
+        <button type="button" id="ice-clear" class="ghost-btn ice-edit ice-needsel" title="Delete: empty the selected cells">Clear</button>
+        <button type="button" data-xf="h" class="ghost-btn ice-edit ice-needsel" title="Mirror left-right with the cells' 0x2000 bit (tile pixels unchanged)">Mirror ↔</button>
+        <button type="button" data-xf="v" class="ghost-btn ice-edit ice-needsel" title="Flip top-bottom with the cells' 0x4000 bit (tile pixels unchanged)">Flip ↕</button>
+        <button type="button" data-xf="90" class="ghost-btn ice-edit ice-needsel" title="Rotate 90° clockwise (adds rotated tiles: the map has no rotate bit)">⟳ 90°</button>
+        <button type="button" data-xf="180" class="ghost-btn ice-edit ice-needsel" title="Rotate 180° with both cell bits (no new tiles)">180°</button>
+        <button type="button" data-xf="270" class="ghost-btn ice-edit ice-needsel" title="Rotate 90° counter-clockwise (adds rotated tiles)">⟲ 270°</button>
+        <span id="ice-sel-info" class="muted"></span>
       </div>
       <div class="ice-scroll"><canvas id="ice-rink"></canvas></div>
       <p id="ice-note" class="muted"></p>

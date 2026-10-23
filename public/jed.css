@@ -103,3 +103,5 @@
 .jed-tip[hidden] { display: none; }
 #jed-hex-in { width: 6.5em; }
 #jed-hex-in.bad { outline: 2px solid #c33; }
+.ice-blockbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 4px 0; }
+.ice-zoom input[type=range] { width: 120px; vertical-align: middle; } .ice-zoom output { display: inline-block; min-width: 2.5em; }
