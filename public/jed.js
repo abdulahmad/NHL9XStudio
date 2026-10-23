@@ -45,6 +45,7 @@
   async function loadLocal(entries) {
     S.files = { home: null, away: null }; S.sprites = null; S.rink = null; S.side = 'home'; S.color = 0;
     const map = new Map(entries.map((e) => [e.rel, e.bytes]));
+    S.sources = { kind: 'local', map };
     for (const e of entries) {
       const side = sideOf(e.rel);
       if (side && /\.bin$/i.test(e.rel)) setPalFile(side, e.bytes, e.rel.split('/').pop());
@@ -70,6 +71,7 @@
   async function loadServer(id) {
     status('Loading ' + id + ' from the server…');
     S.files = { home: null, away: null }; S.sprites = null; S.rink = null; S.side = 'home'; S.color = 0;
+    S.sources = { kind: 'server', id };
     for (const side of ['home', 'away']) {
       const bytes = await fetchBytes('api/games/' + id + '/file?path=' + SIDE_FILE[side]);
       if (bytes) setPalFile(side, bytes, SIDE_FILE[side]);
@@ -120,6 +122,7 @@
     resetHistory();
     buildStrip();
     renderAll();
+    Shared.loaded.forEach((fn) => fn());
   }
 
   // ---- undo / redo: whole-file snapshots of the side being edited (a 12 KB copy each) ----------------------------
@@ -187,11 +190,15 @@
     const colors = J.getColors(cur().file, S.team);
     const orig = originalColors();
     const used = new Set(J.usedColors(cur().file, S.team));
+    const away = S.side === 'away';
     colors.forEach((c, i) => {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'jed-sw' + (used.has(i) ? '' : ' unused') + (c.join() !== orig[i].join() ? ' edited' : '');
-      b.style.background = rgb8(c); b.setAttribute('role', 'option'); b.setAttribute('aria-selected', String(i === S.color));
-      b.title = 'Colour ' + i + ' (game ' + (128 + i) + '): ' + c.join(', ') + (used.has(i) ? '' : ' — not used by any spot');
+      const rinkOwned = J.awayOverwritten(S.game, S.side, i);
+      b.type = 'button'; b.className = 'jed-sw' + (used.has(i) ? '' : ' unused') + (c.join() !== orig[i].join() ? ' edited' : '') + (rinkOwned ? ' rinkfixed' : '');
+      const k = (192 + i) * 3, rc = rinkOwned && S.base && S.base.rinkPlain ? [S.base.rinkPlain[k], S.base.rinkPlain[k + 1], S.base.rinkPlain[k + 2]] : null;
+      b.style.background = rc ? 'rgb(' + rc.join(',') + ')' : rgb8(c); b.setAttribute('role', 'option'); b.setAttribute('aria-selected', String(i === S.color));
+      b.title = 'Colour ' + i + ' (game ' + ((away ? 192 : 128) + i) + '): ' + c.join(', ') + (used.has(i) ? '' : ' — not used by any spot') +
+        (rinkOwned ? ' — in NHL 95 PC the rink palette overwrites game ' + (192 + i) + ' (shown: rink colour ' + (rc ? rc.join(', ') : '?') + '); this value never shows' : '');
       b.addEventListener('click', () => { S.color = i; renderSwatches(); renderColor(); });
       box.appendChild(b);
     });
@@ -200,7 +207,8 @@
   function renderColor() {
     const c = J.getColors(cur().file, S.team)[S.color];
     $('jed-big').style.background = rgb8(c);
-    $('jed-color-name').textContent = 'Colour ' + S.color + ' · game index ' + (128 + S.color);
+    $('jed-color-name').textContent = 'Colour ' + S.color + ' · game index ' + ((S.side === 'away' ? 192 : 128) + S.color) +
+      (J.awayOverwritten(S.game, S.side, S.color) ? ' · overwritten by the rink palette in NHL 95 PC (never shows)' : '');
     $('jed-hex').textContent = 'VGA ' + c.join(',') + ' · 8-bit ' + hex8(c);
     ['r', 'g', 'b'].forEach((k, i) => { $('jed-' + k).value = c[i]; $('jed-' + k + 'n').value = c[i]; });
     $('jed-picker').value = hex8(c);
@@ -297,7 +305,7 @@
 
   // ---- preview -------------------------------------------------------------------------------------------------
   function teamPalette() {
-    if (S.base) return J.spritePalette(cur().file, S.team, S.base);
+    if (S.base) return J.spritePalette(cur().file, S.team, S.base, S.side);
     return Nhl95Pc.buildTeamPalette(J.getRecord(cur().file, S.team), S.rink);
   }
   async function loadBase() {
@@ -555,6 +563,20 @@
       bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up);
     });
   }
+
+  /** For the Centre ice tab (ice.js): the loaded game, its files by name, the base palettes. */
+  const Shared = window.JedShared = {
+    state: S, loaded: [], status, download, guard,
+    async file(name) {
+      const src = S.sources; if (!src) return null;
+      if (src.kind === 'server') return fetchBytes('api/games/' + src.id + '/file?path=' + encodeURIComponent(name));
+      const want = name.toLowerCase();
+      for (const [rel, bytes] of src.map) if (rel.split('/').pop().toLowerCase() === want) return bytes;
+      return null;
+    },
+    homeColors(team) { const f = S.files.home || S.files.away; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; },
+    awayColors(team) { const f = S.files.away || S.files.home; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; }
+  };
 
   wire();
   wireSplit();
