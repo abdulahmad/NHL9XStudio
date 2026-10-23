@@ -173,3 +173,6 @@ for (const name of Object.keys(FILES)) {
 }
 
 console.log('pc-jersey: ok');
+
+// NHL 95 PC sprite pixels + colours vs EA-NHL-Tools SPIT-To-BMP + createPal (skips without the tools / game files).
+require('./pc95-sprite-pipeline');

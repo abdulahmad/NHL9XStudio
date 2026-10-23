@@ -26,8 +26,9 @@ const PAL_DIRS = {
 const PAL_DIR = PAL_DIRS['92'];
 const ROM_DIR = path.join(ROOT, 'roms');
 const PC_DIRS = {
-  pc95: path.join(ROOT, 'pc95'),
-  pc94: path.join(ROOT, 'pc94')
+  // NHL_PC95_DIR / NHL_PC94_DIR point at an installed game folder instead of pc95/ or pc94/ here.
+  pc95: process.env.NHL_PC95_DIR ? path.resolve(process.env.NHL_PC95_DIR) : path.join(ROOT, 'pc95'),
+  pc94: process.env.NHL_PC94_DIR ? path.resolve(process.env.NHL_PC94_DIR) : path.join(ROOT, 'pc94')
 };
 
 function isPcKind(kind) {

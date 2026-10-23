@@ -253,6 +253,7 @@
     const box = $('jed-zones'); box.innerHTML = '';
     const map = J.getMap(cur().file, S.team);
     const colors = J.getColors(cur().file, S.team);
+    crestLogo(box);
     for (const g of zoneGroups()) {
       if (g.zones.length === 1 && !g.zones[0].short) { box.appendChild(zoneButton(Object.assign({}, g.zones[0], { short: g.base }), map, colors)); continue; }
       const row = document.createElement('div'); row.className = 'jed-zgroup';
@@ -260,8 +261,21 @@
       for (const z of g.zones) row.appendChild(zoneButton(Object.assign({}, z, { short: z.short || z.name.slice(g.base.length + 1) }), map, colors));
       box.appendChild(row);
     }
-    pixelGrid(box, 'Crest (4 × 5, sprite 192–196, 208–212, 224–228, 240–244)', J.CREST, 5, map, colors);
-    pixelGrid(box, 'Centre-ice logo colours (4 × 6, sprite 197–202 … 245–250)', J.ICE, 6, map, colors);
+    pixelGrid(box, 'Crest colours (4 × 5, sprite 192–196, 208–212, 224–228, 240–244)', J.CREST, 5, map, colors);
+  }
+  /** The team crest as the game draws it on the jersey front: a 5 × 4 picture whose pixels are sprite colours
+   *  192+row*16+col (every player frame uses exactly these), shown in the current palette. Click a pixel to paint it. */
+  const CREST_PX = 20;
+  function crestLogo(box) {
+    const h = document.createElement('div'); h.className = 'jed-grid-title'; h.textContent = 'Crest logo (click a pixel to give it the selected colour)'; box.appendChild(h);
+    const c = document.createElement('canvas'); c.id = 'jed-crest'; c.className = 'jed-crest'; c.width = 5 * CREST_PX; c.height = 4 * CREST_PX;
+    const pal = teamPalette(); const ctx = c.getContext('2d');
+    J.CREST.forEach((z, i) => { const rgb = pal[z.sprite]; ctx.fillStyle = 'rgb(' + rgb.join(',') + ')'; ctx.fillRect((i % 5) * CREST_PX, Math.floor(i / 5) * CREST_PX, CREST_PX, CREST_PX); });
+    const at = (e) => { const r = c.getBoundingClientRect(); const x = Math.floor((e.clientX - r.left) / r.width * 5); const y = Math.floor((e.clientY - r.top) / r.height * 4); return x >= 0 && x < 5 && y >= 0 && y < 4 ? J.CREST[y * 5 + x].sprite : null; };
+    c.addEventListener('mousemove', (e) => { const p = at(e); c.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ')'; if ($('jed-hover-outline').checked && p !== S.hover) { S.hover = p; drawOverlay(); } });
+    c.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
+    c.addEventListener('click', (e) => { const p = at(e); if (p != null) { assignSpot(p); status(spotName(p) + ' now uses colour ' + S.color); } });
+    box.appendChild(c);
   }
   /** Point sprite colour `sprite` at the selected team colour (JED painting). */
   function assignSpot(sprite) {
@@ -322,6 +336,7 @@
     const frames = visibleFrames();
     const slider = $('jed-frame-slider');
     slider.max = String(Math.max(0, frames.length - 1)); slider.disabled = !frames.length;
+    document.querySelector('.jed-preview').classList.toggle('no-sprites', !S.sprites);
     $('jed-preview-note').textContent = S.sprites ? frames.length + ' frames · ' + S.spriteNote : S.spriteNote || 'No sprites loaded';
     thumbObserver = new IntersectionObserver((list) => {
       const pal = list.some((e) => e.isIntersecting) ? teamPalette() : null;
@@ -400,7 +415,7 @@
     const p = f.pixels[y * f.width + x];
     return p >= J.SPRITE_FIRST && p < J.SPRITE_END ? p : null;
   }
-  function spotName(p) { const z = J.ZONES.concat(J.CREST, J.ICE).find((q) => q.sprite === p); return z ? z.name : 'sprite colour ' + p; }
+  function spotName(p) { const z = J.ZONES.concat(J.CREST).find((q) => q.sprite === p); return z ? z.name : 'sprite colour ' + p; }
 
   /** Neighbouring frames either side of the selected one, as many as fit the stage width. Click to select. */
   function renderNeighbours(frames, at, pal, scale) {
