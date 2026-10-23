@@ -134,7 +134,7 @@
           <button type="button" data-tool="select" aria-pressed="false" class="ice-edit" title="Drag a rectangle of cells; drag inside it to move it as a whole">Select</button>
           <button type="button" data-tool="pick" aria-pressed="false">Pick colour</button>
         </div>
-        <label>Zoom <select id="ice-zoom"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option></select></label>
+        <label class="ice-zoom">Zoom <input type="range" id="ice-zoom" min="1" max="16" value="2"> <output id="ice-zoom-val">2×</output></label>
         <label><input type="checkbox" id="ice-grid" checked> Grid</label>
         <button type="button" id="ice-undo" class="ghost-btn">Undo</button>
         <button type="button" id="ice-redo" class="ghost-btn">Redo</button>

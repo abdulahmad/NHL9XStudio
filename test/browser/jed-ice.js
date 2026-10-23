@@ -84,6 +84,12 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   await page.click('#ice-undo');
   await page.keyboard.press('Escape');
   await page.click('[data-tool="paint"]');
+  // zoom slider: 1..16x, shown as N×
+  await page.$eval('#ice-zoom', (e) => { e.value = '12'; e.dispatchEvent(new Event('input')); });
+  assert.strictEqual(await page.textContent('#ice-zoom-val'), '12×');
+  assert.strictEqual(await page.$eval('#ice-rink', (c) => c.width), 384 * 12);
+  assert.strictEqual(await page.$eval('#ice-zoom', (e) => e.max), '16');
+  await page.$eval('#ice-zoom', (e) => { e.value = '2'; e.dispatchEvent(new Event('input')); });
   // unedited export is byte-identical
   assert.ok((await download(page, '#ice-export-til')).bytes.equals(til));
   assert.ok((await download(page, '#ice-export-map')).bytes.equals(map));

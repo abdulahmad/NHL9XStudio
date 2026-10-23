@@ -291,7 +291,7 @@
     const c = $('ice-rink');
     c.addEventListener('pointerdown', onDown); c.addEventListener('pointermove', onMove); c.addEventListener('pointerup', onUp);
     $('ice-tile-edit').addEventListener('pointerdown', editTile); $('ice-tile-edit').addEventListener('contextmenu', (e) => e.preventDefault());
-    $('ice-zoom').addEventListener('change', () => { I.zoom = Number($('ice-zoom').value); renderRink(); });
+    $('ice-zoom').addEventListener('input', () => { I.zoom = Number($('ice-zoom').value); $('ice-zoom-val').textContent = I.zoom + '×'; renderRink(); });
     $('ice-grid').addEventListener('change', () => { I.grid = $('ice-grid').checked; renderRink(); });
     $('ice-away').addEventListener('change', () => { I.away = Number($('ice-away').value); renderAll(); });
     $('ice-undo').addEventListener('click', () => swap(I.undo, I.redo)); $('ice-redo').addEventListener('click', () => swap(I.redo, I.undo));
