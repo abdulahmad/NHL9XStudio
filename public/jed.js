@@ -123,6 +123,13 @@
     buildStrip();
     renderAll();
     Shared.loaded.forEach((fn) => fn());
+    loadCrests();
+  }
+  async function loadCrests() {
+    S.crests = null; let b = null;
+    try { b = S.game !== '94' ? await Shared.file('CRESTS4.PPV') : null; } catch (err) { b = null; }
+    if (b) { const o = Nhl95Pc.openBytes(b); S.crests = o ? o.shapes : null; }
+    if (cur()) renderZones();
   }
 
   // ---- undo / redo: whole-file snapshots of the side being edited (a 12 KB copy each) ----------------------------
@@ -191,13 +198,15 @@
     const orig = originalColors();
     const used = new Set(J.usedColors(cur().file, S.team));
     const away = S.side === 'away';
+    const jSlots = J.jerseySlots(cur().file, S.team), cSlots = J.crestSlots(cur().file, S.team);
     colors.forEach((c, i) => {
       const b = document.createElement('button');
       const rinkOwned = J.awayOverwritten(S.game, S.side, i);
       b.type = 'button'; b.className = 'jed-sw' + (used.has(i) ? '' : ' unused') + (c.join() !== orig[i].join() ? ' edited' : '') + (rinkOwned ? ' rinkfixed' : '');
       const k = (192 + i) * 3, rc = rinkOwned && S.base && S.base.rinkPlain ? [S.base.rinkPlain[k], S.base.rinkPlain[k + 1], S.base.rinkPlain[k + 2]] : null;
       b.style.background = rc ? 'rgb(' + rc.join(',') + ')' : rgb8(c); b.setAttribute('role', 'option'); b.setAttribute('aria-selected', String(i === S.color));
-      b.title = 'Colour ' + i + ' (game ' + ((away ? 192 : 128) + i) + '): ' + c.join(', ') + (used.has(i) ? '' : ' — not used by any spot') +
+      b.dataset.tip = 'Colour ' + i + ' (game ' + ((away ? 192 : 128) + i) + ') · 6-bit ' + c.join(', ') + ' · 8-bit ' + hex8(c).toUpperCase() +
+        (used.has(i) ? ' · used by ' + [jSlots.has(i) && 'jersey', cSlots.has(i) && 'scoreboard crest'].filter(Boolean).join(' + ') : ' — not used by any spot') +
         (rinkOwned ? ' — in NHL 95 PC the rink palette overwrites game ' + (192 + i) + ' (shown: rink colour ' + (rc ? rc.join(', ') : '?') + '); this value never shows' : '');
       b.addEventListener('click', () => { S.color = i; renderSwatches(); renderColor(); });
       box.appendChild(b);
@@ -209,7 +218,8 @@
     $('jed-big').style.background = rgb8(c);
     $('jed-color-name').textContent = 'Colour ' + S.color + ' · game index ' + ((S.side === 'away' ? 192 : 128) + S.color) +
       (J.awayOverwritten(S.game, S.side, S.color) ? ' · overwritten by the rink palette in NHL 95 PC (never shows)' : '');
-    $('jed-hex').textContent = 'VGA ' + c.join(',') + ' · 8-bit ' + hex8(c);
+    $('jed-hex').textContent = '6-bit ' + c.join(', ') + ' · 8-bit ' + c.map(J.to8).join(', ');
+    if (document.activeElement !== $('jed-hex-in')) { $('jed-hex-in').value = hex8(c).toUpperCase(); $('jed-hex-in').classList.remove('bad'); }
     ['r', 'g', 'b'].forEach((k, i) => { $('jed-' + k).value = c[i]; $('jed-' + k + 'n').value = c[i]; });
     $('jed-picker').value = hex8(c);
   }
@@ -230,8 +240,7 @@
     b.title = z.name + ' · sprite index ' + z.sprite + ' → game palette ' + t;
     b.append(sw, label, idx);
     b.addEventListener('click', () => {
-      if ($('jed-paint').checked) { assignSpot(z.sprite); }
-      else if (t >= 128 && t < 192) { S.color = t - 128; renderSwatches(); renderColor(); }
+      clickSpot(z.sprite);
     });
     b.addEventListener('mouseenter', () => { if ($('jed-hover-outline').checked) { S.hover = z.sprite; drawOverlay(); } });
     b.addEventListener('mouseleave', () => { if (S.hover === z.sprite) { S.hover = null; drawOverlay(); } });
@@ -261,7 +270,7 @@
     const box = $('jed-zones'); box.innerHTML = '';
     const map = J.getMap(cur().file, S.team);
     const colors = J.getColors(cur().file, S.team);
-    crestLogo(box);
+    crestLogo(box); scoreboardCrest(box);
     for (const g of zoneGroups()) {
       if (g.zones.length === 1 && !g.zones[0].short) { box.appendChild(zoneButton(Object.assign({}, g.zones[0], { short: g.base }), map, colors)); continue; }
       const row = document.createElement('div'); row.className = 'jed-zgroup';
@@ -269,21 +278,46 @@
       for (const z of g.zones) row.appendChild(zoneButton(Object.assign({}, z, { short: z.short || z.name.slice(g.base.length + 1) }), map, colors));
       box.appendChild(row);
     }
-    pixelGrid(box, 'Crest colours (4 × 5, sprite 192–196, 208–212, 224–228, 240–244)', J.CREST, 5, map, colors);
   }
   /** The team crest as the game draws it on the jersey front: a 5 × 4 picture whose pixels are sprite colours
    *  192+row*16+col (every player frame uses exactly these), shown in the current palette. Click a pixel to paint it. */
   const CREST_PX = 20;
   function crestLogo(box) {
-    const h = document.createElement('div'); h.className = 'jed-grid-title'; h.textContent = 'Crest logo (click a pixel to give it the selected colour)'; box.appendChild(h);
+    const h = document.createElement('div'); h.className = 'jed-grid-title'; h.textContent = 'Jersey crest (5 × 4, sprite colours 192–196, 208–212, 224–228, 240–244)'; box.appendChild(h);
     const c = document.createElement('canvas'); c.id = 'jed-crest'; c.className = 'jed-crest'; c.width = 5 * CREST_PX; c.height = 4 * CREST_PX;
     const pal = teamPalette(); const ctx = c.getContext('2d');
     J.CREST.forEach((z, i) => { const rgb = pal[z.sprite]; ctx.fillStyle = 'rgb(' + rgb.join(',') + ')'; ctx.fillRect((i % 5) * CREST_PX, Math.floor(i / 5) * CREST_PX, CREST_PX, CREST_PX); });
     const at = (e) => { const r = c.getBoundingClientRect(); const x = Math.floor((e.clientX - r.left) / r.width * 5); const y = Math.floor((e.clientY - r.top) / r.height * 4); return x >= 0 && x < 5 && y >= 0 && y < 4 ? J.CREST[y * 5 + x].sprite : null; };
     c.addEventListener('mousemove', (e) => { const p = at(e); c.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ')'; if ($('jed-hover-outline').checked && p !== S.hover) { S.hover = p; drawOverlay(); } });
     c.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
-    c.addEventListener('click', (e) => { const p = at(e); if (p != null) { assignSpot(p); status(spotName(p) + ' now uses colour ' + S.color); } });
+    c.addEventListener('click', (e) => { const p = at(e); if (p != null) clickSpot(p); });
     box.appendChild(c);
+  }
+  /** NHL 95 PC scoreboard crest (CRESTS4.PPV shape tagged with the team code), drawn as DrawHudPanel does. */
+  function scoreboardCrest(box) {
+    const shape = S.crests && S.crests.find((x) => (x.tag || '').trim().toUpperCase() === teamCode());
+    const h = document.createElement('div'); h.className = 'jed-grid-title';
+    h.textContent = shape ? 'Scoreboard crest (CRESTS4.PPV ' + shape.width + ' × ' + shape.height + ', sprite colours 197–202, 213–218, 229–234, 245–250)'
+      : 'Scoreboard crest: ' + (S.crests ? 'no ' + teamCode() + ' shape in CRESTS4.PPV' : 'CRESTS4.PPV not found in the game files');
+    box.appendChild(h); if (!shape) return;
+    const k = 6; const c = document.createElement('canvas'); c.id = 'jed-sbcrest'; c.className = 'jed-crest'; c.width = shape.width * k; c.height = shape.height * k;
+    const img = new ImageData(J.crestRgb(shape, teamPalette()), shape.width, shape.height);
+    const t = document.createElement('canvas'); t.width = shape.width; t.height = shape.height; t.getContext('2d').putImageData(img, 0, 0);
+    const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(t, 0, 0, c.width, c.height);
+    const at = (e) => { const r = c.getBoundingClientRect(); const x = Math.floor((e.clientX - r.left) / r.width * shape.width); const y = Math.floor((e.clientY - r.top) / r.height * shape.height);
+      const p = x >= 0 && x < shape.width && y >= 0 && y < shape.height ? shape.pixels[y * shape.width + x] : null; return p != null && p >= 128 && p !== 255 ? p : null; };
+    c.addEventListener('mousemove', (e) => { const p = at(e); c.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ')'; if ($('jed-hover-outline').checked && p !== S.hover) { S.hover = p; drawOverlay(); } });
+    c.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
+    c.addEventListener('click', (e) => { const p = at(e); if (p != null) clickSpot(p); });
+    box.appendChild(c);
+  }
+  /** Click on a spot (list, crest, scoreboard crest or the big sprite): paint it with the selected colour when
+   *  "Click paints" is on, otherwise select the colour it uses. */
+  function clickSpot(sprite) {
+    if ($('jed-paint').checked) { assignSpot(sprite); status(spotName(sprite) + ' now uses colour ' + S.color); return; }
+    const t = J.getMap(cur().file, S.team)[sprite];
+    if (t >= 128 && t < 192) { S.color = t - 128; renderSwatches(); renderColor(); status(spotName(sprite) + ' uses colour ' + S.color); }
+    else status(spotName(sprite) + ' uses rink colour ' + t + ' (not a team colour)');
   }
   /** Point sprite colour `sprite` at the selected team colour (JED painting). */
   function assignSpot(sprite) {
@@ -423,7 +457,7 @@
     const p = f.pixels[y * f.width + x];
     return p >= J.SPRITE_FIRST && p < J.SPRITE_END ? p : null;
   }
-  function spotName(p) { const z = J.ZONES.concat(J.CREST).find((q) => q.sprite === p); return z ? z.name : 'sprite colour ' + p; }
+  function spotName(p) { const z = J.ZONES.concat(J.CREST, J.SCOREBOARD).find((q) => q.sprite === p); return z ? z.name : 'sprite colour ' + p; }
 
   /** Neighbouring frames either side of the selected one, as many as fit the stage width. Click to select. */
   function renderNeighbours(frames, at, pal, scale) {
@@ -475,6 +509,13 @@
       $('jed-' + k).oninput = (e) => cur() && setChannel(i, e.target.value);
       $('jed-' + k + 'n').onchange = (e) => cur() && setChannel(i, Math.max(0, Math.min(63, Number(e.target.value) || 0)));
     });
+    $('jed-hex-in').oninput = (e) => {
+      const m = /^#?([0-9a-f]{6})$/i.exec(e.target.value.trim()); e.target.classList.toggle('bad', !m);
+      if (!m || !cur()) return;
+      const c = [0, 2, 4].map((o) => J.to6(parseInt(m[1].substr(o, 2), 16)));
+      remember('c' + S.side + S.team + ':' + S.color); J.setColor(cur().file, S.team, S.color, c); edited();
+    };
+    $('jed-hex-in').onblur = () => { if (cur()) renderColor(); };
     $('jed-picker').oninput = (e) => {
       if (!cur()) return;
       const v = e.target.value; const c = [1, 3, 5].map((o) => J.to6(parseInt(v.substr(o, 2), 16)));
@@ -490,9 +531,9 @@
     $('jed-export-bin').onclick = guard(() => { if (cur()) download(J.getRecord(cur().file, S.team), teamCode() + '_' + S.side + '.bin'); });
     $('jed-undo').onclick = undo; $('jed-redo').onclick = redo;
     const canvas = $('jed-canvas');
-    canvas.addEventListener('mousemove', (e) => { const p = spriteAt(e); if (p !== S.hover) { S.hover = p; drawOverlay(); } canvas.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ') → click to set colour ' + S.color; });
+    canvas.addEventListener('mousemove', (e) => { const p = spriteAt(e); if (p !== S.hover) { S.hover = p; drawOverlay(); } canvas.title = p == null ? '' : spotName(p) + ' (sprite ' + p + ')' + ($('jed-paint').checked ? ' → click to give it colour ' + S.color : ' → click to select its colour'); });
     canvas.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
-    canvas.addEventListener('click', (e) => { const p = spriteAt(e); if (p != null) { assignSpot(p); S.hover = p; drawOverlay(); status(spotName(p) + ' now uses colour ' + S.color); } });
+    canvas.addEventListener('click', (e) => { const p = spriteAt(e); if (p != null) { clickSpot(p); S.hover = p; drawOverlay(); } });
     $('jed-export-act').onclick = guard(() => {
       if (!cur()) return; if (!S.base) throw new Error('The base palettes (jed-pals/*.act) did not load');
       download(J.toAct(cur().file, S.team, S.base, false), teamCode() + (S.side === 'home' ? 'H' : 'V') + '.ACT');
@@ -587,8 +628,17 @@
     awayColors(team) { const f = S.files.away || S.files.home; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; }
   };
 
+  // Instant tooltips for anything with data-tip (swatches here and on the Centre ice tab).
+  function wireTips() {
+    const tip = document.createElement('div'); tip.id = 'jed-tip'; tip.className = 'jed-tip'; tip.hidden = true; document.body.appendChild(tip);
+    const place = (e) => { const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 4); const y = e.clientY + 18 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 8 : e.clientY + 18; tip.style.left = x + 'px'; tip.style.top = y + 'px'; };
+    document.addEventListener('mouseover', (e) => { const t = e.target.closest && e.target.closest('[data-tip]'); if (!t) { tip.hidden = true; return; } tip.textContent = t.dataset.tip; tip.hidden = false; place(e); });
+    document.addEventListener('mousemove', (e) => { if (!tip.hidden) place(e); });
+    document.addEventListener('mouseout', (e) => { if (!e.relatedTarget || !(e.relatedTarget.closest && e.relatedTarget.closest('[data-tip]'))) tip.hidden = true; });
+  }
   wire();
   wireSplit();
+  wireTips();
   loadBase();
   detectServer();
   window.addEventListener('resize', () => { if (cur()) renderPreview(false); });

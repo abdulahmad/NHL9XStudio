@@ -50,6 +50,7 @@
           <label>R <input type="range" min="0" max="63" id="jed-r"><input type="number" min="0" max="63" id="jed-rn"></label>
           <label>G <input type="range" min="0" max="63" id="jed-g"><input type="number" min="0" max="63" id="jed-gn"></label>
           <label>B <input type="range" min="0" max="63" id="jed-b"><input type="number" min="0" max="63" id="jed-bn"></label>
+          <label title="Type #RRGGBB (8-bit); it is snapped to the game's 6-bit VGA colour">Hex <input type="text" id="jed-hex-in" class="mono" size="8" maxlength="7" spellcheck="false"></label>
           <label>Picker <input type="color" id="jed-picker" title="Snapped to the nearest 6-bit VGA colour"></label>
         </div>
       </div>
@@ -64,8 +65,8 @@
         <button type="button" id="jed-import-act-btn" class="ghost-btn" title="768 or 772-byte sprite-space ACT: each team colour is read from the lowest sprite index (144–250) that shows it (÷4); conflicts are reported">Import .ACT</button>
         <button type="button" id="jed-revert" class="ghost-btn" title="Undo every edit to this team and side">Revert team</button>
       </div>
-      <h2>Jersey spots <span class="muted">click to pick its colour · Paint mode assigns the selected colour</span></h2>
-      <label class="check"><input type="checkbox" id="jed-paint"> Paint mode</label>
+      <h2>Jersey spots <span class="muted">big sprite, crests and spots: click paints (or picks the colour when off)</span></h2>
+      <label class="check" title="On: clicking the big sprite, a crest pixel or a spot below gives that spot the selected colour. Off: clicking selects the colour the spot uses (eyedropper)."><input type="checkbox" id="jed-paint" checked> Click paints spots with the selected colour</label>
       <label class="check"><input type="checkbox" id="jed-hover-outline" checked> Outline on sprite when hovering a spot</label>
       <div id="jed-zones" class="jed-zones"></div>
     </section>
