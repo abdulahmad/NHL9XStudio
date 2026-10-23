@@ -4,7 +4,7 @@
   'use strict';
   const R = NhlPcRink, J = NhlPcJersey, A = NhlPcPalette, X = window.JedShared;
   const $ = (id) => document.getElementById(id);
-  const I = { team: 0, away: 1, model: null, original: null, rink: null, rinkNote: '', tool: 'paint', tile: 0, color: 0,
+  const I = { cache: {}, srcRef: null, team: 0, away: 1, model: null, original: null, rink: null, rinkNote: '', tool: 'paint', tile: 0, color: 0,
     zoom: 2, grid: true, undo: [], redo: [], ro: false, pal: null, drag: null, loadedFor: '' };
   const st = () => X.state;
   const arenas = () => (st().game === '94' ? R.ARENAS.slice(0, 24) : R.ARENAS);
@@ -28,6 +28,8 @@
   async function load() {
     const S = st(); if (!S.sources) return;
     const name = code(); I.ro = S.game === '94';
+    if (I.srcRef !== S.sources) { I.cache = {}; I.model = null; I.loadedFor = null; I.srcRef = S.sources; }
+    if (I.model && I.loadedFor && I.loadedFor !== S.game + name) I.cache[I.loadedFor] = { original: I.original, model: I.model, undo: I.undo, redo: I.redo, team: I.cacheTeam, raw: I.raw };
     $('ice-warn').hidden = !I.ro;
     const [tb, mb, rb] = await Promise.all([X.file(name + '.TIL'), X.file(name + '.MAP'), X.file(I.ro ? 'RINK.TIL' : 'RINK.QFS')]);
     I.rink = null;
@@ -35,6 +37,12 @@
     if (rb && I.ro) { try { const m = await X.file('RINK.MAP'); if (m) I.rink = R.composite(null, R.parseMap(m), R.parseTil(rb), [0, 0, -1, -1], 94); } catch (e) { I.rink = null; } }
     I.rinkNote = I.rink ? '' : 'No rink picture (RINK.QFS) loaded — showing the logo on a plain background. ';
     const place = (R.PLACEMENT[S.game] || R.PLACEMENT[95])[name] || [21, 37, -1, -1];
+    I.raw = tb && mb ? { til: tb, map: mb } : null; I.cacheTeam = I.team;
+    const hit = I.cache[S.game + name];
+    if (hit && !I.ro) {
+      Object.assign(I, { original: hit.original, model: hit.model, undo: hit.undo, redo: hit.redo, raw: hit.raw }); delete I.cache[S.game + name];
+      I.sel = null; I.float = null; I.loadedFor = S.game + name; renderAll(); return;
+    }
     if (tb && mb) {
       const map = R.parseMap(mb), tiles = R.parseTil(tb);
       I.original = { map, tiles, place: place.slice() };
@@ -295,12 +303,26 @@
   }
 
   // ---- import / export ----------------------------------------------------------------------------------------
+  /** Every centre ice edited this session (the open one plus arenas switched away from):
+   *  [{ name, team, files: { til, map }, json }] for files that differ from the game's. */
+  function editedArenas() {
+    const same = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
+    const list = []; const add = (name, team, model, original, raw) => {
+      let o; try { o = R.exportFiles(model, original); } catch (e) { return; }
+      if (raw && same(o.til, raw.til) && same(o.map, raw.map)) return;
+      list.push({ name, team, til: o.til, map: o.map, json: placementJson(name, team, model) });
+    };
+    for (const k of Object.keys(I.cache)) { const c = I.cache[k]; if (k.startsWith('95')) add(k.slice(2), c.team, c.model, c.original, c.raw); }
+    if (I.model && !I.ro && (I.model.tiles.length || I.raw)) add(code(), I.team, I.model, I.original, I.raw);
+    return list;
+  }
   function exportNow() {
     const out = R.exportFiles(I.model, I.original); return out;
   }
-  function placementJson() {
-    const b = built(); const p = b ? b.place : I.model.place;
-    return { game: 'nhl95pc', arena: code(), team: teamName(I.team), x: p[0], y: p[1], x2: p[2], y2: p[3],
+  function placementJson(name, team, model) {
+    model = model || I.model; name = name || code(); team = team == null ? I.team : team;
+    let b = null; try { b = R.build(model); } catch (e) { b = null; } const p = b ? b.place : model.place;
+    return { game: 'nhl95pc', arena: name, team: teamName(team), x: p[0], y: p[1], x2: p[2], y2: p[3],
       note: 'Tiles, top-left of the .MAP on the 48x74 rink; x2 > 0 draws a second copy rotated 180 degrees, its bottom-right tile at (x2, y2). HOCKEY.EXE arena table, not patched by this editor.' };
   }
   function pngOf(pix, w, h) {
@@ -441,5 +463,5 @@
     if (ice && !st().sources) X.status('Open an NHL 95 PC game folder or its files to edit its centre ice logos');
   }
   wire();
-  window.JedIce = { state: I, load, tab };
+  window.JedIce = { state: I, load, tab, editedArenas, tileSlots: (team) => (I.model && I.team === team && !I.ro ? tileSlots() : new Set()) };
 }());
