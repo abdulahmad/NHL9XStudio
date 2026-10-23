@@ -322,6 +322,7 @@
     const frames = visibleFrames();
     const slider = $('jed-frame-slider');
     slider.max = String(Math.max(0, frames.length - 1)); slider.disabled = !frames.length;
+    document.querySelector('.jed-preview').classList.toggle('no-sprites', !S.sprites);
     $('jed-preview-note').textContent = S.sprites ? frames.length + ' frames · ' + S.spriteNote : S.spriteNote || 'No sprites loaded';
     thumbObserver = new IntersectionObserver((list) => {
       const pal = list.some((e) => e.isIntersecting) ? teamPalette() : null;

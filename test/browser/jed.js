@@ -39,6 +39,7 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 92); // 48 zones + 20 crest + 24 centre-ice
   assert.strictEqual(await page.locator('#jed-zones .jed-zgroup').count() > 10, true, 'light/medium/dark rows');
   assert.strictEqual(await page.textContent('#jed-export-file'), 'Export homepals.bin');
+  assert.ok(await page.isVisible('#jed-empty'), 'no-sprites guidance shown');
 
   // unedited export: identical
   let out = await download(page, '#jed-export-file');

@@ -59,3 +59,8 @@
 .jed-thumb canvas { max-width: 60px; max-height: 64px; }
 .jed-thumb[aria-selected="true"] { border: 5px solid var(--amber, #f5a623); box-shadow: 0 0 0 3px var(--red, #c8102e); }
 @media (max-width: 900px) { .jed { height: auto; overflow: auto; } .jed-main { grid-template-columns: 1fr; } }
+
+/* no sprite sheets: guidance instead of an empty 1x1 frame, and no frame grid */
+.jed-empty { display: none; max-width: 520px; margin: 0; color: #2b3845; line-height: 1.5; text-align: center; }
+.jed-preview.no-sprites .jed-empty { display: block; }
+.jed-preview.no-sprites .jed-mainwrap, .jed-preview.no-sprites .jed-split, .jed-preview.no-sprites .jed-strip, .jed-preview.no-sprites .jed-nbs { display: none; }

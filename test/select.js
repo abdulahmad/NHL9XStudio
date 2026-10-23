@@ -55,6 +55,7 @@ const RULES = [
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.
   { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'browser:jed'], why: 'jersey palette format' },
   { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed'], why: 'jersey editor page' },
+  { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
