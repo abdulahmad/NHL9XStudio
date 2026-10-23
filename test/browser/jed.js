@@ -39,6 +39,10 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 48); // jersey zones; the crest is the picture
   assert.match(await page.textContent('#jed-zones'), /Scoreboard crest: CRESTS4\.PPV not found/);
   assert.strictEqual(await page.locator('#jed-zones .jed-zgroup').count() > 10, true, 'light/medium/dark rows');
+  const row = (n) => page.evaluate((n) => { const r = [...document.querySelectorAll('#jed-zones .jed-zgroup')].find((g) => g.querySelector('b').textContent === n); return r && [...r.querySelectorAll('.jed-zone')].map((b) => b.title.split(' · ')[0]); }, n);
+  assert.deepStrictEqual(await row('yoke'), ['yoke 3', 'yoke 2', 'yoke 1']);
+  assert.deepStrictEqual(await row('upper body'), ['goalie mask', 'yoke corner', 'shoulder patch']);
+  assert.deepStrictEqual(await row('waist 1'), ['waist 1 hidden', 'waist 1 even', 'waist 1 odd']);
   assert.strictEqual(await page.textContent('#jed-export-file'), 'Export homepals.bin');
   assert.ok(await page.isVisible('#jed-empty'), 'no-sprites guidance shown');
 
