@@ -59,6 +59,12 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#ice-swatches .ice-sw.src-fixed').count(), 4);
   assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['21', '38']);
   assert.match(await page.textContent('#ice-count'), /^2 \/ 1024/);
+  // zoom slider: 1..16x, shown as N×
+  await page.$eval('#ice-zoom', (e) => { e.value = '12'; e.dispatchEvent(new Event('input')); });
+  assert.strictEqual(await page.textContent('#ice-zoom-val'), '12×');
+  assert.strictEqual(await page.$eval('#ice-rink', (c) => c.width), 384 * 12);
+  assert.strictEqual(await page.$eval('#ice-zoom', (e) => e.max), '16');
+  await page.$eval('#ice-zoom', (e) => { e.value = '2'; e.dispatchEvent(new Event('input')); });
   // unedited export is byte-identical
   assert.ok((await download(page, '#ice-export-til')).bytes.equals(til));
   assert.ok((await download(page, '#ice-export-map')).bytes.equals(map));
