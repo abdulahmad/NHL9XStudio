@@ -135,9 +135,11 @@
       <div class="ice-scroll"><canvas id="ice-rink"></canvas></div>
       <p id="ice-note" class="muted"></p>
       <div class="jed-io">
-        <button type="button" id="ice-import-image" class="ghost-btn ice-edit" title="PNG, BMP, GIF, JPEG: matched to the allowed colours, cut into 8×8 tiles, duplicates removed, max 1024">Import image…</button>
+        <button type="button" id="ice-import-image" class="ghost-btn ice-edit" title="PNG, BMP, GIF, JPEG (384×592 = full rink): matched to the allowed colours, cut into 8×8 tiles, duplicates removed, max 1024">Import image…</button>
         <label class="muted"><input type="checkbox" id="ice-q-home" checked> use home colours</label>
         <label class="muted"><input type="checkbox" id="ice-q-replace" checked> replace logo</label>
+        <label class="muted" title="A 384×592 image is taken as the whole rink at 0,0">tiles from <select id="ice-q-cells"><option value="all">every visible cell</option><option value="diff">cells that differ from the rink</option><option value="mask">the mask (white = tile)</option></select></label>
+        <button type="button" id="ice-mask" class="ghost-btn ice-edit" title="Black / white image the size of the import: white cells become tiles">Mask…</button>
         <button type="button" id="ice-import-til" class="ghost-btn ice-edit">Import .TIL / .MAP…</button>
         <button type="button" id="ice-import-json" class="ghost-btn ice-edit">Import placement…</button>
         <button type="button" id="ice-export-til" class="ghost-btn">Export .TIL</button>
@@ -149,6 +151,7 @@
       <input type="file" id="ice-image-file" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
       <input type="file" id="ice-tilmap-file" hidden accept=".til,.map">
       <input type="file" id="ice-json-file" hidden accept=".json">
+      <input type="file" id="ice-mask-file" hidden accept="image/png,image/bmp,image/gif,.png,.bmp,.gif">
     </section>
   </main>
   <script src="lib/snespak.js"></script>

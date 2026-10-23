@@ -94,6 +94,17 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   t = (await download(page, '#ice-export-til')).bytes;
   assert.strictEqual(t.length, 64); assert.ok(t.every((v) => v === 140), 'quantized to the home colour');
   const logo = await download(page, '#ice-export-logo'); assert.strictEqual(logo.name, 'BOS-logo.png');
+  // full-rink image (384x592) with a mask: only white cells become tiles
+  const FW = 384, FH = 592, frgba = new Uint8Array(FW * FH * 4), mrgba = new Uint8Array(FW * FH * 4);
+  for (let i = 0; i < FW * FH; i++) { frgba.set([...homeRgb, 255], i * 4); mrgba.set([0, 0, 0, 255], i * 4); }
+  for (let y = 16; y < 32; y++) for (let x = 24; x < 48; x++) mrgba.set([255, 255, 255, 255], (y * FW + x) * 4);
+  await upload(page, '#ice-mask', { name: 'mask.png', mimeType: 'image/png', buffer: png(FW, FH, mrgba) });
+  assert.strictEqual(await page.inputValue('#ice-q-cells'), 'mask');
+  await upload(page, '#ice-import-image', { name: 'rink.png', mimeType: 'image/png', buffer: png(FW, FH, frgba) });
+  assert.match(await page.textContent('#jed-status'), /as a full rink, white cells of mask\.png: 1 \/ 1024/);
+  assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['3', '2']);
+  const fmap = (await download(page, '#ice-export-map')).bytes; assert.deepStrictEqual([fmap.readUInt16LE(0), fmap.readUInt16LE(2)], [3, 2]);
+  await page.selectOption('#ice-q-cells', 'all');
   // the jerseys tab still works
   await page.click('#tab-jerseys'); assert.ok(await page.isVisible('main.jed-main')); await page.click('#tab-ice');
 
@@ -117,6 +128,14 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
         await items.nth(arenas.indexOf(a)).click(); await page.waitForTimeout(200);
         await page.selectOption('#ice-away', String(arenas.indexOf(away))); await page.waitForTimeout(200);
         await page.screenshot({ path: path.join(SHOT, 'ice-' + a + '-1920x1080.png') });
+      }
+      if (process.env.NHL_ICE_RINK) { // full-rink mockup, cells that differ from RINK.QFS
+        await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
+        await page.selectOption('#ice-q-cells', 'diff');
+        await upload(page, '#ice-import-image', process.env.NHL_ICE_RINK);
+        console.log('jed-ice full rink: ' + await page.textContent('#jed-status'));
+        await page.screenshot({ path: path.join(SHOT, 'ice-fullrink-1920x1080.png') });
+        await page.selectOption('#ice-q-cells', 'all');
       }
       if (process.env.NHL_ICE_IMAGE) {
         await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
