@@ -79,6 +79,23 @@ withBrowser('jed', async ({ url, newPage }) => {
     await page.waitForSelector('#jed-sbcrest');
     assert.deepStrictEqual(await page.$eval('#jed-sbcrest', (c) => [c.width, c.height]), [192, 144]);
     if (process.env.NHL_CREST_SHOT) { await page.setViewportSize({ width: 1920, height: 1080 }); await page.screenshot({ path: process.env.NHL_CREST_SHOT }); }
+    // crest export / import (PNG, JED PCX, game SPT), whole-file save, Export all zip
+    const tmp = fs.mkdtempSync(path.join(require('os').tmpdir(), 'crest-'));
+    const png = await download(page, '#jed-crest-png'); const pcx = await download(page, '#jed-crest-pcx'); const spt = await download(page, '#jed-crest-spt');
+    assert.strictEqual(pcx.bytes[0], 10); assert.strictEqual(spt.bytes[0], 0xFB);
+    const same = await download(page, '#jed-crests-out'); assert.ok(same.bytes.equals(fs.readFileSync(path.join(dir, 'CRESTS4.PPV'))), 'unedited CRESTS4.PPV byte-identical');
+    await page.evaluate(() => window.JedShared.exportAll()); assert.match(await page.textContent('#jed-status'), /Nothing edited/);
+    for (const f of [png, pcx]) {
+      const p = path.join(tmp, f.name); fs.writeFileSync(p, f.bytes); await upload(page, '#jed-crest-import', p);
+      await page.waitForFunction(() => /scoreboard crest \(/.test(document.getElementById('jed-status').textContent));
+      assert.match(await page.textContent('#jed-status'), /home: \d+ colours.*away: \d+ colours/);
+    }
+    const sp = path.join(tmp, spt.name); fs.writeFileSync(sp, spt.bytes); await upload(page, '#jed-crest-import', sp);
+    await page.waitForFunction(() => /crest pixels replaced/.test(document.getElementById('jed-status').textContent));
+    const zip = await download(page, '#jed-export-all'); assert.strictEqual(zip.name, 'nhl95pc-edits.zip');
+    const names = []; for (let o = 0; zip.bytes.readUInt32LE(o) === 0x04034b50;) { const n = zip.bytes.readUInt16LE(o + 26), x = zip.bytes.readUInt16LE(o + 28); names.push(zip.bytes.slice(o + 30, o + 30 + n).toString()); o += 30 + n + x + zip.bytes.readUInt32LE(o + 18); }
+    assert.ok(names.includes('HOMEPALS.BIN') && names.includes('AWAYPALS.BIN'), 'zip ' + names);
+    if (process.env.NHL_CREST_SHOT) { await page.setViewportSize({ width: 1920, height: 1080 }); await page.$eval('#jed-sbcrest', (c) => c.scrollIntoView({ block: 'start' })); await page.screenshot({ path: process.env.NHL_CREST_SHOT.replace(/\.png$/, '-import.png') }); }
     await page.setInputFiles('#jed-files', [fix('HOMEPALS95.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS95.BIN', 'AWAYPALS.BIN')]);
     await page.waitForFunction(() => !document.getElementById('jed-sbcrest'));
     await page.setViewportSize({ width: 1400, height: 900 });

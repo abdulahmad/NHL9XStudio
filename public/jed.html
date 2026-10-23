@@ -24,7 +24,10 @@
       </div>
       <button type="button" id="jed-open-folder" class="ghost-btn" title="An NHL 94 PC or 95 PC install folder: HOMEPALS/AWAYPALS plus the PPV sprites for the preview">Open game folder…</button>
       <button type="button" id="jed-open-files" class="ghost-btn" title="HOMEPALS.BIN and/or AWAYPALS.BIN (plus PPV sheets and RINKPAL for the preview)">Open files…</button>
+      <button type="button" id="jed-export-all" class="ghost-btn" data-tip="One .zip of everything you edited: HOMEPALS.BIN, AWAYPALS.BIN, CRESTS4.PPV and each edited centre ice (.MAP, .TIL, placement JSON)">Export all (.zip)</button>
       <input type="file" id="jed-folder" hidden multiple webkitdirectory>
+      <input type="file" id="jed-import-crest" hidden accept=".png,.bmp,.gif,.pcx,.spt,image/*">
+      <input type="file" id="jed-import-ppv" hidden accept=".ppv,.095">
       <input type="file" id="jed-files" hidden multiple>
       <input type="file" id="jed-import-bin" hidden accept=".bin">
       <input type="file" id="jed-import-file" hidden accept=".bin,.o94,.o95">
@@ -194,6 +197,8 @@
   <script src="lib/pc-jersey.js"></script>
   <script src="lib/pc-rink.js"></script>
   <script src="lib/pc-palette.js"></script>
+  <script src="lib/pc-crests.js"></script>
+  <script src="lib/zip-store.js"></script>
   <script src="jed.js"></script>
   <script src="ice.js"></script>
 </body>

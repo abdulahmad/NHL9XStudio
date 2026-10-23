@@ -128,7 +128,7 @@
   async function loadCrests() {
     S.crests = null; let b = null;
     try { b = S.game !== '94' ? await Shared.file('CRESTS4.PPV') : null; } catch (err) { b = null; }
-    if (b) { const o = Nhl95Pc.openBytes(b); S.crests = o ? o.shapes : null; }
+    if (b) { try { S.crests = NhlPcCrests.parse(b); } catch (err) { S.crests = null; } }
     if (cur()) renderZones();
   }
 
@@ -303,9 +303,89 @@
     c.addEventListener('click', (e) => { const p = at(e); if (p != null) clickSpot(p); });
     box.appendChild(c);
   }
+  // ---- scoreboard crest import / export (JED 3.01: F5 import PCX, F6 export PCX; here also PNG/BMP/GIF and SPIT) ----
+  const CREST_OPTS = [['team', 'Team colour slots', true], ['rink', 'Rink colours (home only)', true], ['overwrite', 'Overwrite team palette', false],
+    ['jersey', 'Keep jersey colours', true], ['crest', 'Keep current crest colours', false], ['tiles', 'Keep centre ice colours', true], ['free', 'Only free slots', false], ['both', 'Home and away records', true]];
+  S.crestOpts = S.crestOpts || Object.fromEntries(CREST_OPTS.map(([k, , v]) => [k, v]));
+  function crestTools(box, shape) {
+    const bar = document.createElement('div'); bar.className = 'jed-crest-tools'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Scoreboard crest files');
+    const btn = (id, label, tip, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ghost-btn'; b.id = id; b.textContent = label; b.dataset.tip = tip; b.addEventListener('click', guard(fn)); bar.appendChild(b); };
+    btn('jed-crest-import', 'Import crest…', 'PNG, BMP, GIF, JED .PCX (32 × 24, transparent = see-through) or a game-format .SPT shape', () => importCrest(shape));
+    btn('jed-crest-png', 'PNG', 'Export this crest as PNG (transparent background)', () => exportCrest(shape, 'png'));
+    btn('jed-crest-pcx', 'PCX', 'Export as 8-bit PCX like JED (F6): pixel values are the sprite colours', () => exportCrest(shape, 'pcx'));
+    btn('jed-crest-spt', 'SPT', 'Export the game-format shape (SPIT header + RLE, as stored in CRESTS4.PPV)', () => exportCrest(shape, 'spt'));
+    btn('jed-crest-revert', 'Revert', 'Put back this crest\'s pixels from CRESTS4.PPV as opened', () => { shape.pixels = Uint8Array.from(shape.orig); renderZones(); status(teamCode() + ' crest pixels reverted (colours: use Undo)'); });
+    btn('jed-crests-in', 'Open CRESTS4.PPV…', 'Replace the whole crests file', async () => { const f = await readFile($('jed-import-ppv')); if (!f) return; S.crests = NhlPcCrests.parse(f.bytes); renderZones(); status(f.name + ': ' + S.crests.entries.length + ' crests'); });
+    btn('jed-crests-out', 'Save CRESTS4.PPV', 'Export the whole crests file with your edits', () => { download(NhlPcCrests.write(S.crests), 'CRESTS4.PPV'); status('CRESTS4.PPV saved' + (NhlPcCrests.edited(S.crests) ? ' (edited crests re-encoded)' : ' (unchanged)')); });
+    box.appendChild(bar);
+    const fs = document.createElement('fieldset'); fs.className = 'jed-crest-opts'; fs.id = 'jed-crest-opts';
+    const lg = document.createElement('legend'); lg.textContent = 'Crest import colours'; fs.appendChild(lg);
+    const raw = { team: S.crestOpts.team, rink: S.crestOpts.rink, overwrite: S.crestOpts.overwrite, jersey: S.crestOpts.jersey, crest: S.crestOpts.crest, tiles: S.crestOpts.tiles, freeOnly: S.crestOpts.free };
+    const bad = NhlPcPalette.conflicts(raw);
+    for (const [k, label] of CREST_OPTS) {
+      const l = document.createElement('label'); const i = document.createElement('input'); i.type = 'checkbox'; i.id = 'jed-co-' + k; i.checked = S.crestOpts[k];
+      const why = bad[k === 'free' ? 'freeOnly' : k] || (S.crestOpts.free && ['jersey', 'crest', 'tiles'].includes(k) ? '"Only free slots" already keeps every used colour' : '');
+      i.disabled = Boolean(why); l.title = why; i.addEventListener('change', () => { S.crestOpts[k] = i.checked; renderZones(); });
+      l.append(i, ' ' + label); fs.appendChild(l);
+    }
+    box.appendChild(fs);
+  }
+  function crestOptions() { const o = {}; const raw = { team: S.crestOpts.team, rink: S.crestOpts.rink, overwrite: S.crestOpts.overwrite, jersey: S.crestOpts.jersey, crest: S.crestOpts.crest, tiles: S.crestOpts.tiles, freeOnly: S.crestOpts.free };
+    const bad = NhlPcPalette.conflicts(raw); for (const k of Object.keys(raw)) o[k] = raw[k] && !bad[k]; if (o.freeOnly) { o.jersey = o.crest = o.tiles = true; } return o; }
+  function crestPalette8(shape) { // 256 x RGB of how the crest shows now (index 67 = game colour 103)
+    const p = teamPalette(); const out = new Uint8Array(768);
+    for (let i = 0; i < 256; i++) { const c = (i === J.CREST_OUTLINE ? p.game && p.game[J.CREST_OUTLINE_GAME] : (p.sprite || p)[i]) || [0, 0, 0]; out.set(c.slice(0, 3), i * 3); }
+    return out;
+  }
+  async function exportCrest(shape, kind) {
+    const name = teamCode();
+    if (kind === 'spt') { download(NhlPcCrests.exportSpit(shape), name + '-crest.spt'); return; }
+    if (kind === 'pcx') { download(NhlPcCrests.writePcx(shape.pixels, shape.width, shape.height, crestPalette8(shape)), name + '-crest.pcx'); return; }
+    const c = document.createElement('canvas'); c.width = shape.width; c.height = shape.height; c.getContext('2d').putImageData(new ImageData(J.crestRgb(shape, teamPalette()), shape.width, shape.height), 0, 0);
+    download(await new Promise((ok) => c.toBlob((b) => b.arrayBuffer().then((a) => ok(new Uint8Array(a))), 'image/png')), name + '-crest.png');
+  }
+  async function decodeImage(f) {
+    const url = URL.createObjectURL(new Blob([f.bytes]));
+    try {
+      const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error('Could not read ' + f.name + ' as an image')); i.src = url; });
+      const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      return { w: c.width, h: c.height, rgba: x.getImageData(0, 0, c.width, c.height).data };
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function importCrest(shape) {
+    const f = await readFile($('jed-import-crest')); if (!f) return;
+    const ext = f.name.toLowerCase().split('.').pop();
+    if (ext === 'spt') { const sp = NhlPcCrests.importSpit(f.bytes); if (sp.width !== shape.width || sp.height !== shape.height) throw new Error(f.name + ' is ' + sp.width + '×' + sp.height + '; ' + teamCode() + ' is ' + shape.width + '×' + shape.height);
+      shape.pixels = sp.pixels; renderZones(); status(f.name + ': crest pixels replaced (sprite colours kept as in the file)'); return; }
+    let im = ext === 'pcx' ? NhlPcCrests.readPcx(f.bytes) : await decodeImage(f);
+    if (ext === 'pcx' && f.bytes.length) { const r = im.rgba; for (let i = 0; i < im.idx.length; i++) if (im.idx[i] === 255) r[i * 4 + 3] = 0; } // JED: colour 255 = see-through
+    if (im.w > shape.width || im.h > shape.height) throw new Error(f.name + ' is ' + im.w + '×' + im.h + '; scoreboard crests are ' + shape.width + '×' + shape.height);
+    const w = shape.width, h = shape.height, ox = Math.floor((w - im.w) / 2), oy = Math.floor((h - im.h) / 2);
+    const rgba = new Uint8ClampedArray(w * h * 4); for (let y = 0; y < im.h; y++) rgba.set(im.rgba.subarray(y * im.w * 4, (y + 1) * im.w * 4), ((y + oy) * w + ox) * 4);
+    const o = crestOptions(); if (!o.team && !o.rink) throw new Error('Turn on team colour slots and/or rink colours');
+    const sides = S.crestOpts.both ? ['home', 'away'].filter((sd) => S.files[sd]) : [S.side];
+    remember(); const report = []; let pixels = null; const keepSide = S.side;
+    for (const side of sides) { // like JED: home and away records each get their own colours and map
+      S.side = side; const file = S.files[side].file; const away = side === 'away';
+      const colors = J.getColors(file, S.team); const p = teamPalette(); const rink = [];
+      if (o.rink && !away) for (let i = 0; i < 128; i++) if (p.game && p.game[i] && i !== 0) rink.push({ index: i, rgb6: p.game[i].map(NhlPcPalette.to6) });
+      const exclude = new Set(); if (away) for (let k = J.AWAY_RINK_FIRST; k < 64; k++) exclude.add(k);
+      const used = { jersey: J.jerseySlots(file, S.team), crest: J.crestSlots(file, S.team), tiles: window.JedIce ? window.JedIce.tileSlots(S.team) : new Set() };
+      const alloc = NhlPcPalette.allocate(rgba, colors, rink, Object.assign({}, o, { rink: o.rink && !away, maxColors: J.SCOREBOARD.length, exclude }), used);
+      const idx = NhlPcPalette.indexImage(rgba, alloc); const games = [...new Set(idx)].filter((v) => v !== 255);
+      if (games.length > J.SCOREBOARD.length) throw new Error(f.name + ' needs ' + games.length + ' colours; a crest has ' + J.SCOREBOARD.length);
+      alloc.colors.forEach((c, k) => { if (alloc.written.includes(k)) J.setColor(file, S.team, k, c); });
+      const spriteOf = new Map(); games.forEach((g, k) => { spriteOf.set(g, J.SCOREBOARD[k].sprite); J.setMap(file, S.team, J.SCOREBOARD[k].sprite, g); });
+      const px = Uint8Array.from(idx, (v) => (v === 255 ? 255 : spriteOf.get(v)));
+      if (!pixels) pixels = px; else if (px.some((v, i) => v !== pixels[i])) report.push('away pixel layout differs; home layout kept');
+      report.push(side + ': ' + games.length + ' colours, slots rewritten ' + (alloc.written.length ? alloc.written.join(', ') : 'none'));
+    }
+    S.side = keepSide; shape.pixels = pixels; renderAll();
+    status(f.name + ' → ' + teamCode() + ' scoreboard crest (' + im.w + '×' + im.h + '); ' + report.join('; ') + '. Save HOMEPALS/AWAYPALS and CRESTS4.PPV (or Export all).');
+  }
   /** NHL 95 PC scoreboard crest (CRESTS4.PPV shape tagged with the team code), drawn as DrawHudPanel does. */
   function scoreboardCrest(box) {
-    const shape = S.crests && S.crests.find((x) => (x.tag || '').trim().toUpperCase() === teamCode());
+    const shape = S.crests && NhlPcCrests.find(S.crests, teamCode());
     const h = document.createElement('div'); h.className = 'jed-grid-title';
     h.textContent = shape ? 'Scoreboard crest (CRESTS4.PPV ' + shape.width + ' × ' + shape.height + ', sprite colours 197–202, 213–218, 229–234, 245–250)'
       : 'Scoreboard crest: ' + (S.crests ? 'no ' + teamCode() + ' shape in CRESTS4.PPV' : 'CRESTS4.PPV not found in the game files');
@@ -320,6 +400,7 @@
     c.addEventListener('mouseleave', () => { S.hover = null; drawOverlay(); });
     c.addEventListener('click', (e) => { const p = at(e); if (p != null) clickSpot(p); });
     box.appendChild(c);
+    crestTools(box, shape);
   }
   /** Click on a spot (list, crest, scoreboard crest or the big sprite): paint it with the selected colour when
    *  "Click paints" is on, otherwise select the colour it uses. */
@@ -501,10 +582,22 @@
       input.click();
     });
   }
+  /** Export all: a store-only zip of the files that differ from what was opened. */
+  function exportAll() {
+    const same = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]); const enc = new TextEncoder(); const entries = [];
+    for (const side of ['home', 'away']) { const f = S.files[side]; if (f && !same(f.file.bytes, f.original)) entries.push({ name: side === 'home' ? 'HOMEPALS.BIN' : 'AWAYPALS.BIN', data: J.exportFile(f.file) }); }
+    if (S.crests && NhlPcCrests.edited(S.crests)) entries.push({ name: 'CRESTS4.PPV', data: NhlPcCrests.write(S.crests) });
+    for (const a of (window.JedIce ? window.JedIce.editedArenas() : [])) entries.push({ name: a.name + '.MAP', data: a.map }, { name: a.name + '.TIL', data: a.til }, { name: a.name + '-placement.json', data: enc.encode(JSON.stringify(a.json, null, 2) + '\n') });
+    if (!entries.length) { status('Nothing edited yet: no file differs from what you opened', true); return; }
+    download(NhlZipStore.zipStore(entries), 'nhl95pc-edits.zip');
+    status('nhl95pc-edits.zip: ' + entries.map((e) => e.name).join(', '));
+    return entries.map((e) => e.name);
+  }
   function guard(fn) { return async (...a) => { try { await fn(...a); } catch (err) { status(err.message, true); } }; }
   function wire() {
     $('jed-open-folder').onclick = () => $('jed-folder').click();
     $('jed-open-files').onclick = () => $('jed-files').click();
+    $('jed-export-all').addEventListener('click', guard(exportAll));
     const pick = guard(async (input) => {
       const files = Array.from(input.files || []); input.value = '';
       if (!files.length) return;
@@ -660,5 +753,6 @@
   wireTips();
   loadBase();
   Shared.serverReady = detectServer();
+  Shared.exportAll = exportAll;
   window.addEventListener('resize', () => { if (cur()) renderPreview(false); });
 })();

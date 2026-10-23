@@ -231,6 +231,16 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
     console.log('jed-ice: 26 retail arenas export byte-identically');
   } else console.log('jed-ice: NHL_PC95_DIR not set, retail check skipped');
 
+  // Export all: edited arenas survive switching teams and all land in one zip
+  await page.evaluate(() => { const m = window.JedIce.state.model; if (m && m.tiles[0] && !window.JedIce.state.ro) m.tiles[0][0] = m.tiles[0][0] === 130 ? 131 : 130; });
+  const edited = await page.evaluate(() => window.JedIce.editedArenas().map((a) => a.name));
+  if (edited.length) {
+    await page.locator('#ice-team-list .item').nth(5).click(); await page.waitForTimeout(300);
+    const after = await page.evaluate(() => window.JedIce.editedArenas().map((a) => a.name));
+    for (const n of edited) assert.ok(after.includes(n), 'edited ' + n + ' kept after switching arena: ' + after);
+    const names = await page.evaluate(() => window.JedShared.exportAll());
+    for (const n of edited) assert.ok(names.includes(n + '.MAP') && names.includes(n + '.TIL') && names.includes(n + '-placement.json'), 'zip has ' + n + ': ' + names);
+  } else console.log('jed-ice: nothing edited, Export all not checked');
   const problems = page.problems.filter((p) => !OPTIONAL.test(p));
   assert.deepStrictEqual(problems, []);
   console.log('jed-ice: ok');
