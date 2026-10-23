@@ -635,7 +635,16 @@
       return null;
     },
     homeColors(team) { const f = S.files.home || S.files.away; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; },
-    awayColors(team) { const f = S.files.away || S.files.home; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; }
+    awayColors(team) { const f = S.files.away || S.files.home; return f && team < J.teamCount(f.file) ? J.getColors(f.file, team) : null; },
+    /** Write a team's home colours (HOMEPALS); AWAYPALS is left alone (the rink only shows home colours). */
+    setHomeColors(team, colors) {
+      const f = S.files.home; if (!f || team >= J.teamCount(f.file)) throw new Error('Open HOMEPALS.BIN to change team colours');
+      const old = J.getColors(f.file, team); let n = 0;
+      colors.forEach((c, i) => { if (c.join() !== old[i].join()) { J.setColor(f.file, team, i, c); n++; } });
+      if (n && cur()) renderAll(); return n;
+    },
+    /** Team slots (0..63) the home jersey and the scoreboard crest point at. */
+    usage(team) { const f = S.files.home; if (!f || team >= J.teamCount(f.file)) return { jersey: new Set(), crest: new Set() }; return { jersey: J.jerseySlots(f.file, team), crest: J.crestSlots(f.file, team) }; }
   };
 
   // Instant tooltips for anything with data-tip (swatches here and on the Centre ice tab).

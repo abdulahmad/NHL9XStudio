@@ -2,7 +2,7 @@
  * from jed.js for the loaded game folder / server game and the home & away team palettes. */
 (function () {
   'use strict';
-  const R = NhlPcRink, J = NhlPcJersey, X = window.JedShared;
+  const R = NhlPcRink, J = NhlPcJersey, A = NhlPcPalette, X = window.JedShared;
   const $ = (id) => document.getElementById(id);
   const I = { team: 0, away: 1, model: null, original: null, rink: null, rinkNote: '', tool: 'paint', tile: 0, color: 0,
     zoom: 2, grid: true, undo: [], redo: [], ro: false, pal: null, drag: null, loadedFor: '' };
@@ -14,10 +14,16 @@
   function palette() {
     const S = st(); const rink = S.base && S.base.rinkPlain;
     if (!rink) return null;
-    return R.gamePalette(rink, X.homeColors(I.team), X.awayColors(I.away));
+    return R.gamePalette(rink, I.float ? I.float.colors : X.homeColors(I.team), X.awayColors(I.away));
   }
-  function remember() { I.undo.push(R.cloneModel(I.model)); if (I.undo.length > 100) I.undo.shift(); I.redo = []; }
-  function swap(a, b) { if (!a.length) return; b.push(R.cloneModel(I.model)); I.model = a.pop(); renderAll(); }
+  /** Undo steps hold the model and the home team colours (an image import can rewrite both). */
+  function snap() { const m = R.cloneModel(I.model); const c = X.homeColors(I.team); m.colors = c && c.map((x) => x.slice()); return m; }
+  function remember() { I.undo.push(snap()); if (I.undo.length > 100) I.undo.shift(); I.redo = []; }
+  function swap(a, b) {
+    if (!a.length) return; b.push(snap()); I.model = a.pop();
+    if (I.model.colors) { try { X.setHomeColors(I.team, I.model.colors); } catch (e) { /* no HOMEPALS */ } }
+    renderAll();
+  }
 
   async function load() {
     const S = st(); if (!S.sources) return;
@@ -38,7 +44,7 @@
       I.model = { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: place.slice(), flag: 16 };
       I.rinkNote += 'No ' + name + '.TIL / .MAP in what you opened. ';
     }
-    I.undo = []; I.redo = []; I.sel = null; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); I.loadedFor = S.game + name;
+    I.undo = []; I.redo = []; I.sel = null; I.float = null; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); I.loadedFor = S.game + name;
     renderAll();
   }
 
@@ -53,7 +59,30 @@
   function rinkPixels() {
     if (I.ro) return I.original ? R.composite(I.rink, I.original.map, I.original.tiles, I.original.place, 94) : R.composite(I.rink, null);
     const b = built(); const place = b ? b.place : I.model.place;
-    return b ? R.composite(I.rink, b.map, b.tiles, place, I.ro ? 94 : 95) : R.composite(I.rink, null);
+    const out = b ? R.composite(I.rink, b.map, b.tiles, place, I.ro ? 94 : 95) : R.composite(I.rink, null);
+    if (I.float) floatCells().forEach(({ col, row }) => { // the floating import, drawn on top
+      const f = I.float;
+      for (let py = 0; py < 8; py++) for (let px = 0; px < 8; px++) {
+        const sx = col * 8 + px, sy = row * 8 + py; if (sx >= f.w || sy >= f.h) continue;
+        const v = f.idx[sy * f.w + sx]; const X0 = (f.x + col) * 8 + px, Y0 = (f.y + row) * 8 + py;
+        if (v !== R.CLEAR && X0 < R.PX_W && Y0 < R.PX_H) out[Y0 * R.PX_W + X0] = v;
+      }
+    });
+    return out;
+  }
+  /** Cells of the floating import that will become tiles: { col, row, x, y, over } (over = a non-empty cell). */
+  function floatCells() {
+    const f = I.float, out = []; if (!f) return out;
+    for (let row = 0; row < Math.ceil(f.h / 8); row++) for (let col = 0; col < Math.ceil(f.w / 8); col++) {
+      const x = f.x + col, y = f.y + row; if (x < 0 || y < 0 || x >= R.W || y >= R.H) continue;
+      if (f.pick && !f.pick(col, row)) continue;
+      let any = false; for (let py = 0; py < 8 && !any; py++) for (let px = 0; px < 8; px++) { const sx = col * 8 + px, sy = row * 8 + py; if (sx < f.w && sy < f.h && f.idx[sy * f.w + sx] !== R.CLEAR) { any = true; break; } }
+      if (!any) continue;
+      const over = !f.replace && I.model.cells[y * R.W + x] >= 0;
+      if (over && !$('ice-o-cells').checked) continue;
+      out.push({ col, row, x, y, over });
+    }
+    return out;
   }
   function renderRink() {
     const c = $('ice-rink'), z = I.zoom; c.width = R.PX_W * z; c.height = R.PX_H * z;
@@ -67,6 +96,10 @@
       for (let x = 0; x <= R.W; x++) { ctx.moveTo(x * 8 * z + 0.5, 0); ctx.lineTo(x * 8 * z + 0.5, c.height); }
       for (let y = 0; y <= R.H; y++) { ctx.moveTo(0, y * 8 * z + 0.5); ctx.lineTo(c.width, y * 8 * z + 0.5); }
       ctx.stroke();
+    }
+    if (I.float) {
+      ctx.fillStyle = 'rgba(255,80,80,.45)'; for (const c of floatCells()) if (c.over) ctx.fillRect(c.x * 8 * z, c.y * 8 * z, 8 * z, 8 * z);
+      ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(I.float.x * 8 * z, I.float.y * 8 * z, Math.ceil(I.float.w / 8) * 8 * z, Math.ceil(I.float.h / 8) * 8 * z); ctx.setLineDash([]);
     }
     if (I.sel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.strokeRect(I.sel.x * 8 * z + 1, I.sel.y * 8 * z + 1, I.sel.w * 8 * z - 2, I.sel.h * 8 * z - 2); ctx.setLineDash([]); }
     if (bb) { ctx.strokeStyle = '#f5b301'; ctx.lineWidth = 2; ctx.strokeRect(bb.x * 8 * z, bb.y * 8 * z, bb.w * 8 * z, bb.h * 8 * z); }
@@ -131,11 +164,30 @@
     arenas().forEach((a, i) => { const o = document.createElement('option'); o.value = i; o.textContent = teamName(i); sel.appendChild(o); });
     sel.value = cur;
   }
+  // ---- import colour options -------------------------------------------------------------------------------------
+  const OPTS = ['team', 'rink', 'overwrite', 'jersey', 'crest', 'tiles', 'free'];
+  function opts() { const o = {}; for (const k of OPTS) o[k === 'free' ? 'freeOnly' : k] = $('ice-o-' + k).checked && !$('ice-o-' + k).disabled; return o; }
+  function tileSlots() { const s = new Set(); I.model.cells.forEach((e) => { if (e < 0) return; const t = I.model.tiles[e & R.CELL]; if (t) for (const v of t) if (v >= 128 && v < 192) s.add(v - 128); }); return s; }
+  function usage() { const u = X.usage(I.team); return { jersey: u.jersey, crest: u.crest, tiles: tileSlots() }; }
+  function renderOpts() {
+    const raw = {}; for (const k of OPTS) raw[k === 'free' ? 'freeOnly' : k] = $('ice-o-' + k).checked;
+    const bad = A.conflicts(raw);
+    for (const k of OPTS) {
+      const why = bad[k === 'free' ? 'freeOnly' : k]; const el = $('ice-o-' + k); el.disabled = I.ro || Boolean(why);
+      el.parentElement.setAttribute('aria-disabled', String(Boolean(why))); el.parentElement.title = why || '';
+    }
+    if (raw.freeOnly) for (const k of ['jersey', 'crest', 'tiles']) { $('ice-o-' + k).disabled = true; $('ice-o-' + k).parentElement.setAttribute('aria-disabled', 'true'); $('ice-o-' + k).parentElement.title = '"Only free team slots" already keeps every used colour'; }
+    if (!I.model) return;
+    const u = usage(); const sets = A.slotSets(opts(), u);
+    $('ice-slots').textContent = 'Team slots: jersey uses ' + u.jersey.size + ', crest ' + u.crest.size + ', tiles ' + u.tiles.size + ' · ' + sets.free.length + ' free · ' +
+      (opts().team ? sets.writable.length + ' may be rewritten' : 'none rewritten');
+  }
   function renderAll() {
     if (!I.model) return;
     I.pal = palette();
     document.querySelectorAll('.ice-edit').forEach((el) => { el.disabled = I.ro; });
-    renderTeams(); renderSwatches(); renderTiles(); renderTileEdit(); renderPlace(); renderRink();
+    renderTeams(); renderSwatches(); renderTiles(); renderTileEdit(); renderPlace(); renderRink(); renderOpts();
+    $('ice-float-bar').hidden = !I.float; if (I.float) $('ice-float-name').textContent = I.float.name + ' (' + I.float.w + '×' + I.float.h + ') at ' + I.float.x + ', ' + I.float.y;
     document.querySelectorAll('.ice-needsel').forEach((el) => { el.disabled = I.ro || !I.sel; });
     $('ice-paste').disabled = I.ro || !I.clip;
     $('ice-sel-info').textContent = I.sel ? 'Selection ' + I.sel.w + ' × ' + I.sel.h + ' at ' + I.sel.x + ', ' + I.sel.y : (I.clip ? 'Clipboard ' + I.clip.w + ' × ' + I.clip.h : '');
@@ -170,6 +222,9 @@
   function onDown(e) {
     if (I.ro || !I.model) return; const p = cellAt(e); if (!p) return;
     const k = p.y * R.W + p.x;
+    if (I.float) { // while an import floats, the canvas drags it
+      I.drag = { float: true, x: p.x, y: p.y }; $('ice-rink').setPointerCapture(e.pointerId); I.down = true; return;
+    }
     if (I.tool === 'pick') { const v = rinkPixels()[p.py * R.PX_W + p.px]; if (R.usable(v)) I.color = v; X.status('Picked index ' + v + ' (' + R.rangeOf(v).label + ')'); renderSwatches(); return; }
     remember();
     if (I.tool === 'paint') paintAt(p);
@@ -187,6 +242,11 @@
   }
   function onMove(e) {
     if (!I.down) return; const p = cellAt(e); if (!p) return;
+    if (I.drag && I.drag.float) {
+      if (p.x === I.drag.x && p.y === I.drag.y) return;
+      I.float.x += p.x - I.drag.x; I.float.y += p.y - I.drag.y; I.drag.x = p.x; I.drag.y = p.y; renderRink();
+      $('ice-float-name').textContent = I.float.name + ' (' + I.float.w + '×' + I.float.h + ') at ' + I.float.x + ', ' + I.float.y; return;
+    }
     if (I.tool === 'paint') { paintAt(p); renderRink(); renderTileEdit(); }
     else if (I.tool === 'place') { I.model.cells[p.y * R.W + p.x] = I.tile; renderRink(); }
     else if (I.tool === 'erase') { I.model.cells[p.y * R.W + p.x] = -1; renderRink(); }
@@ -259,27 +319,38 @@
   async function importImage(file) {
     const im = await readImage(file);
     if (im.w > R.PX_W || im.h > R.PX_H) throw new Error(file.name + ' is ' + im.w + '×' + im.h + '; the rink is ' + R.PX_W + '×' + R.PX_H + ' pixels');
-    const allowed = []; for (let i = 0; i < 256; i++) if (R.usable(i) && i !== R.CLEAR && ($('ice-q-home').checked || R.rangeOf(i).source !== 'home')) allowed.push(i);
-    const idx = R.quantize(im.rgba, I.pal, allowed);
-    const tw = Math.ceil(im.w / 8), th = Math.ceil(im.h / 8);
+    const o = opts(); const colors = X.homeColors(I.team);
+    if (o.team && !colors) throw new Error('Team colour slots need HOMEPALS.BIN: open it, or turn off "team colour slots"');
+    const rink = []; for (let i = 0; i < 256; i++) { const r = R.rangeOf(i); if (r.usable && r.source !== 'home' && i !== R.CLEAR && I.pal && I.pal[i]) rink.push({ index: i, rgb6: I.pal[i].map(A.to6) }); }
+    const alloc = A.allocate(im.rgba, colors || [], rink, o, usage());
+    const idx = A.indexImage(im.rgba, alloc);
     const full = im.w === R.PX_W && im.h === R.PX_H;
-    const mode = $('ice-q-cells').value;
-    let pick = null, how = 'every cell with a visible pixel';
-    const x = full ? 0 : Math.max(0, Math.min(R.W - tw, Math.round((R.W - tw) / 2))), y = full ? 0 : Math.max(0, Math.min(R.H - th, Math.round((R.H - th) / 2)));
+    const tw = Math.ceil(im.w / 8), th = Math.ceil(im.h / 8);
+    const x = full ? 0 : Math.max(0, Math.round((R.W - tw) / 2)), y = full ? 0 : Math.max(0, Math.round((R.H - th) / 2));
+    const mode = $('ice-q-cells').value; let pick = null, how = 'every cell with a visible pixel';
     if (mode === 'diff') {
       if (!I.rink) throw new Error('"Differs from the rink" needs RINK.QFS: open the game folder');
       pick = R.cellsDiffering(idx, im.w, im.h, x, y, I.rink); how = 'cells that differ from RINK.QFS';
     } else if (mode === 'mask') {
       if (!I.mask) throw new Error('Choose a mask image first (Mask…): white cells become tiles');
-      const mk = I.mask, mf = { name: mk.name };
-      if (mk.w !== im.w || mk.h !== im.h) throw new Error('The mask ' + mf.name + ' is ' + mk.w + '×' + mk.h + '; it must match the image (' + im.w + '×' + im.h + ')');
-      pick = R.cellsFromMask(mk.rgba, mk.w, mk.h); how = 'white cells of ' + mf.name;
+      if (I.mask.w !== im.w || I.mask.h !== im.h) throw new Error('The mask ' + I.mask.name + ' is ' + I.mask.w + '×' + I.mask.h + '; it must match the image (' + im.w + '×' + im.h + ')');
+      pick = R.cellsFromMask(I.mask.rgba, I.mask.w, I.mask.h); how = 'white cells of ' + I.mask.name;
     }
-    const keep = $('ice-q-replace').checked ? { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: I.model.place.slice(), flag: I.model.flag } : I.model;
+    I.float = { name: file.name, idx, w: im.w, h: im.h, x, y, pick, colors: o.team ? alloc.colors : colors, written: alloc.written, replace: $('ice-q-replace').checked, how };
+    renderAll();
+    X.status('Floating ' + file.name + ' (' + im.w + '×' + im.h + '), ' + how + '; ' + alloc.written.length + ' team slot' + (alloc.written.length === 1 ? '' : 's') + ' rewritten' +
+      (alloc.written.length ? ' (' + alloc.written.join(', ') + ')' : '') + '. Drag to place, then Apply or Cancel.');
+  }
+  function applyFloat() {
+    const f = I.float; if (!f) return;
+    const keep = new Set(floatCells().map((c) => c.row * 4096 + c.col));
+    const base = f.replace ? { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: I.model.place.slice(), flag: I.model.flag } : I.model;
     let next;
-    try { next = R.placeImage(keep, idx, im.w, im.h, x, y, pick); } catch (e) { if (e.tiles) X.status(e.message, true); throw e; }
-    remember(); I.model = next; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); renderAll();
-    X.status('Imported ' + file.name + ' (' + im.w + '×' + im.h + ')' + (full ? ' as a full rink' : '') + ', ' + how + ': ' + R.tileCount(I.model) + ' / ' + R.MAX_TILES + ' tiles after removing duplicates' + (full ? '' : '; drag with Move to place it'));
+    try { next = R.placeImage(base, f.idx, f.w, f.h, f.x, f.y, (col, row) => keep.has(row * 4096 + col)); } catch (e) { if (e.tiles) X.status(e.message, true); throw e; }
+    remember();
+    if (f.written.length) X.setHomeColors(I.team, f.colors);
+    I.model = next; I.float = null; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); renderAll();
+    X.status('Applied ' + f.name + ': ' + R.tileCount(I.model) + ' / ' + R.MAX_TILES + ' tiles after removing duplicates' + (f.written.length ? '; HOMEPALS team slots ' + f.written.join(', ') + ' rewritten' : ''));
   }
   function file(input) { return new Promise((ok) => { input.value = ''; input.onchange = () => ok(input.files[0] || null); input.click(); }); }
   async function bytesOf(f) { return new Uint8Array(await f.arrayBuffer()); }
@@ -333,6 +404,9 @@
       remember(); I.model = r.model; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL);
       X.status('Removed ' + r.removed + ' unused tile' + (r.removed > 1 ? 's' : '') + '; ' + I.model.tiles.length + ' left, map renumbered (Undo restores them)'); renderAll();
     });
+    $('ice-float-apply').addEventListener('click', X.guard(applyFloat));
+    $('ice-float-cancel').addEventListener('click', () => { I.float = null; renderAll(); X.status('Import cancelled'); });
+    OPTS.concat(['cells']).forEach((k) => $('ice-o-' + k).addEventListener('change', () => { renderOpts(); if (I.float) renderRink(); }));
     $('ice-import-image').addEventListener('click', X.guard(async () => { const f = await file($('ice-image-file')); if (f) await importImage(f); }));
     $('ice-mask').addEventListener('click', X.guard(async () => {
       const f = await file($('ice-mask-file')); if (!f) return;
