@@ -18,7 +18,10 @@
       <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
-      <select id="jed-server" hidden aria-label="Game on this server"></select>
+      <div id="jed-game" class="pin-options" role="group" aria-label="Game" hidden>
+        <button type="button" id="jed-game-95" data-game="nhl95pc" aria-pressed="false">NHL 95 PC</button>
+        <button type="button" id="jed-game-94" data-game="nhl94pc" aria-pressed="false">NHL 94 PC</button>
+      </div>
       <button type="button" id="jed-open-folder" class="ghost-btn" title="An NHL 94 PC or 95 PC install folder: HOMEPALS/AWAYPALS plus the PPV sprites for the preview">Open game folder…</button>
       <button type="button" id="jed-open-files" class="ghost-btn" title="HOMEPALS.BIN and/or AWAYPALS.BIN (plus PPV sheets and RINKPAL for the preview)">Open files…</button>
       <input type="file" id="jed-folder" hidden multiple webkitdirectory>

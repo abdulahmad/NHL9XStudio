@@ -98,3 +98,4 @@
 #ice-rink { display: block; cursor: crosshair; }
 .ice-warn { background: #4a2a00; color: #ffd27a; border: 1px solid #a66b00; padding: 6px 8px; border-radius: 6px; font-size: 13px; }
 #ice-count.error { color: var(--red); }
+#jed-game[hidden], #jed-game button[hidden] { display: none; }

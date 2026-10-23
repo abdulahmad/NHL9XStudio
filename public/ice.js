@@ -294,7 +294,7 @@
     document.querySelector('main.jed-main').hidden = ice; $('ice-main').hidden = !ice;
     if (ice && (!I.model || I.loadedFor !== st().game + code())) X.guard(load)();
     else if (ice) renderAll();
-    if (ice && !st().sources) X.status('Open an NHL 95 PC folder (or pick the game on this server) to edit its centre ice logos');
+    if (ice && !st().sources) X.status('Open an NHL 95 PC game folder or its files to edit its centre ice logos');
   }
   wire();
   window.JedIce = { state: I, load, tab };

@@ -18,7 +18,7 @@ const SUITES = [
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink',
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed', 'jed-ice'];
+const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed', 'jed-ice', 'jed-server'];
 const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
@@ -56,7 +56,7 @@ const RULES = [
   { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'pc-rink', 'browser:jed', 'browser:jed-ice'], why: 'jersey palette format' },
   { re: /^lib\/pc-rink\.js$/, tests: ['pc-rink', 'browser:jed-ice'], why: 'centre ice .TIL / .MAP format' },
   { re: /^test\/pc-rink\.js$/, tests: ['pc-rink'], why: 'centre ice tests' },
-  { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed', 'browser:jed-ice'], why: 'jersey editor page' },
+  { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed', 'browser:jed-ice', 'browser:jed-server'], why: 'jersey editor page' },
   { re: /^public\/ice\.js$/, tests: ['browser:jed-ice'], why: 'centre ice tab' },
   { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },

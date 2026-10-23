@@ -541,11 +541,20 @@
     try { const r = await fetch('api/games'); if (!r.ok) return; list = await r.json(); } catch (err) { return; }
     const pcs = (list || []).filter((g) => (g.kind === 'pc94' || g.kind === 'pc95') && g.pixels);
     if (!pcs.length) return;
-    const sel = $('jed-server'); sel.hidden = false;
-    sel.innerHTML = '<option value="">Game on this server…</option>' + pcs.map((g) => '<option value="' + g.id + '">' + g.title + '</option>').join('');
-    sel.onchange = guard(async () => { if (sel.value) await loadServer(sel.value); });
+    // Auto-load the server's PC game (NHL 95 PC first). With both, the 94 / 95 switch picks; no menu.
+    const pick = (id) => pcs.find((g) => g.id === id);
     const want = new URLSearchParams(location.hash.slice(1)).get('game');
-    if (want && pcs.some((g) => g.id === want)) { sel.value = want; await guard(loadServer)(want); }
+    const first = pick(want) || pcs.find((g) => g.kind === 'pc95') || pcs[0];
+    const group = $('jed-game');
+    const mark = (id) => group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.game === id)));
+    group.querySelectorAll('button').forEach((b) => {
+      const g = pick(b.dataset.game); b.hidden = !g;
+      if (g) b.addEventListener('click', guard(async () => { mark(g.id); await loadServer(g.id); }));
+    });
+    group.hidden = pcs.length < 2;
+    mark(first.id);
+    const before = $('jed-status').textContent;
+    try { await loadServer(first.id); } catch (err) { status(before); group.hidden = true; } // nothing usable: open a folder instead
   }
 
   /** Splitter between the big preview and the frame grid; default 4 rows of thumbnails, size kept in localStorage. */
