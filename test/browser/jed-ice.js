@@ -38,6 +38,8 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   const page = await newPage(1920);
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto(url + 'jed.html');
+  // a server with pc95/ auto-loads it: let that finish before opening the test files
+  await page.evaluate(() => window.JedShared.serverReady);
   const t0 = Buffer.alloc(64, 5), t1 = Buffer.alloc(64, 255); t1[9] = 140; // rink colour 5; home colour 140 on clear
   const til = Buffer.concat([t0, t1]);
   const map = Buffer.from([2, 0, 2, 0, 16, 0, 0, 0, 1, 0, 1, 0, 0, 0]);
@@ -59,6 +61,29 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#ice-swatches .ice-sw.src-fixed').count(), 4);
   assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['21', '38']);
   assert.match(await page.textContent('#ice-count'), /^2 \/ 1024/);
+  // blocks: select the logo, mirror twice = unchanged; 90 adds tiles; copy / paste; tile delete / unused
+  await page.click('#ice-sel-logo');
+  assert.match(await page.textContent('#ice-sel-info'), /^Selection \d+ × \d+ at 21, 38/);
+  await page.click('[data-xf="h"]');
+  assert.match(await page.textContent('#jed-status'), /Mirrored .*tile pixels unchanged/);
+  await page.click('[data-xf="h"]');
+  assert.ok((await download(page, '#ice-export-map')).bytes.equals(map), 'mirror twice = original map');
+  await page.click('[data-xf="90"]');
+  assert.match(await page.textContent('#jed-status'), /Rotated 90°/);
+  await page.click('#ice-undo'); await page.click('#ice-undo'); await page.click('#ice-undo');
+  assert.ok((await download(page, '#ice-export-map')).bytes.equals(map), 'undo transforms');
+  await page.click('#ice-sel-logo'); await page.click('#ice-copy'); await page.keyboard.press('Escape');
+  await page.click('#ice-paste');
+  assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['0', '0'], 'pasted at 0,0');
+  await page.click('#ice-undo');
+  await page.click('#ice-unused');
+  assert.match(await page.textContent('#jed-status'), /No unused tiles/);
+  page.once('dialog', (d) => d.accept());
+  await page.click('#ice-del-tile');
+  assert.match(await page.textContent('#jed-status'), /Deleted tile \d+; \d+ cells? that used it are now empty/);
+  await page.click('#ice-undo');
+  await page.keyboard.press('Escape');
+  await page.click('[data-tool="paint"]');
   // unedited export is byte-identical
   assert.ok((await download(page, '#ice-export-til')).bytes.equals(til));
   assert.ok((await download(page, '#ice-export-map')).bytes.equals(map));
@@ -141,6 +166,15 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
         await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
         await upload(page, '#ice-import-image', process.env.NHL_ICE_IMAGE);
         await page.screenshot({ path: path.join(SHOT, 'ice-import-1920x1080.png') });
+      }
+      { // blocks: TOR logo selected, copied, pasted and rotated 90° at 4x zoom
+        await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
+        await page.$eval('#ice-zoom', (e) => { e.value = '4'; e.dispatchEvent(new Event('input')); });
+        await page.click('#ice-sel-logo'); await page.click('#ice-copy');
+        await page.$eval('#ice-x', () => 0); await page.keyboard.press('Escape');
+        await page.click('#ice-paste'); await page.click('[data-xf="90"]');
+        await page.screenshot({ path: path.join(SHOT, 'ice-blocks-1920x1080.png') });
+        await page.$eval('#ice-zoom', (e) => { e.value = '2'; e.dispatchEvent(new Event('input')); });
       }
       await page.click('#jed-away'.replace('jed-away', 'tab-jerseys')); await page.click('#jed-away'); await page.waitForTimeout(300);
       await page.screenshot({ path: path.join(SHOT, 'jerseys-away-1920x1080.png') });
