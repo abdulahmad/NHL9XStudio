@@ -250,14 +250,24 @@
   function zoneGroups() {
     const SHADES = ['dark', 'medium', 'light'];
     const groups = []; const byBase = new Map();
+    // Rows without dark/medium/light in their names: columns are dark, medium, light.
+    const FIXED = [['yoke', ['yoke 3', 'yoke 2', 'yoke 1']], ['upper body', ['goalie mask', 'yoke corner', 'shoulder patch']],
+      ['waist 1', ['waist 1 hidden', 'waist 1 even', 'waist 1 odd']]];
+    const fixedOf = new Map(); for (const [base, names] of FIXED) names.forEach((n, i) => fixedOf.set(n, { base, short: n === base ? n : n.replace(/^waist 1 /, ''), i }));
     for (const z of J.ZONES) {
+      const f = fixedOf.get(z.name);
+      if (f) {
+        let g = byBase.get(f.base);
+        if (!g) { g = { base: f.base, zones: [], fixed: true }; byBase.set(f.base, g); groups.push(g); }
+        g.zones[f.i] = Object.assign({}, z, { short: f.short }); continue;
+      }
       const words = z.name.split(' '); const last = words[words.length - 1];
       const base = SHADES.includes(last) ? words.slice(0, -1).join(' ') : z.name;
       let g = byBase.get(base);
       if (!g) { g = { base, zones: [] }; byBase.set(base, g); groups.push(g); }
       g.zones.push(Object.assign({ short: SHADES.includes(last) ? last : '' }, z));
     }
-    for (const g of groups) g.zones.sort((x, y) => SHADES.indexOf(x.short) - SHADES.indexOf(y.short));
+    for (const g of groups) if (!g.fixed) g.zones.sort((x, y) => SHADES.indexOf(x.short) - SHADES.indexOf(y.short));
     return groups;
   }
   function pixelGrid(box, title, list, cols, map, colors) {
@@ -275,7 +285,7 @@
       if (g.zones.length === 1 && !g.zones[0].short) { box.appendChild(zoneButton(Object.assign({}, g.zones[0], { short: g.base }), map, colors)); continue; }
       const row = document.createElement('div'); row.className = 'jed-zgroup';
       const name = document.createElement('b'); name.textContent = g.base; row.appendChild(name);
-      for (const z of g.zones) row.appendChild(zoneButton(Object.assign({}, z, { short: z.short || z.name.slice(g.base.length + 1) }), map, colors));
+      for (const z of g.zones) row.appendChild(zoneButton(Object.assign({}, z, { short: z.short || z.name.slice(g.base.length + 1), shade: g.fixed ? ['dark', 'medium', 'light'][g.zones.indexOf(z)] : null }), map, colors));
       box.appendChild(row);
     }
   }
