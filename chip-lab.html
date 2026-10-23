@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-asset-versions>(function(){var V={"anim/Crowd.anim":"be0ef785a3","anim/Puck.anim":"56df9f431a","anim/Sprites.anim":"41c2b8392f","anim/Zam.anim":"6dd540000c","data/audio/nhl92-68k-driver.json":"8cca4d9eb5","data/audio/nhl92-chip-tests.json":"bb71a44f19","data/audio/nhl92-gm-map.json":"fcce3b2ed4","data/audio/nhl92-patch-analysis.json":"0390b0fb71","data/audio/nhl92-sound-chain.json":"cd8dd816b7","data/audio/nhl92.json":"124c0a1004","data/audio/nhl93s-gm-map.json":"25ba0d721c","data/audio/nhl93s-instrument-analysis.json":"7c5b677131","data/audio/nhl93s-sound.json":"020b1f9441","data/audio/nhl94.json":"b761c197be","data/audio/nhl94s-gm-map.json":"4b129c4c92","data/audio/nhl94s-sound-analysis.json":"db72393250","data/audio/nhl94s-sound.json":"05148f7b10","data/audio/nhl95-gm-map.json":"17683f2409","data/audio/nhl95-sound-chain.json":"171eb1263b","data/audio/nhl95.json":"d859139cd2","data/audio/nhl9x-dac-analysis.json":"a5789c09fb","data/audio/nhl9x-gm-map.json":"85b50c7b90","data/audio/nhl9x-patch-analysis.json":"60ffbfb058","data/audio/nhl9x-sound-chain.json":"a5855ca283","data/audio/nhlpa93.json":"4e8292c8e0","data/fixtures/README.md":"311d0aeaf7","data/fixtures/nhl92-sound-fixture.json":"e1b8a0714c","data/fixtures/nhl92-sound-slice.bin":"d0ed9bc79b","data/fixtures/nhl92-z80-program.bin":"781163eeb0","data/fixtures/nhl93-sound-fixture.json":"668dac7c2e","data/fixtures/nhl93-sound-slice.bin":"d2bf0412cc","data/fixtures/nhl94-sound-fixture.json":"7b17bdabd8","data/fixtures/nhl94-sound-slice.bin":"2c5043f83a","data/fixtures/nhl95-sound-fixture.json":"e33a3f8d2f","data/fixtures/nhl95-sound-slice.bin":"dc5b637c43","data/frames.asm":"ef7420738a","data/frames93.asm":"c40dabad92","data/frames93snes.asm":"e17f5e58ca","data/frames94.asm":"8fb29d5dc6","data/frames94pc.asm":"2879436815","data/frames94snes.asm":"f63e0ef674","data/frames95.asm":"9f1adec2ee","data/frames95pc.asm":"09e254abde","data/pals/genesis/ALLSTARH.pal":"9794c5d2dd","data/pals/genesis/ALLSTARV.pal":"7e804ada01","data/pals/genesis/Bruinsh.pal":"63f9d53404","data/pals/genesis/Bruinsv.pal":"6a5d10bde0","data/pals/genesis/Campbellh.pal":"7e804ada01","data/pals/genesis/Campbellv.pal":"9794c5d2dd","data/pals/genesis/Kingsh.pal":"9a32c8a410","data/pals/genesis/Kingsv.pal":"b6085d4000","data/pals/genesis/Redwingsh.pal":"d15792d377","data/pals/genesis/Redwingsv.pal":"ccd237202d","data/pals/genesis/Sharksh.pal":"b427f51fc6","data/pals/genesis/Sharksv.pal":"1033ecb093","data/pals/genesis/Walesh.pal":"7e804ada01","data/pals/genesis/Walesv.pal":"9794c5d2dd","data/pals/genesis/blackhawksh.pal":"96db84f48c","data/pals/genesis/blackhawksv.pal":"dcbb952b1f","data/pals/genesis/bluesh.pal":"d33710b025","data/pals/genesis/bluesv.pal":"77b7424bb1","data/pals/genesis/canadiensh.pal":"2ea85bfcc8","data/pals/genesis/canadiensv.pal":"70463c45ce","data/pals/genesis/canucksh.pal":"2959275f60","data/pals/genesis/canucksv.pal":"e42a083cf0","data/pals/genesis/capitalsh.pal":"987cfcc3ad","data/pals/genesis/capitalsv.pal":"5984d4092d","data/pals/genesis/devilsh.pal":"4e4cd60803","data/pals/genesis/devilsv.pal":"44097f7192","data/pals/genesis/flamesh.pal":"b8d2e4f9a6","data/pals/genesis/flamesv.pal":"5400cb4324","data/pals/genesis/flyersh.pal":"6db66ee9c1","data/pals/genesis/flyersv.pal":"dc14f5e5c9","data/pals/genesis/islandersh.pal":"5c041da397","data/pals/genesis/islandersv.pal":"6057b3933e","data/pals/genesis/jetsh.pal":"860f0a92fb","data/pals/genesis/jetsv.pal":"1f6d6b5c10","data/pals/genesis/mapleleafsh.pal":"0053a546ed","data/pals/genesis/mapleleafsv.pal":"bfb778acc3","data/pals/genesis/nordiquesh.pal":"794ce345af","data/pals/genesis/nordiquesv.pal":"819ff9c9dc","data/pals/genesis/northstarsh.pal":"21bda3ad49","data/pals/genesis/northstarsv.pal":"01cd8ecf12","data/pals/genesis/oilersh.pal":"733591f1b8","data/pals/genesis/oilersv.pal":"f4401cc356","data/pals/genesis/penguinsh.pal":"6135251ffd","data/pals/genesis/penguinsv.pal":"78b9c813b7","data/pals/genesis/rangersh.pal":"b7ead56656","data/pals/genesis/rangersv.pal":"8ea9e3e65f","data/pals/genesis/sabresh.pal":"f36b792441","data/pals/genesis/sabresv.pal":"54673d086e","data/pals/genesis/whalersh.pal":"41c395c547","data/pals/genesis/whalersv.pal":"af9ddd3835","data/pals/genesis95/Bruinsh.pal":"122ebf5903","data/pals/genesis95/Bruinsv.pal":"5b47de1d2c","data/pals/genesis95/anah.pal":"55d42712d4","data/pals/genesis95/anav.pal":"03408a2f89","data/pals/genesis95/flamesh.pal":"77d0ea5ec0","data/pals/genesis95/flamesv.pal":"6b43ae25ed","data/pals/genesis95/sabresh.pal":"31c86c498a","data/pals/genesis95/sabresv.pal":"c9a7f5aebd","data/pals/snes/ASEh.snespal":"7e804ada01","data/pals/snes/ASEv.snespal":"9794c5d2dd","data/pals/snes/ASWh.snespal":"7e804ada01","data/pals/snes/ASWv.snespal":"9794c5d2dd","data/pals/snes/BOSh.snespal":"63f9d53404","data/pals/snes/BOSv.snespal":"6a5d10bde0","data/pals/snes/BUFh.snespal":"f36b792441","data/pals/snes/BUFv.snespal":"54673d086e","data/pals/snes/CGYh.snespal":"b8d2e4f9a6","data/pals/snes/CGYv.snespal":"5400cb4324","data/pals/snes/CHIh.snespal":"96db84f48c","data/pals/snes/CHIv.snespal":"dcbb952b1f","data/pals/snes/DETh.snespal":"d15792d377","data/pals/snes/DETv.snespal":"ccd237202d","data/pals/snes/EDMh.snespal":"733591f1b8","data/pals/snes/EDMv.snespal":"f4401cc356","data/pals/snes/HFDh.snespal":"41c395c547","data/pals/snes/HFDv.snespal":"af9ddd3835","data/pals/snes/LAh.snespal":"9a32c8a410","data/pals/snes/LAv.snespal":"b6085d4000","data/pals/snes/LIh.snespal":"5c041da397","data/pals/snes/LIv.snespal":"6057b3933e","data/pals/snes/MINh.snespal":"8e5ce1653b","data/pals/snes/MINv.snespal":"a6551b366e","data/pals/snes/MTLh.snespal":"2ea85bfcc8","data/pals/snes/MTLv.snespal":"70463c45ce","data/pals/snes/NJh.snespal":"10a56c9229","data/pals/snes/NJv.snespal":"79ea0475e0","data/pals/snes/NYh.snespal":"b7ead56656","data/pals/snes/NYv.snespal":"8ea9e3e65f","data/pals/snes/OTWh.snespal":"6db66ee9c1","data/pals/snes/OTWv.snespal":"dc14f5e5c9","data/pals/snes/PHIh.snespal":"6db66ee9c1","data/pals/snes/PHIv.snespal":"dc14f5e5c9","data/pals/snes/PITh.snespal":"6135251ffd","data/pals/snes/PITv.snespal":"78b9c813b7","data/pals/snes/QUEh.snespal":"794ce345af","data/pals/snes/QUEv.snespal":"819ff9c9dc","data/pals/snes/Rink.snespal":"f31d514c7d","data/pals/snes/SJh.snespal":"b427f51fc6","data/pals/snes/SJv.snespal":"1033ecb093","data/pals/snes/STLh.snespal":"d33710b025","data/pals/snes/STLv.snespal":"77b7424bb1","data/pals/snes/TBYh.snespal":"39a62b3d33","data/pals/snes/TBYv.snespal":"24afe2bdfa","data/pals/snes/TORh.snespal":"0053a546ed","data/pals/snes/TORv.snespal":"bfb778acc3","data/pals/snes/VANh.snespal":"2959275f60","data/pals/snes/VANv.snespal":"e42a083cf0","data/pals/snes/WPGh.snespal":"860f0a92fb","data/pals/snes/WPGv.snespal":"1f6d6b5c10","data/pals/snes/WSHh.snespal":"987cfcc3ad","data/pals/snes/WSHv.snespal":"5984d4092d","games.json":"7024e76405","jed-pals/createjerseyShadowfixed.act":"e72f7af63d","jed-pals/rinkpal.act":"c0ce7ee1f2","jed-pals/rinkpalShadowfixed.act":"155fafeb97","lib/audio/README.md":"76844e9e0f","lib/audio/data/nhl94-streams.json":"2016f81f74","lib/audio/data/nhlpa93-streams.json":"d55a9377ae","lib/audio/generated/ym2612_wasm.wasm":"694282ba9d","lib/audio/licenses-ymfm.txt":"2281404259"};var M={"lib/audio/generated/ym2612-runtime.js":"d3157c772a","lib/audio/generated/ym2612_wasm.js":"cd7cb8d43c"};var R=new URL("./",location.href).href;var f=window.fetch;window.fetch=function(u,o){try{var a=new URL((u&&u.url)||String(u),document.baseURI);if(a.href.indexOf(R)===0&&!a.search){var h=V[a.pathname.slice(new URL(R).pathname.length)];if(h){a.search="?v="+h;if(typeof u==="string"||u instanceof URL)u=a.href;}}}catch(e){}return f.call(this,u,o);};window.assetUrl=function(p){var a=new URL(p,R);if(M[p])a.search="?v="+M[p];return a.href;};})();</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chip lab · YM2612 &amp; SN76489 · NHL9X Studio</title>
+  <script>
+    (function () {
+      var path = location.pathname || '/';
+      var slash = path.lastIndexOf('/');
+      var base = slash >= 0 ? path.slice(0, slash + 1) : '/';
+      var b = document.createElement('base');
+      b.href = base;
+      document.head.appendChild(b);
+    })();
+  </script>
+  <link rel="stylesheet" href="chip-lab.css?v=777ef47ffb">
+</head>
+<body class="chip-lab">
+  <main>
+    <p><a class="back" href="index.html">← NHL9X Studio</a></p>
+    <h1>Chip lab</h1>
+    <p class="lead">Live YM2612 (FM, ymfm WASM) and SN76489 (PSG) emulation. Click a sound to hear it: the button lights up, click it again to stop. Audio starts on your first click (browser policy). The NHL '92 instruments and DAC samples are in the Audio section of NHL9X Studio (NHL 92).</p>
+    <div class="chip-grid">
+      <section class="chip-card" aria-labelledby="ym-title">
+        <h2 id="ym-title">YM2612 (Genesis FM)</h2>
+        <div class="row">
+          <button type="button" data-ym="440">A4 beep</button>
+          <button type="button" data-ym="mid">E4 beep</button>
+          <button type="button" data-ym="low">A2 beep</button>
+        </div>
+        <p class="meter" id="ym-meter">Engine idle</p>
+      </section>
+      <section class="chip-card" aria-labelledby="psg-title">
+        <h2 id="psg-title">SN76489 (PSG)</h2>
+        <div class="row">
+          <button type="button" data-psg="tone">Square tone</button>
+          <button type="button" data-psg="noise">Noise</button>
+        </div>
+        <p class="meter" id="psg-meter">Engine idle</p>
+      </section>
+    </div>
+    <section class="chip-card nhl92-card" aria-labelledby="audition-title">
+      <h2 id="audition-title">Mapping audition · <span id="aud-title-game">NHL '92</span> ↔ General MIDI</h2>
+      <p class="hint">Hear a pick next to its mapped sound. The game side is the retail driver; the GM side is a basic stand-in synth, not a real GM sound set, so judge the game's sound against the <em>name</em>. Both sides play at the same level. Matches live in <code>data/audio/nhl92-gm-map.json</code> (NHL '92) and <code>data/audio/nhl9x-gm-map.json</code> (NHLPA 93 and NHL 94, which share their patches).</p>
+      <div class="row">
+        <label>Game
+          <select id="aud-game">
+            <option value="92">NHL '92</option>
+            <option value="93">NHLPA 93</option>
+            <option value="94">NHL 94</option>
+          </select>
+        </label>
+        <label>Direction
+          <select id="aud-dir">
+            <option value="n2g">Game patch → GM</option>
+            <option value="g2n">GM program → game</option>
+            <option value="drum">GM drum → game</option>
+          </select>
+        </label>
+        <label>Pick <select id="aud-pick"></select></label>
+      </div>
+      <p class="hint" id="aud-info">Loading mapping…</p>
+      <div class="row">
+        <button type="button" class="primary" id="aud-both">Play pick, then match</button>
+        <button type="button" id="aud-a">Pick only</button>
+        <button type="button" id="aud-b">Match only</button>
+        <button type="button" id="aud-ru">Runner-up only</button>
+        <button type="button" id="aud-stop">Stop</button>
+      </div>
+      <p class="meter" id="aud-meter">Loading driver…</p>
+    </section>
+    <p class="meter" id="status">Loading WASM…</p>
+  </main>
+  <script src="lib/audio/sn76489.js?v=254d796fbe"></script>
+  <script src="lib/audio/chip-lab-presets.js?v=3fa52ba3f4"></script>
+  <script src="lib/audio/chip-resampler.js?v=35e6bcc45b"></script>
+  <script src="lib/audio/z80-cpu.js?v=b9d7e1c7f6"></script>
+  <script src="lib/audio/z80-cpu-core.js?v=91b2987265"></script>
+  <script src="lib/audio/nhl92-z80.js?v=894771f7bd"></script>
+  <script src="lib/audio/nhl92-sound-fixture.js?v=4b0fc3a05d"></script>
+  <script src="lib/audio/nhl92-z80-harness.js?v=0a5f7c99be"></script>
+  <script src="lib/audio/nhl92-z80-audio.js?v=2e0e509d76"></script>
+  <script src="lib/audio/wav.js?v=9d21594a3d"></script>
+  <script src="lib/audio/nhl92-gm-map.js?v=2f6d24c190"></script>
+  <script src="lib/audio/gm-reference.js?v=1e440ea0bc"></script>
+  <script src="lib/audio/nhl92-gm-audition.js?v=aade0912ee"></script>
+  <script src="lib/audio/m68k-cpu.js?v=0b49daf493"></script>
+  <script src="lib/audio/nhl92-68k-harness.js?v=9cccc79cb2"></script>
+  <script src="lib/audio/nhl9x-68k-harness.js?v=9967baae39"></script>
+  <script src="lib/audio/nhl93-68k-harness.js?v=c06bce172a"></script>
+  <script src="lib/audio/nhl94-68k-harness.js?v=2fe25eaa30"></script>
+  <script src="lib/audio/nhl9x-song.js?v=b4d8c5c05f"></script>
+  <script src="lib/audio/nhl92-68k-run.js?v=5b74d48b7d"></script>
+  <script src="lib/audio/nhl92-sound-chain.js?v=888ecf5217"></script>
+  <script src="lib/audio/patch-edits.js?v=d48c8136d8"></script>
+  <script src="lib/audio/nhl92-song.js?v=1cb5512f89"></script>
+  <script src="lib/audio/nhl92-song-gm.js?v=b580747111"></script>
+  <script src="lib/audio/nhl9x-stream.js?v=307c482304"></script>
+  <script src="lib/audio/nhl9x-gm-audition.js?v=b273110b08"></script>
+  <script type="module" src="chip-lab.js?v=b8faf4846d"></script>
+</body>
+</html>
