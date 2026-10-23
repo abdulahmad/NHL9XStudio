@@ -99,3 +99,7 @@
 .ice-warn { background: #4a2a00; color: #ffd27a; border: 1px solid #a66b00; padding: 6px 8px; border-radius: 6px; font-size: 13px; }
 #ice-count.error { color: var(--red); }
 #jed-game[hidden], #jed-game button[hidden] { display: none; }
+.jed-tip { position: fixed; z-index: 1000; pointer-events: none; max-width: 340px; padding: 4px 7px; border-radius: 4px; background: #111; color: #eee; border: 1px solid #555; font-size: 12px; line-height: 1.35; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.jed-tip[hidden] { display: none; }
+#jed-hex-in { width: 6.5em; }
+#jed-hex-in.bad { outline: 2px solid #c33; }

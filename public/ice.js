@@ -78,7 +78,7 @@
       const r = R.rangeOf(i), b = document.createElement('button'); b.type = 'button';
       b.className = 'ice-sw src-' + r.source + (r.usable ? '' : ' blocked'); b.dataset.index = i;
       const c = rgbOf(i); b.style.background = i === R.CLEAR ? '' : 'rgb(' + c.join(',') + ')';
-      b.title = i + ': ' + (i === R.CLEAR ? 'transparent' : c.join(', ')) + ' — ' + r.label;
+      b.dataset.tip = i + ': ' + (i === R.CLEAR ? 'transparent' : c.join(', ')) + ' — ' + r.label;
       b.setAttribute('aria-selected', String(i === I.color)); b.disabled = !r.usable;
       b.addEventListener('click', () => { I.color = i; renderSwatches(); });
       box.appendChild(b);
@@ -95,7 +95,7 @@
     const box = $('ice-tiles'); box.innerHTML = '';
     I.model.tiles.forEach((t, i) => {
       if (!used.has(i) && i !== I.tile) return;
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'ice-tile'; b.title = 'Tile ' + i;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ice-tile'; b.dataset.tip = 'Tile ' + i;
       b.setAttribute('aria-selected', String(i === I.tile)); b.appendChild(tileCanvas(t, 24));
       b.addEventListener('click', () => { I.tile = i; renderTiles(); renderTileEdit(); });
       box.appendChild(b);

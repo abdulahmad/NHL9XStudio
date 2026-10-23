@@ -36,7 +36,8 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);
   assert.strictEqual(await page.locator('#jed-team-list .item').count(), 28);
   assert.strictEqual(await page.locator('#jed-swatches .jed-sw').count(), 64);
-  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 68); // 48 zones + 20 crest
+  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 48); // jersey zones; the crest is the picture
+  assert.match(await page.textContent('#jed-zones'), /Scoreboard crest: CRESTS4\.PPV not found/);
   assert.strictEqual(await page.locator('#jed-zones .jed-zgroup').count() > 10, true, 'light/medium/dark rows');
   assert.strictEqual(await page.textContent('#jed-export-file'), 'Export homepals.bin');
   assert.ok(await page.isVisible('#jed-empty'), 'no-sprites guidance shown');
@@ -50,6 +51,34 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.deepStrictEqual(await crestRgb(), want, 'crest pixel repainted with colour 5');
   assert.match(await page.textContent('#jed-status'), /crest r1c1 now uses colour 5/);
   await page.click('#jed-undo');
+
+  // 6-bit + 8-bit readout, hex entry quantized to 6-bit
+  await page.fill('#jed-hex-in', '#FF8040');
+  assert.deepStrictEqual(await page.evaluate(() => ['r', 'g', 'b'].map((k) => Number(document.getElementById('jed-' + k).value))), [63, 32, 16]);
+  assert.match(await page.textContent('#jed-hex'), /6-bit 63, 32, 16 · 8-bit 252, 128, 64/);
+  await page.fill('#jed-hex-in', '#zz'); assert.ok(await page.$eval('#jed-hex-in', (e) => e.classList.contains('bad')));
+  await page.click('#jed-undo');
+  // instant custom tooltip on swatches (no native title)
+  await page.locator('#jed-swatches .jed-sw').nth(3).hover();
+  assert.ok(await page.isVisible('#jed-tip'), 'tooltip shown at once');
+  assert.match(await page.textContent('#jed-tip'), /^Colour 3 \(game 131\) · 6-bit/);
+  assert.strictEqual(await page.locator('#jed-swatches .jed-sw[title]').count(), 0);
+  // click-paints off: clicking the crest selects the colour it uses
+  await page.uncheck('#jed-paint');
+  await page.click('#jed-crest', { position: { x: 3, y: 3 } });
+  assert.match(await page.textContent('#jed-status'), /crest r1c1 uses (colour|rink colour) \d+/);
+  await page.check('#jed-paint');
+
+  if (process.env.NHL_PC95_DIR) { // real game: scoreboard crest from CRESTS4.PPV, live
+    const dir = process.env.NHL_PC95_DIR;
+    await page.setInputFiles('#jed-files', ['HOMEPALS.BIN', 'AWAYPALS.BIN', 'CRESTS4.PPV'].map((n) => path.join(dir, n)));
+    await page.waitForSelector('#jed-sbcrest');
+    assert.deepStrictEqual(await page.$eval('#jed-sbcrest', (c) => [c.width, c.height]), [192, 144]);
+    if (process.env.NHL_CREST_SHOT) { await page.setViewportSize({ width: 1920, height: 1080 }); await page.screenshot({ path: process.env.NHL_CREST_SHOT }); }
+    await page.setInputFiles('#jed-files', [fix('HOMEPALS95.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS95.BIN', 'AWAYPALS.BIN')]);
+    await page.waitForFunction(() => !document.getElementById('jed-sbcrest'));
+    await page.setViewportSize({ width: 1400, height: 900 });
+  }
 
   // unedited export: identical
   let out = await download(page, '#jed-export-file');

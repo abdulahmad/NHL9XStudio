@@ -172,6 +172,17 @@ for (const name of Object.keys(FILES)) {
   assert.ok(J.usedColors(f, 0).includes(7));
 }
 
+// scoreboard crest: pixel p -> palette[p], 67 -> game 103, 255 transparent; slots split jersey / crest
+{
+  const f = J.openFile(read('HOMEPALS95.BIN'), 'home');
+  const pal = []; for (let i = 0; i < 256; i++) pal[i] = [i, 1, 2]; pal.game = []; for (let i = 0; i < 256; i++) pal.game[i] = [i, 9, 9];
+  const rgb = J.crestRgb({ width: 3, height: 1, pixels: [197, 67, 255] }, pal);
+  assert.deepStrictEqual(Array.from(rgb), [197, 1, 2, 255, 103, 9, 9, 255, 0, 0, 0, 0]);
+  const map = J.getMap(f, 0); const c = J.crestSlots(f, 0);
+  for (const z of J.SCOREBOARD) if (map[z.sprite] >= 128 && map[z.sprite] < 192) assert.ok(c.has(map[z.sprite] - 128));
+  const all = new Set(J.usedColors(f, 0)); for (const x of [...c, ...J.jerseySlots(f, 0)]) assert.ok(all.has(x));
+}
+
 console.log('pc-jersey: ok');
 
 // NHL 95 PC sprite pixels + colours vs EA-NHL-Tools SPIT-To-BMP + createPal (skips without the tools / game files).
