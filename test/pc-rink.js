@@ -94,6 +94,17 @@ assert.strictEqual(empty.tiles.length, 0, 'input model untouched');
 const big = new Uint8Array(R.PX_W * R.PX_H); let seed = 1; for (let i = 0; i < big.length; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; big[i] = (seed >> 16) & 127; }
 assert.throws(() => R.placeImage(empty, big, R.PX_W, R.PX_H, 0, 0), /at most 1024/);
 
+// full-rink import: only masked / changed cells become tiles
+const rinkPix = new Uint8Array(R.PX_W * R.PX_H).fill(9);
+const full = Uint8Array.from(rinkPix); for (let y = 100; y < 120; y++) for (let x = 40; x < 60; x++) full[y * R.PX_W + x] = 130;
+let fm = R.placeImage(empty, full, R.PX_W, R.PX_H, 0, 0, R.cellsDiffering(full, R.PX_W, R.PX_H, 0, 0, rinkPix));
+assert.deepStrictEqual(R.bounds(fm), { x: 5, y: 12, w: 3, h: 3 }, 'diff picks the changed cells only');
+assert.strictEqual(R.tileCount(fm), 4, 'solid inside + rink-only edge pieces deduped');
+const mask = new Uint8Array(R.PX_W * R.PX_H * 4); for (let y = 0; y < 8; y++) for (let x = 0; x < 16; x++) mask.set([255, 255, 255, 255], (y * R.PX_W + x) * 4);
+fm = R.placeImage(empty, full, R.PX_W, R.PX_H, 0, 0, R.cellsFromMask(mask, R.PX_W, R.PX_H));
+assert.deepStrictEqual(R.bounds(fm), { x: 0, y: 0, w: 2, h: 1 }); assert.strictEqual(R.tileCount(fm), 1);
+assert.throws(() => R.placeImage(empty, big, R.PX_W, R.PX_H, 0, 0, () => true), (e) => e.tiles > 1024 && /mask/.test(e.message));
+
 // --- retail (local only) ---
 const DIR = process.env.NHL_PC95_DIR;
 if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
@@ -108,6 +119,13 @@ if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
     same(R.composite(base, orig.map, orig.tiles, orig.place), R.composite(base, rb.map, rb.tiles, rb.place), a + ' rebuilt renders the same');
     for (const t of orig.tiles) for (const p of t) assert.ok(p === R.CLEAR || R.usable(p), a + ' retail colour ' + p);
   }
-  console.log('pc-rink: 26 retail arenas round-trip');
+  // a full-rink mockup (retail rink + an 'ad' block): diff keeps it well under 1024
+  const P = require('../lib/pc95');
+  const rk = P.openBytes(new Uint8Array(fs.readFileSync(path.join(DIR, 'RINK.QFS'))), 'RINK.QFS').shapes[0].pixels;
+  const mock = Uint8Array.from(rk); for (let y = 200; y < 248; y++) for (let x = 64; x < 320; x++) mock[y * R.PX_W + x] = (x >> 4) & 1 ? 130 : 140;
+  const mm = R.placeImage(empty, mock, R.PX_W, R.PX_H, 0, 0, R.cellsDiffering(mock, R.PX_W, R.PX_H, 0, 0, rk));
+  assert.ok(R.tileCount(mm) < 200, 'full-rink diff ' + R.tileCount(mm));
+  assert.throws(() => R.placeImage(empty, mock, R.PX_W, R.PX_H, 0, 0), /1024/, 'the whole rink without a mask is over 1024');
+  console.log('pc-rink: 26 retail arenas round-trip; full-rink diff import ' + R.tileCount(mm) + ' tiles');
 } else console.log('pc-rink: NHL_PC95_DIR not set, retail round trip skipped');
 console.log('pc-rink: ok');

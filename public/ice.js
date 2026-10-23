@@ -218,11 +218,24 @@
     const allowed = []; for (let i = 0; i < 256; i++) if (R.usable(i) && i !== R.CLEAR && ($('ice-q-home').checked || R.rangeOf(i).source !== 'home')) allowed.push(i);
     const idx = R.quantize(im.rgba, I.pal, allowed);
     const tw = Math.ceil(im.w / 8), th = Math.ceil(im.h / 8);
+    const full = im.w === R.PX_W && im.h === R.PX_H;
+    const mode = $('ice-q-cells').value;
+    let pick = null, how = 'every cell with a visible pixel';
+    const x = full ? 0 : Math.max(0, Math.min(R.W - tw, Math.round((R.W - tw) / 2))), y = full ? 0 : Math.max(0, Math.min(R.H - th, Math.round((R.H - th) / 2)));
+    if (mode === 'diff') {
+      if (!I.rink) throw new Error('"Differs from the rink" needs RINK.QFS: open the game folder');
+      pick = R.cellsDiffering(idx, im.w, im.h, x, y, I.rink); how = 'cells that differ from RINK.QFS';
+    } else if (mode === 'mask') {
+      if (!I.mask) throw new Error('Choose a mask image first (Mask…): white cells become tiles');
+      const mk = I.mask, mf = { name: mk.name };
+      if (mk.w !== im.w || mk.h !== im.h) throw new Error('The mask ' + mf.name + ' is ' + mk.w + '×' + mk.h + '; it must match the image (' + im.w + '×' + im.h + ')');
+      pick = R.cellsFromMask(mk.rgba, mk.w, mk.h); how = 'white cells of ' + mf.name;
+    }
     const keep = $('ice-q-replace').checked ? { cells: new Int32Array(R.W * R.H).fill(-1), tiles: [], place: I.model.place.slice(), flag: I.model.flag } : I.model;
-    const x = Math.max(0, Math.min(R.W - tw, Math.round((R.W - tw) / 2))), y = Math.max(0, Math.min(R.H - th, Math.round((R.H - th) / 2)));
-    const next = R.placeImage(keep, idx, im.w, im.h, x, y);
+    let next;
+    try { next = R.placeImage(keep, idx, im.w, im.h, x, y, pick); } catch (e) { if (e.tiles) X.status(e.message, true); throw e; }
     remember(); I.model = next; I.tile = Math.max(0, (I.model.cells.find((e) => e >= 0) || 0) & R.CELL); renderAll();
-    X.status('Imported ' + file.name + ' (' + im.w + '×' + im.h + '): ' + R.tileCount(I.model) + ' tiles after removing duplicates; drag with Move to place it');
+    X.status('Imported ' + file.name + ' (' + im.w + '×' + im.h + ')' + (full ? ' as a full rink' : '') + ', ' + how + ': ' + R.tileCount(I.model) + ' / ' + R.MAX_TILES + ' tiles after removing duplicates' + (full ? '' : '; drag with Move to place it'));
   }
   function file(input) { return new Promise((ok) => { input.value = ''; input.onchange = () => ok(input.files[0] || null); input.click(); }); }
   async function bytesOf(f) { return new Uint8Array(await f.arrayBuffer()); }
@@ -251,6 +264,11 @@
     $('ice-mirror').addEventListener('click', () => { const t = I.model.tiles[I.tile]; if (!t) return; remember(); I.model.tiles[I.tile] = R.flipped(t, true, false); renderAll(); });
     $('ice-flip').addEventListener('click', () => { const t = I.model.tiles[I.tile]; if (!t) return; remember(); I.model.tiles[I.tile] = R.flipped(t, false, true); renderAll(); });
     $('ice-import-image').addEventListener('click', X.guard(async () => { const f = await file($('ice-image-file')); if (f) await importImage(f); }));
+    $('ice-mask').addEventListener('click', X.guard(async () => {
+      const f = await file($('ice-mask-file')); if (!f) return;
+      I.mask = Object.assign(await readImage(f), { name: f.name }); $('ice-q-cells').value = 'mask';
+      $('ice-mask').textContent = 'Mask: ' + f.name; X.status('Mask ' + f.name + ' (' + I.mask.w + '×' + I.mask.h + '): white cells become tiles on the next image import');
+    }));
     $('ice-import-til').addEventListener('click', X.guard(async () => {
       const f = await file($('ice-tilmap-file')); if (!f) return; const b = await bytesOf(f);
       remember();
