@@ -152,12 +152,27 @@
         <button type="button" data-xf="270" class="ghost-btn ice-edit ice-needsel" title="Rotate 90° counter-clockwise (adds rotated tiles)">⟲ 270°</button>
         <span id="ice-sel-info" class="muted"></span>
       </div>
+      <div class="ice-float-bar" id="ice-float-bar" hidden>
+        <b id="ice-float-name"></b> <span class="muted">floating: drag it to place · <span class="ice-redkey"></span> = non-empty cells it overwrites</span>
+        <button type="button" id="ice-float-apply" class="ghost-btn">Apply</button>
+        <button type="button" id="ice-float-cancel" class="ghost-btn">Cancel</button>
+      </div>
       <div class="ice-scroll"><canvas id="ice-rink"></canvas></div>
       <p id="ice-note" class="muted"></p>
       <div class="jed-io">
         <button type="button" id="ice-import-image" class="ghost-btn ice-edit" title="PNG, BMP, GIF, JPEG (384×592 = full rink): matched to the allowed colours, cut into 8×8 tiles, duplicates removed, max 1024">Import image…</button>
-        <label class="muted"><input type="checkbox" id="ice-q-home" checked> use home colours</label>
         <label class="muted"><input type="checkbox" id="ice-q-replace" checked> replace logo</label>
+        <fieldset class="ice-popts" id="ice-popts"><legend>Image colours</legend>
+          <label><input type="checkbox" id="ice-o-team" checked> team colour slots (home 128–191)</label>
+          <label><input type="checkbox" id="ice-o-rink" checked> rink colours (0–127, 251–254, never changed)</label>
+          <label><input type="checkbox" id="ice-o-overwrite"> overwrite the whole team palette</label>
+          <label><input type="checkbox" id="ice-o-jersey" checked> keep colours the jersey uses</label>
+          <label><input type="checkbox" id="ice-o-crest" checked> keep colours the scoreboard crest uses</label>
+          <label><input type="checkbox" id="ice-o-tiles" checked> keep colours existing tiles use</label>
+          <label><input type="checkbox" id="ice-o-free"> only free team slots</label>
+          <label><input type="checkbox" id="ice-o-cells"> overwrite existing tiles</label>
+          <span id="ice-slots" class="muted"></span>
+        </fieldset>
         <label class="muted" title="A 384×592 image is taken as the whole rink at 0,0">tiles from <select id="ice-q-cells"><option value="all">every visible cell</option><option value="diff">cells that differ from the rink</option><option value="mask">the mask (white = tile)</option></select></label>
         <button type="button" id="ice-mask" class="ghost-btn ice-edit" title="Black / white image the size of the import: white cells become tiles">Mask…</button>
         <button type="button" id="ice-import-til" class="ghost-btn ice-edit">Import .TIL / .MAP…</button>
@@ -178,6 +193,7 @@
   <script src="lib/pc95.js"></script>
   <script src="lib/pc-jersey.js"></script>
   <script src="lib/pc-rink.js"></script>
+  <script src="lib/pc-palette.js"></script>
   <script src="jed.js"></script>
   <script src="ice.js"></script>
 </body>

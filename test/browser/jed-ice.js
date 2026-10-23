@@ -117,8 +117,45 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   const W = 32, H = 16, rgba = new Uint8Array(W * H * 4);
   const homeRgb = await page.evaluate(() => { const S = JedShared.state; return NhlPcJersey.getColors(S.files.home.file, 0)[12].map((v) => v * 4); });
   for (let i = 0; i < W * H; i++) if (i % W < 16) rgba.set([...homeRgb, 255], i * 4);
+  // palette options: conflicts disable with a reason; slot counts shown
+  await page.check('#ice-o-overwrite');
+  assert.ok(await page.isDisabled('#ice-o-jersey')); assert.ok(await page.isDisabled('#ice-o-free'));
+  assert.match(await page.$eval('#ice-o-free', (x) => x.parentElement.title), /ignores which slots/);
+  await page.uncheck('#ice-o-overwrite'); await page.check('#ice-o-free');
+  assert.ok(await page.isDisabled('#ice-o-overwrite')); assert.ok(await page.isDisabled('#ice-o-tiles'));
+  assert.match(await page.textContent('#ice-slots'), /^Team slots: jersey uses \d+, crest \d+, tiles \d+ · \d+ free · \d+ may be rewritten/);
+  await page.uncheck('#ice-o-free');
+  // floating import: Cancel discards
   await upload(page, '#ice-import-image', { name: 'logo.png', mimeType: 'image/png', buffer: png(W, H, rgba) });
-  assert.match(await page.textContent('#jed-status'), /Imported logo\.png/);
+  assert.ok(await page.isVisible('#ice-float-bar')); assert.match(await page.textContent('#jed-status'), /Floating logo\.png/);
+  await page.click('#ice-float-cancel'); assert.ok(await page.isHidden('#ice-float-bar'));
+  assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['24', '40'], 'cancel keeps the map');
+  // a new colour (not in the team palette) with free slots only: one free slot rewritten, Apply writes HOMEPALS, undo restores
+  {
+    const odd = new Uint8Array(16 * 16 * 4); for (let i = 0; i < 256; i++) odd.set([200, 36, 116, 255], i * 4);
+    await page.uncheck('#ice-q-replace'); await page.check('#ice-o-free'); await page.check('#ice-o-cells'); await page.uncheck('#ice-o-rink');
+    await upload(page, '#ice-import-image', { name: 'odd.png', mimeType: 'image/png', buffer: png(16, 16, odd) });
+    const slot = Number((await page.textContent('#jed-status')).match(/1 team slot rewritten \((\d+)\)/)[1]);
+    const used = await page.evaluate(() => { const u = JedShared.usage(0); return [...u.jersey, ...u.crest]; });
+    assert.ok(!used.includes(slot), 'free slot');
+    // drag the float onto the logo: overwritten cells get the red shading
+    const b2 = await page.$eval('#ice-rink', (c) => { const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, s: r.width / 384 }; });
+    const fx = Number(await page.textContent('#ice-float-name').then((t) => t.match(/at (\d+), (\d+)/)[1])), fy = Number(await page.textContent('#ice-float-name').then((t) => t.match(/at (\d+), (\d+)/)[2]));
+    await page.mouse.move(b2.x + (fx * 8 + 4) * b2.s, b2.y + (fy * 8 + 4) * b2.s); await page.mouse.down();
+    await page.mouse.move(b2.x + (24 * 8 + 4) * b2.s, b2.y + (40 * 8 + 4) * b2.s, { steps: 4 }); await page.mouse.up();
+    assert.match(await page.textContent('#ice-float-name'), /at 24, 40/);
+    const red = await page.$eval('#ice-rink', (c) => { const z = c.width / 384; const d = c.getContext('2d').getImageData(Math.floor(24 * 8 * z) + 1, Math.floor(40 * 8 * z) + 1, 1, 1).data; return d[0] > d[1] + 40; });
+    assert.ok(red, 'red overwrite shading');
+    const before = await page.evaluate((s) => NhlPcJersey.getColors(JedShared.state.files.home.file, 0)[s], slot);
+    await page.click('#ice-float-apply');
+    assert.deepStrictEqual(await page.evaluate((s) => NhlPcJersey.getColors(JedShared.state.files.home.file, 0)[s], slot), [50, 9, 29], 'HOMEPALS slot written (6-bit)');
+    await page.click('#ice-undo');
+    assert.deepStrictEqual(await page.evaluate((s) => NhlPcJersey.getColors(JedShared.state.files.home.file, 0)[s], slot), before, 'undo restores the colour');
+    await page.check('#ice-q-replace'); await page.uncheck('#ice-o-free'); await page.uncheck('#ice-o-cells'); await page.check('#ice-o-rink');
+  }
+  await upload(page, '#ice-import-image', { name: 'logo.png', mimeType: 'image/png', buffer: png(W, H, rgba) });
+  await page.click('#ice-float-apply');
+  assert.match(await page.textContent('#jed-status'), /Applied logo\.png/);
   assert.match(await page.textContent('#ice-count'), /^1 \/ 1024/);
   const ex = (await download(page, '#ice-export-map')).bytes;
   assert.deepStrictEqual([ex.readUInt16LE(0), ex.readUInt16LE(2)], [2, 2]);
@@ -132,7 +169,9 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
   await upload(page, '#ice-mask', { name: 'mask.png', mimeType: 'image/png', buffer: png(FW, FH, mrgba) });
   assert.strictEqual(await page.inputValue('#ice-q-cells'), 'mask');
   await upload(page, '#ice-import-image', { name: 'rink.png', mimeType: 'image/png', buffer: png(FW, FH, frgba) });
-  assert.match(await page.textContent('#jed-status'), /as a full rink, white cells of mask\.png: 1 \/ 1024/);
+  assert.match(await page.textContent('#jed-status'), /Floating rink\.png .*white cells of mask\.png/);
+  await page.click('#ice-float-apply');
+  assert.match(await page.textContent('#jed-status'), /Applied rink\.png: 1 \/ 1024/);
   assert.deepStrictEqual([await page.inputValue('#ice-x'), await page.inputValue('#ice-y')], ['3', '2']);
   const fmap = (await download(page, '#ice-export-map')).bytes; assert.deepStrictEqual([fmap.readUInt16LE(0), fmap.readUInt16LE(2)], [3, 2]);
   await page.selectOption('#ice-q-cells', 'all');
@@ -164,6 +203,8 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
         await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
         await page.selectOption('#ice-q-cells', 'diff');
         await upload(page, '#ice-import-image', process.env.NHL_ICE_RINK);
+        await page.screenshot({ path: path.join(SHOT, 'ice-floating-1920x1080.png') });
+        await page.click('#ice-float-apply');
         console.log('jed-ice full rink: ' + await page.textContent('#jed-status'));
         await page.screenshot({ path: path.join(SHOT, 'ice-fullrink-1920x1080.png') });
         await page.selectOption('#ice-q-cells', 'all');
@@ -171,6 +212,8 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
       if (process.env.NHL_ICE_IMAGE) {
         await items.nth(arenas.indexOf('TOR')).click(); await page.waitForTimeout(200);
         await upload(page, '#ice-import-image', process.env.NHL_ICE_IMAGE);
+        await page.screenshot({ path: path.join(SHOT, 'ice-import-floating-1920x1080.png') });
+        await page.click('#ice-float-apply');
         await page.screenshot({ path: path.join(SHOT, 'ice-import-1920x1080.png') });
       }
       { // blocks: TOR logo selected, copied, pasted and rotated 90° at 4x zoom
