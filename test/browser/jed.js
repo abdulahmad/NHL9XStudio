@@ -36,10 +36,20 @@ withBrowser('jed', async ({ url, newPage }) => {
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);
   assert.strictEqual(await page.locator('#jed-team-list .item').count(), 28);
   assert.strictEqual(await page.locator('#jed-swatches .jed-sw').count(), 64);
-  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 92); // 48 zones + 20 crest + 24 centre-ice
+  assert.strictEqual(await page.locator('#jed-zones .jed-zone').count(), 68); // 48 zones + 20 crest
   assert.strictEqual(await page.locator('#jed-zones .jed-zgroup').count() > 10, true, 'light/medium/dark rows');
   assert.strictEqual(await page.textContent('#jed-export-file'), 'Export homepals.bin');
   assert.ok(await page.isVisible('#jed-empty'), 'no-sprites guidance shown');
+
+  // crest logo: 5x4 picture in the team palette; clicking a pixel paints it and the logo repaints
+  const crestRgb = () => page.evaluate(() => Array.from(document.getElementById('jed-crest').getContext('2d').getImageData(2, 2, 1, 1).data.slice(0, 3)));
+  assert.ok(await page.isVisible('#jed-crest'), 'crest logo shown');
+  await page.locator('#jed-swatches .jed-sw').nth(5).click();
+  await page.click('#jed-crest', { position: { x: 3, y: 3 } });
+  const want = await page.evaluate(() => [document.getElementById('jed-r').value, document.getElementById('jed-g').value, document.getElementById('jed-b').value].map((v) => Math.min(255, Number(v) * 4)));
+  assert.deepStrictEqual(await crestRgb(), want, 'crest pixel repainted with colour 5');
+  assert.match(await page.textContent('#jed-status'), /crest r1c1 now uses colour 5/);
+  await page.click('#jed-undo');
 
   // unedited export: identical
   let out = await download(page, '#jed-export-file');

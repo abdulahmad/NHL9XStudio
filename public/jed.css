@@ -64,3 +64,4 @@
 .jed-empty { display: none; max-width: 520px; margin: 0; color: #2b3845; line-height: 1.5; text-align: center; }
 .jed-preview.no-sprites .jed-empty { display: block; }
 .jed-preview.no-sprites .jed-mainwrap, .jed-preview.no-sprites .jed-split, .jed-preview.no-sprites .jed-strip, .jed-preview.no-sprites .jed-nbs { display: none; }
+.jed-crest { grid-column: 1 / -1; image-rendering: pixelated; cursor: crosshair; border: 1px solid var(--line, #333); justify-self: start; margin-bottom: 6px; }

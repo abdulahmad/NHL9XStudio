@@ -107,6 +107,13 @@ try {
       }
     }
     assert.ok(frames > 20, 'retail frames compared ' + frames);
+    // the crest logo the editor draws (J.CREST, 5 x 4) is exactly the block of sprite colours 192+row*16+col on the
+    // jersey front: docs frame 369 (anthem) has it as one 5 x 4 block; sprites never use 197..207 etc. (no other logo)
+    const anthem = studio.renderFrame(370); const used = new Set();
+    for (let f = 1; f <= 1134; f++) { const r = studio.renderFrame(f); if (r && r.width) for (const p of r.pixels) if (p >= 192 && p < 251) used.add(p); }
+    assert.deepStrictEqual([...used].sort((a, b) => a - b), J.CREST.map((z) => z.sprite).sort((a, b) => a - b), 'sprites use exactly the crest colours');
+    const at = anthem.pixels.indexOf(192); const x0 = at % anthem.width; const y0 = (at - x0) / anthem.width;
+    J.CREST.forEach((z, i) => assert.strictEqual(anthem.pixels[(y0 + Math.floor(i / 5)) * anthem.width + x0 + (i % 5)], z.sprite, 'frame 369 crest ' + z.name));
     // retail HOMEPALS/AWAYPALS give EA's shipped createPal ACT for every team, ANA home included (the fixture's ANA differs)
     for (const side of ['HOMEPALS', 'AWAYPALS']) {
       const fp = path.join(DIR, side + '.BIN'); if (!fs.existsSync(fp)) continue;
