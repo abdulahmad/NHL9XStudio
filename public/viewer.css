@@ -525,3 +525,31 @@ select:focus, input:focus, button:focus-visible {
 .pe-f input, .pe-body input[type="number"] { width: 58px; background: var(--raise-2); color: var(--text); border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; font: inherit; }
 .pe-env { width: 100%; height: 54px; margin-top: 6px; border-radius: 4px; }
 .pe-note { margin: 8px 0 0; }
+
+/* About / work-in-progress pop-up (about.js) */
+.about-scrim { position: fixed; inset: 0; z-index: 1000; background: rgba(8, 10, 13, 0.72); display: grid; place-items: center; padding: 16px; }
+.about-scrim[hidden] { display: none; }
+.about-modal { width: min(520px, 100%); max-height: 100%; overflow: auto; background: var(--raise); border: 1px solid var(--line); border-top: 3px solid var(--amber); border-radius: 10px; box-shadow: var(--shadow); padding: 24px; }
+.about-modal h1 { margin: 0 0 2px; font-size: 20px; }
+.about-modal p { margin: 0 0 14px; line-height: 1.5; font-size: 14px; }
+.about-ver { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.about-vnum { font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px; }
+.about-sub { margin: 0 0 16px; color: var(--amber); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.about-tiers { display: grid; gap: 8px; margin-bottom: 18px; }
+.about-tier { display: flex; gap: 12px; align-items: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+.about-tag { flex: none; min-width: 84px; text-align: center; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.about-tag.ok { background: rgba(143, 208, 168, 0.15); color: var(--good); }
+.about-tag.wip { background: rgba(240, 180, 41, 0.15); color: var(--amber); }
+.about-modal .about-feedback { font-size: 13px; }
+.about-modal a { color: var(--amber); }
+.about-modal .about-notice { font-size: 12px; color: var(--muted); border-left: 2px solid var(--amber); padding: 2px 0 2px 10px; }
+.about-log { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin-bottom: 18px; }
+.about-log summary { cursor: pointer; padding: 9px 12px; font-size: 13px; font-weight: 600; }
+.about-log-body { max-height: 170px; overflow: auto; padding: 0 12px 10px; font-size: 12.5px; color: var(--muted); }
+.about-log-body h3 { margin: 10px 0 4px; font-size: 12.5px; color: var(--text); }
+.about-log-body h3 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.about-log-body ul { margin: 0; padding-left: 18px; }
+.about-log-body li { margin: 2px 0; }
+.about-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.about-foot label { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.about-foot button { background: var(--amber); color: #1a1405; border: 0; border-radius: 6px; padding: 8px 18px; font-weight: 700; cursor: pointer; }

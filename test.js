@@ -63,3 +63,12 @@ if (process.env.NHL_SKIP_BROWSER !== '1') {
     });
   }
 }
+
+{
+  // the About pop-up reads its version from the newest changelog entry, which must match package.json
+  const log = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'changelog.json'), 'utf8'));
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+  assert.strictEqual(log.releases[0].version, pkg.version, 'changelog.json newest release must equal package.json version');
+  log.releases.forEach((r) => assert.ok(r.version && Array.isArray(r.changes) && r.changes.length, 'changelog entry ' + r.version));
+  console.log('changelog ok (v' + pkg.version + ')');
+}
