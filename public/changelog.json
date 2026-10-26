@@ -1,0 +1,15 @@
+{
+  "releases": [
+    {
+      "version": "1.0.0",
+      "date": "2026-10-20",
+      "changes": [
+        "NHL 94 SNES pictures: face-off, team blocks, EASN, refs, fonts, sprites",
+        "93S songs by cue, named sound effects, play button",
+        "Audio and image lists aligned across 92, 93G and 93S",
+        "NHLPA 93 SNES rinks open on a team palette",
+        "Jersey editor: scoreboard crest import/export"
+      ]
+    }
+  ]
+}
