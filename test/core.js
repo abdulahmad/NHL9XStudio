@@ -491,8 +491,11 @@ assert.strictEqual(ronFrame.height, 72);
 assert.ok(inkCount(ronFrame) > 100);
 
 function romIf(file) {
-  return fs.existsSync(file) ? fs.readFileSync(file) : null;
+  return file && fs.existsSync(file) ? fs.readFileSync(file) : null;
 }
+// An upstream disassembly's retail ROM: in its folder under any file name (found by SHA-1), or the old path.
+const { findRomIn, ROMS: UPSTREAM_ROMS } = require('../lib/upstream-rom');
+const upstreamRom = (dir, id, old) => romIf(findRomIn(dir, UPSTREAM_ROMS[id]) || old);
 const viewer92 = romIf(path.join(root, 'roms', 'nhl92.bin'));
 if (viewer92) {
   const game = GAMES.find((item) => item.id === 'nhl92');
@@ -523,6 +526,7 @@ if (retail92) {
 }
 const genesis93 =
   romIf('/tmp/disasm/NHLPA93Genesis/output/retail/nhl93.bin')
+  || upstreamRom('/tmp/disasm/NHLPA93Genesis', 'nhlpa93', null)
   || romIf(path.join(root, 'roms', 'nhlpa93.bin'));
 if (genesis93) {
   const sheet = parseSheet(genesis93, pa93.sheet);
@@ -541,7 +545,7 @@ if (genesis93) {
   assert.ok(zam.numFrames >= 1);
   assert.ok(inkCount(zam.renderFrame(1)) > 20);
 }
-const genesis94 = romIf('/tmp/disasm/NHL94Genesis/lst/nhl94.bin');
+const genesis94 = upstreamRom('/tmp/disasm/NHL94Genesis', 'nhl94', '/tmp/disasm/NHL94Genesis/lst/nhl94.bin');
 if (genesis94) {
   const boston = g94.images.find((image) => image.id === 'logoBOS.map.jim');
   const logo = decodeJim(
@@ -569,7 +573,7 @@ if (genesis94) {
   assert.ok(crowd.numFrames >= 2);
   assert.ok(inkCount(crowd.renderFrame(1)) > 100);
 }
-const genesis95 = romIf('/tmp/disasm/NHL95Genesis/lst/nhl95.bin');
+const genesis95 = upstreamRom('/tmp/disasm/NHL95Genesis', 'nhl95', '/tmp/disasm/NHL95Genesis/lst/nhl95.bin');
 if (genesis95) {
   const logo = g95.images.find((image) => image.id === 'logoANA.map.jim');
   const drawn = decodeJim(genesis95.subarray(logo.start, logo.end));
@@ -650,7 +654,7 @@ if (revB93) {
     assert.ok(bank.numFrames >= 2, id);
   }
 }
-const retail93 = romIf('/tmp/snes/93/nhlpa93retail.sfc') || romIf('/tmp/snes/93/lst/nhlpa93snes.bin');
+const retail93 = upstreamRom('/tmp/snes/93', 'nhlpa93snes', '/tmp/snes/93/lst/nhlpa93snes.bin');
 if (retail93) {
   const drawn = parse93(retail93, GAMES.find((game) => game.id === 'nhlpa93snes').snes);
   assert.strictEqual(drawn.numFrames, 720);
@@ -699,7 +703,7 @@ if (retail93) {
   assert.strictEqual(scout93.renderFrame(1).width, 256);
   assert.strictEqual(scout93.renderFrame(1).height, 128);
 }
-const retail94 = romIf('/tmp/snes/94/lst/nhl94snes.sfc');
+const retail94 = upstreamRom('/tmp/snes/94', 'nhl94snes', '/tmp/snes/94/lst/nhl94snes.sfc');
 if (retail94) {
   const game = GAMES.find((item) => item.id === 'nhl94snes');
   const drawn = parse94(retail94, game.snes);
@@ -1248,7 +1252,7 @@ if (genesis93Rom) {
     }
   }
 }
-const genesis94Rom = genesis94 || romIf(path.join(disasm94, 'lst/nhl94.bin'));
+const genesis94Rom = genesis94 || upstreamRom(disasm94, 'nhl94', path.join(disasm94, 'lst/nhl94.bin'));
 if (genesis94Rom) {
   const teamSong = nhl94Audio.entries.find((e) => e.group === 'Music — Team');
   const schedule94 = audio.genesis.previewEntry(

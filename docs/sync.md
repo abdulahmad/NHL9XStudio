@@ -15,10 +15,10 @@ Clone or update these on your machine (paths below are **conventions** — set e
 | **EA-NHL-Tools** | `$EA_NHL_TOOLS_ROOT` or sibling `../EA-NHL-Tools` | `ANIM-To-BMP`, `Asset-Extractor/extractAssets*.js`, `Docs/Sprites`, `Docs/SND`, `JIM-Tools`, `PAL-To-ACT`, golden BMP tests |
 | **NHL92Genesis** | `/tmp/disasm/NHL92Genesis` or your disasm root | `src/frames.Asm` → `data/frames.asm` |
 | **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames93.asm` → `data/frames93.asm`; `src/sound93.asm` + `tools/extractAssets93.js` → `lib/audio/data/nhlpa93-streams.json`; built `output/retail/nhl93.bin` (`node tools/build.js retail`) for optional ROM tests |
-| **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; `lst/nhl94.bin` |
-| **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames95.asm` → `data/frames95.asm`; `lst/nhl95.bin` |
+| **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; the retail ROM in the repo folder |
+| **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames95.asm` → `data/frames95.asm`; the retail ROM in the repo folder |
 | **NHLPA93SNES** | `$SNES93` or `/tmp/snes/93` | `src/data/frames93s.asm` (SPA/SPF equates), `src/ram93s.asm` → `tools/build-snes-frames.js`; team palettes `Extracted/Graphics/Pals/*.pal` (run `npm run assets` in NHLPA93SNES first; the ROM is `nhlpa93retail.sfc` in that folder) → `data/pals/snes/*.snespal` (same bytes, renamed) |
-| **NHL94 SNES disasm** | `/tmp/snes/94` | Retail ROM `lst/nhl94snes.sfc` → `tools/build-snes-frames.js` (94 SPA names) |
+| **NHL94 SNES disasm** | `/tmp/snes/94` | The retail ROM in the repo folder → `tools/build-snes-frames.js` (94 SPA names); `src/data/name_map`-style docs → `tools/extract-nhl94s-sound.js` |
 | **NHL95PC** (optional) | install folder or `pc95/` locally | Not in git; used for manual QA and `test.js` live paths under `/tmp/nhl95all` |
 
 NHLPA93SNES layout (what the tools read): `src/data/frames93s.asm` and `src/ram93s.asm` (frames), `docs/file-map.md` and `src/data/sound/*.asm` (sound; older checkouts keep the sound data in `src/banks/b86_sound_driver.asm`), `src/routines/sound/StartSng<Name>.asm` (the `sound` module has no areas), `Extracted/` (written by `npm run assets`; the ROM is `nhlpa93retail.sfc` in that folder). The other routine modules have areas (`src/routines/hockey/collisions/`, ...) and the bank files are named after their data and code; none of the tools depend on those paths.
@@ -108,7 +108,7 @@ Review diffs for new SPA/SPF names — update `lib/parse-frames.js` `SPF_INFO` /
 
 ```bash
 export SNES93=/tmp/snes/93
-export SNES94_ROM=/tmp/snes/94/lst/nhl94snes.sfc
+# SNES94_ROM is optional: the ROM is found in /tmp/snes/94 by its SHA-1 (any file name)
 cd "$STUDIO" && node tools/build-snes-frames.js
 ```
 
@@ -124,7 +124,7 @@ rsync -a --delete "$SNES93/src/data/pals/" "$STUDIO/data/pals/snes/"   # adjust 
 1. Open the matching `EA-NHL-Tools/Asset-Extractor/extractAssets{93,94,95}.js` and disasm asset lists.
 2. For each picture, set `start`/`end` to **retail ROM** bytes (extract script offsets are often start points; `test.js` documents **trim** rules for 93G).
 3. Add/rename `id`/`label`/`group`/`kind`/`paletteAt` to match extract filenames.
-4. Run optional ROM tests (place ROMs under `roms/` or `/tmp/disasm/.../lst/`).
+4. Run optional ROM tests (place ROMs under `roms/`, or in the disassembly folders `/tmp/disasm/<repo>` and `/tmp/snes/<93|94>`: `lib/upstream-rom.js` finds them by SHA-1 under any file name).
 
 **Audio (Genesis):**
 
@@ -192,7 +192,7 @@ Example user message:
 When instructed to sync per this file:
 
 1. Read `docs/AGENT-HANDOFF.md` and `docs/DESIGN.md` §1 (priority order) so you do not fight active GAP work.
-2. Resolve upstream paths (`EA_NHL_TOOLS_ROOT`, `SNES93`, `SNES94_ROM`, disasm `lst/*.bin`).
+2. Resolve upstream paths (`EA_NHL_TOOLS_ROOT`, `SNES93`, `SNES94_ROM`, the retail ROMs in the disasm folders).
 3. Run the **scoped** steps in §3–4; produce a short summary of what changed upstream (commits or dates if visible).
 4. Update Studio artifacts in the table in §2; run `node test.js` and `node tools/build-manifest.js`.
 5. If new symbols or images appear, update viewer search aliases / `SPF_INFO` only when needed for UX.
@@ -241,3 +241,4 @@ When upstream and Studio **intentionally** diverge (e.g. interim `frames94pc.asm
 | Date | Change |
 |------|--------|
 | 2026-10-15 | Initial sync runbook for agents and maintainers |
+| 2026-10-28 | The disassembly repos keep the ROM in the repo folder under any file name (no `lst/`); Studio finds it by SHA-1 (`lib/upstream-rom.js`). The repos' `src/` has placeholders for the licensed names and generates them from the ROM, so SNES sound labels with team nicknames changed (`SongNYICharge`). |

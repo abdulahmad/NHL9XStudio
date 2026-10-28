@@ -17,7 +17,9 @@ const path = require('path');
 const { parseFrames } = require('../lib/parse-frames');
 
 const SRC93 = process.env.SNES93 || '/tmp/snes/93';
-const ROM94 = process.env.SNES94_ROM || '/tmp/snes/94/lst/nhl94snes.sfc';
+const { findRomIn, ROMS } = require('../lib/upstream-rom');
+// The NHL 94 SNES ROM: in the repo folder under any file name (found by SHA-1), or the older lst/nhl94snes.sfc.
+const ROM94 = process.env.SNES94_ROM || findRomIn('/tmp/snes/94', ROMS.nhl94snes) || '/tmp/snes/94/lst/nhl94snes.sfc';
 const OUT = path.join(__dirname, '..', 'data');
 // NHL 94 SNES sequences named by hand (see docs/AGENT-HANDOFF.md): generated name -> [name, comment].
 const KNOWN94 = {
