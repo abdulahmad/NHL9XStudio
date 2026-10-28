@@ -12,7 +12,7 @@ Clone or update these on your machine (paths below are **conventions** — set e
 
 | Upstream | Typical local path | NHL9X Studio consumes |
 |----------|-------------------|------------------------|
-| **EA-NHL-Tools** | `$EA_NHL_TOOLS_ROOT` or sibling `../EA-NHL-Tools` | `ANIM-To-BMP`, `Asset-Extractor/extractAssets*.js`, `Docs/Sprites`, `Docs/SND`, `JIM-Tools`, `PAL-To-ACT`, golden BMP tests |
+| **EA-NHL-Tools** | `$EA_NHL_TOOLS_ROOT` or sibling `../EA-NHL-Tools` | `ANIM-To-BMP`, `Asset-Extractor/extractAssets*.js`, `Docs/Sprites`, `Docs/SND`, `JIM-Tools`, `PAL-To-ACT`, golden BMP tests. **JIM-Tools compression docs are not source of truth** — see `docs/nhl9x-studio-requirements.md` §4; use 93G/94G `DecompressBytecode` and `lib/jim.js`. |
 | **NHL92Genesis** | `/tmp/disasm/NHL92Genesis` or your disasm root | `src/frames.Asm` → `data/frames.asm` |
 | **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames93.asm` → `data/frames93.asm`; `src/sound93.asm` + `tools/extractAssets93.js` → `lib/audio/data/nhlpa93-streams.json`; built `output/retail/nhl93.bin` (`node tools/build.js retail`) for optional ROM tests |
 | **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; the retail ROM in the repo folder |

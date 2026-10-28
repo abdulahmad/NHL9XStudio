@@ -14,7 +14,7 @@ Everything below is merged to `main` and live on GitHub Pages (a deploy can fail
 
 **Last updated:** 2026-10-15 (NHL '92 sound steps 6–7 on main; see sound handoff below)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
-**Design / roadmap:** `docs/DESIGN.md`  
+**Design / roadmap:** `docs/DESIGN.md`. **Maps editor spec:** `docs/nhl9x-studio-requirements.md`.  
 **Upstream sync runbook:** `docs/sync.md` — use when aligning with disasm / EA-NHL-Tools (“sync per sync.md”).
 
 ---
@@ -54,6 +54,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 
 | ID | Scope | Notes |
 |----|--------|------|
+| **MAPS** | Genesis JIM editor | Hide Chip Lab; `.map.jim` import/edit/export. Spec: `docs/nhl9x-studio-requirements.md` |
 | **GAP-2** | 93G | JIM inventory polish optional |
 | **GAP-3** | 94G | Done — SPA/SPF/image search aliases + celebrate vs bench-check blurbs |
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
@@ -78,6 +79,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 | `lib/audio/` | Genesis catalogs + FM preview (`genesis.js`, `data/audio/`) |
 | `test.js` | Regression tests |
 | `tools/build-manifest.js` | Regenerate `public/games.json` |
+| `docs/nhl9x-studio-requirements.md` | Genesis `.map.jim` editor + Chip Lab hide |
 
 ### Optional ROMs (local)
 
