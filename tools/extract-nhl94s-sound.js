@@ -65,7 +65,8 @@ function main() {
   const dir = args.filter((a) => !a.startsWith('--'))[0];
   const out = args.filter((a) => !a.startsWith('--'))[1] || OUT;
   if (!dir) { console.error('usage: extract-nhl94s-sound.js <NHL94SNES dir> [out.json | --check]'); process.exit(2); }
-  const rom = fs.readFileSync(path.join(dir, 'lst', 'nhl94snes.sfc'));
+  const romFile = require('../lib/upstream-rom').findRomIn(dir, { sha1: ROM_SHA1 }) || path.join(dir, 'lst', 'nhl94snes.sfc');   // any file name in the repo folder
+  const rom = fs.readFileSync(romFile);
   const sha = crypto.createHash('sha1').update(rom).digest('hex');
   if (sha !== ROM_SHA1) throw new Error('ROM SHA-1 ' + sha + ' is not the expected NHL \'94 SNES ' + ROM_SHA1);
   const csv = fs.readFileSync(path.join(dir, 'docs', 'name_map.csv'), 'utf8').split(/\r?\n/).slice(1).filter(Boolean);

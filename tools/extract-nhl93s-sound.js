@@ -80,8 +80,8 @@ function main() {
   const dir = args.filter((a) => !a.startsWith('--'))[0];
   const out = args.filter((a) => !a.startsWith('--'))[1] || OUT;
   if (!dir) { console.error('usage: extract-nhl93s-sound.js <NHLPA93SNES dir> [out.json | --check]'); process.exit(2); }
-  // the retail ROM sits in the repo folder as nhlpa93retail.sfc (older checkouts: lst/nhlpa93snes.bin)
-  const romPath = [path.join(dir, 'nhlpa93retail.sfc'), path.join(dir, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p));
+  // the retail ROM sits in the repo folder under any file name (found by SHA-1; usually nhlpa93retail.sfc; older checkouts: lst/nhlpa93snes.bin)
+  const romPath = require('../lib/upstream-rom').findRomIn(dir, { sha1: ROM_SHA1 }) || [path.join(dir, 'nhlpa93retail.sfc'), path.join(dir, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p));
   if (!romPath) throw new Error('no nhlpa93retail.sfc in ' + dir);
   const rom = fs.readFileSync(romPath);
   const sha = crypto.createHash('sha1').update(rom).digest('hex');

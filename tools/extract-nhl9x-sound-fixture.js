@@ -18,19 +18,19 @@ const GAMES = {
     name: 'NHLPA 93 (Genesis, retail v1.1)', sha1: '8efc1cacb079ea223966dda065c16c49e584cac2', size: 0x80000,
     start: 0x165d8, end: 0x2e1fc, // sound93 (NHLPA93Genesis); graphics93 starts at $2E1FC
     env: 'NHL93_ROM', files: ['roms/nhlpa93.bin', 'roms/nhlpa93retail.bin', '../ea-nhl-disassembly-project/NHL93-Genesis/nhlpa93retail.bin'],
-    out: 'nhl93-sound'
+    out: 'nhl93-sound', repos: ['/tmp/disasm/NHLPA93Genesis', '../NHLPA93Genesis', '../nhlpa93genesis']
   },
   94: {
     name: 'NHL 94 (Genesis, retail)', sha1: '7b1489ab501258133bf03e5f0892b77d04312580', size: 0x100000,
     start: 0x1a264, end: 0x4b5c0, // sound94 (NHL94Genesis tools/segments.json); graphics94 starts at $4B5C0
     env: 'NHL94_ROM', files: ['roms/nhl94.bin', '../abdulahmad/nhl94genesis/lst/nhl94.bin', '../ea-nhl-disassembly-project/NHL94-Genesis/nhl94.bin'],
-    out: 'nhl94-sound'
+    out: 'nhl94-sound', repos: ['/tmp/disasm/NHL94Genesis', '../NHL94Genesis', '../nhl94genesis']
   },
   95: {
     name: 'NHL 95 (Genesis, retail)', sha1: '09e87b076aa4cd6f057a1d65bb50fd889b509b44', size: 0x200000,
     start: 0xaf44, end: 0x7a000, // sound95 (NHL95Genesis segmap95); driver, bank, PCM, FM patches
     env: 'NHL95_ROM', files: ['roms/nhl95.bin', '/tmp/disasm/NHL95Genesis/lst/nhl95.bin'],
-    out: 'nhl95-sound'
+    out: 'nhl95-sound', repos: ['/tmp/disasm/NHL95Genesis', '../NHL95Genesis', '../nhl95genesis']
   }
 };
 
@@ -40,7 +40,8 @@ for (const key of want) {
   const g = GAMES[key];
   if (!g) { console.error('unknown game ' + key + ' (93 or 94)'); process.exit(1); }
   const candidates = [process.env[g.env]].concat(g.files.map((f) => path.join(root, f))).filter(Boolean);
-  const file = candidates.find((f) => fs.existsSync(f));
+  const file = candidates.find((f) => fs.existsSync(f))
+    || require('../lib/upstream-rom').findRomIn(g.repos.concat(path.join(root, 'roms')), { sha1: g.sha1, size: g.size });   // any file name in a disassembly folder
   if (!file) {
     console.error('NHL ' + key + ': need ' + g.files[0] + ' (or ' + g.env + '=path) to refresh the sound fixture.');
     failed = true;

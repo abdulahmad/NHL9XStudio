@@ -60,7 +60,7 @@ SPAgready	= *-SPAList	; goalie ready (loops)
 .6	dc.w	424,120,639,10,640,10,639,10,640,10,424,120,639,10,640,10,639,-10
 .7	dc.w	427,180,641,10,642,10,641,10,642,10,427,180,641,10,642,10,641,-10
 
-SPAgready2	= *-SPAList
+SPAgready2	= *-SPAList	; goalie ready position, held frame (used by the goalie scripts)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0

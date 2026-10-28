@@ -28,7 +28,8 @@ function opLength(op) {
 }
 
 function load94(dir) {
-  const rom = fs.readFileSync(path.join(dir, 'lst', 'nhl94snes.sfc'));
+  const { findRomIn, ROMS } = require('../lib/upstream-rom');
+  const rom = fs.readFileSync(findRomIn(dir, ROMS.nhl94snes) || path.join(dir, 'lst', 'nhl94snes.sfc'));
   const key = Buffer.from([0x00, 0x04, 0x20, 0xcd, 0xff]); // upload header (base $0400) + clrp, mov x,#$FF
   const i = rom.indexOf(key);
   if (i < 2) throw new Error('NHL94 sound driver block not found');
@@ -79,7 +80,7 @@ const hex = (s) => [...s].sort((a, b) => a - b).map((o) => ('0' + o.toString(16)
 const [d93, d94] = process.argv.slice(2);
 if (!d93 || !d94) { console.error('usage: scan-spc700-driver-ops.js <NHLPA93SNES dir> <NHL94SNES dir>'); process.exit(2); }
 // the whole driver block (code, songs and effects): $868004, 9959 bytes; Extracted/Sound/driver.spc700 holds only its code part
-const m93 = fs.readFileSync([path.join(d93, 'nhlpa93retail.sfc'), path.join(d93, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p))).subarray(0x30004, 0x30004 + 9959);
+const m93 = fs.readFileSync(require('../lib/upstream-rom').findRomIn(d93, require('../lib/upstream-rom').ROMS.nhlpa93snes) || [path.join(d93, 'nhlpa93retail.sfc'), path.join(d93, 'lst', 'nhlpa93snes.bin')].find((p) => fs.existsSync(p))).subarray(0x30004, 0x30004 + 9959);
 const m94 = load94(d94);
 const out = {};
 for (const [name, mem] of [['nhl93', m93], ['nhl94', m94]]) {
