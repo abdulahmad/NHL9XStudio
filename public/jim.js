@@ -427,6 +427,20 @@
   function floatPlaceable() {
     return !!(state.float && !floatReplace() && !floatAdd());
   }
+  function floatHasSeams() {
+    const f = state.float;
+    if (!f || !f.palettes || !f.cells || !f.cells.length) return false;
+    if (floatAdd()) return false;
+    const mode = f.mode || importMode();
+    return !isPngReduce(mode);
+  }
+  function lockedPalList() {
+    const locked = [];
+    for (let p = 0; p < palCount(); p++) {
+      locked[p] = !!( $('jim-lock-' + p) && $('jim-lock-' + p).checked );
+    }
+    return locked;
+  }
   function viewMap() {
     if (floatReplace()) return { w: state.float.w, h: state.float.h };
     return { w: doc.mapW, h: doc.mapH };
@@ -1298,6 +1312,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       erase: { x: 4, y: 20, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linejoin="round" d="M4 14.5l7.2-7.2 6.5 6.5-4.4 4.4H6.2L4 16.2z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M8.2 18.2H20"/></svg>' },
       select: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="#f0b429" stroke-width="2" stroke-dasharray="3 2.5"/></svg>' },
       pick: { x: 4, y: 21, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" d="M14.2 4.2l5.6 5.6-8.4 8.4-3.2-3.2 6-10.8z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M7.2 16.2L4 20"/></svg>' },
+      pal: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="13" y="13" width="8" height="8" fill="#f0b429"/></svg>' },
       pan: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" d="M8 11V6.5a1.5 1.5 0 013 0V11m0-3.2V5.5a1.5 1.5 0 013 0V11m0-2.2V6.8a1.5 1.5 0 013 0V13c0 3-1.4 6.5-4.6 6.5H12c-2.8 0-5-1.6-6.2-3.4L4.2 13.2A1.4 1.4 0 016.6 12L8 13"/></svg>' }
     };
     const icon = icons[tool];
@@ -1433,6 +1448,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       }
       ctx.stroke();
     }
+    if (state.float && floatHasSeams() && ($('jim-seam').checked || state.tool === 'pal')) {
+      drawFloatSeams(ctx, z);
+    }
     if ($('jim-show-users').checked) {
       ctx.strokeStyle = 'rgba(240, 180, 41, 0.95)';
       ctx.beginPath();
@@ -1461,8 +1479,53 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     ctx.strokeStyle = '#ffffff';
     ctx.strokeRect(state.focus.x * 8 * z + 0.5, state.focus.y * 8 * z + 0.5, 8 * z - 1, 8 * z - 1);
-    canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
+    canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' && state.tool !== 'pal' ? 'move' : toolCursor(state.tool);
     $('jim-zoom-val').textContent = state.zoom + '×';
+  }
+  function drawFloatSeams(ctx, z) {
+    const f = state.float;
+    if (!f || !f.cells) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
+    ctx.beginPath();
+    for (let ty = 0; ty < f.h; ty++) {
+      for (let tx = 0; tx < f.w; tx++) {
+        const cell = f.cells[ty * f.w + tx];
+        if (!cell) continue;
+        const pal = cell.pal | 0;
+        const mx = f.x + tx;
+        const my = f.y + ty;
+        const right = f.cells[ty * f.w + tx + 1];
+        const below = f.cells[(ty + 1) * f.w + tx];
+        if (tx + 1 < f.w && right && (right.pal | 0) !== pal) {
+          const x = (mx + 1) * 8 * z + 0.5;
+          ctx.moveTo(x, my * 8 * z); ctx.lineTo(x, (my + 1) * 8 * z);
+        }
+        if (ty + 1 < f.h && below && (below.pal | 0) !== pal) {
+          const y = (my + 1) * 8 * z + 0.5;
+          ctx.moveTo(mx * 8 * z, y); ctx.lineTo((mx + 1) * 8 * z, y);
+        }
+      }
+    }
+    ctx.stroke();
+    if (state.tool === 'pal' && z >= 2) {
+      ctx.font = Math.max(9, Math.floor(z * 1.6)) + 'px sans-serif';
+      ctx.textBaseline = 'top';
+      for (let ty = 0; ty < f.h; ty++) {
+        for (let tx = 0; tx < f.w; tx++) {
+          const cell = f.cells[ty * f.w + tx];
+          if (!cell) continue;
+          const x = (f.x + tx) * 8 * z + 2;
+          const y = (f.y + ty) * 8 * z + 1;
+          const label = String(cell.pal | 0);
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(x - 1, y, ctx.measureText(label).width + 3, Math.max(10, z * 1.8));
+          ctx.fillStyle = '#f0b429';
+          ctx.fillText(label, x, y);
+        }
+      }
+    }
+    ctx.restore();
   }
   function blitFloat(data, W, H, mapW, mapH) {
     const f = state.float;
@@ -1637,6 +1700,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-paste').disabled = ro || !state.clip;
     document.querySelectorAll('.jim-needsel').forEach((el) => { el.disabled = ro || !state.sel; });
     $('jim-float-bar').hidden = !state.float;
+    const seamBox = $('jim-float-seam');
+    if (seamBox) seamBox.hidden = !floatHasSeams();
     if (state.float) {
       const extra = state.float.pending ? ' · quantize pending' : '';
       const hint = $('jim-float-hint');
@@ -1645,7 +1710,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         $('jim-float-name').textContent = state.float.name + extra;
         if (hint) hint.hidden = true;
         if (hintAdd) hintAdd.hidden = false;
-      } else if (state.float.bitmap) {
+      } else if (state.float.bitmap && !floatHasSeams()) {
         $('jim-float-name').textContent = state.float.name + ' (' + state.float.bitmap.w + '×' +
           state.float.bitmap.h + ' px)' + extra;
         if (hint) hint.hidden = false;
@@ -1653,7 +1718,14 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       } else {
         $('jim-float-name').textContent = state.float.name + ' (' + state.float.w + '×' + state.float.h + ') at ' +
           state.float.x + ', ' + state.float.y + extra;
-        if (hint) hint.hidden = false;
+        if (hint) {
+          hint.hidden = false;
+          if (floatHasSeams()) {
+            hint.innerHTML = state.tool === 'pal'
+              ? ('Pal tool · click a tile to use pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · Apply to commit')
+              : 'dotted outline · Pal tool assigns palettes · Optimize seams · Apply to commit';
+          }
+        }
         if (hintAdd) hintAdd.hidden = true;
       }
     }
@@ -1661,6 +1733,56 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       ? state.float.warnings.join(' ')
       : '';
     renderCompare();
+    revealImportChrome();
+  }
+  let mapSplitBeforePopup = null;
+  function revealImportChrome() {
+    const view = $('jim-view');
+    const chrome = $('jim-chrome');
+    const scroll = $('jim-scroll');
+    if (!view || !chrome || !scroll) return;
+    const popping = !!(state.float ||
+      ($('jim-compare') && !$('jim-compare').hidden) ||
+      ($('jim-hash') && !$('jim-hash').hidden) ||
+      ($('jim-portrait') && !$('jim-portrait').hidden));
+    if (!popping) {
+      if (mapSplitBeforePopup) {
+        if (mapSplitBeforePopup.active) {
+          view.style.setProperty('--jim-map-h', mapSplitBeforePopup.h + 'px');
+          view.classList.add('is-split');
+        } else {
+          view.style.removeProperty('--jim-map-h');
+          view.classList.remove('is-split');
+        }
+        mapSplitBeforePopup = null;
+      }
+      return;
+    }
+    const fit = () => {
+      if (chrome.scrollHeight <= chrome.clientHeight + 2) {
+        const bar = $('jim-float-bar');
+        if (bar && !bar.hidden) bar.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      if (mapSplitBeforePopup == null) {
+        mapSplitBeforePopup = {
+          active: view.classList.contains('is-split'),
+          h: Math.round(scroll.getBoundingClientRect().height)
+        };
+      }
+      const col = view.getBoundingClientRect().height;
+      const split = $('jim-split');
+      const note = $('jim-note');
+      const splitH = split ? split.getBoundingClientRect().height : 0;
+      const noteH = note ? note.getBoundingClientRect().height : 0;
+      const mapH = Math.max(80, Math.round(col - chrome.scrollHeight - splitH - noteH));
+      view.style.setProperty('--jim-map-h', mapH + 'px');
+      view.classList.add('is-split');
+      chrome.scrollTop = 0;
+      const bar = $('jim-float-bar');
+      if (bar && !bar.hidden) bar.scrollIntoView({ block: 'nearest' });
+    };
+    requestAnimationFrame(fit);
   }
   function blitRgba(canvas, rgba, w, h) {
     const max = 160;
@@ -2021,6 +2143,10 @@ remember();
     if (!doc) return;
     const p = cellAt(event);
     if (!p) return;
+    if (state.tool === 'pal') {
+      assignFloatPalAt(p, event.button === 2);
+      return;
+    }
     if (floatPlaceable() && state.tool !== 'pan' && event.button === 0) {
       state.drag = { float: true, x: p.x, y: p.y };
       $('jim-map').setPointerCapture(event.pointerId);
@@ -2131,6 +2257,73 @@ remember();
       state.undo.pop();
     }
     state.drag = null;
+    renderAll();
+  }
+  function assignFloatPalAt(p, pick) {
+    if (!floatHasSeams()) {
+      status('Palette paint works on a floating import. Import an image, then click tiles.', true);
+      return;
+    }
+    const f = state.float;
+    const tx = p.x - f.x;
+    const ty = p.y - f.y;
+    if (tx < 0 || ty < 0 || tx >= f.w || ty >= f.h) return;
+    const cell = f.cells[ty * f.w + tx];
+    if (!cell) {
+      status('No imported tile in that cell.', true);
+      return;
+    }
+    if (pick) {
+      state.color = { pal: cell.pal | 0, index: state.color.index };
+      status('Picked palette ' + (cell.pal | 0) + ' from the floating tile.');
+      renderSwatches();
+      renderChrome();
+      return;
+    }
+    const dest = state.color.pal & (isSnes() ? 7 : 3);
+    const pals = f.palettes || doc.palettes;
+    if (Quant && typeof Quant.setTilePalette === 'function') {
+      const hit = Quant.setTilePalette(cell, dest, pals, {
+        bits: colorBits(),
+        opaquePal0: $('jim-opaque0').checked,
+        lockedLines: lockedPalList()
+      });
+      if (!hit.ok) { status(hit.reason, true); return; }
+      cell.nibbles = hit.nibbles;
+      cell.pal = hit.pal;
+    } else {
+      cell.pal = dest;
+    }
+    status('Tile ' + tx + ',' + ty + ' is pal ' + dest + '.');
+    renderMap();
+    renderChrome();
+  }
+  function optimizeFloatSeams() {
+    if (!floatHasSeams() || !canEdit()) return;
+    const f = state.float;
+    if (!Quant || typeof Quant.optimizeSeams !== 'function') {
+      status('Seam optimizer did not load.', true);
+      return;
+    }
+    const pals = f.palettes || doc.palettes;
+    const use = openPalList();
+    const result = Quant.optimizeSeams(f.cells, pals, f.w, f.h, {
+      bits: colorBits(),
+      opaquePal0: $('jim-opaque0').checked,
+      lockedLines: lockedPalList(),
+      availablePals: use.length ? use : pals.map((_, i) => i)
+    });
+    f.cells = result.cells;
+    if (f.palettes) f.palettes = result.palettes;
+    else doc.palettes = result.palettes;
+    const extra = result.warnings && result.warnings.length ? ' ' + result.warnings.join(' ') : '';
+    if (result.moved) {
+      status('Seams: moved ' + result.moved + ' tile' + (result.moved === 1 ? '' : 's') +
+        ' onto shared palettes. Free ink slots ' + result.freeBefore + ' → ' + result.freeAfter + '.' + extra);
+    } else {
+      status('Seams: tiles already share palettes where they can. Free ink slots ' +
+        result.freeAfter + '.' + extra);
+    }
     renderAll();
   }
   function pickAt(p) {
@@ -3568,7 +3761,12 @@ remember();
       if (doc.readOnly && btn.classList.contains('jim-edit')) return;
       state.tool = btn.dataset.tool;
       document.querySelectorAll('[data-tool]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
+      if (state.tool === 'pal' && floatHasSeams() && $('jim-seam') && !$('jim-seam').checked) {
+        $('jim-seam').checked = true;
+        $('jim-seam').dispatchEvent(new Event('change', { bubbles: true }));
+      }
       renderMap();
+      renderChrome();
       if (doc) renderTileEdit();
     }));
     const canvas = $('jim-map');
@@ -3634,6 +3832,7 @@ remember();
         bar.addEventListener('pointermove', move);
         bar.addEventListener('pointerup', up);
       });
+      window.addEventListener('resize', () => { if (state.float) revealImportChrome(); });
     })();
     (function wireTilesSplit() {
       const KEY = 'nhl9x-jim-tiles-h';
@@ -3892,6 +4091,9 @@ remember();
     });
     $('jim-float-apply').addEventListener('click', () => { try { applyFloat(); } catch (err) { status(err.message, true); } });
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
+    if ($('jim-float-opt')) $('jim-float-opt').addEventListener('click', () => {
+      try { optimizeFloatSeams(); } catch (err) { status(err.message, true); }
+    });
     $('jim-export').addEventListener('click', requestExport);
     if ($('jim-float-export-apply')) $('jim-float-export-apply').addEventListener('click', applyThenExport);
     if ($('jim-float-export-cancel')) $('jim-float-export-cancel').addEventListener('click', closeFloatExportPrompt);

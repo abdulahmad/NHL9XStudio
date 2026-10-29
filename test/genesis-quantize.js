@@ -345,4 +345,49 @@ function uniqueRgb(rgba) {
   assert.strictEqual(alpha.rgbaOut[7], 200);
 }
 
+function palLine() {
+  const line = Array.from({ length: 16 }, () => null);
+  line[0] = { r3: 0, g3: 0, b3: 0 };
+  return line;
+}
+
+{
+  assert.strictEqual(typeof Q.setTilePalette, 'function');
+  const red = { r3: 7, g3: 0, b3: 0 };
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[0][1] = red;
+  const nib = new Uint8Array(64);
+  nib[0] = 1;
+  const hit = Q.setTilePalette({ nibbles: nib, pal: 0 }, 1, palettes, {
+    bits: 3, opaquePal0: true
+  });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.pal, 1);
+  assert.deepStrictEqual(palettes[1][hit.nibbles[0]], red);
+}
+
+{
+  assert.strictEqual(typeof Q.optimizeSeams, 'function');
+  const red = { r3: 7, g3: 0, b3: 0 };
+  const blue = { r3: 0, g3: 0, b3: 7 };
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[0][1] = red;
+  palettes[0][2] = blue;
+  palettes[1][1] = red;
+  palettes[1][2] = blue;
+  const nib = new Uint8Array(64);
+  nib[0] = 1;
+  nib[1] = 2;
+  const cells = [
+    { nibbles: Uint8Array.from(nib), pal: 0 },
+    { nibbles: Uint8Array.from(nib), pal: 1 }
+  ];
+  const result = Q.optimizeSeams(cells, palettes, 2, 1, { bits: 3, opaquePal0: true });
+  assert.strictEqual(result.cells[0].pal, result.cells[1].pal,
+    'matching tiles share a palette');
+  assert.ok(result.moved >= 1, 'at least one tile moved, got ' + result.moved);
+  assert.ok(result.freeAfter > result.freeBefore,
+    'shared palettes free ink slots ' + result.freeBefore + ' -> ' + result.freeAfter);
+}
+
 console.log('genesis-quantize: ok');

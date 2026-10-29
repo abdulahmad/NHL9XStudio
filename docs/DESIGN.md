@@ -149,6 +149,8 @@ Five import modes, named in the UI as:
 - PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines (hidden in lattice-only and count-only)
 - Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)
 - Change color options while the float is pending; Apply is what commits
+- When Apply, import previews, or other chrome pop-ups appear, the **centre pane expands** so they stay on screen
+- On a floating import, **Pal** paints which 8×8 tiles use which palette. **Optimize seams** moves tiles that share colors onto the same palette so other lines get free ink slots
 - Export with a floating image open asks to **Apply, then export**, or **Cancel** and leaves Export closed
 - Only-empty-cells skip map words that already have a tile
 
@@ -261,7 +263,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
-| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. 5-bit quantization wherever 3-bit exists. |
+| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. Centre pane expands for Apply and import previews. Floating import Pal tool + Optimize seams. 5-bit quantization wherever 3-bit exists. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |

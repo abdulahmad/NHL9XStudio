@@ -10,8 +10,8 @@
 }
 .jim-side { overflow: auto; }
 .jim-view { overflow: hidden; }
-.jim-chrome { flex: 0 0 auto; min-height: 0; overflow: visible; }
-.jim-view.is-split .jim-chrome { flex: 1 1 auto; min-height: 72px; overflow: auto; }
+.jim-chrome { flex: 0 0 auto; min-height: min-content; overflow: visible; }
+.jim-view.is-split .jim-chrome { flex: 1 1 auto; min-height: min-content; overflow: auto; }
 .jim-main .ice-scroll { flex: 1 1 auto !important; min-height: 80px; }
 .jim-view.is-split .ice-scroll { flex: 0 0 var(--jim-map-h, 280px) !important; min-height: 80px; }
 .jim-tiles {
