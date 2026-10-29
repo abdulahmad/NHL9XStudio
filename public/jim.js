@@ -1777,8 +1777,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
           hint.hidden = false;
           if (floatHasSeams()) {
             hint.textContent = state.tool === 'pal'
-              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to rebuild this pal from those pixels · Apply to commit')
-              : 'dotted outline · Pal rebuilds the selected pal from those tiles · Optimize groups matching tiles · Apply to commit';
+              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to move them onto this pal · Apply to commit')
+              : 'dotted outline · Pal moves tiles onto the selected pal · Optimize groups matching tiles · Apply to commit';
           }
         }
         if (hintAdd) hintAdd.hidden = true;
@@ -2400,11 +2400,13 @@ remember();
     if (hit.locked) {
       status('Matched ' + hit.assigned + ' tile' + (hit.assigned === 1 ? '' : 's') +
         ' onto locked pal ' + dest + '.');
+    } else if (hit.remapped) {
+      status('Moved ' + hit.assigned + ' tile' + (hit.assigned === 1 ? '' : 's') +
+        ' onto pal ' + dest + ' (rebuilt that pal from all ' +
+        (hit.assigned + hit.remapped) + ' tiles on it).');
     } else {
       status('Rebuilt pal ' + dest + ' from ' + hit.assigned + ' tile' +
-        (hit.assigned === 1 ? '' : 's') +
-        (hit.remapped ? '; remapped ' + hit.remapped + ' other tile' +
-          (hit.remapped === 1 ? '' : 's') + ' already on that pal' : '') + '.');
+        (hit.assigned === 1 ? '' : 's') + '.');
     }
     renderAll();
   }

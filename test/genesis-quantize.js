@@ -416,7 +416,7 @@ function dummyCell(pal) {
   const source = image(16, 8, (x) => x < 8 ? red : blue);
   const palettes = [palLine(), palLine(), palLine(), palLine()];
   palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
-  const cells = [dummyCell(1), dummyCell(1)];
+  const cells = [dummyCell(0), dummyCell(1)];
   const hit = Q.quantizeTilesToPalette(
     source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }], 1, palettes, {
       bits: 3,
@@ -426,11 +426,12 @@ function dummyCell(pal) {
     });
   assert.ok(hit.ok, hit.reason);
   assert.strictEqual(hit.assigned, 1);
-  assert.ok(hit.remapped >= 1, 'other tiles already on dest pal are remapped, got ' + hit.remapped);
+  assert.ok(hit.remapped >= 1, 'other tiles already on dest pal stay on it, got remapped ' + hit.remapped);
   assert.strictEqual(hit.cells[1].pal, 1);
   const destKeys = inkKeys(hit.palettes[1], 0);
-  assert.ok(!destKeys.has((0 << 6) | (0 << 3) | 7),
-    'unselected blue tile must not keep dest pal from being rebuilt around the selection');
+  assert.ok(destKeys.has((7 << 6) | (0 << 3) | 0), 'moved red tile is in dest pal');
+  assert.ok(destKeys.has((0 << 6) | (0 << 3) | 7),
+    'moving one tile onto dest pal must not wipe colors still used by tiles on that pal');
 }
 
 {
