@@ -96,6 +96,7 @@ const state = {
 };
 
 const banks = new Map();
+const looseMaps = new Map();
 const paletteFiles = new Map();
 let ensuringOpposite = false;
 const bitmaps = new Map();
@@ -478,12 +479,14 @@ function bitmapFor(frame, colors) {
   return canvas;
 }
 
-/** Native 1:1 bitmap of a frame in the selected palette, color 0 see-through, no marks (the stage's bitmapFor path). */
+/** Native 1:1 bitmap of a frame in the selected palette, no marks. Sprites skip color 0; pictures follow Transparency. */
 function exportCanvas(frame, colors) {
   const saved = state.transparentOverride;
   const savedMode = state.mode;
-  state.transparentOverride = true;
-  state.mode = 'image'; // bitmapFor only honors the override in image mode
+  // bitmapFor only honors the override in image mode. Pictures keep the
+  // stage's hole rule (screens default opaque); sprites still skip color 0.
+  state.transparentOverride = frame && frame.picture ? imageTransparencyOn(frame) : true;
+  state.mode = 'image';
   try {
     const src = bitmapFor(frame, colors);
     const out = document.createElement('canvas');
@@ -1357,6 +1360,8 @@ function renderMeta() {
     detail.append(dt, dd);
   }
   el('detail-title').textContent = frame ? 'Frame ' + shownFrame(frame.frame) : 'Frame';
+  const leftoverEdit = el('edit-map');
+  if (leftoverEdit) leftoverEdit.remove();
   const soundData = !!soundPanel();
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
@@ -1574,6 +1579,8 @@ function renderTransport() {
   const showTransparent = state.mode === 'image';
   el('transparent-field').classList.toggle('is-hidden', !showTransparent);
   const showExport = state.mode === 'image' || state.mode === 'frame';
+  const editImage = el('edit-image');
+  if (editImage) editImage.classList.toggle('is-hidden', state.mode !== 'image' || !!soundPanel());
   el('export-frame').classList.toggle('is-hidden', !showExport);
   el('export-all').classList.toggle('is-hidden', !showExport);
   if (showTransparent) {
@@ -1852,6 +1859,11 @@ function wire() {
     state.acc = 0;
   });
   el('export-frame').addEventListener('click', () => exportFrame().catch((e) => alert('Export failed: ' + e.message)));
+  if (el('edit-image')) {
+    el('edit-image').addEventListener('click', () => {
+      openJimEditor().catch((err) => alert(err.message));
+    });
+  }
   el('export-all').addEventListener('click', () => exportAllFrames().catch((e) => alert('Export failed: ' + e.message)));
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
@@ -2111,6 +2123,177 @@ async function ensureRink() {
   const colors = Nhl92Snes.decodeRinkPalette(await response.arrayBuffer());
   rinkColors.set(gameInfo.id, colors);
   return colors;
+}
+
+function bytesToB64(u8) {
+  let s = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < u8.length; i += chunk) {
+    s += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+  }
+  return btoa(s);
+}
+
+function handOffJim(payload) {
+  sessionStorage.setItem('nhl9x-jim-return', location.href);
+  sessionStorage.setItem('nhl9x-jim', JSON.stringify(payload));
+  const q = payload.image
+    ? '#game=' + encodeURIComponent(payload.game || state.game) + '&image=' + encodeURIComponent(payload.image)
+    : '#from=viewer';
+  location.href = 'jim.html' + q;
+}
+
+function editorPlatform() {
+  const kind = gameInfo && gameInfo.kind;
+  if (kind === 'snes93' || kind === 'snes94') return 'snes';
+  return 'genesis';
+}
+
+function nativeMapImage() {
+  const loose = looseMaps.get(state.image);
+  if (loose && loose.bytes && loose.bytes.length &&
+      (loose.kind === 'jim' || loose.kind === 'sjim' || loose.kind === 'snes94')) {
+    return { loose: loose };
+  }
+  const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
+  if (image && (image.kind === 'jim' || image.kind === 'snes93-screen' || image.kind === 'snes94-screen')) {
+    return { image: image };
+  }
+  return null;
+}
+
+function rasterizeShownFrame() {
+  const step = sequence().steps[state.step];
+  const colors = activeColors();
+  const frame = step && colors ? renderedFrame(step.frame) : null;
+  if (!frame || !frame.pixels || !frame.width) return null;
+  const canvas = exportCanvas(frame, colors);
+  const image = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+  return {
+    name: ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image),
+    w: canvas.width,
+    h: canvas.height,
+    rgba: new Uint8Array(image.data)
+  };
+}
+
+function handOffRaster(raster) {
+  const label = (raster.name && (raster.name.label || raster.name.id)) || state.image || 'image';
+  const file = String(label).replace(/\s+/g, '_') + '.png';
+  handOffJim({
+    name: file,
+    game: state.game,
+    image: state.image,
+    rgbaB64: bytesToB64(raster.rgba),
+    rgbaW: raster.w,
+    rgbaH: raster.h,
+    platform: editorPlatform(),
+    importMode: 'replace'
+  });
+}
+
+async function openJimEditor() {
+  if (state.mode !== 'image') throw new Error('Pick a picture on the Images tab.');
+  const native = nativeMapImage();
+  try {
+  if (native && native.loose) {
+    handOffJim({
+      name: native.loose.name,
+      game: state.game,
+      image: native.loose.name,
+      b64: bytesToB64(native.loose.bytes),
+      platform: (native.loose.kind === 'sjim' || native.loose.kind === 'snes94') ? 'snes' : 'genesis',
+      variant: native.loose.kind === 'snes94' ? 'snes94' : undefined
+    });
+    return;
+  }
+  const image = native && native.image;
+  if (!image) {
+    const shown = rasterizeShownFrame();
+    if (shown) { handOffRaster(shown); return; }
+    throw new Error('This picture has not loaded yet.');
+  }
+  if (image.kind === 'snes94-screen') {
+    const rom = await ensureRom();
+    if (!rom) throw new Error('Could not load the map bytes (ROM missing?)');
+    if (typeof Nhl92Sscr === 'undefined' || typeof Nhl92Sscr.extractScreen94 !== 'function') {
+      throw new Error('lib/sscr.js did not load.');
+    }
+    let donorBytes = null;
+    if (!image.palette) {
+      const colors = await ensureRink();
+      if (colors && colors.length) {
+        donorBytes = new Uint8Array(Math.min(256, colors.length * 2));
+        const view = new DataView(donorBytes.buffer);
+        for (let i = 0; i < colors.length && i * 2 + 1 < donorBytes.length; i++) {
+          const c = colors[i];
+          const r5 = Math.round((c[0] || 0) * 31 / 255) & 31;
+          const g5 = Math.round((c[1] || 0) * 31 / 255) & 31;
+          const b5 = Math.round((c[2] || 0) * 31 / 255) & 31;
+          view.setUint16(i * 2, r5 | (g5 << 5) | (b5 << 10), true);
+        }
+      }
+    }
+    const parsed = Nhl92Sscr.extractScreen94(rom, image, donorBytes);
+    const zip = Nhl92Sscr.encodeScreen94Zip(parsed, { packed: true });
+    const fileName = image.id + '.snes94.zip';
+    handOffJim({
+      name: fileName,
+      game: state.game,
+      image: image.id,
+      b64: bytesToB64(zip),
+      remap: image.remap || null,
+      platform: 'snes',
+      variant: 'snes94',
+      sscr: parsed.sscr,
+      fileNames: image.fileNames || []
+    });
+    return;
+  }
+  const bytes = await bytesFor(image);
+  if (!bytes) throw new Error('Could not load the map bytes (ROM missing?)');
+  let donor = null;
+  if (image.paletteAt != null) {
+    const rom = await ensureRom();
+    if (rom && image.paletteAt >= 0 && image.paletteAt + 128 <= rom.length) {
+      donor = rom.subarray(image.paletteAt, image.paletteAt + 128);
+    }
+  }
+  if (image.kind === 'snes93-screen' && image.palFrom) {
+    const rom = await ensureRom();
+    if (rom && typeof Nhl92Jim !== 'undefined' && Nhl92Jim.decompressBytecode) {
+      const blob = rom.subarray(image.palFrom.start, image.palFrom.end);
+      const unpacked = Nhl92Jim.decompressBytecode(blob, 0);
+      const off = image.palFrom.offset || 0;
+      const count = image.palFrom.count || 64;
+      if (off + count * 2 <= unpacked.length) donor = unpacked.subarray(off, off + count * 2);
+    }
+  }
+  const sjim = image.kind === 'snes93-screen' ? {
+    mapW: image.mapW, mapH: image.mapH, mapSize: image.mapSize,
+    pal: image.pal, tiles: image.tiles,
+    palBytes: image.pal == null ? 0 : ((image.tiles || 0) - (image.pal || 0))
+  } : null;
+  const fileName = (image.fileNames && image.fileNames[0] && !/\s/.test(image.fileNames[0]))
+    ? image.fileNames[0]
+    : (image.kind === 'snes93-screen'
+      ? (/\.sjim$/i.test(image.id) ? image.id : image.id + '.map.sjim')
+      : (/\.jim$/i.test(image.id) ? image.id : image.id + '.map.jim'));
+  handOffJim({
+    name: fileName,
+    game: state.game,
+    image: image.id,
+    b64: bytesToB64(bytes),
+    donor: donor ? Array.from(donor) : null,
+    remap: image.remap || null,
+    platform: image.kind === 'snes93-screen' ? 'snes' : 'genesis',
+    sjim: sjim
+  });
+  } catch (err) {
+    const shown = rasterizeShownFrame();
+    if (shown) { handOffRaster(shown); return; }
+    throw err;
+  }
 }
 
 async function bytesFor(spec) {
@@ -2592,10 +2775,19 @@ async function ingestDroppedFiles(fileList) {
     refreshAll();
     return;
   }
+  if (classified.kind === 'jim' || classified.kind === 'sjim' || classified.kind === 'snes94') {
+    looseMaps.set(classified.label, {
+      name: classified.label,
+      bytes: classified.bytes,
+      kind: classified.kind
+    });
+  }
   const decoded = NhlOpenAsset.decodeLoose(classified, {
     anim: Nhl92Anim,
     sheet: Nhl92Sheet,
     jim: Nhl92Jim,
+    sjim: typeof Nhl92Sjim === 'undefined' ? null : Nhl92Sjim,
+    sscr: typeof Nhl92Sscr === 'undefined' ? null : Nhl92Sscr,
     pc95: Nhl95Pc
   });
   if (!decoded) {
@@ -2608,9 +2800,10 @@ async function ingestDroppedFiles(fileList) {
     el('game').value = decoded.gameId;
     gameInfo = games.find((game) => game.id === decoded.gameId);
   }
-  banks.set(decoded.bankId, decoded.parsed);
+  const bankKey = decoded.bankId || decoded.imageId;
+  if (bankKey) banks.set(bankKey, decoded.parsed);
   state.mode = decoded.mode;
-  state.bank = decoded.bankId;
+  state.bank = decoded.bankId || bankKey || state.bank;
   if (decoded.mode === 'image') state.image = decoded.imageId || decoded.bankId;
   state.frame = 1;
   state.step = 0;

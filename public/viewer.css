@@ -104,6 +104,8 @@ a.ghost-btn {
   align-items: center;
   text-decoration: none;
 }
+a.ghost-btn[hidden], button.ghost-btn[hidden] { display: none !important; }
+.transport button.is-hidden { display: none; }
 
 .ghost-btn {
   background: var(--bg);

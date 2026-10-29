@@ -30,7 +30,7 @@ Many older `cursor/*-e6a9` branches exist on the remote; treat **`main` as sourc
 node tools/build-manifest.js   # before test.js if manifest stale
 node test.js                   # full suite (~60s; includes chain test ~40s)
 node tools/render-nhl92-sound-chain.js --update   # ~160s; writes out/ + pins (only when chain intentionally changes)
-node server.js                 # local viewer + chip lab (port 8732)
+node server.js                 # local viewer (port 8732); Chip lab at chip-lab.html (direct URL, not in header)
 ```
 
 Optional local ROM: `roms/nhl92.bin` (524288-byte Genesis ROM). Enables wrapper-vs-retail and full-ROM sound-data checks; CI runs without it.
@@ -69,7 +69,7 @@ PR #28 played `song(0)` for one vblank and then `sfx(0)`, so SngEOP's first note
 | **Sound test sequencer** | Channels view under the clock: FM1–FM6 + PSG piano roll and an Events list, derived from the Z80's YM writes (`lib/audio/ym-note-tracker.js`, `public/sound-roll.js`), placed at the audible position. Read-only `onYmWrite` / `onPsgWrite` / `onYmReset` taps on `Nhl92SoundChain.create`; no pinned hash changed. Tests: `test/ym-note-tracker.js`. See `docs/NHL92-SOUND-CHAIN.md`. |
 | **Sound data** tab | Removed, along with `public/sound-data-view.js`. The parser (`lib/audio/nhl92-sound-data.js`) stays and feeds the Sound test details. |
 | **Audio** tab (AUD-1 sketch) | Hidden for NHL 92 (`hasAudioTab`). Kept for NHLPA 93–95. Old NHL 92 `mode=audio` / `mode=sounddata` links open the Sound test. |
-| **Chip lab** | YM/PSG presets and the mapping audition. The NHL '92 patch scales and raw DAC samples live in the Audio section (collapsible *DAC samples* and *Instruments* lists, `public/sound-instruments.js`). |
+| **Chip lab** | YM/PSG presets and the mapping audition at `chip-lab.html` (direct URL; the header link is hidden). The NHL '92 patch scales and raw DAC samples live in the Audio section (collapsible *DAC samples* and *Instruments* lists, `public/sound-instruments.js`). |
 | Default view | NHL 92 + SPA, unchanged. |
 
 **Cleanup kept deliberately** (all still have users): `audio-engine.js`, `genesis*.js` (NHLPA 93–95 Audio tab, `test.js` catalog tests, `/api/games/:id/audio`), `nhl92-sound-system.js` and `z80-machine.js` (Node tests and the server's preview fallback), `nhl92-z80.js`, `nhl92-z80-audio.js` + chip-test pins (chip lab, `test/nhl92-z80-audio.js`), `nhl92-z80-golden.js` (`test/nhl92-z80-driver.js`), `data/audio/nhl92.json` (server API and tests).

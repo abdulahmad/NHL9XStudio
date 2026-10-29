@@ -315,7 +315,8 @@ const picture = decodeJim(jim);
 const pictureFrame = picture.renderFrame(1);
 assert.strictEqual(picture.numFrames, 1);
 assert.strictEqual(pictureFrame.picture, true);
-assert.strictEqual(pictureFrame.opaque, false);
+assert.strictEqual(pictureFrame.opaque, true);
+assert.strictEqual(picture.opaque, true);
 assert.strictEqual(pictureFrame.rowTransparent, true);
 assert.strictEqual(picturePixelHidden(0), false);
 assert.strictEqual(picturePixelHidden(16), true);
@@ -330,7 +331,10 @@ palJim.writeUInt16BE(jimTiles, 8);
 palJim.writeUInt16BE(1, jimMap);
 palJim.writeUInt16BE(1, jimMap + 2);
 palJim.writeUInt16BE(0x2000, jimMap + 4);
-const palFrame = decodeJim(palJim).renderFrame(1);
+const palDecoded = decodeJim(palJim);
+const palFrame = palDecoded.renderFrame(1);
+assert.strictEqual(palDecoded.opaque, true);
+assert.strictEqual(palFrame.opaque, true);
 assert.strictEqual(palFrame.pixels[0], 16);
 assert.strictEqual(picturePixelHidden(palFrame.pixels[0]), true);
 assert.strictEqual(pictureFrame.width, 8);
@@ -515,12 +519,18 @@ if (viewer92) {
   assert.ok(frame.pixels.some((pixel) => (pixel & 15) === 3));
   assert.ok(!frame.pixels.some((pixel) => (pixel & 15) === 1));
 }
-const retail92 = romIf(path.join(toolsRoot, 'NHL92FMTunes-To-MIDI', 'nhl92retail.bin'));
+const retail92 = romIf(path.join(toolsRoot, 'NHL92FMTunes-To-MIDI', 'nhl92retail.bin'))
+  || romIf('/tmp/nhl92retail.bin')
+  || romIf(path.join(root, 'roms', 'nhl92.bin'));
 if (retail92) {
   const sliced = parseAnim(retail92.subarray(0x3D5EE, 0x7216C));
   assert.strictEqual(sliced.numFrames, spritesAnim.numFrames);
   const title = decodeJim(retail92.subarray(0x25642, 0x2ADF0));
-  assert.strictEqual(title.renderFrame(1).width, 256);
+  const titleFrame = title.renderFrame(1);
+  assert.strictEqual(titleFrame.width, 256);
+  assert.strictEqual(title.opaque, true);
+  assert.strictEqual(titleFrame.opaque, true);
+  assert.ok(titleFrame.pixels.some((p) => picturePixelHidden(p)), 'Title1 ice uses pal 1+ color 0');
   const refs = decodeJim(retail92.subarray(0x3A3DC, 0x3D5EE));
   assert.strictEqual(refs.renderFrame(1).height, 2160);
 }

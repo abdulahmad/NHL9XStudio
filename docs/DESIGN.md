@@ -10,6 +10,8 @@ This document has three parts:
 2. **Implementation plan: NHL 94 PC graphics** (`94PC`) — detailed later; **lowest** platform priority (after **95PC**).
 3. **Implementation plan: audio** for all eight retail profiles below.
 
+Genesis `.map.jim` editor (next graphics product) is specified in [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md), not here.
+
 Long-term product buckets (teams, schedules, ROM build, patches) remain as in the original outline at the end; they are not implemented in NHL9X Studio yet.
 
 ### Implementation priority (canonical)
@@ -38,7 +40,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | `server.js` | Node HTTP server (default port **8732**). Serves `public/`, `lib/*.js`, `data/*.asm`, ROMs from `roms/`, PC assets from `pc95/`, palettes from sibling tool folders. |
 | `public/viewer.js` | Single-page UI: catalog, stage, transport, filmstrip, compass, jersey palette, URL hash state. |
 | `lib/games.js` | **Game profiles**: frames file, platform, banks, image catalog, ROM hints, sheet/SNES/PC options. |
-| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). |
+| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). |
 | `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames95pc.asm` for 95 DOS. |
 | `test.js` | Parser tests, PC95 tests, NHL 92 frame BMP cross-check when ROM present. |
 
@@ -81,6 +83,8 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `sheet` | `lib/sheet.js` on ROM sprite sheet | Same tile model + hotlist from ROM |
 | `snes93` / `snes94` | `lib/snes.js`, `snespak.js` | Planar 4bpp, mode-specific maps/screens/cards |
 | `jim` | `lib/jim.js` | Genesis compressed maps (images tab) |
+| `sjim` | `lib/sjim.js` | NHLPA 93 SNES packed screens (map + pal + planar tiles) |
+| `snes94-screen` | `lib/sscr.js`, `snespak.js` | NHL 94 SNES tiles + map + pal (LZ / Huffman / RLE) |
 | `pc95` | `lib/pc95.js` | RefPack QFS → SHPI → SPIT; PPV SHPI banks; team/rink palettes |
 
 **Catalog data:** SPF/SPA from `data/frames*.asm` via `lib/parse-frames.js` (including ascending SPF range fix). Genesis image lists from `lib/genesis-images.js` (generated from disassembly extracts). SNES 94 frames partly generated (`tools/build-snes-frames.js`).
@@ -111,7 +115,7 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 - **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
 - **94PC:** Full install under `pc94/`; **no** `nhl94pc` game profile or decoders in `pc95.js`.
 - **96G:** Out of scope for viewer game list.
-- **Editing / export / build:** View-only; no write path to ROM or extracted bins.
+- **Editing / export / build:** View-only today; no write path to ROM or extracted bins. Planned: Genesis `.map.jim` editor (`docs/nhl9x-studio-requirements.md`).
 
 ### 1.8 Goal celebrations, “bench” sprites, and missing banks (94G focus)
 
@@ -354,7 +358,7 @@ Dependencies: **94PC** audio and graphics share planned `lib/pc*.js`; building *
 These remain **future** NHL9X Studio goals, not current app features:
 
 1. **Project & ROM handling** — open disassembly, detect version, write extracted assets, optional IPS/BPS.
-2. **Graphics editing** — PNG import/export, repack JIM/ANIM/SHPI.
+2. **Graphics editing** — **next:** Genesis `.map.jim` import/edit/export ([`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md)). Later: ANIM/SHPI. **Chip Lab** header link is to be hidden (page kept).
 3. **Teams & data** — rosters, songs per team, schedules, `NumTeams` mods.
 4. **Validation** — SRAM/ROM size, stock ROM MATCH, mod packs.
 
@@ -363,9 +367,20 @@ Suggested **overall** order after today’s NHL9X Studio shell:
 1. ✅ Multi-game graphics shell (done).
 2. **HOST-0 → HOST-2** (repo on NHL9XStudio, client `openBytes`, drag-and-drop) so **GitHub Pages** is viable.
 3. **Graphics GAP-1–8** in **implementation priority** order: **92G, 93G, 94G, 95G, 93S, 94S, 95PC, 94PC** (GAP-1–3 largely done for 92G–94G banks).
-4. **HOST-3–5** (folder workspace in browser, Pages CI, ISO).
-5. **Audio AUD-0–5** (same platform priority).
-6. Team/roster editor, graphics edit/export, schedules/build.
+4. **MAPS-0–5** — hide Chip Lab; JIM map editor ([`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md)).
+5. **HOST-3–5** (folder workspace in browser, Pages CI, ISO).
+6. **Audio AUD-0–5** (same platform priority).
+7. Team/roster editor, ANIM/SHPI edit/export, schedules/build.
+
+### 4.1 Genesis `.map.jim` editor (next graphics product)
+
+Full requirements, format truth vs JIM-Tools, architecture, and step × model table: **[`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md)**.
+
+Short version:
+
+- Hide **Chip lab** in the header; keep `public/chip-lab.html`.
+- New **Image Editor** (`jim.html`, header button): import PNG/BMP, lock palettes from `.act` / `.pal` / `.map.jim`, Genesis 3-bit / 15–61 colors or SNES 5-bit / 15–121 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), open/export NHLPA 93 SNES `.map.sjim` (8 BGR555 pals, 10-bit tile index), and open/export NHL 94 SNES screens (tiles + map + palettes as LZ/Huffman/RLE, downloaded as a ZIP). Edit map from the Images tab (including a JIM dropped on the viewer).
+- Compression: implement from 93G `src/decompress93.asm` / 94G `src/decompress94.asm` / `lib/jim.js` `decompressBytecode`. Do **not** follow EA-NHL-Tools `JIM-Tools/Readme.md` “JZIP” opcodes.
 
 ---
 
@@ -425,6 +440,7 @@ Local Node keeps `/api/games` for convenience; Studio Web implements the same `g
 
 | Path | Topic |
 |------|--------|
+| `docs/nhl9x-studio-requirements.md` | **Maps editor + Chip Lab hide** — requirements, JIM format truth, implementation steps |
 | `docs/sync.md` | **Sync runbook** — disasm + EA-NHL-Tools → Studio catalogs |
 | `Sprite-Viewer/README.md` | NHL9X Studio runbook (historical; see `docs/MIGRATION.md`) |
 | `Docs/Sprites/Readme.md` | Frame numbering Genesis & DOS |
@@ -445,3 +461,4 @@ Local Node keeps `/api/games` for convenience; Studio Web implements the same `g
 | 2026-10 | Canonical **implementation priority**: 92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC. |
 | 2026-10 | Product rename to **NHL9X Studio**; Genesis auxiliary frame banks (92G–94G). |
 | 2026-10 | §5 hosting: GitHub Pages, workspace vs drop-in, ISO/PC loose files; **NHL9XStudio** repo. |
+| 2026-10-28 | §4.1 Genesis `.map.jim` editor + Chip Lab hide; see `docs/nhl9x-studio-requirements.md`. |
