@@ -366,6 +366,108 @@ function palLine() {
   assert.deepStrictEqual(palettes[1][hit.nibbles[0]], red);
 }
 
+function inkKeys(line, start) {
+  const keys = new Set();
+  for (let i = start; i < 16; i++) {
+    const c = line[i];
+    if (!c) continue;
+    keys.add((c.r3 << 6) | (c.g3 << 3) | c.b3);
+  }
+  return keys;
+}
+
+function dummyCell(pal) {
+  return { nibbles: new Uint8Array(64), pal: pal };
+}
+
+{
+  assert.strictEqual(typeof Q.quantizeTilesToPalette, 'function');
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const green = { r3: 0, g3: 7, b3: 0 };
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = green;
+  palettes[1][2] = { r3: 7, g3: 7, b3: 0 };
+  const cells = [dummyCell(0), dummyCell(0)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.assigned, 1);
+  assert.strictEqual(hit.cells[0].pal, 1);
+  assert.strictEqual(hit.cells[1].pal, 0, 'unselected tile stays on its pal');
+  const destKeys = inkKeys(hit.palettes[1], 0);
+  assert.ok(destKeys.has((7 << 6) | (0 << 3) | 0), 'dest pal is rebuilt from the red tile');
+  assert.ok(!destKeys.has((0 << 6) | (7 << 3) | 0),
+    'from-scratch Pal must drop leftover dest colors, not squeeze into free slots');
+  assert.ok(!destKeys.has((7 << 6) | (7 << 3) | 0),
+    'yellow leftover on dest pal must not survive a rebuild');
+  assert.strictEqual(palettes[1][1], green, 'input palettes are not mutated');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  const cells = [dummyCell(1), dummyCell(1)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.assigned, 1);
+  assert.ok(hit.remapped >= 1, 'other tiles already on dest pal are remapped, got ' + hit.remapped);
+  assert.strictEqual(hit.cells[1].pal, 1);
+  const destKeys = inkKeys(hit.palettes[1], 0);
+  assert.ok(!destKeys.has((0 << 6) | (0 << 3) | 7),
+    'unselected blue tile must not keep dest pal from being rebuilt around the selection');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const source = image(8, 8, () => red);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  const locked = Q.quantizeTilesToPalette(
+    source, 8, 8, [dummyCell(0)], 1, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      lockedLines: [false, true, false, false]
+    });
+  assert.ok(locked.ok, locked.reason);
+  assert.strictEqual(locked.cells[0].pal, 1);
+  assert.strictEqual(locked.palettes[1][1].g3, 7, 'locked dest pal is match-only');
+  assert.strictEqual(locked.assigned, 1);
+  assert.strictEqual(locked.remapped, 0);
+}
+
+{
+  const source = image(8, 8, (x, y) => [
+    (x * 36) & 255, (y * 28) & 255, ((x * y) * 17) & 255, 255
+  ]);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  const hit = Q.quantizeTilesToPalette(
+    source, 8, 8, [dummyCell(0)], 1, 1, [0], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.ok(inkKeys(hit.palettes[1], 1).size <= 15,
+    'rebuilt dest pal must fit in 15 ink slots, got ' + inkKeys(hit.palettes[1], 1).size);
+}
+
 {
   assert.strictEqual(typeof Q.optimizeSeams, 'function');
   const red = { r3: 7, g3: 0, b3: 0 };

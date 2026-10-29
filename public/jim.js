@@ -88,6 +88,7 @@
     return best;
   }
   function rgbOf(c) {
+    if (!c) return 'rgb(0,0,0)';
     if (isSnes() && c.r5 != null) {
       return 'rgb(' + expand5(c.r5) + ',' + expand5(c.g5) + ',' + expand5(c.b5) + ')';
     }
@@ -98,6 +99,7 @@
       const v = bits === 5 ? expand5(n) : expandChannel(n);
       return v.toString(16).padStart(2, '0');
     }
+    if (!c) return '#000000';
     if (isSnes() && c.r5 != null) return '#' + h(c.r5, 5) + h(c.g5, 5) + h(c.b5, 5);
     return '#' + h(c.r3, 3) + h(c.g3, 3) + h(c.b3, 3);
   }
@@ -433,6 +435,38 @@
     if (floatAdd()) return false;
     const mode = f.mode || importMode();
     return !isPngReduce(mode);
+  }
+  function viewPalettes() {
+    if (floatHasSeams() && state.float.palettes) return state.float.palettes;
+    return doc.palettes;
+  }
+  function floatRgba(f) {
+    if (f.original && f.original.rgba instanceof Uint8Array) {
+      if (f.original.w === f.w * 8 && f.original.h === f.h * 8) return f.original;
+      return padImage({ rgba: f.original.rgba, w: f.original.w, h: f.original.h });
+    }
+    const w = f.w * 8;
+    const h = f.h * 8;
+    const pals = f.palettes || doc.palettes;
+    const rgba = new Uint8Array(w * h * 4);
+    for (let ty = 0; ty < f.h; ty++) {
+      for (let tx = 0; tx < f.w; tx++) {
+        const cell = f.cells[ty * f.w + tx];
+        if (!cell || !cell.nibbles) continue;
+        const line = pals[cell.pal | 0];
+        for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+            const rgb = rgbChannels(line && line[cell.nibbles[y * 8 + x] & 15]);
+            const at = ((ty * 8 + y) * w + (tx * 8 + x)) * 4;
+            rgba[at] = rgb[0];
+            rgba[at + 1] = rgb[1];
+            rgba[at + 2] = rgb[2];
+            rgba[at + 3] = 255;
+          }
+        }
+      }
+    }
+    return { rgba: rgba, w: w, h: h };
   }
   function lockedPalList() {
     const locked = [];
@@ -1571,11 +1605,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
 
   function renderSwatches() {
+    const pals = viewPalettes();
     for (let p = 0; p < palCount(); p++) {
       for (let i = 0; i < 16; i++) {
         const btn = $('jim-sw-' + p + '-' + i);
         if (!btn) continue;
-        const c = doc.palettes[p][i];
+        const c = pals[p] && pals[p][i];
         btn.style.backgroundColor = rgbOf(c);
         const hole = hiddenPixel(p, i);
         btn.style.backgroundImage = hole ? 'repeating-conic-gradient(#555 0 25%, transparent 0 50%)' : 'none';
@@ -1584,17 +1619,21 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         btn.title = 'Pal ' + p + ' index ' + i + ' ' + hexOf(c) + (hole ? ' (transparent)' : '');
       }
     }
-    const c = doc.palettes[state.color.pal][state.color.index];
+    const c = pals[state.color.pal] && pals[state.color.pal][state.color.index];
     const locked = $('jim-lock-' + state.color.pal).checked || doc.readOnly;
     $('jim-color-line').textContent = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + hexOf(c) +
       '  CRAM ' + cramHex(c) + (locked ? '  (locked)' : '');
-    const ch = isSnes() && c.r5 != null;
-    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(ch ? c.r5 : c.r3); $('jim-rn').value = String(ch ? c.r5 : c.r3); }
-    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(ch ? c.g5 : c.g3); $('jim-gn').value = String(ch ? c.g5 : c.g3); }
-    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(ch ? c.b5 : c.b3); $('jim-bn').value = String(ch ? c.b5 : c.b3); }
+    const ch = !!(c && isSnes() && c.r5 != null);
+    const rv = c ? (ch ? c.r5 : c.r3) : 0;
+    const gv = c ? (ch ? c.g5 : c.g3) : 0;
+    const bv = c ? (ch ? c.b5 : c.b3) : 0;
+    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(rv); $('jim-rn').value = String(rv); }
+    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(gv); $('jim-gn').value = String(gv); }
+    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(bv); $('jim-bn').value = String(bv); }
     ['jim-r', 'jim-g', 'jim-b', 'jim-rn', 'jim-gn', 'jim-bn'].forEach((id) => { $(id).disabled = locked; });
   }
   function cramHex(c) {
+    if (!c) return '$0000';
     if (isSnes() && c.r5 != null) {
       const word = (c.r5 & 31) | ((c.g5 & 31) << 5) | ((c.b5 & 31) << 10);
       return '$' + word.toString(16).toUpperCase().padStart(4, '0') + ' BGR555';
@@ -1738,8 +1777,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
           hint.hidden = false;
           if (floatHasSeams()) {
             hint.textContent = state.tool === 'pal'
-              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click a tile or drag a rectangle · Apply to commit')
-              : 'dotted outline · Pal paints palettes · Optimize groups matching tiles · Apply to commit';
+              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to rebuild this pal from those pixels · Apply to commit')
+              : 'dotted outline · Pal rebuilds the selected pal from those tiles · Optimize groups matching tiles · Apply to commit';
           }
         }
         if (hintAdd) hintAdd.hidden = true;
@@ -2298,7 +2337,7 @@ remember();
   }
   function assignFloatPalRect(rect, pick) {
     if (!floatHasSeams()) {
-      status('Palette paint works on a floating import. Import an image, then click tiles.', true);
+      status('Palette rebuild works on a floating import. Import an image, then click tiles.', true);
       renderAll();
       return;
     }
@@ -2322,34 +2361,50 @@ remember();
       return;
     }
     const dest = state.color.pal & (isSnes() ? 7 : 3);
-    const pals = f.palettes || doc.palettes;
-    const opts = {
-      bits: colorBits(),
-      opaquePal0: $('jim-opaque0').checked,
-      lockedLines: lockedPalList()
-    };
-    let painted = 0, skipped = 0;
-    let reason = '';
+    const selected = [];
     for (let ty = y0; ty < y1; ty++) {
       for (let tx = x0; tx < x1; tx++) {
-        const cell = f.cells[ty * f.w + tx];
-        if (!cell) continue;
-        if (Quant && typeof Quant.setTilePalette === 'function') {
-          const hit = Quant.setTilePalette(cell, dest, pals, opts);
-          if (!hit.ok) { skipped++; reason = hit.reason; continue; }
-          cell.nibbles = hit.nibbles;
-          cell.pal = hit.pal;
-        } else {
-          cell.pal = dest;
-        }
-        painted++;
+        if (f.cells[ty * f.w + tx]) selected.push({ x: tx, y: ty });
       }
     }
-    if (painted) {
-      status('Pal ' + dest + ' on ' + painted + ' tile' + (painted === 1 ? '' : 's') +
-        (skipped ? ' (' + skipped + ' did not fit)' : '') + '.');
+    if (!selected.length) {
+      status('Click a tile on the floating import.', true);
+      renderAll();
+      return;
+    }
+    if (!Quant || typeof Quant.quantizeTilesToPalette !== 'function') {
+      status('Palette quantize did not load.', true);
+      renderAll();
+      return;
+    }
+    const src = floatRgba(f);
+    const qopts = quantizeOpts(openPalList());
+    const hit = Quant.quantizeTilesToPalette(
+      src.rgba, src.w, src.h, f.cells, f.w, f.h, selected, dest,
+      f.palettes || doc.palettes, {
+        bits: colorBits(),
+        opaquePal0: $('jim-opaque0').checked,
+        lockedLines: lockedPalList(),
+        stepA: qopts.stepA,
+        stepB: qopts.stepB,
+        alphaThreshold: qopts.alphaThreshold
+      });
+    if (!hit.ok) {
+      status(hit.reason || 'Could not rebuild that palette.', true);
+      renderAll();
+      return;
+    }
+    f.cells = hit.cells;
+    if (f.palettes) f.palettes = hit.palettes;
+    else doc.palettes = hit.palettes;
+    if (hit.locked) {
+      status('Matched ' + hit.assigned + ' tile' + (hit.assigned === 1 ? '' : 's') +
+        ' onto locked pal ' + dest + '.');
     } else {
-      status(reason || ('Those tiles are already pal ' + dest + '.'), !!reason);
+      status('Rebuilt pal ' + dest + ' from ' + hit.assigned + ' tile' +
+        (hit.assigned === 1 ? '' : 's') +
+        (hit.remapped ? '; remapped ' + hit.remapped + ' other tile' +
+          (hit.remapped === 1 ? '' : 's') + ' already on that pal' : '') + '.');
     }
     renderAll();
   }
@@ -2413,19 +2468,27 @@ remember();
     if ($('jim-lock-' + p) && $('jim-lock-' + p).checked) return;
     const max = isSnes() ? 31 : 7;
     const v = Math.max(0, Math.min(max, value | 0));
-    const color = doc.palettes[p][i];
+    const pals = viewPalettes();
+    if (!pals[p]) return;
+    if (!pals[p][i]) {
+      pals[p][i] = isSnes()
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    const color = pals[p][i];
+    const editDoc = pals === doc.palettes;
     if (isSnes()) {
       const key = ch === 'r3' ? 'r5' : ch === 'g3' ? 'g5' : 'b5';
       if ((color[key] & 31) === v) return;
-      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
       color[key] = v;
       color[ch] = v >> 2;
     } else {
       if ((color[ch] & 7) === v) return;
-      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
       color[ch] = v;
     }
-    doc.dirtyPal = true;
+    if (editDoc) doc.dirtyPal = true;
     renderSwatches();
     renderMap();
     renderTileEdit();

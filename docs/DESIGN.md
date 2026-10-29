@@ -263,7 +263,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
-| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. Centre pane expands for Apply and import previews. Floating import Pal tool + Optimize seams. 5-bit quantization wherever 3-bit exists. |
+| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. Centre pane expands for Apply and import previews. Floating Pal rebuilds the selected palette from those tiles; Optimize seams groups matching tiles. 5-bit quantization wherever 3-bit exists. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |
