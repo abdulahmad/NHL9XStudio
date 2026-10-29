@@ -1364,20 +1364,15 @@ function renderMeta() {
     editMap.type = 'button';
     editMap.id = 'edit-map';
     editMap.className = 'ghost-btn';
-    editMap.textContent = 'Edit in Image Editor';
+    editMap.textContent = 'Edit image';
     el('detail').parentElement.appendChild(editMap);
     editMap.addEventListener('click', () => {
       openJimEditor().catch((err) => alert(err.message));
     });
   }
-  const jimImage = state.mode === 'image'
-    ? ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image)
-    : null;
-  const loose = state.mode === 'image' ? looseMaps.get(state.image) : null;
   const soundData = !!soundPanel();
-  const canEditMap = !!(jimImage && (jimImage.kind === 'jim' || jimImage.kind === 'snes93-screen' || jimImage.kind === 'snes94-screen'))
-    || !!(loose && (loose.kind === 'jim' || loose.kind === 'sjim' || loose.kind === 'snes94'));
-  editMap.hidden = soundData || !canEditMap;
+  const canEditMap = state.mode === 'image' && !soundData;
+  editMap.hidden = !canEditMap;
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
   el('palette').closest('section').hidden = soundData;
@@ -1594,6 +1589,8 @@ function renderTransport() {
   const showTransparent = state.mode === 'image';
   el('transparent-field').classList.toggle('is-hidden', !showTransparent);
   const showExport = state.mode === 'image' || state.mode === 'frame';
+  const editImage = el('edit-image');
+  if (editImage) editImage.classList.toggle('is-hidden', state.mode !== 'image' || !!soundPanel());
   el('export-frame').classList.toggle('is-hidden', !showExport);
   el('export-all').classList.toggle('is-hidden', !showExport);
   if (showTransparent) {
@@ -1872,6 +1869,11 @@ function wire() {
     state.acc = 0;
   });
   el('export-frame').addEventListener('click', () => exportFrame().catch((e) => alert('Export failed: ' + e.message)));
+  if (el('edit-image')) {
+    el('edit-image').addEventListener('click', () => {
+      openJimEditor().catch((err) => alert(err.message));
+    });
+  }
   el('export-all').addEventListener('click', () => exportAllFrames().catch((e) => alert('Export failed: ' + e.message)));
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
@@ -2151,22 +2153,75 @@ function handOffJim(payload) {
   location.href = 'jim.html' + q;
 }
 
-async function openJimEditor() {
+function editorPlatform() {
+  const kind = gameInfo && gameInfo.kind;
+  if (kind === 'snes93' || kind === 'snes94') return 'snes';
+  return 'genesis';
+}
+
+function nativeMapImage() {
   const loose = looseMaps.get(state.image);
-  if (loose && loose.bytes && loose.bytes.length) {
+  if (loose && loose.bytes && loose.bytes.length &&
+      (loose.kind === 'jim' || loose.kind === 'sjim' || loose.kind === 'snes94')) {
+    return { loose: loose };
+  }
+  const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
+  if (image && (image.kind === 'jim' || image.kind === 'snes93-screen' || image.kind === 'snes94-screen')) {
+    return { image: image };
+  }
+  return null;
+}
+
+function rasterizeShownFrame() {
+  const step = sequence().steps[state.step];
+  const colors = activeColors();
+  const frame = step && colors ? renderedFrame(step.frame) : null;
+  if (!frame || !frame.pixels || !frame.width) return null;
+  const canvas = exportCanvas(frame, colors);
+  const image = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+  return {
+    name: ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image),
+    w: canvas.width,
+    h: canvas.height,
+    rgba: new Uint8Array(image.data)
+  };
+}
+
+function handOffRaster(raster) {
+  const label = (raster.name && (raster.name.label || raster.name.id)) || state.image || 'image';
+  const file = String(label).replace(/\s+/g, '_') + '.png';
+  handOffJim({
+    name: file,
+    game: state.game,
+    image: state.image,
+    rgbaB64: bytesToB64(raster.rgba),
+    rgbaW: raster.w,
+    rgbaH: raster.h,
+    platform: editorPlatform(),
+    importMode: 'replace'
+  });
+}
+
+async function openJimEditor() {
+  if (state.mode !== 'image') throw new Error('Pick a picture on the Images tab.');
+  const native = nativeMapImage();
+  try {
+  if (native && native.loose) {
     handOffJim({
-      name: loose.name,
+      name: native.loose.name,
       game: state.game,
-      image: loose.name,
-      b64: bytesToB64(loose.bytes),
-      platform: (loose.kind === 'sjim' || loose.kind === 'snes94') ? 'snes' : 'genesis',
-      variant: loose.kind === 'snes94' ? 'snes94' : undefined
+      image: native.loose.name,
+      b64: bytesToB64(native.loose.bytes),
+      platform: (native.loose.kind === 'sjim' || native.loose.kind === 'snes94') ? 'snes' : 'genesis',
+      variant: native.loose.kind === 'snes94' ? 'snes94' : undefined
     });
     return;
   }
-  const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
-  if (!image || (image.kind !== 'jim' && image.kind !== 'snes93-screen' && image.kind !== 'snes94-screen')) {
-    throw new Error('This picture is not a JIM, SJIM, or NHL 94 SNES screen');
+  const image = native && native.image;
+  if (!image) {
+    const shown = rasterizeShownFrame();
+    if (shown) { handOffRaster(shown); return; }
+    throw new Error('This picture has not loaded yet.');
   }
   if (image.kind === 'snes94-screen') {
     const rom = await ensureRom();
@@ -2242,6 +2297,11 @@ async function openJimEditor() {
     platform: image.kind === 'snes93-screen' ? 'snes' : 'genesis',
     sjim: sjim
   });
+  } catch (err) {
+    const shown = rasterizeShownFrame();
+    if (shown) { handOffRaster(shown); return; }
+    throw err;
+  }
 }
 
 async function bytesFor(spec) {

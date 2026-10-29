@@ -11,6 +11,42 @@ const { withBrowser } = require('./harness');
 const { compressBytecode, packPortrait, unpackPortrait } = require('../../lib/jim');
 const { packSnesMapWord, packSnesTile, parseSjim } = require('../../lib/sjim');
 const { parseScreen94, encodeScreen94Zip, parseScreen94Zip } = require('../../lib/sscr');
+const { crc32 } = require('../../lib/zip-store');
+const zlib = require('zlib');
+
+function pngRgb(width, height, rgb) {
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (width * 3 + 1)] = 0;
+    for (let x = 0; x < width; x++) {
+      const at = y * (width * 3 + 1) + 1 + x * 3;
+      raw[at] = rgb[0];
+      raw[at + 1] = rgb[1];
+      raw[at + 2] = rgb[2];
+    }
+  }
+  function chunk(type, data) {
+    const t = Buffer.from(type);
+    const body = Buffer.concat([t, data]);
+    const crc = crc32(body);
+    const out = Buffer.alloc(8 + data.length + 4);
+    out.writeUInt32BE(data.length, 0);
+    body.copy(out, 4);
+    out.writeUInt32BE(crc, 8 + data.length);
+    return out;
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0))
+  ]);
+}
 
 function rawJim() {
   const tiles = 1, palOff = 10 + 32, mapOff = palOff + 128;
@@ -64,9 +100,21 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-memo').count());
   assert.ok(await page.locator('#jim-show-unused').count());
   assert.ok(await page.locator('#jim-import-mode').count());
+  assert.match(await page.locator('label:has(#jim-import-mode)').textContent(), /Import mode/);
+  assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
   assert.match(await page.textContent('#jim-map-px'), /pixels/);
+
+  await page.setInputFiles('#jim-image', [{
+    name: 'wide.png',
+    mimeType: 'image/png',
+    buffer: pngRgb(32, 16, [240, 32, 32])
+  }]);
+  await page.waitForFunction(() => /Floating wide\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  assert.match(await page.textContent('#jim-map-px'), /32×16 pixels/);
+  assert.ok(await page.locator('#jim-float-bar').isVisible());
+  await page.click('#jim-float-cancel');
 
   const buf = rawJim();
   await page.setInputFiles('#jim-open', [{
@@ -76,6 +124,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Opened pri\.map\.jim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-status'), /Opened pri\.map\.jim/);
+  assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'place');
   assert.match(await page.textContent('#jim-map-px'), /8×8 pixels/);
   assert.ok(await page.isChecked('#jim-pri'));
   await page.click('#jim-sel-all');

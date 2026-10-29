@@ -199,14 +199,15 @@
     }
     return out;
   }
-  function defaultLine(p) {
+  function defaultLine(p, snes) {
+    const use5 = snes == null ? isSnes() : !!snes;
     const line = [];
     for (let i = 0; i < 16; i++) {
       const r3 = (i + p) & 7;
       const g3 = (i * 2 + p) & 7;
       const b3 = (7 - i + p * 3) & 7;
       const c = { r3: r3, g3: g3, b3: b3 };
-      if (isSnes()) {
+      if (use5) {
         c.r5 = (r3 << 2) | (r3 >> 1);
         c.g5 = (g3 << 2) | (g3 >> 1);
         c.b5 = (b3 << 2) | (b3 >> 1);
@@ -215,11 +216,34 @@
     }
     return line;
   }
-  function defaultPalettes(count) {
-    const n = count || palCount();
+  function defaultPalettes(count, snes) {
+    const use5 = snes == null ? isSnes() : !!snes;
+    const n = count || (use5 ? 8 : palCount());
     const lines = [];
-    for (let p = 0; p < n; p++) lines.push(defaultLine(p));
+    for (let p = 0; p < n; p++) lines.push(defaultLine(p, use5));
     return lines;
+  }
+  function setImportMode(mode) {
+    const el = $('jim-import-mode');
+    if (el && mode) el.value = mode;
+  }
+  function floatReplace() {
+    return !!(state.float && (state.float.mode || importMode()) === 'replace');
+  }
+  function viewMap() {
+    if (floatReplace()) return { w: state.float.w, h: state.float.h };
+    return { w: doc.mapW, h: doc.mapH };
+  }
+  function placeFloat(fl) {
+    if (!fl) return fl;
+    if ((fl.mode || importMode()) === 'replace') {
+      fl.x = 0;
+      fl.y = 0;
+    } else {
+      fl.x = Math.max(0, Math.floor((doc.mapW - fl.w) / 2));
+      fl.y = Math.max(0, Math.floor((doc.mapH - fl.h) / 2));
+    }
+    return fl;
   }
   function copyBytes(src) {
     const u = src instanceof Uint8Array ? src : new Uint8Array(src);
@@ -330,13 +354,19 @@
     return true;
   }
 
-  function blankDoc() {
+  function blankDoc(opts) {
+    opts = opts || {};
+    const platform = opts.platform || 'genesis';
+    const snes = platform === 'snes';
+    const mapW = opts.mapW || 8;
+    const mapH = opts.mapH || 8;
     const tiles = [new Uint8Array(64)];
     const cells = [];
-    for (let i = 0; i < 64; i++) cells.push(zeroCell());
+    for (let i = 0; i < mapW * mapH; i++) cells.push(zeroCell());
     return {
-      name: 'untitled.map.jim',
+      name: opts.name || (snes ? 'untitled.map.sjim' : 'untitled.map.jim'),
       variant: 'map',
+      platform: platform,
       readOnly: false,
       packedOnDisk: false,
       embedPalettes: true,
@@ -347,10 +377,10 @@
       palOff: null,
       mapOff: null,
       tiles: tiles,
-      mapW: 8,
-      mapH: 8,
+      mapW: mapW,
+      mapH: mapH,
       cells: cells,
-      palettes: defaultPalettes(),
+      palettes: defaultPalettes(snes ? 8 : 4, snes),
       dirtyTiles: false,
       dirtyPal: false,
       dirtyMap: false,
@@ -926,14 +956,15 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (doc.palOff != null) where.push('pal $' + (doc.palOff >>> 0).toString(16).toUpperCase());
     if (doc.mapOff != null) where.push('map $' + (doc.mapOff >>> 0).toString(16).toUpperCase());
     $('jim-variant').textContent = variantLabel();
-    $('jim-file-meta').textContent = doc.name + ' · ' + doc.mapW + '×' + doc.mapH + ' cells · ' +
+    const view = viewMap();
+    $('jim-file-meta').textContent = doc.name + ' · ' + view.w + '×' + view.h + ' cells · ' +
       (doc.packedOnDisk ? 'packed on disk' : 'raw on disk') + ' · ' + doc.via +
       (where.length ? ' · ' + where.join(' · ') : '');
     $('jim-header-mode').textContent = headerMode();
-    if (!focused('jim-map-w')) $('jim-map-w').value = String(doc.mapW);
-    if (!focused('jim-map-h')) $('jim-map-h').value = String(doc.mapH);
+    if (!focused('jim-map-w')) $('jim-map-w').value = String(view.w);
+    if (!focused('jim-map-h')) $('jim-map-h').value = String(view.h);
     const px = $('jim-map-px');
-    if (px) px.textContent = mapPixelText(doc.mapW, doc.mapH);
+    if (px) px.textContent = mapPixelText(view.w, view.h) + (floatReplace() ? ' (new image preview)' : '');
     fillDobitmapSelect();
     if (document.activeElement !== $('jim-embed')) $('jim-embed').checked = !!doc.embedPalettes;
     if ($('jim-kind') && document.activeElement !== $('jim-kind')) {
@@ -968,7 +999,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
 
   function drawZoom() {
     let z = state.zoom;
-    while (z > 1 && (doc.mapW * 8 * z > 4096 || doc.mapH * 8 * z > 4096)) z--;
+    const size = viewMap();
+    while (z > 1 && (size.w * 8 * z > 4096 || size.h * 8 * z > 4096)) z--;
     return z;
   }
   function samplePreview(cell, px, py) {
@@ -1024,8 +1056,10 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
   function renderMap() {
     const z = drawZoom();
-    const W = doc.mapW * 8;
-    const H = doc.mapH * 8;
+    const size = viewMap();
+    const replacing = floatReplace();
+    const W = size.w * 8;
+    const H = size.h * 8;
     if (!state.scratch || state.scratch.width !== W || state.scratch.height !== H) {
       state.scratch = document.createElement('canvas');
       state.scratch.width = W;
@@ -1035,27 +1069,29 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const img = sctx.createImageData(W, H);
     const data = img.data;
     const showHoles = $('jim-trans').checked;
-    for (let ty = 0; ty < doc.mapH; ty++) {
-      for (let tx = 0; tx < doc.mapW; tx++) {
-        const cell = doc.cells[ty * doc.mapW + tx];
-        for (let py = 0; py < 8; py++) {
-          for (let px = 0; px < 8; px++) {
-            const x = tx * 8 + px;
-            const y = ty * 8 + py;
-            const sample = samplePreview(cell, x, y);
-            if (showHoles && hiddenPixel(sample.pal, sample.nib)) {
-              const v = ((x >> 3) ^ (y >> 3)) & 1 ? 86 : 138;
-              paintPixel(data, W, x, y, v, v, v, 255);
-            } else {
-              const col = doc.palettes[sample.pal][sample.nib];
-              const rgb = rgbChannels(col);
-              paintPixel(data, W, x, y, rgb[0], rgb[1], rgb[2], 255);
+    if (!replacing) {
+      for (let ty = 0; ty < doc.mapH; ty++) {
+        for (let tx = 0; tx < doc.mapW; tx++) {
+          const cell = doc.cells[ty * doc.mapW + tx];
+          for (let py = 0; py < 8; py++) {
+            for (let px = 0; px < 8; px++) {
+              const x = tx * 8 + px;
+              const y = ty * 8 + py;
+              const sample = samplePreview(cell, x, y);
+              if (showHoles && hiddenPixel(sample.pal, sample.nib)) {
+                const v = ((x >> 3) ^ (y >> 3)) & 1 ? 86 : 138;
+                paintPixel(data, W, x, y, v, v, v, 255);
+              } else {
+                const col = doc.palettes[sample.pal][sample.nib];
+                const rgb = rgbChannels(col);
+                paintPixel(data, W, x, y, rgb[0], rgb[1], rgb[2], 255);
+              }
             }
           }
         }
       }
     }
-    if (state.float) blitFloat(data, W, H);
+    if (state.float) blitFloat(data, W, H, size.w, size.h);
     sctx.putImageData(img, 0, 0);
     const canvas = $('jim-map');
     canvas.width = W * z;
@@ -1066,11 +1102,11 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if ($('jim-grid').checked) {
       ctx.strokeStyle = 'rgba(255,255,255,0.28)';
       ctx.beginPath();
-      for (let x = 0; x <= doc.mapW; x++) { ctx.moveTo(x * 8 * z + 0.5, 0); ctx.lineTo(x * 8 * z + 0.5, canvas.height); }
-      for (let y = 0; y <= doc.mapH; y++) { ctx.moveTo(0, y * 8 * z + 0.5); ctx.lineTo(canvas.width, y * 8 * z + 0.5); }
+      for (let x = 0; x <= size.w; x++) { ctx.moveTo(x * 8 * z + 0.5, 0); ctx.lineTo(x * 8 * z + 0.5, canvas.height); }
+      for (let y = 0; y <= size.h; y++) { ctx.moveTo(0, y * 8 * z + 0.5); ctx.lineTo(canvas.width, y * 8 * z + 0.5); }
       ctx.stroke();
     }
-    if ($('jim-seam').checked) {
+    if ($('jim-seam').checked && !replacing) {
       ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
       ctx.beginPath();
       for (let ty = 0; ty < doc.mapH; ty++) {
@@ -1112,16 +1148,18 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const label = state.zoom + '×';
     $('jim-zoom-val').textContent = z === state.zoom ? label : label + ' (drawn ' + z + '×)';
   }
-  function blitFloat(data, W, H) {
+  function blitFloat(data, W, H, mapW, mapH) {
     const f = state.float;
     const showHoles = $('jim-trans').checked;
+    const clipW = mapW != null ? mapW : doc.mapW;
+    const clipH = mapH != null ? mapH : doc.mapH;
     for (let ty = 0; ty < f.h; ty++) {
       for (let tx = 0; tx < f.w; tx++) {
         const cell = f.cells[ty * f.w + tx];
         if (!cell) continue;
         const mx = f.x + tx;
         const my = f.y + ty;
-        if (mx < 0 || my < 0 || mx >= doc.mapW || my >= doc.mapH) continue;
+        if (mx < 0 || my < 0 || mx >= clipW || my >= clipH) continue;
         for (let py = 0; py < 8; py++) {
           for (let px = 0; px < 8; px++) {
             const nib = cell.nibbles[py * 8 + px] & 15;
@@ -1632,7 +1670,7 @@ remember();
     if (!doc) return;
     const p = cellAt(event);
     if (!p) return;
-    if (state.float && state.tool !== 'pan' && event.button === 0) {
+    if (state.float && state.tool !== 'pan' && event.button === 0 && !floatReplace()) {
       state.drag = { float: true, x: p.x, y: p.y };
       $('jim-map').setPointerCapture(event.pointerId);
       state.down = true;
@@ -1991,18 +2029,19 @@ remember();
         pal: (tile.pal | 0) & (isSnes() ? 7 : 3)
       };
     });
-    return {
+    return placeFloat({
       name: name,
       w: tw,
       h: th,
-      x: Math.max(0, Math.floor((doc.mapW - tw) / 2)),
-      y: Math.max(0, Math.floor((doc.mapH - th) / 2)),
+      x: 0,
+      y: 0,
       cells: cells,
       palettes: palettes,
       warnings: warnings || [],
       pending: !!pending,
-      onlyEmpty: !!onlyEmpty
-    };
+      onlyEmpty: !!onlyEmpty,
+      mode: importMode()
+    });
   }
   function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
     const padded = padImage(image);
@@ -2037,9 +2076,9 @@ remember();
     if (!f || !f.source || !canEdit()) return;
     try {
       const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
-      next.x = f.x;
-      next.y = f.y;
       next.mode = importMode();
+      if (next.mode === 'replace') placeFloat(next);
+      else { next.x = f.x; next.y = f.y; }
       state.float = next;
       renderAll();
     } catch (err) { status(err.message || String(err), true); }
@@ -2130,9 +2169,6 @@ remember();
         status('New image map is ' + w + '×' + h + '; size must be 1–1024.', true);
         return;
       }
-      const msg = 'Resize the map from ' + doc.mapW + '×' + doc.mapH + ' (' + mapPixelText(doc.mapW, doc.mapH) +
-        ') to ' + w + '×' + h + ' (' + mapPixelText(w, h) + ') and replace tiles?';
-      if (!window.confirm(msg)) return;
       const built = tilesFromFloat(f, []);
       if (built.tiles.length > tileCap()) {
         status('That image needs ' + built.tiles.length + ' tiles. The name table holds ' + tileCap() + '.', true);
@@ -2213,7 +2249,7 @@ remember();
     const pending = state.float.pending ? ' quantize pending.' : '';
     const mode = importMode();
     const hint = mode === 'replace'
-      ? ' Apply resizes the map to ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + ').'
+      ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
       : (mode === 'add' ? ' Apply appends new tiles.' : ' Apply overwrites cells on this map.');
     status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
@@ -2442,6 +2478,7 @@ remember();
       if (doc.cells[i].tile) { state.tile = doc.cells[i].tile; break; }
     }
     if (state.tile >= doc.tiles.length) state.tile = 0;
+    setImportMode((next.via === 'new' || !next.source) ? 'replace' : 'place');
     $('jim-packed').checked = isSnes() || !!doc.packedOnDisk;
     if (!Array.isArray(doc.palettes)) doc.palettes = [];
     while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
@@ -2697,6 +2734,24 @@ remember();
       if (!raw) return false;
       const data = JSON.parse(raw);
       sessionStorage.removeItem('nhl9x-jim');
+      if (data.rgbaB64 && data.rgbaW && data.rgbaH) {
+        const rgba = Uint8Array.from(atob(data.rgbaB64), (c) => c.charCodeAt(0));
+        loadDoc(blankDoc({
+          platform: data.platform || 'genesis',
+          name: data.name || 'untitled.map.jim'
+        }), 'Opened from the Images tab.');
+        setImportMode(data.importMode || 'replace');
+        state.float = quantizeToFloat({
+          name: data.name || 'image.png',
+          w: data.rgbaW | 0,
+          h: data.rgbaH | 0,
+          rgba: rgba
+        }, openPalList(), false);
+        status('Imported ' + (data.name || 'image') + '. Map preview is ' +
+          state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + ').');
+        renderAll();
+        return true;
+      }
       const bytes = data.b64
         ? Uint8Array.from(atob(data.b64), (c) => c.charCodeAt(0))
         : Uint8Array.from(data.bytes || []);
@@ -2725,7 +2780,7 @@ remember();
     if (!q.get('image')) return;
     const game = q.get('game');
     $('jim-hash').hidden = false;
-    $('jim-hash').textContent = 'The Images tab did not hand over the map bytes. Use Edit map on the picture you are viewing, or Open the .map.jim here. (' +
+    $('jim-hash').textContent = 'The Images tab did not hand over the map bytes. Use Edit image on the picture you are viewing, or Open the file here. (' +
       (game || 'game') + ' / ' + q.get('image') + ')';
   }
 
@@ -2891,9 +2946,11 @@ remember();
     if ($('jim-import-mode')) $('jim-import-mode').addEventListener('change', () => {
       if (state.float) {
         state.float.mode = importMode();
+        placeFloat(state.float);
         status(importMode() === 'replace'
-          ? 'Apply will resize the map to the image.'
+          ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
           : (importMode() === 'add' ? 'Apply will append new tiles.' : 'Apply will overwrite cells on this map.'));
+        renderAll();
       }
     });
     ['jim-map-w', 'jim-map-h'].forEach((id) => {
