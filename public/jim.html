@@ -10,19 +10,19 @@
 </head>
 <body class="jed jim-app">
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
-      <p>Drop a .map.jim, .map.sjim, .jim, .bin, image, or .act</p>
+      <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, or .act</p>
   </div>
   <header class="jed-head">
     <div>
       <h1 class="product-name"><a href="index.html" id="jim-home">NHL9X Studio</a> · Image Editor</h1>
-      <p id="jim-status" class="jed-status">Open a Genesis .map.jim or a SNES .map.sjim. Nothing is written back into a ROM.</p>
+      <p id="jim-status" class="jed-status">Open a Genesis .map.jim, a 93S .map.sjim, or an NHL 94 SNES screen. Nothing is written back into a ROM.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
       <button type="button" id="jim-exit" class="ghost-btn" title="Back to the image viewer">Close</button>
-      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, or SNES .map.sjim">Open…</button>
+      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, SNES .map.sjim, or NHL 94 SNES .zip/.huf/.lz/.rle">Open…</button>
       <button type="button" id="jim-export" class="ghost-btn" title="Download using the opened file name">Export</button>
-      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro). On: bit 15 set and a bytecode stream. SNES .map.sjim is always a packed stream."><input type="checkbox" id="jim-packed"> Packed export</label>
-      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim">
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim,.huf,.lz,.rle,.pairs,.zip,.chr,.pal">
     </div>
   </header>
   <main class="jim-main">
@@ -219,6 +219,9 @@
   <script src="lib/jim-compress.js"></script>
   <script src="lib/jim.js"></script>
   <script src="lib/sjim.js"></script>
+  <script src="lib/snespak.js"></script>
+  <script src="lib/zip-store.js"></script>
+  <script src="lib/sscr.js"></script>
   <script src="lib/open-asset.js"></script>
   <script src="lib/genesis-quantize.js"></script>
   <script src="jim.js"></script>

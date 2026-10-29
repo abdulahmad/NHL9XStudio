@@ -273,6 +273,8 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   assert.strictEqual(classify('RonBarr.map.jim', prefix).kind, 'jim');
   assert.strictEqual(classify('Title1.map.sjim', prefix).kind, 'sjim');
   assert.notStrictEqual(classify('Title1.map.sjim', prefix).kind, 'jim');
+  const packed94 = Uint8Array.from([0x7a, 0xfb, 0, 0, 1, 1, 1, 0xff, 0, 0]);
+  assert.strictEqual(classify('SetupBackTiles.chr.huf', packed94).kind, 'snes94');
   assert.notStrictEqual(classify('x.bin', Uint8Array.from([0x4a, 0x49, 0, 0])).kind, 'jim');
 }
 

@@ -12,6 +12,7 @@
 
   const Jim = typeof Nhl92Jim === 'undefined' ? null : Nhl92Jim;
   const Sjim = typeof Nhl92Sjim === 'undefined' ? null : Nhl92Sjim;
+  const Sscr = typeof Nhl92Sscr === 'undefined' ? null : Nhl92Sscr;
   const Quant = typeof NhlGenesisQuantize === 'undefined' ? null : NhlGenesisQuantize;
   const QKEY = 'nhl9x-jim-quantize';
   const UNDO_MAX = 100;
@@ -463,6 +464,7 @@
       variant: variant,
       platform: raw.platform || 'genesis',
       sjim: raw.sjim || null,
+      sscr: raw.sscr || null,
       readOnly: !!raw.readOnly,
       packedOnDisk: !!(raw.packedOnDisk || raw.packed),
       embedPalettes: embed,
@@ -581,6 +583,35 @@
     bytes = copyBytes(bytes);
     const donorBytes = donor && donor.length ? copyBytes(donor) : null;
     extra = extra || {};
+    const want94 = extra.variant === 'snes94' || extra.sscr
+      || (Sscr && Sscr.isSscrName && Sscr.isSscrName(name));
+    if (want94 && Sscr) {
+      let parsed;
+      if (extra.tiles && extra.map) {
+        parsed = Sscr.parseScreen94({
+          tiles: extra.tiles, map: extra.map, pal: extra.pal,
+          fileNames: extra.fileNames, linear: extra.sscr && extra.sscr.linear,
+          rawMap: extra.sscr && extra.sscr.rawMap, rawTiles: extra.sscr && extra.sscr.rawTiles
+        }, { name: name, remap: extra.remap, donor: donorBytes });
+      } else {
+        parsed = Sscr.parsePackedOrZip(bytes, {
+          name: name,
+          remap: extra.remap,
+          donor: donorBytes,
+          linear: extra.sscr && extra.sscr.linear,
+          rawMap: extra.sscr && extra.sscr.rawMap,
+          rawTiles: extra.sscr && extra.sscr.rawTiles,
+          extraWord: extra.sscr && extra.sscr.extraWord,
+          tileFormat: extra.sscr && extra.sscr.tileFormat,
+          mapFormat: extra.sscr && extra.sscr.mapFormat,
+          palFormat: extra.sscr && extra.sscr.palFormat,
+          paletteCount: extra.sscr && extra.sscr.paletteCount
+        });
+      }
+      parsed.source = bytes;
+      parsed.via = 'parseScreen94';
+      return parsed;
+    }
     if ((extra.platform === 'snes' || (Sjim && Sjim.isSjimName && Sjim.isSjimName(name))) && Sjim && typeof Sjim.parseSjim === 'function') {
       const parsed = Sjim.parseSjim(bytes, donorBytes, { name: name, layout: extra.sjim || extra.layout, remap: extra.remap });
       const adapted = adaptParsed(parsed, name, bytes);
@@ -635,6 +666,12 @@ function identityMap(model) {
       const c = model.cells[i];
       if (c.tile > cap - 1) throw new Error('Export refused: cell ' + (i % model.mapW) + ',' + Math.floor(i / model.mapW) + ' tile ' + c.tile + ' does not fit in ' + bits + ' bits.');
       if (c.tile >= model.tiles.length) throw new Error('Export refused: cell ' + (i % model.mapW) + ',' + Math.floor(i / model.mapW) + ' uses tile ' + c.tile + ' but the file has ' + model.tiles.length + '.');
+    }
+    if (model.variant === 'snes94') {
+      if (!Sscr || typeof Sscr.encodeScreen94Zip !== 'function') throw new Error('lib/sscr.js did not load.');
+      const dirty = !!(model.dirtyTiles || model.dirtyPal || model.dirtyMap);
+      if (!dirty && model.source && !!packed === !!model.packedOnDisk) return model.source;
+      return Sscr.encodeScreen94Zip(model, { packed: packed });
     }
     if (model.platform === 'snes') {
       if (!Sjim || typeof Sjim.encodeSjim !== 'function') throw new Error('lib/sjim.js did not load.');
@@ -774,6 +811,7 @@ function buildExport(packed) {
   function focused(id) { return document.activeElement && document.activeElement.id === id; }
 
   function headerMode() {
+if (doc.variant === 'snes94') return 'Export writes a ZIP of the NHL 94 SNES files: tiles (.chr.huf/.lz/.rle), map (6-byte header then words), and BGR555 palettes. Packed uses Decompress $FB10/$FB30/$FB7A. Nothing is written into a ROM.';
 if (doc.platform === 'snes') return 'Export writes one DecompressBytecode stream: map words, BGR555 palettes, then planar tiles. Offsets are not in the file.';
 if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows (3 bits + 5). Shared faces keep a zero header.';
   if (doc.embedPalettes) return 'Export writes 128 bytes of CRAM, then the map.';
@@ -805,6 +843,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
   function variantLabel() {
     if (doc.variant === 'nopal') return 'no palette ($FFFFFFFF)';
+    if (doc.variant === 'snes94') return 'SNES 94 screen (huf/lz/rle)';
     if (doc.platform === 'snes') return 'SNES .map.sjim';
     if (doc.variant === 'portrait') return 'portrait (UnpackPicture)';
     if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
@@ -830,7 +869,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       ' · dobitmap $' + mask.toString(16).toUpperCase().padStart(2, '0') + ' loads ' + (loaded.length ? loaded.join(',') : 'none');
     const text = doc.tiles.length + '/' + cap + ' tiles · ' + s.inks + '/' + s.budget + ' colors · lines ' +
       (s.pals.length ? s.pals.join(',') : 'none') + ' · on disk ' + (doc.packedOnDisk ? 'packed' : 'raw') +
-      ' · export ' + (doc.platform === 'snes' ? 'packed sjim' : (packedBox ? 'packed' : 'uncompressed')) + ' · ' + variantLabel() +
+      ' · export ' + (doc.variant === 'snes94'
+        ? (packedBox ? 'packed 94S zip' : 'raw 94S zip')
+        : (doc.platform === 'snes' ? 'packed sjim' : (packedBox ? 'packed' : 'uncompressed'))) + ' · ' + variantLabel() +
       (warnings.length ? ' · ' + warnings.join(' · ') : '');
     $('jim-note').textContent = text;
     $('jim-count').textContent = doc.tiles.length + ' / ' + cap;
@@ -899,8 +940,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       $('jim-kind').value = (doc.variant === 'sheet' || doc.variant === 'shared') ? 'sheet' : 'map';
     }
     $('jim-portrait').hidden = doc.variant !== 'portrait';
-    $('jim-packed').disabled = isSnes();
-    if (isSnes()) $('jim-packed').checked = true;
+    $('jim-packed').disabled = isSnes() && doc.variant !== 'snes94';
+    if (isSnes() && doc.variant !== 'snes94') $('jim-packed').checked = true;
     if ($('jim-memo') && document.activeElement !== $('jim-memo')) $('jim-memo').value = doc.memo || '';
     const palHead = $('jim-pal-sub');
     if (palHead) palHead.textContent = isSnes() ? '8 × 16 BGR555 · 5-bit' : '4 × 16 CRAM · 3-bit';
@@ -2438,8 +2479,13 @@ remember();
       const bytes = buildExport(packed);
       let name = doc.name || 'untitled.map.jim';
       if (/\.jzip$/i.test(name)) name = name.replace(/\.jzip$/i, '.map.jim');
+      if (doc.variant === 'snes94' && !/\.zip$/i.test(name)) {
+        name = name.replace(/\.(map\.)?(sjim|jim|huf|lz|rle|bin)$/i, '') + '.snes94.zip';
+      }
       download(bytes, name);
-      status('Exported ' + doc.name + ' (' + (doc.platform === 'snes' ? 'packed sjim' : (packed ? 'packed' : 'uncompressed')) + ', ' + bytes.length + ' bytes).');
+      status('Exported ' + doc.name + ' (' + (doc.variant === 'snes94'
+        ? (packed ? 'packed 94S zip' : 'raw 94S zip')
+        : (doc.platform === 'snes' ? 'packed sjim' : (packed ? 'packed' : 'uncompressed'))) + ', ' + bytes.length + ' bytes).');
     } catch (err) {
       status(err.message || String(err), true);
     }
@@ -2654,12 +2700,18 @@ remember();
       const bytes = data.b64
         ? Uint8Array.from(atob(data.b64), (c) => c.charCodeAt(0))
         : Uint8Array.from(data.bytes || []);
-      if (!bytes.length) return false;
+      if (!bytes.length && !(data.tilesB64 && data.mapB64)) return false;
       const donor = data.donor && data.donor.length ? Uint8Array.from(data.donor) : null;
       loadDoc(openBytes(bytes, data.name || 'catalog.map.jim', donor, {
         platform: data.platform,
+        variant: data.variant,
         sjim: data.sjim,
-        remap: data.remap
+        sscr: data.sscr,
+        remap: data.remap,
+        tiles: data.tilesB64 ? Uint8Array.from(atob(data.tilesB64), (c) => c.charCodeAt(0)) : null,
+        map: data.mapB64 ? Uint8Array.from(atob(data.mapB64), (c) => c.charCodeAt(0)) : null,
+        pal: data.palB64 ? Uint8Array.from(atob(data.palB64), (c) => c.charCodeAt(0)) : null,
+        fileNames: data.fileNames
       }));
       setRemapPreview(data.remap);
       return true;
@@ -2971,7 +3023,7 @@ remember();
     wire();
     if (!fromSession()) {
       hashNote();
-      loadDoc(blankDoc(), 'Open a Genesis .map.jim or a SNES .map.sjim. Export stays on this machine — nothing is written into a ROM.');
+      loadDoc(blankDoc(), 'Open a Genesis .map.jim, a 93S .map.sjim, or an NHL 94 SNES screen. Export stays on this machine — nothing is written into a ROM.');
     }
   }
 

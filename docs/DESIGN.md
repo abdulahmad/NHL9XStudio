@@ -84,6 +84,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `snes93` / `snes94` | `lib/snes.js`, `snespak.js` | Planar 4bpp, mode-specific maps/screens/cards |
 | `jim` | `lib/jim.js` | Genesis compressed maps (images tab) |
 | `sjim` | `lib/sjim.js` | NHLPA 93 SNES packed screens (map + pal + planar tiles) |
+| `snes94-screen` | `lib/sscr.js`, `snespak.js` | NHL 94 SNES tiles + map + pal (LZ / Huffman / RLE) |
 | `pc95` | `lib/pc95.js` | RefPack QFS → SHPI → SPIT; PPV SHPI banks; team/rink palettes |
 
 **Catalog data:** SPF/SPA from `data/frames*.asm` via `lib/parse-frames.js` (including ascending SPF range fix). Genesis image lists from `lib/genesis-images.js` (generated from disassembly extracts). SNES 94 frames partly generated (`tools/build-snes-frames.js`).
@@ -378,7 +379,7 @@ Full requirements, format truth vs JIM-Tools, architecture, and step × model ta
 Short version:
 
 - Hide **Chip lab** in the header; keep `public/chip-lab.html`.
-- New **Image Editor** (`jim.html`, header button): import PNG/BMP, lock palettes from `.act` / `.pal` / `.map.jim`, Genesis 3-bit / 15–61 colors or SNES 5-bit / 15–121 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), and open/export NHLPA 93 SNES `.map.sjim` (8 BGR555 pals, 10-bit tile index). Edit map from the Images tab (including a JIM dropped on the viewer).
+- New **Image Editor** (`jim.html`, header button): import PNG/BMP, lock palettes from `.act` / `.pal` / `.map.jim`, Genesis 3-bit / 15–61 colors or SNES 5-bit / 15–121 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), open/export NHLPA 93 SNES `.map.sjim` (8 BGR555 pals, 10-bit tile index), and open/export NHL 94 SNES screens (tiles + map + palettes as LZ/Huffman/RLE, downloaded as a ZIP). Edit map from the Images tab (including a JIM dropped on the viewer).
 - Compression: implement from 93G `src/decompress93.asm` / 94G `src/decompress94.asm` / `lib/jim.js` `decompressBytecode`. Do **not** follow EA-NHL-Tools `JIM-Tools/Readme.md` “JZIP” opcodes.
 
 ---

@@ -2,7 +2,7 @@
 
 **In-repo copy:** [docs/nhl9x-studio-requirements.md](https://github.com/abdulahmad/nhl9xstudio/blob/main/docs/nhl9x-studio-requirements.md) in [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio). Keep both files the same.
 
-**Related:** `docs/DESIGN.md` (product shell), `lib/jim.js` + `lib/sjim.js` (parse/encode), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
+**Related:** `docs/DESIGN.md` (product shell), `lib/jim.js` + `lib/sjim.js` + `lib/sscr.js` (parse/encode), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
 
 This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL9X Studio, plus **hiding Chip Lab** in the product chrome. It is not a rewrite of the viewer, the PC ice editor, or ANIM/SHPI editing.
 
@@ -20,7 +20,7 @@ This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL
 | Unique colors | Genesis **15–61** (1–4 lines). SNES **15–121** (1–8 BGR555 lines). See §3.4. |
 | ACT lock | One `.act`: colors **1–16 → pal 0**, **17–32 → pal 1**, and so on. Genesis uses pals 0–3 (64 colors). SNES uses pals 0–7 (128 colors). Lock per palette independently. |
 | UI home | New **Maps** page next to **Jerseys** (`jed.html` / `ice.js` pattern), plus **Edit map** from the Images tab for `kind: 'jim'`. |
-| v1 non-goals | ANIM sprites, PC TIL/MAP, writing back into a ROM. Portrait encode and SNES `.map.sjim` are in the Maps editor. |
+| v1 non-goals | ANIM sprites, PC TIL/MAP, writing back into a ROM. Portrait encode, SNES `.map.sjim`, and NHL 94 SNES screens are in the Maps editor. |
 
 ---
 
@@ -219,15 +219,18 @@ Round-trip:
 ```
 public/index.html          hide Chip Lab link; add Maps button
 public/jim.html            Map editor shell (jed.html layout: chrome + canvas + side panels)
-public/jim.js              UI: tools, undo, import wizard, preview, sjim/portrait
+public/jim.js              UI: tools, undo, import wizard, preview, sjim/portrait/94S
 lib/jim.js                 parseJim, encodeJim, compressBytecode, packPortrait
 lib/sjim.js                NHLPA 93 SNES .map.sjim parse/encode (DecompressBytecode stream)
+lib/sscr.js                NHL 94 SNES screens (tiles + map + pal, ZIP export)
+lib/snespak.js             unpack/pack LZ, Huffman, pairs, RLE
 lib/genesis-quantize.js    3-bit snap, reduction methods, dither, ACT lock, writeAct
-lib/open-asset.js          classifies .jim / .map.jim / .sjim
-lib/games.js               Images catalog; “Edit map” uses jim and 93S screen slices
+lib/open-asset.js          classifies .jim / .map.jim / .sjim / 94S packed / ZIP
+lib/games.js               Images catalog; “Edit map” uses jim, 93S, and 94S screens
 public/viewer.js           Images tab: Edit map → jim.html#game=&image=
 test/jim-roundtrip.js      codec + compressor vs 93/94 fixtures / ROM slices
 test/sjim.js               SNES word/tile/stream round-trip
+test/sscr.js               94S packers + screen ZIP round-trip
 ```
 
 Reuse, do not fork:
@@ -251,9 +254,10 @@ Do **not** import `JIM-Tools/decompressJim.js`, `uncompress-jzip.js`, or `genesi
 ```text
 JimDoc {
   name,               // IceRink.map.jim
-  variant,            // 'map' | 'nopal' | 'shared' | 'portrait' | 'sheet' | 'sjim'
+  variant,            // 'map' | 'nopal' | 'shared' | 'portrait' | 'sheet' | 'sjim' | 'snes94'
   platform,           // 'genesis' | 'snes'
-  packedOnDisk,       // Genesis: bit 15 of tile word. SNES: always packed.
+  packedOnDisk,       // Genesis: bit 15 of tile word. 93S sjim: always packed. 94S: LZ/Huffman/RLE or raw.
+  sscr: { extraWord, tileFormat, mapFormat, palFormat, linear, rawMap, rawTiles, paletteCount } | null,
   tiles: Uint8Array[], // each 64 nibbles 0–15, row-major 8×8 (editor space)
   mapW, mapH,
   cells: { tile, hFlip, vFlip, pal, priority }[],
@@ -460,9 +464,10 @@ Each milestone is a PR titled `DOCS:` (M0) or `TOOLS:` / feature (`MAPS:` is fin
 - [x] `public/jim.html` + `public/jim.js` + CSS (share `jed.css` if it fits)  
 - [x] `lib/jim.js` — parse/encode/compress; keep `decodeJim` working for the viewer  
 - [x] `lib/sjim.js` — NHLPA 93 SNES `.map.sjim` parse/encode  
+- [x] `lib/sscr.js` + `lib/snespak.js` packers — NHL 94 SNES screens (LZ/Huffman/RLE ZIP)  
 - [x] `lib/genesis-quantize.js` — new  
 - [x] `lib/open-asset.js` — drop classification without `JI` magic  
-- [x] `public/viewer.js` — Edit map (JIM and 93S screens)  
+- [x] `public/viewer.js` — Edit map (JIM, 93S screens, 94S screens)  
 - [x] `server.js` — serve `jim.html` / `jim.js`  
 - [x] `test/jim-roundtrip.js` + `test/sjim.js` + `test/select.js`  
 - [x] `docs/DESIGN.md` roadmap line (graphics editing)  
@@ -482,3 +487,4 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 | 2026-10-28 | v1.1 polish: ACT auto-lock, session quantize, batch lock-from-ACT, dobitmap mask, PNG/ACT export, unused-tile highlight, compare view, sheet kind, note field. |
 | 2026-10-28 | SNES Maps path uses pals 0–7, 5-bit BGR555, 1024 tiles, and unique-ink budget 15–121. |
 | 2026-10-28 | Image Editor: overwrite/add/new-image import, live quantize, step previews, palette mapping dialog, dobitmap select, exit warning, viewer Edit map for dropped JIMs. |
+| 2026-10-28 | NHL 94 SNES screens in the Image Editor: catalog Edit map, LZ/Huffman/RLE pack, ZIP export of tiles+map+pal. |

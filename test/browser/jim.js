@@ -10,6 +10,7 @@ const assert = require('assert');
 const { withBrowser } = require('./harness');
 const { compressBytecode, packPortrait, unpackPortrait } = require('../../lib/jim');
 const { packSnesMapWord, packSnesTile, parseSjim } = require('../../lib/sjim');
+const { parseScreen94, encodeScreen94Zip, parseScreen94Zip } = require('../../lib/sscr');
 
 function rawJim() {
   const tiles = 1, palOff = 10 + 32, mapOff = palOff + 128;
@@ -152,6 +153,48 @@ withBrowser('jim', async ({ url, newPage }) => {
   const back = unpackPortrait(portOut, 10, 36);
   assert.strictEqual((back[0] >> 4) & 15, 9);
   assert.strictEqual(back[0] & 15, 5);
+
+  const map94 = Buffer.alloc(6 + 8 * 8 * 2);
+  map94.writeUInt16LE(8, 0);
+  map94.writeUInt16LE(8, 2);
+  map94.writeUInt16LE(0x0308, 4);
+  map94.writeUInt16LE(packSnesMapWord({ tile: 0, pal: 5, priority: 1, hFlip: 0, vFlip: 1 }), 6);
+  const tile94 = packSnesTile(Uint8Array.from({ length: 64 }, (_, i) => (i === 0 ? 3 : 0)));
+  const pal94 = Buffer.alloc(256);
+  pal94.writeUInt16LE(0x7fff, 2);
+  const screen94 = parseScreen94({
+    tiles: Buffer.concat([Buffer.from(tile94), Buffer.alloc(32)]),
+    map: map94,
+    pal: pal94,
+    fileNames: ['ProbeTiles.chr.huf', 'ProbeMap.map.rle']
+  }, { name: 'probe.snes94.zip' });
+  const zip94 = Buffer.from(encodeScreen94Zip(screen94, { packed: true }));
+  await page.setInputFiles('#jim-open', [{
+    name: 'probe.snes94.zip',
+    mimeType: 'application/zip',
+    buffer: zip94
+  }]);
+  await page.waitForFunction(() => /Opened probe\.snes94\.zip/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  assert.match(await page.textContent('#jim-variant'), /SNES 94/);
+  assert.ok(!(await page.locator('#jim-packed').isDisabled()));
+  assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
+  let zipDl;
+  try {
+    [zipDl] = await Promise.all([
+      page.waitForEvent('download', { timeout: 8000 }),
+      page.click('#jim-export')
+    ]);
+  } catch (err) {
+    throw new Error('94S export failed: status=' + (await page.textContent('#jim-status')) +
+      ' note=' + (await page.textContent('#jim-note')) + ' orig=' + err.message);
+  }
+  assert.match(zipDl.suggestedFilename(), /snes94\.zip/);
+  const zipOut = fs.readFileSync(await zipDl.path());
+  const round = parseScreen94Zip(zipOut);
+  assert.strictEqual(round.cells[0].pal, 5);
+  assert.strictEqual(round.cells[0].priority, 1);
+  assert.strictEqual(round.cells[0].vFlip, 1);
+  assert.strictEqual(round.tiles[0][0], 3);
 
   console.log('jim browser: ok');
 });
