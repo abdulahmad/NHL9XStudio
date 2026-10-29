@@ -32,14 +32,20 @@
     <symbol id="i-delete" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M5 7h14l-1.2 13H6.2L5 7z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M9 4h6v3H9zM4 7h16"/></symbol>
     <symbol id="i-unused" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M7 7l10 10"/></symbol>
     <symbol id="i-dedupe" viewBox="0 0 24 24"><rect x="3" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M8 12h8"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.4" d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"/></symbol>
+    <symbol id="i-trans" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="currentColor" d="M4.8 4.8h7.2v7.2H4.8zm7.2 7.2h7.2v7.2H12z"/></symbol>
+    <symbol id="i-seams" viewBox="0 0 24 24"><rect x="3" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v16"/></symbol>
   </svg>
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
       <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, .act, .pal, or .snespal</p>
   </div>
   <header class="jed-head">
     <div>
-      <a href="index.html" id="jim-exit" class="studio-back" title="Back to NHL9X Studio">← NHL9X Studio</a>
-      <h1 class="product-name">Image Editor</h1>
+      <h1 class="product-name studio-title">
+        <a href="index.html" id="jim-exit" class="studio-back" title="Back to NHL9X Studio">← NHL9X Studio</a>
+        <span class="studio-title-sep" aria-hidden="true">|</span>
+        Image Editor
+      </h1>
       <p id="jim-status" class="jed-status">Open a Genesis .map.jim, a 93S .map.sjim, or an NHL 94 SNES screen. Nothing is written back into a ROM.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
@@ -80,8 +86,7 @@
       </div>
       <div class="jed-io">
         <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, Genesis .pal, SNES .snespal, .bin, .map.jim, or .map.sjim. A dialog maps each file palette onto an editor pal.">Import palettes…</button>
-        <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of the four (or eight) lines. Optional 772-byte trailer with color count.">Export .ACT</button>
-        <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
+        <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of one palette line, or all lines combined. Optional 772-byte trailer with color count.">Export .ACT</button>
         <input type="file" id="jim-act" hidden accept=".act,.pal,.snespal,.bin,.jim,.map.jim,.sjim,.map.sjim">
       </div>
 
@@ -120,14 +125,8 @@
       <p id="jim-hash" class="ice-warn" hidden></p>
       <div class="ice-toolbar jim-toolbar">
         <div class="pin-options jim-tools" role="group" aria-label="Tool">
-          <button type="button" data-tool="paint" aria-pressed="false" class="jim-icon-btn jim-edit" title="Paint pixel">
-            <svg><use href="#i-paint"/></svg><span>Paint</span>
-          </button>
-          <button type="button" data-tool="place" aria-pressed="false" class="jim-icon-btn jim-edit" title="Place tile">
-            <svg><use href="#i-place"/></svg><span>Place</span>
-          </button>
-          <button type="button" data-tool="erase" aria-pressed="false" class="jim-icon-btn jim-edit" title="Erase cell">
-            <svg><use href="#i-erase"/></svg><span>Erase</span>
+          <button type="button" data-tool="pan" aria-pressed="false" class="jim-icon-btn" title="Pan">
+            <svg><use href="#i-pan"/></svg><span>Pan</span>
           </button>
           <button type="button" data-tool="select" aria-pressed="true" class="jim-icon-btn jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">
             <svg><use href="#i-select"/></svg><span>Select</span>
@@ -135,8 +134,14 @@
           <button type="button" data-tool="pick" aria-pressed="false" class="jim-icon-btn" title="Pick color">
             <svg><use href="#i-pick"/></svg><span>Pick</span>
           </button>
-          <button type="button" data-tool="pan" aria-pressed="false" class="jim-icon-btn" title="Pan">
-            <svg><use href="#i-pan"/></svg><span>Pan</span>
+          <button type="button" data-tool="place" aria-pressed="false" class="jim-icon-btn jim-edit" title="Place tile">
+            <svg><use href="#i-place"/></svg><span>Place</span>
+          </button>
+          <button type="button" data-tool="paint" aria-pressed="false" class="jim-icon-btn jim-edit" title="Paint pixel">
+            <svg><use href="#i-paint"/></svg><span>Paint</span>
+          </button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="jim-icon-btn jim-edit" title="Erase cell">
+            <svg><use href="#i-erase"/></svg><span>Erase</span>
           </button>
         </div>
         <div class="jim-toolbar-hist" role="group" aria-label="History">
@@ -148,10 +153,18 @@
           </button>
         </div>
         <div class="jim-toolbar-view" role="group" aria-label="Map view">
-          <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
-          <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
-          <label class="check" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color, which is how a full screen looks over pal 0 color 0."><input type="checkbox" id="jim-trans"> Transparency</label>
-          <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
+          <input type="checkbox" id="jim-grid" checked hidden>
+          <input type="checkbox" id="jim-trans" hidden>
+          <input type="checkbox" id="jim-seam" hidden>
+          <button type="button" class="jim-icon-btn" data-flag="jim-grid" aria-pressed="true" title="Show the 8×8 cell lattice">
+            <svg><use href="#i-grid"/></svg><span>Grid</span>
+          </button>
+          <button type="button" class="jim-icon-btn" data-flag="jim-trans" aria-pressed="false" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color.">
+            <svg><use href="#i-trans"/></svg><span>Trans</span>
+          </button>
+          <button type="button" class="jim-icon-btn" data-flag="jim-seam" aria-pressed="false" title="Tile edges where the palette line changes">
+            <svg><use href="#i-seams"/></svg><span>Seams</span>
+          </button>
         </div>
       </div>
       <div class="ice-blockbar" id="jim-blockbar">
@@ -185,6 +198,7 @@
         <button type="button" data-xf="270" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">
           <svg><use href="#i-rot270"/></svg><span>270°</span>
         </button>
+        <label class="ice-zoom jim-toolbar-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
         <span id="jim-sel-info" class="muted"></span>
       </div>
       <div class="ice-float-bar" id="jim-float-bar" hidden>
@@ -296,21 +310,35 @@
   <div id="jim-export-dlg" class="jim-palmap" hidden>
     <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-export-title">
       <h2 id="jim-export-title">Export</h2>
-      <p class="muted">Pick a format. If this picture cannot be that file, you will get an error and nothing is downloaded.</p>
+      <p class="muted">Pick a format. Export stays disabled when this picture cannot become that file; the reason is next to the buttons.</p>
       <fieldset class="jim-export-kinds">
         <legend class="muted">Format</legend>
         <label><input type="radio" name="jim-export-kind" value="native" checked> Native file <span class="muted" id="jim-export-native-name"></span></label>
         <label><input type="radio" name="jim-export-kind" value="jim"> Genesis .map.jim</label>
         <label><input type="radio" name="jim-export-kind" value="sjim"> SNES .map.sjim</label>
-        <label><input type="radio" name="jim-export-kind" value="snes94"> NHL 94 SNES screen (.zip)</label>
+        <label><input type="radio" name="jim-export-kind" value="snes94"> NHL 94 SNES screen (.zip: <span id="jim-export-zip-files">Tiles.chr, Map.map, palette, screen.json</span>)</label>
         <label><input type="radio" name="jim-export-kind" value="png" id="jim-png"> Map PNG</label>
         <label><input type="radio" name="jim-export-kind" value="tiles" id="jim-png-tiles"> Tiles PNG</label>
-        <label><input type="radio" name="jim-export-kind" value="act"> Adobe .ACT</label>
       </fieldset>
-      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE. Disabled when the format has only one packing."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <div class="jim-export-foot">
+        <p class="muted" id="jim-export-why"></p>
+        <div class="jed-io">
+          <button type="button" id="jim-export-ok" class="ghost-btn">Export</button>
+          <button type="button" id="jim-export-cancel" class="ghost-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="jim-act-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-act-title">
+      <h2 id="jim-act-title">Export .ACT</h2>
+      <p class="muted">One palette line, or every line packed into one Adobe Color Table.</p>
+      <div id="jim-act-pals" class="jim-export-kinds"></div>
+      <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
       <div class="jed-io">
-        <button type="button" id="jim-export-ok" class="ghost-btn">Export</button>
-        <button type="button" id="jim-export-cancel" class="ghost-btn">Cancel</button>
+        <button type="button" id="jim-act-ok" class="ghost-btn">Export</button>
+        <button type="button" id="jim-act-cancel" class="ghost-btn">Cancel</button>
       </div>
     </div>
   </div>

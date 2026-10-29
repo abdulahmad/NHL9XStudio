@@ -76,7 +76,7 @@ If a title is missing a bank or a picture that exists in the ROM, that is a cata
 
 ## 3. Product surfaces
 
-Every page shares the NHL9X Studio header (product name, game where it applies, About). Editors that leave the main viewer use a **← NHL9X Studio** text link in the top left, not a “Close” button.
+Every page shares the NHL9X Studio header (product name, game where it applies, About). Editors that leave the main viewer use a **← NHL9X Studio | page title** heading on one line in the top left (the arrow is the back link), not a “Close” button.
 
 ### 3.1 Sprite viewer (`index.html`)
 
@@ -109,16 +109,18 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 **Must have — files**
 
 - Open any of those formats; status says what kind of file it is
-- Export through a **modal** that lists every format the editor knows, plus map PNG, tiles PNG, and Adobe ACT
-- If the open picture **cannot** become the chosen format, show an error popup and do not download a broken file
-- Packed vs uncompressed is a choice on that modal for formats that have it
+- Export through a **modal** that lists native, Genesis `.map.jim`, SNES `.map.sjim`, NHL 94 SNES `.zip` (with the files that will be in the archive listed next to `.zip`), map PNG, and tiles PNG. Adobe ACT is **not** on this list — **Export .ACT** on the left opens a dialog: one palette line, or all lines combined
+- If the open picture **cannot** become the chosen format, **Export is disabled** and the reason sits next to Export/Cancel. Do not pop an error for that case, and do not download a broken file
+- Picking SNES `.map.sjim` from a Genesis map (or 94S screen) is an **explicit conversion** (3-bit→5-bit, pals padded to 8, tiles ≤ 1024). Silent conversion is still forbidden. SNES→Genesis `.map.jim` stays blocked (lossy: 8 pals / 5-bit)
+- **Packed** is enabled only when the chosen format has both packed and unpacked (Genesis `.map.jim` and NHL 94 SNES zip). `.map.sjim` is always packed
 - Download uses the opened file name; nothing is written into a ROM
 - Pal 0 color 0 is opaque on pictures by default; Transparency is a preview of VDP holes
 
 **Must have — tools**
 
-- Tools: Paint pixel, Place tile, Erase cell, Select, Pick color, Pan. **Select is the default** when the editor opens
+- Tools, first row, in this order: **Pan, Select, Pick, Place tile, Paint, Erase**, then **Undo, Redo**, then **Grid / Trans / Seams** as labeled icons that highlight when on, with a vertical separator after Redo. **Select is the default** when the editor opens
 - Tools, Undo/Redo, and map-view options sit in **separate toolbar groups** so they wrap as units
+- Zoom sits next to **270°** on the block bar, with a vertical separator
 - Every tool, edit action, and tile action has an **icon with a short label underneath** (the editor is new; labels teach the icons)
 - The map cursor matches the active tool (pencil, stamp, eraser, marquee, eyedropper, hand)
 - The zoomed tile preview on the right **does not paint**. Clicks do nothing unless **Pick** is on, then they sample that pixel’s color
@@ -127,9 +129,9 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 - **Paste** and **import into the current image** land as a **floating layer** with a dotted outline. Apply commits it; Cancel drops it. The person can drag it first.
 - Erase cell (and clear) writes a **blank tile filled with palette color 0**, not “tile 0” if tile 0 is a real graphic
 - New tile, delete tile, remove unused tiles, **remove duplicate tiles** (including tiles that only match after H-flip and/or V-flip; cells keep the flip bits)
-- Resize the map; edit a cell’s tile index, palette, H-flip, V-flip, priority. The inspector keeps **tile index beside palette**, **H-flip beside V-flip**, the map **Word** on the Cell heading, and View directly under Priority
+- Resize the map; edit a cell’s tile index, palette, H-flip, V-flip, priority. The inspector keeps **tile index beside palette**, **H-flip beside V-flip**, the map **Word** on the Cell heading, and View directly under Priority. Resize and Kind stay compact (same height as the map W/H fields)
 - Grid, zoom, seams, highlight cells that use this tile, highlight unused tiles
-- **← NHL9X Studio** in the top left returns to the viewer (or the page that opened the editor), with a leave confirm if dirty
+- **← NHL9X Studio | Image Editor** on one line in the top left returns to the viewer (or the page that opened the editor), with a leave confirm if dirty
 
 **Must have — import**
 
@@ -163,7 +165,7 @@ Edit **NHL 94 PC and NHL 95 PC** team colours and centre-ice marks.
 - Switch 94 PC / 95 PC when both are present
 - Paint jersey zones, import/export crests, export HOMEPALS / AWAYPALS / edited ice
 - Export all as a zip of everything touched
-- The same **top-right back arrow** as the Image Editor
+- The same **← NHL9X Studio | page title** one-line heading as the Image Editor
 
 ### 3.4 Sound test and sequencers
 
@@ -255,5 +257,6 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |
 | 2026-10-29 | Rewrote as a product-requirements document. Technical sections moved to IMPLEMENTATION.md. Image Editor: labeled tool icons, tool cursors, back arrow, export modal, floating paste/import, H/V-aware dedupe, erase-to-blank-tile. |
 | 2026-10 | Earlier versions mixed product vision with implementation (see git history of this file and IMPLEMENTATION.md). |

@@ -75,10 +75,6 @@
   align-items: center;
 }
 
-.chip-lab a.back {
-  color: var(--ice-2);
-}
-
 .nhl92-card {
   margin-top: 1.25rem;
 }

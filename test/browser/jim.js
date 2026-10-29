@@ -130,9 +130,12 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-exit.studio-back').count());
   assert.match(await page.locator('#jim-exit').textContent(), /←\s*NHL9X Studio/);
   assert.ok(!(await page.locator('#jim-exit').textContent() || '').includes('Close'));
+  assert.match(await page.locator('h1.studio-title').textContent(), /←\s*NHL9X Studio\s*\|\s*Image Editor/);
   const backBox = await page.locator('#jim-exit').boundingBox();
+  const titleBox = await page.locator('h1.studio-title').boundingBox();
   const openBox = await page.locator('#jim-open-btn').boundingBox();
   assert.ok(backBox && openBox && backBox.x < openBox.x - 80, 'back link is in the top left');
+  assert.ok(backBox && titleBox && Math.abs(backBox.y - titleBox.y) < 6, 'back link sits on the title line');
   assert.ok(await page.locator('#jim-pri').count());
   assert.ok(await page.locator('#jim-png').count());
   assert.ok(await page.locator('#jim-act-export').count());
@@ -151,11 +154,25 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('[data-tool="paint"]').isVisible());
   assert.match(await page.locator('[data-tool="paint"]').textContent(), /Paint/);
   assert.match(await page.locator('[data-tool="erase"]').textContent(), /Erase/);
+  const toolOrder = await page.locator('.jim-tools [data-tool]').evaluateAll((els) => els.map((el) => el.dataset.tool));
+  assert.deepStrictEqual(toolOrder, ['pan', 'select', 'pick', 'place', 'paint', 'erase']);
   assert.strictEqual(await page.locator('[data-tool="select"]').getAttribute('aria-pressed'), 'true', 'Select is the default tool');
   assert.strictEqual(await page.locator('[data-tool="paint"]').getAttribute('aria-pressed'), 'false');
   const undoY = await page.locator('#jim-undo').evaluate((el) => el.getBoundingClientRect().y);
   const redoY = await page.locator('#jim-redo').evaluate((el) => el.getBoundingClientRect().y);
+  const gridY = await page.locator('[data-flag="jim-grid"]').evaluate((el) => el.getBoundingClientRect().y);
   assert.ok(Math.abs(undoY - redoY) < 8, 'Undo and Redo stay on one row');
+  assert.ok(Math.abs(undoY - gridY) < 12, 'Grid sits on the Undo/Redo row');
+  const rot270 = await page.locator('[data-xf="270"]').boundingBox();
+  const zoomBox = await page.locator('.jim-toolbar-zoom').boundingBox();
+  assert.ok(rot270 && zoomBox && zoomBox.x > rot270.x && Math.abs(rot270.y - zoomBox.y) < 14, 'zoom sits next to 270°');
+  const resizeH = await page.locator('#jim-resize').evaluate((el) => el.getBoundingClientRect().height);
+  const kindH = await page.locator('#jim-kind').evaluate((el) => el.getBoundingClientRect().height);
+  assert.ok(resizeH <= 32, 'Resize button compact, got ' + resizeH);
+  assert.ok(kindH <= 32, 'Kind dropdown compact, got ' + kindH);
+  assert.strictEqual(await page.locator('input[name="jim-export-kind"][value="act"]').count(), 0, 'ACT is not on the export format list');
+  assert.ok(await page.locator('#jim-act-dlg').count());
+  assert.ok(await page.locator('#jim-export-zip-files').count());
   assert.ok(await page.locator('#jim-sel-all').isVisible());
   assert.ok(await page.locator('.jim-preview-set').isHidden());
   assert.ok(await page.locator('#jim-tiles-more').count());
@@ -190,7 +207,8 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-act').evaluate((el) => /\.snespal/.test(el.getAttribute('accept') || '')));
   assert.match(await page.textContent('#jim-map-px'), /pixels/);
   assert.strictEqual(await page.isChecked('#jim-trans'), false, 'editor Transparency defaults off');
-  assert.match(await page.locator('label:has(#jim-trans)').getAttribute('title'), /VDP-transparent/i);
+  assert.strictEqual(await page.locator('[data-flag="jim-trans"]').getAttribute('aria-pressed'), 'false');
+  assert.match(await page.locator('[data-flag="jim-trans"]').getAttribute('title'), /VDP-transparent/i);
 
   await page.setInputFiles('#jim-image', [{
     name: 'wide.png',
@@ -326,13 +344,29 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.mouse.click(box.x + 4, box.y + 4);
   assert.match(await page.textContent('#jim-count'), /^2 \//);
   await page.keyboard.press('Control+z');
+  await page.click('#jim-act-export');
+  await page.waitForSelector('#jim-act-dlg:not([hidden])');
+  assert.match(await page.textContent('#jim-act-pals'), /All palettes combined/);
+  assert.match(await page.textContent('#jim-act-pals'), /Palette 0 only/);
+  await page.click('#jim-act-cancel');
   await page.click('#jim-export');
   await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.match(await page.textContent('#jim-export-zip-files'), /Tiles\.chr/i);
   await page.check('input[name="jim-export-kind"][value="sjim"]');
-  await page.click('#jim-export-ok');
-  await page.waitForFunction(() => /cannot be exported as SNES/.test(
-    (document.getElementById('jim-status') || {}).textContent || ''
-  ), null, { timeout: 5000 });
+  assert.ok(!(await page.locator('#jim-export-ok').isDisabled()), 'Genesis map can convert to sjim');
+  assert.ok(await page.locator('#jim-packed').isDisabled(), 'sjim has only packed');
+  assert.strictEqual((await page.textContent('#jim-export-why')).trim(), '');
+  const [sjimFromJim] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  assert.match(sjimFromJim.suggestedFilename(), /\.map\.sjim$/);
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  await page.check('input[name="jim-export-kind"][value="snes94"]');
+  assert.ok(await page.locator('#jim-export-ok').isDisabled(), 'Genesis map cannot be a 94S zip');
+  assert.match(await page.textContent('#jim-export-why'), /not one of those screens|map\.sjim/i);
+  await page.click('#jim-export-cancel');
   const dl = await exportNative(page);
   const name = dl.suggestedFilename();
   assert.match(name, /pri\.map\.jim/);
@@ -346,16 +380,16 @@ withBrowser('jim', async ({ url, newPage }) => {
     buffer: iceHoleJim()
   }]);
   await page.waitForFunction(() => /Opened ice\.map\.jim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
-  if (await page.isChecked('#jim-grid')) await page.uncheck('#jim-grid');
+  if (await page.isChecked('#jim-grid')) await page.click('[data-flag="jim-grid"]');
   assert.strictEqual(await page.isChecked('#jim-trans'), false);
   const iceRgb = await sampleCanvas(page, '#jim-map');
   assert.ok(iceRgb[1] > 200 && iceRgb[2] > 200 && iceRgb[0] > 100 && iceRgb[0] < 190,
     'pal 1 color 0 ice is drawn, not a hole ' + iceRgb);
-  await page.check('#jim-trans');
+  await page.click('[data-flag="jim-trans"]');
   const holeRgb = await sampleCanvas(page, '#jim-map');
   assert.ok(Math.abs(holeRgb[0] - holeRgb[1]) < 8 && holeRgb[0] < 170,
     'Transparency punches pal 1 color 0 as gray ' + holeRgb);
-  await page.uncheck('#jim-trans');
+  await page.click('[data-flag="jim-trans"]');
 
   const sjimBuf = packedSjim();
   await page.setInputFiles('#jim-open', [{
@@ -366,7 +400,10 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.waitForFunction(() => /Opened probe\.map\.sjim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-status'), /Opened probe\.map\.sjim/);
   assert.match(await page.textContent('#jim-variant'), /SNES/);
-  assert.ok(await page.locator('#jim-packed').isDisabled());
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(await page.locator('#jim-packed').isDisabled(), 'native sjim has only packed');
+  await page.click('#jim-export-cancel');
   const palOptions = await page.locator('#jim-pal option').count();
   assert.strictEqual(palOptions, 8);
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
@@ -433,7 +470,11 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Opened probe\.snes94\.zip/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-variant'), /SNES 94/);
-  assert.ok(!(await page.locator('#jim-packed').isDisabled()));
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(!(await page.locator('#jim-packed').isDisabled()), '94S zip has packed and unpacked');
+  assert.match(await page.textContent('#jim-export-zip-files'), /ProbeTiles|Tiles|\.chr/i);
+  await page.click('#jim-export-cancel');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
   let zipDl;
   try {

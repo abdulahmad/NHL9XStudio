@@ -44,9 +44,9 @@ Must all appear in the shipped tool.
 | U2 | Choose how many palettes | Genesis: which of **0–3** (1–4 lines). SNES: which of **0–7** (1–8 BGR555 lines). Unused palettes stay empty / unused in the map. |
 | U3 | Lock palettes from one `.act` | Import Adobe Color Table. Colors 1–16 lock pal 0, 17–32 pal 1, etc. **Lock pal 0 and leave pal 1 open** (and any other mix). Locked palettes are not rewritten by quantization. |
 | U4 | Seamless multi-palette tiles | If more than one palette is in use, adjacent tiles on different palettes must not show a hard color break. Assignment is per **8×8 tile**, not JIM-Tools’ 4/9 rectangles. |
-| U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
+| U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export **only when the chosen format has both packings** (Genesis `.map.jim`, NHL 94 SNES zip). `.map.sjim` is always packed. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
 | U6 | See the tile map | Grid of map cells, selected tile highlighted, zoom, optional 8×8 grid overlay. |
-| U7 | Place tiles and rotate them | Paint / place / erase like `ice.js`. **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. |
+| U7 | Place tiles and rotate them | Toolbar order: **Pan, Select, Pick, Place tile, Paint, Erase**, then Undo/Redo, then Grid / Trans / Seams as labeled icons (highlight when on). **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. Zoom sits next to 270°. |
 | U8 | Import an image | **Overwrite cells** (keep map size), **add tiles** (append unique tiles to the set; the map picture is not overlaid), or **new image** (resize the map to the picture). Change quantize options on the floating preview before Apply. |
 | U9 | Transparency | Source alpha &lt; threshold → palette index **0**. Checkerboard for holes. Pal 0 color 0 is still stored (backdrop). |
 | U10 | Two-step color conversion | (A) snap to **3-bit** Genesis CRAM (512 colors) or **5-bit** SNES BGR555 (32,768 colors). (B) reduce to **15–61** (Genesis) or **15–121** (SNES) unique inks by palette config. **Optional reverse order** (reduce count first, then snap to the lattice). |
@@ -153,7 +153,7 @@ File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bi
 
 Reuse `public/ice.js` / `jed.html` habits:
 
-- [x] Tools: **Paint pixel**, **Place tile**, **Erase cell**, **Select** (default), **Pick color**, **Pan**. The zoomed tile preview is pick-only.
+- [x] Tools, first row: **Pan**, **Select** (default), **Pick color**, **Place tile**, **Paint pixel**, **Erase cell**, then Undo/Redo, then Grid / Trans / Seams as labeled icons that highlight when on. The zoomed tile preview is pick-only. Zoom sits next to 270°. Header is **← NHL9X Studio | Image Editor** on one line.
 - [x] Tile strip: used tiles, New / Delete / Remove unused / Mirror / Flip.
 - [x] Cell inspector: tile index, pal 0–3 (0–7 on SNES), H/V flip, priority.
 - [x] **Undo / Redo** (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y), ≥100 steps, like ice and JED.
@@ -194,7 +194,8 @@ Round-trip:
 
 - Eyedropper that shows CRAM word + RGB8 + palette line. **Done** (color line).
 - Export PNG of the composed map and of the tile sheet. **Done**.
-- Export / import `.act` of the four lines (768-byte and 772-byte trailer, as JED already does). **Done**.
+- Export / import `.act` of the four lines (768-byte and 772-byte trailer, as JED already does). **Done.** Export .ACT is a left-pane dialog (one line vs all combined), not a radio on the format picker.
+- Export format picker: native / Genesis `.map.jim` / SNES `.map.sjim` / NHL 94 SNES zip / PNGs. Unsupported formats **grey Export** and show why next to the buttons (no popup). Picking `.map.sjim` from a Genesis map is an **explicit conversion** when tiles ≤ 1024. Zip label lists the files in the archive. Packed is disabled when the format has only one packing. **Done**.
 - Palette editor (3-bit sliders) for **unlocked** lines; locked lines are read-only. **Done**.
 - “Show unused tiles” and “show cells using this tile”. **Done**.
 - Compare view: original vs quantized vs dithered. **Done** (original vs quantized on float).
@@ -341,7 +342,7 @@ Proof that JIM-Tools header text is wrong: fixture `ronbarr.map.jzip` starts `00
 ### 3.5 UI surfaces
 
 1. **Header:** Maps button (show). Chip Lab button (hide).
-2. **`jim.html`:** left = file / palettes / ACT / import queue; center = map canvas; right = tile strip + cell inspector + export (raw / packed).
+2. **`jim.html`:** header is **← NHL9X Studio | Image Editor** on one line. Left = file / palettes / ACT / import queue; center = map canvas; right = tile strip + cell inspector. Export is a format modal (raw / packed when both exist).
 3. **Images tab:** for `kind === 'jim'`, an **Edit map** control that opens `jim.html` with the same bytes the viewer decoded (including donor palette).
 4. **Drop overlay:** already accepts JIM (`index.html`). Decode into the editor when Maps is open; otherwise keep today’s Images view.
 
@@ -481,6 +482,7 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Toolbar order Pan→Erase / Undo-Redo / Grid-Trans-Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line (Image Editor, Jerseys, Chip lab). |
 | 2026-10-28 | First requirements + implementation plan (Chip Lab hide, `.map.jim` editor). |
 | 2026-10-28 | Clarified: JIM has no rotate field; editor must round-trip every name-table bit (tile, H/V flip, palette, priority). |
 | 2026-10-28 | Portrait `UnpackPicture` encode and NHLPA 93 SNES `.map.sjim` are in the Maps editor. |

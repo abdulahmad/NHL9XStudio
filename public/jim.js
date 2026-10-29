@@ -998,8 +998,6 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       $('jim-kind').value = (doc.variant === 'sheet' || doc.variant === 'shared') ? 'sheet' : 'map';
     }
     $('jim-portrait').hidden = doc.variant !== 'portrait';
-    $('jim-packed').disabled = isSnes() && doc.variant !== 'snes94';
-    if (isSnes() && doc.variant !== 'snes94') $('jim-packed').checked = true;
     if ($('jim-memo') && document.activeElement !== $('jim-memo')) $('jim-memo').value = doc.memo || '';
     const palHead = $('jim-pal-sub');
     if (palHead) palHead.textContent = isSnes() ? '8 × 16 BGR555 · 5-bit' : '4 × 16 CRAM · 3-bit';
@@ -2607,11 +2605,130 @@ remember();
     const el = document.querySelector('input[name="jim-export-kind"]:checked');
     return el && el.value ? el.value : 'native';
   }
+  function packedApplies(kind) {
+    kind = kind || exportKind();
+    if (kind === 'png' || kind === 'tiles') return false;
+    if (kind === 'sjim') return false;
+    if (kind === 'native') {
+      if (!doc) return false;
+      if (doc.variant === 'snes94') return true;
+      if (isSnes() || doc.variant === 'portrait') return false;
+      return true;
+    }
+    if (kind === 'jim') return !!(doc && !isSnes());
+    if (kind === 'snes94') return !!(doc && doc.variant === 'snes94');
+    return false;
+  }
+  function exportBlocker(kind) {
+    kind = kind || exportKind();
+    if (!doc) return 'Open a picture first.';
+    if (kind === 'png' || kind === 'tiles' || kind === 'native') return '';
+    if (kind === 'jim') {
+      if (isSnes()) {
+        return 'This is a SNES picture (8 palette lines, 5-bit color). Genesis .map.jim has 4 CRAM lines and 3-bit color.';
+      }
+      return '';
+    }
+    if (kind === 'sjim') {
+      if (doc.tiles.length > 1024) {
+        return 'SNES name table is 10 bits (1024 tiles). This picture has ' + doc.tiles.length + '.';
+      }
+      for (let i = 0; i < doc.cells.length; i++) {
+        if (doc.cells[i].tile > 1023) {
+          return 'A cell uses tile ' + doc.cells[i].tile + ', which does not fit in the SNES 10-bit index.';
+        }
+      }
+      return '';
+    }
+    if (kind === 'snes94') {
+      if (doc.variant !== 'snes94') {
+        return 'NHL 94 SNES .zip is the chr/map/pal layout those screens use in the ROM. This picture is not one of those screens — pick SNES .map.sjim for a SNES tilemap.';
+      }
+      return '';
+    }
+    return '';
+  }
+  function zipExportHint() {
+    if (doc && doc.variant === 'snes94' && Sscr && typeof Sscr.encodeScreen94 === 'function') {
+      try {
+        const packed = packedApplies('snes94') ? $('jim-packed').checked : true;
+        const encoded = Sscr.encodeScreen94(doc, { packed: packed });
+        return encoded.files.map((f) => f.name).join(', ');
+      } catch (err) { /* fall through */ }
+    }
+    return 'Tiles.chr, Map.map, palette, screen.json';
+  }
+  function snesPalettesFromDoc() {
+    const lines = [];
+    for (let p = 0; p < 8; p++) {
+      const src = doc.palettes[p];
+      lines[p] = [];
+      for (let i = 0; i < 16; i++) {
+        const c = src && src[i];
+        if (!c) {
+          lines[p][i] = { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 };
+          continue;
+        }
+        if (c.r5 != null) lines[p][i] = c;
+        else {
+          const r3 = c.r3 & 7, g3 = c.g3 & 7, b3 = c.b3 & 7;
+          lines[p][i] = {
+            r3: r3, g3: g3, b3: b3,
+            r5: (r3 << 2) | (r3 >> 1),
+            g5: (g3 << 2) | (g3 >> 1),
+            b5: (b3 << 2) | (b3 >> 1)
+          };
+        }
+      }
+    }
+    return lines;
+  }
+  function exportAsSjim() {
+    if (!Sjim || typeof Sjim.encodeSjim !== 'function') throw new Error('lib/sjim.js did not load.');
+    const name = (doc.name || 'map').replace(/\.(map\.)?(jim|sjim|zip)$/i, '') + '.map.sjim';
+    const payload = {
+      name: name,
+      platform: 'snes',
+      variant: 'sjim',
+      tiles: doc.tiles,
+      mapW: doc.mapW,
+      mapH: doc.mapH,
+      cells: doc.cells,
+      palettes: snesPalettesFromDoc(),
+      embedPalettes: doc.embedPalettes !== false,
+      dirty: true,
+      sjim: { mapW: doc.mapW, mapH: doc.mapH, palBytes: 256 }
+    };
+    const bytes = Sjim.encodeSjim(payload, { force: true });
+    download(bytes, name);
+    status('Exported ' + name + ' (SNES .map.sjim, packed, ' + bytes.length + ' bytes).');
+  }
+  function syncExportModal() {
+    if (!$('jim-export-dlg') || $('jim-export-dlg').hidden) return;
+    const kind = exportKind();
+    const why = exportBlocker(kind);
+    const ok = $('jim-export-ok');
+    const note = $('jim-export-why');
+    if (ok) ok.disabled = !!why;
+    if (note) note.textContent = why;
+    const packedOk = packedApplies(kind);
+    if ($('jim-packed')) {
+      $('jim-packed').disabled = !packedOk;
+      if (kind === 'sjim' || (kind === 'native' && isSnes() && doc.variant !== 'snes94')) {
+        $('jim-packed').checked = true;
+      }
+    }
+    const zipEl = $('jim-export-zip-files');
+    if (zipEl) zipEl.textContent = zipExportHint();
+  }
   function openExportModal() {
     if (!doc) return;
     const nameEl = $('jim-export-native-name');
     if (nameEl) nameEl.textContent = '(' + (doc.name || 'untitled.map.jim') + ')';
+    const native = document.querySelector('input[name="jim-export-kind"][value="native"]');
+    if (native) native.checked = true;
     $('jim-export-dlg').hidden = false;
+    syncExportModal();
   }
   function closeExportModal() {
     if ($('jim-export-dlg')) $('jim-export-dlg').hidden = true;
@@ -2622,6 +2739,11 @@ remember();
   }
   function runChosenExport() {
     const kind = exportKind();
+    const why = exportBlocker(kind);
+    if (why) {
+      syncExportModal();
+      return;
+    }
     closeExportModal();
     try {
       if (kind === 'png') {
@@ -2634,33 +2756,16 @@ remember();
         status('Exported the tile sheet as PNG.');
         return;
       }
-      if (kind === 'act') {
-        exportActFile();
-        return;
-      }
       if (kind === 'jim') {
-        if (isSnes()) {
-          exportPopup('This is a SNES picture. It cannot be exported as Genesis .map.jim.');
-          return;
-        }
         doExport();
         return;
       }
       if (kind === 'sjim') {
-        if (!isSnes() || doc.variant === 'snes94') {
-          exportPopup(doc.variant === 'snes94'
-            ? 'NHL 94 SNES screens export as a ZIP of chr/map/pal files, not as .map.sjim.'
-            : 'This is a Genesis picture. It cannot be exported as SNES .map.sjim.');
-          return;
-        }
-        doExport();
+        if (isSnes() && doc.variant !== 'snes94') doExport();
+        else exportAsSjim();
         return;
       }
       if (kind === 'snes94') {
-        if (doc.variant !== 'snes94') {
-          exportPopup('This is not an NHL 94 SNES screen. Export as .map.sjim, .map.jim, or PNG.');
-          return;
-        }
         doExport();
         return;
       }
@@ -2722,15 +2827,45 @@ remember();
       blob.arrayBuffer().then((buf) => download(new Uint8Array(buf), name));
     }, 'image/png');
   }
-  function exportActFile() {
+  function exportActFile(scope) {
+    let pals;
+    let count;
+    let suffix = '.act';
+    if (scope == null || scope === 'all') {
+      pals = doc.palettes.slice(0, palCount());
+      count = palCount() * 16;
+    } else {
+      const p = parseInt(scope, 10);
+      pals = [doc.palettes[p] || []];
+      count = 16;
+      suffix = '-pal' + p + '.act';
+    }
+    const trailer = $('jim-act-trailer') && $('jim-act-trailer').checked;
     const bytes = Quant && typeof Quant.writeAct === 'function'
-      ? Quant.writeAct(doc.palettes, { trailer: $('jim-act-trailer').checked, count: palCount() * 16 })
+      ? Quant.writeAct(pals, { trailer: trailer, count: count })
       : actFromDoc();
-    const name = (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.act';
-    download(bytes.length === 768 && $('jim-act-trailer').checked
-      ? (Quant && Quant.writeAct ? Quant.writeAct(doc.palettes, { trailer: true, count: palCount() * 16 }) : bytes)
-      : bytes, name);
+    const name = (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + suffix;
+    download(bytes, name);
     status('Exported ' + name + ' (' + bytes.length + ' bytes).');
+  }
+  function openActExportModal() {
+    if (!doc) return;
+    const host = $('jim-act-pals');
+    if (host) {
+      host.innerHTML = '';
+      const all = document.createElement('label');
+      all.innerHTML = '<input type="radio" name="jim-act-scope" value="all" checked> All palettes combined';
+      host.appendChild(all);
+      for (let p = 0; p < palCount(); p++) {
+        const lab = document.createElement('label');
+        lab.innerHTML = '<input type="radio" name="jim-act-scope" value="' + p + '"> Palette ' + p + ' only';
+        host.appendChild(lab);
+      }
+    }
+    if ($('jim-act-dlg')) $('jim-act-dlg').hidden = false;
+  }
+  function closeActExportModal() {
+    if ($('jim-act-dlg')) $('jim-act-dlg').hidden = true;
   }
   function saveQuantize() {
     try {
@@ -3039,6 +3174,18 @@ remember();
     ['jim-grid', 'jim-trans', 'jim-seam', 'jim-show-users', 'jim-show-unused', 'jim-remap-on', 'jim-printa-on', 'jim-dobitmap-on'].forEach((id) => {
       if ($(id)) $(id).addEventListener('change', () => { renderMap(); renderTiles(); renderInspector(); renderNote(); });
     });
+    document.querySelectorAll('[data-flag]').forEach((btn) => {
+      const box = $(btn.dataset.flag);
+      if (!box) return;
+      const sync = () => btn.setAttribute('aria-pressed', String(!!box.checked));
+      btn.addEventListener('click', () => {
+        box.checked = !box.checked;
+        box.dispatchEvent(new Event('change', { bubbles: true }));
+        sync();
+      });
+      box.addEventListener('change', sync);
+      sync();
+    });
     $('jim-printa').addEventListener('input', () => { renderMap(); renderInspector(); });
     $('jim-remap').addEventListener('input', () => { renderMap(); });
     $('jim-undo').addEventListener('click', undo);
@@ -3222,10 +3369,17 @@ remember();
     $('jim-export').addEventListener('click', openExportModal);
     if ($('jim-export-ok')) $('jim-export-ok').addEventListener('click', runChosenExport);
     if ($('jim-export-cancel')) $('jim-export-cancel').addEventListener('click', closeExportModal);
-    $('jim-packed').addEventListener('change', renderNote);
-    if ($('jim-act-export')) $('jim-act-export').addEventListener('click', () => {
-      try { exportActFile(); } catch (err) { status(err.message, true); }
+    document.querySelectorAll('input[name="jim-export-kind"]').forEach((el) => {
+      el.addEventListener('change', syncExportModal);
     });
+    $('jim-packed').addEventListener('change', () => { renderNote(); syncExportModal(); });
+    if ($('jim-act-export')) $('jim-act-export').addEventListener('click', openActExportModal);
+    if ($('jim-act-ok')) $('jim-act-ok').addEventListener('click', () => {
+      const picked = document.querySelector('input[name="jim-act-scope"]:checked');
+      try { exportActFile(picked ? picked.value : 'all'); } catch (err) { status(err.message, true); }
+      closeActExportModal();
+    });
+    if ($('jim-act-cancel')) $('jim-act-cancel').addEventListener('click', closeActExportModal);
     if ($('jim-kind')) $('jim-kind').addEventListener('change', () => {
       if (!canEdit()) return;
       remember();
@@ -3259,6 +3413,11 @@ remember();
       else if (event.key === 'Escape') {
         if ($('jim-export-dlg') && !$('jim-export-dlg').hidden) {
           closeExportModal();
+          event.preventDefault();
+          return;
+        }
+        if ($('jim-act-dlg') && !$('jim-act-dlg').hidden) {
+          closeActExportModal();
           event.preventDefault();
           return;
         }
