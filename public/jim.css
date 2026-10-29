@@ -42,10 +42,21 @@
 }
 .jim-swatches { display: flex; flex-direction: column; gap: 3px; margin: 4px 0 8px; }
 .jim-swatch-row .ice-swatches { grid-column: 1 / -1; }
-.jim-rgb { margin: 0 0 8px; }
+.jim-color { display: flex; gap: 8px; align-items: stretch; margin: 0 0 8px; }
+.jim-color-swatch {
+  width: 44px;
+  flex: none;
+  border: 1px solid #000;
+  border-radius: 4px;
+  min-height: 72px;
+}
+.jim-rgb { flex: 1; min-width: 0; margin: 0; }
 .jim-rgb input[type="number"] { width: 44px; background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+.jim-hex-row { display: flex; align-items: center; gap: 8px; margin: 2px 0; min-width: 0; }
+.jim-hex-row label { margin: 0; flex: none; }
 #jim-hex { width: 6.5em; background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
 #jim-hex.bad { outline: 2px solid #c33; }
+#jim-rgb-readout { font-size: 12px; white-space: nowrap; }
 .jim-side h2 { margin: 8px 0 4px; }
 .jim-cell-head {
   display: flex;

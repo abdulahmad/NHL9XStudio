@@ -1631,10 +1631,16 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const c = pals[state.color.pal] && pals[state.color.pal][state.color.index];
     const locked = $('jim-lock-' + state.color.pal).checked || doc.readOnly;
     const rgb = rgbChannels(c);
-    $('jim-color-line').textContent = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + hexOf(c) +
-      '  RGB ' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] +
-      (isSnes() ? '' : ' (×36)') +
-      '  CRAM ' + cramHex(c) + (locked ? '  (locked)' : '');
+    const swatch = $('jim-color-swatch');
+    if (swatch) {
+      swatch.style.backgroundColor = rgbOf(c);
+      swatch.title = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + cramHex(c) + (locked ? '  (locked)' : '');
+    }
+    const readout = $('jim-rgb-readout');
+    if (readout) {
+      readout.textContent = rgb[0] + ', ' + rgb[1] + ', ' + rgb[2];
+      readout.title = isSnes() ? '8-bit RGB' : '8-bit RGB (3-bit × 36)';
+    }
     if ($('jim-hex') && !focused('jim-hex')) {
       $('jim-hex').value = hexOf(c).toUpperCase();
       $('jim-hex').classList.remove('bad');
