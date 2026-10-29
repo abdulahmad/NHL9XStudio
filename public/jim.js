@@ -436,6 +436,23 @@
     const mode = f.mode || importMode();
     return !isPngReduce(mode);
   }
+  function seamsLocked() {
+    return !!( $('jim-lock-seams') && $('jim-lock-seams').checked );
+  }
+  function setSeamsLocked(on) {
+    const box = $('jim-lock-seams');
+    if (!box) return;
+    box.checked = !!on;
+    const btn = document.querySelector('[data-flag="jim-lock-seams"]');
+    if (btn) btn.setAttribute('aria-pressed', String(!!on));
+  }
+  function assignmentFromFloat(f) {
+    const out = new Uint8Array(f.w * f.h);
+    for (let i = 0; i < f.cells.length; i++) {
+      out[i] = f.cells[i] ? (f.cells[i].pal | 0) : 0;
+    }
+    return out;
+  }
   function viewPalettes() {
     if (floatHasSeams() && state.float.palettes) return state.float.palettes;
     return doc.palettes;
@@ -1757,6 +1774,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-float-bar').hidden = !state.float;
     const opt = $('jim-float-opt');
     if (opt) opt.disabled = !floatHasSeams() || ro;
+    const lockSeamsBtn = document.querySelector('[data-flag="jim-lock-seams"]');
+    if (lockSeamsBtn) lockSeamsBtn.disabled = !floatHasSeams() || ro;
+    if (!floatHasSeams() && seamsLocked()) setSeamsLocked(false);
     if (state.float) {
       const extra = state.float.pending ? ' · quantize pending' : '';
       const hint = $('jim-float-hint');
@@ -1777,8 +1797,11 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
           hint.hidden = false;
           if (floatHasSeams()) {
             hint.textContent = state.tool === 'pal'
-              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to move them onto this pal · Apply to commit')
-              : 'dotted outline · Pal moves tiles onto the selected pal · Optimize groups matching tiles · Apply to commit';
+              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to move them onto this pal' +
+                (seamsLocked() ? ' · seams locked' : '') + ' · Apply to commit')
+              : (seamsLocked()
+                ? 'dotted outline · seams locked · color options will not reassign tiles · Apply to commit'
+                : 'dotted outline · Pal moves tiles onto the selected pal · Lock seams keeps that · Apply to commit');
           }
         }
         if (hintAdd) hintAdd.hidden = true;
@@ -2408,6 +2431,7 @@ remember();
       status('Rebuilt pal ' + dest + ' from ' + hit.assigned + ' tile' +
         (hit.assigned === 1 ? '' : 's') + '.');
     }
+    setSeamsLocked(true);
     renderAll();
   }
   function optimizeFloatSeams() {
@@ -2436,6 +2460,7 @@ remember();
       status('Seams: tiles already share palettes where they can. Free ink slots ' +
         result.freeAfter + '.' + extra);
     }
+    setSeamsLocked(true);
     renderAll();
   }
   function pickAt(p) {
@@ -2798,7 +2823,8 @@ remember();
       mode: importMode()
     });
   }
-  function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
+  function quantizeToFloat(image, pals, onlyEmpty, lockAct, extra) {
+    extra = extra || {};
     if (isBitonlyMode()) return reduceBitsToFloat(image);
     if (isCountonlyMode()) return reduceCountToFloat(image);
     const padded = padImage(image);
@@ -2806,7 +2832,12 @@ remember();
     if (!use.length) throw new Error('Pick at least one palette line (Use) for ' + image.name + '.');
     let result;
     if (Quant && typeof Quant.quantize === 'function') {
-      result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use, lockAct));
+      const opts = quantizeOpts(use, lockAct);
+      if (extra.assignment) opts.assignment = extra.assignment;
+      if (extra.actPalettes && extra.actPalettes.length && Quant.writeAct) {
+        opts.act = Quant.writeAct(extra.actPalettes);
+      }
+      result = Quant.quantize(padded.rgba, padded.w, padded.h, opts);
       const order = $('jim-q-order').value === 'countFirst'
         ? ('count, then ' + bitLabel())
         : (bitLabel() + ', then count');
@@ -2832,11 +2863,19 @@ remember();
     const f = state.float;
     if (!f || !f.source || !canEdit()) return;
     try {
-      const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
+      const extra = {};
+      const keepSeams = seamsLocked() && floatHasSeams();
+      if (keepSeams) extra.assignment = assignmentFromFloat(f);
+      if (f.palettes) extra.actPalettes = f.palettes;
+      const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked, true, extra);
       next.mode = importMode();
       if (next.mode === 'replace' || isPngReduce(next.mode)) placeFloat(next);
       else { next.x = f.x; next.y = f.y; }
+      if (keepSeams) {
+        next.warnings = ['Seams locked: tiles stayed on their palettes.'].concat(next.warnings || []);
+      }
       state.float = next;
+      if (keepSeams) setSeamsLocked(true);
       renderAll();
     } catch (err) { status(err.message || String(err), true); }
   }
@@ -3759,10 +3798,9 @@ remember();
       const lock = document.createElement('input');
       lock.type = 'checkbox';
       lock.id = 'jim-lock-' + p;
-      lock.title = 'Quantize will not rewrite this line. ACT colors 1–16 are pal 0, 17–32 pal 1, and so on.';
+      lock.title = 'Quantize will not rewrite this line. Checking Lock does not rebuild a floating import. ACT colors 1–16 are pal 0, 17–32 pal 1, and so on.';
       lock.addEventListener('change', () => {
         renderSwatches();
-        if (state.float && state.float.source) requantizeFloat();
       });
       const onMap = document.createElement('span');
       onMap.id = 'jim-onmap-' + p;

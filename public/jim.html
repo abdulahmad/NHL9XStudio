@@ -37,6 +37,7 @@
     <symbol id="i-seams" viewBox="0 0 24 24"><rect x="3" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v16"/></symbol>
     <symbol id="i-pal" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="13" width="8" height="8" fill="currentColor" opacity="0.85"/></symbol>
     <symbol id="i-optseams" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 12h4M13 9l3 3-3 3"/></symbol>
+    <symbol id="i-lockseams" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8 11V8a4 4 0 0 1 8 0v3"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 14.5v3"/></symbol>
   </svg>
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
       <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, .act, .pal, or .snespal</p>
@@ -76,7 +77,7 @@
 
       <div id="jim-pal-block" class="jim-bitonly-hide">
       <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit (GEN)</span></h2>
-      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is a VDP hole onto the backdrop (often the same ice ink). Check Transparency to show those holes. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is a VDP hole onto the backdrop (often the same ice ink). Check Transparency to show those holes. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization; checking it does not rebuild a floating import. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills. <b>Lock seams</b> (next to Pal) keeps the tiles you assigned when color options change.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
@@ -168,6 +169,7 @@
           <input type="checkbox" id="jim-grid" checked hidden>
           <input type="checkbox" id="jim-trans" hidden>
           <input type="checkbox" id="jim-seam" hidden>
+          <input type="checkbox" id="jim-lock-seams" hidden>
           <button type="button" class="jim-icon-btn" data-flag="jim-grid" aria-pressed="true" title="Show the 8×8 cell lattice">
             <svg><use href="#i-grid"/></svg><span>Grid</span>
           </button>
@@ -182,6 +184,9 @@
           </button>
           <button type="button" id="jim-float-opt" class="jim-icon-btn jim-edit" title="Move tiles that share colors onto the same palette so other lines get free ink slots.">
             <svg><use href="#i-optseams"/></svg><span>Optimize</span>
+          </button>
+          <button type="button" class="jim-icon-btn jim-edit" data-flag="jim-lock-seams" aria-pressed="false" title="Keep the per-tile palette assignment when you change color options. Unlock to let quantize reassign tiles.">
+            <svg><use href="#i-lockseams"/></svg><span>Lock seams</span>
           </button>
         </div>
       </div>

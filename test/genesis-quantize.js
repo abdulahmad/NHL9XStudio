@@ -470,6 +470,29 @@ function dummyCell(pal) {
 }
 
 {
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const assignment = new Uint8Array([3, 3]);
+  const first = Q.quantize(source, 16, 8, {
+    pals: [0, 1, 2, 3],
+    opaquePal0: true,
+    assignment: assignment,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(first.tiles[0].pal, 3);
+  assert.strictEqual(first.tiles[1].pal, 3);
+  const second = Q.quantize(source, 16, 8, {
+    pals: [0, 1, 2, 3],
+    opaquePal0: true,
+    assignment: assignment,
+    stepB: { method: 'perceptual', dither: 'none' }
+  });
+  assert.strictEqual(second.tiles[0].pal, 3, 'frozen assignment survives a method change');
+  assert.strictEqual(second.tiles[1].pal, 3);
+}
+
+{
   assert.strictEqual(typeof Q.optimizeSeams, 'function');
   const red = { r3: 7, g3: 0, b3: 0 };
   const blue = { r3: 0, g3: 0, b3: 7 };

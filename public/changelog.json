@@ -10,6 +10,7 @@
         "Export asks to apply a floating image first, or cancel and leave Export closed",
         "The centre pane grows so Apply and import previews stay on screen",
         "Floating import: Pal moves clicked or dragged tiles onto the selected palette and rebuilds that pal from all tiles on it; Optimize (next to Pal) groups matching tiles to free ink slots",
+        "Lock on a palette does not rebuild a floating import; Lock seams keeps Pal assignments when color options change",
         "5-bit quantization is available everywhere 3-bit is"
       ]
     },
