@@ -71,19 +71,17 @@
   }
   function isZero(c) { return !c.tile && !c.hFlip && !c.vFlip && !c.pal && !c.priority; }
 
+  // Genesis CRAM 3-bit → 8-bit in this editor is n × 36 (0, 36, …, 252).
   function expandChannel(c) {
-    if (Quant && Quant.expandChannel) return Quant.expandChannel(c & 7);
-    if (typeof Nhl92Anim !== 'undefined' && Nhl92Anim.expandChannel) return Nhl92Anim.expandChannel(c & 7);
-    c &= 7;
-    return (c << 5) | (c << 2) | (c >> 1);
+    return (c & 7) * 36;
   }
   function encodeChannel(value) {
-    if (Quant && Quant.encodeChannel) return Quant.encodeChannel(value);
+    value = Math.max(0, Math.min(255, Number(value) || 0));
     let best = 0;
     let err = 1e9;
-    for (let c = 0; c < 8; c++) {
-      const d = Math.abs((value | 0) - expandChannel(c));
-      if (d < err) { err = d; best = c; }
+    for (let n = 0; n < 8; n++) {
+      const d = Math.abs(value - n * 36);
+      if (d < err) { err = d; best = n; }
     }
     return best;
   }
@@ -395,15 +393,8 @@
     const use5 = snes == null ? isSnes() : !!snes;
     const line = [];
     for (let i = 0; i < 16; i++) {
-      const r3 = (i + p) & 7;
-      const g3 = (i * 2 + p) & 7;
-      const b3 = (7 - i + p * 3) & 7;
-      const c = { r3: r3, g3: g3, b3: b3 };
-      if (use5) {
-        c.r5 = (r3 << 2) | (r3 >> 1);
-        c.g5 = (g3 << 2) | (g3 >> 1);
-        c.b5 = (b3 << 2) | (b3 >> 1);
-      }
+      const c = { r3: 0, g3: 0, b3: 0 };
+      if (use5) { c.r5 = 0; c.g5 = 0; c.b5 = 0; }
       line.push(c);
     }
     return line;
@@ -1638,8 +1629,16 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     const c = pals[state.color.pal] && pals[state.color.pal][state.color.index];
     const locked = $('jim-lock-' + state.color.pal).checked || doc.readOnly;
+    const rgb = rgbChannels(c);
     $('jim-color-line').textContent = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + hexOf(c) +
+      '  RGB ' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] +
+      (isSnes() ? '' : ' (×36)') +
       '  CRAM ' + cramHex(c) + (locked ? '  (locked)' : '');
+    if ($('jim-hex') && !focused('jim-hex')) {
+      $('jim-hex').value = hexOf(c).toUpperCase();
+      $('jim-hex').classList.remove('bad');
+    }
+    $('jim-hex') && ($('jim-hex').disabled = locked);
     const ch = !!(c && isSnes() && c.r5 != null);
     const rv = c ? (ch ? c.r5 : c.r3) : 0;
     const gv = c ? (ch ? c.g5 : c.g3) : 0;
@@ -2514,6 +2513,44 @@ remember();
       if ((color[ch] & 7) === v) return;
       if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
       color[ch] = v;
+    }
+    if (editDoc) doc.dirtyPal = true;
+    renderSwatches();
+    renderMap();
+    renderTileEdit();
+    renderNote();
+  }
+  function setFromHex(text) {
+    const el = $('jim-hex');
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(text || '').trim());
+    if (el) el.classList.toggle('bad', !m);
+    if (!m || !canEdit() || !doc) return;
+    const p = state.color.pal;
+    const i = state.color.index;
+    if ($('jim-lock-' + p) && $('jim-lock-' + p).checked) return;
+    const pals = viewPalettes();
+    if (!pals[p]) return;
+    if (!pals[p][i]) {
+      pals[p][i] = isSnes()
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    const r = parseInt(m[1].slice(0, 2), 16);
+    const g = parseInt(m[1].slice(2, 4), 16);
+    const b = parseInt(m[1].slice(4, 6), 16);
+    const color = pals[p][i];
+    const editDoc = pals === doc.palettes;
+    if (isSnes()) {
+      const r5 = encode5(r), g5 = encode5(g), b5 = encode5(b);
+      if ((color.r5 & 31) === r5 && (color.g5 & 31) === g5 && (color.b5 & 31) === b5) return;
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
+      color.r5 = r5; color.g5 = g5; color.b5 = b5;
+      color.r3 = r5 >> 2; color.g3 = g5 >> 2; color.b3 = b5 >> 2;
+    } else {
+      const r3 = encodeChannel(r), g3 = encodeChannel(g), b3 = encodeChannel(b);
+      if ((color.r3 & 7) === r3 && (color.g3 & 7) === g3 && (color.b3 & 7) === b3) return;
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
+      color.r3 = r3; color.g3 = g3; color.b3 = b3;
     }
     if (editDoc) doc.dirtyPal = true;
     renderSwatches();
@@ -4079,6 +4116,11 @@ remember();
     channelInput('r3', 'jim-r', 'jim-rn');
     channelInput('g3', 'jim-g', 'jim-gn');
     channelInput('b3', 'jim-b', 'jim-bn');
+    if ($('jim-hex')) {
+      $('jim-hex').addEventListener('input', () => setFromHex($('jim-hex').value));
+      $('jim-hex').addEventListener('change', () => { state.colorStroke = false; });
+      $('jim-hex').addEventListener('blur', () => { if (doc) renderSwatches(); });
+    }
     $('jim-new-tile').addEventListener('click', () => {
       if (!canEdit()) return;
       remember();

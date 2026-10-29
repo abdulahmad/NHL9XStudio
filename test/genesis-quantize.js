@@ -473,6 +473,33 @@ function dummyCell(pal) {
   const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
   const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
   const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  palettes[2][1] = { r3: 7, g3: 7, b3: 0 };
+  palettes[3][1] = { r3: 0, g3: 7, b3: 7 };
+  const cells = [dummyCell(1), dummyCell(2)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }, { x: 1, y: 0 }], 0, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.cells[0].pal, 0);
+  assert.strictEqual(hit.cells[1].pal, 0);
+  function isBlackLine(line) {
+    return line.every((c) => !c || ((c.r3 || 0) === 0 && (c.g3 || 0) === 0 && (c.b3 || 0) === 0));
+  }
+  assert.ok(isBlackLine(hit.palettes[1]), 'unused pal 1 must be empty when every tile is on pal 0');
+  assert.ok(isBlackLine(hit.palettes[2]), 'unused pal 2 must be empty when every tile is on pal 0');
+  assert.ok(isBlackLine(hit.palettes[3]), 'unused pal 3 must be empty when every tile is on pal 0');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
   const assignment = new Uint8Array([3, 3]);
   const first = Q.quantize(source, 16, 8, {
     pals: [0, 1, 2, 3],

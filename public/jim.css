@@ -44,6 +44,8 @@
 .jim-swatch-row .ice-swatches { grid-column: 1 / -1; }
 .jim-rgb { margin: 0 0 8px; }
 .jim-rgb input[type="number"] { width: 44px; background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+#jim-hex { width: 6.5em; background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+#jim-hex.bad { outline: 2px solid #c33; }
 .jim-side h2 { margin: 8px 0 4px; }
 .jim-cell-head {
   display: flex;
