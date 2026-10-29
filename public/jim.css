@@ -201,7 +201,8 @@
   margin-top: 10px;
 }
 .jim-export-foot .jed-io { margin-left: auto; }
-#jim-export-why { margin: 0; flex: 1 1 12em; color: var(--amber); }
+#jim-export-why { margin: 0; flex: 1 1 12em; }
+#jim-export-why.is-block { color: var(--amber); }
 #jim-export-why:empty { display: none; }
 .jim-tools.pin-options button {
   border: 1px solid var(--line);

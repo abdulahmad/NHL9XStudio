@@ -355,7 +355,8 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.check('input[name="jim-export-kind"][value="sjim"]');
   assert.ok(!(await page.locator('#jim-export-ok').isDisabled()), 'Genesis map can convert to sjim');
   assert.ok(await page.locator('#jim-packed').isDisabled(), 'sjim has only packed');
-  assert.strictEqual((await page.textContent('#jim-export-why')).trim(), '');
+  assert.match(await page.textContent('#jim-export-why'), /planar tiles|5-bit/);
+  assert.ok(!(await page.locator('#jim-export-why').evaluate((el) => el.classList.contains('is-block'))));
   const [sjimFromJim] = await Promise.all([
     page.waitForEvent('download', { timeout: 8000 }),
     page.click('#jim-export-ok')
@@ -364,9 +365,18 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.click('#jim-export');
   await page.waitForSelector('#jim-export-dlg:not([hidden])');
   await page.check('input[name="jim-export-kind"][value="snes94"]');
-  assert.ok(await page.locator('#jim-export-ok').isDisabled(), 'Genesis map cannot be a 94S zip');
-  assert.match(await page.textContent('#jim-export-why'), /not one of those screens|map\.sjim/i);
-  await page.click('#jim-export-cancel');
+  assert.ok(!(await page.locator('#jim-export-ok').isDisabled()), 'Genesis map can convert to 94S zip');
+  assert.ok(!(await page.locator('#jim-packed').isDisabled()), '94S zip has packed and unpacked');
+  assert.match(await page.textContent('#jim-export-why'), /three blobs|chr/i);
+  assert.ok(!(await page.locator('#jim-export-why').evaluate((el) => el.classList.contains('is-block'))));
+  const [zipFromJim] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  assert.match(zipFromJim.suggestedFilename(), /snes94\.zip$/);
+  const fromJim94 = parseScreen94Zip(fs.readFileSync(await zipFromJim.path()), { name: 'fromjim.snes94.zip' });
+  assert.strictEqual(fromJim94.cells[0].priority, 1);
+  assert.strictEqual(fromJim94.tiles.length, 1);
   const dl = await exportNative(page);
   const name = dl.suggestedFilename();
   assert.match(name, /pri\.map\.jim/);

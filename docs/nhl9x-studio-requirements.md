@@ -195,7 +195,7 @@ Round-trip:
 - Eyedropper that shows CRAM word + RGB8 + palette line. **Done** (color line).
 - Export PNG of the composed map and of the tile sheet. **Done**.
 - Export / import `.act` of the four lines (768-byte and 772-byte trailer, as JED already does). **Done.** Export .ACT is a left-pane dialog (one line vs all combined), not a radio on the format picker.
-- Export format picker: native / Genesis `.map.jim` / SNES `.map.sjim` / NHL 94 SNES zip / PNGs. Unsupported formats **grey Export** and show why next to the buttons (no popup). Picking `.map.sjim` from a Genesis map is an **explicit conversion** when tiles ≤ 1024. Zip label lists the files in the archive. Packed is disabled when the format has only one packing. **Done**.
+- Export format picker: native / Genesis `.map.jim` / SNES `.map.sjim` / NHL 94 SNES zip / PNGs. Unsupported formats **grey Export** and show why next to the buttons (no popup). Picking `.map.sjim` or 94S zip from a Genesis map is an **explicit conversion** when tiles ≤ 1024. 94S zip is chr + map + pal (Huffman/RLE/LZ), not one JIM/sjim stream. Zip label lists the files in the archive. Packed is disabled when the format has only one packing. **Done**.
 - Palette editor (3-bit sliders) for **unlocked** lines; locked lines are read-only. **Done**.
 - “Show unused tiles” and “show cells using this tile”. **Done**.
 - Compare view: original vs quantized vs dithered. **Done** (original vs quantized on float).
@@ -482,6 +482,7 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (separate chr/map/pal blobs). |
 | 2026-10-29 | Toolbar order Pan→Erase / Undo-Redo / Grid-Trans-Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line (Image Editor, Jerseys, Chip lab). |
 | 2026-10-28 | First requirements + implementation plan (Chip Lab hide, `.map.jim` editor). |
 | 2026-10-28 | Clarified: JIM has no rotate field; editor must round-trip every name-table bit (tile, H/V flip, palette, priority). |

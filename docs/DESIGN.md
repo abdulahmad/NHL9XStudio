@@ -111,7 +111,7 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 - Open any of those formats; status says what kind of file it is
 - Export through a **modal** that lists native, Genesis `.map.jim`, SNES `.map.sjim`, NHL 94 SNES `.zip` (with the files that will be in the archive listed next to `.zip`), map PNG, and tiles PNG. Adobe ACT is **not** on this list — **Export .ACT** on the left opens a dialog: one palette line, or all lines combined
 - If the open picture **cannot** become the chosen format, **Export is disabled** and the reason sits next to Export/Cancel. Do not pop an error for that case, and do not download a broken file
-- Picking SNES `.map.sjim` from a Genesis map (or 94S screen) is an **explicit conversion** (3-bit→5-bit, pals padded to 8, tiles ≤ 1024). Silent conversion is still forbidden. SNES→Genesis `.map.jim` stays blocked (lossy: 8 pals / 5-bit)
+- Picking SNES `.map.sjim` or NHL 94 SNES `.zip` from a Genesis map is an **explicit conversion** when tiles ≤ 1024 (3-bit→5-bit, pals padded to 8, map words 10-bit). 94S zip is tiles + map + pal as separate files (Huffman/RLE/LZ), not a JIM and not a 93S sjim stream. Silent conversion is still forbidden. SNES→Genesis `.map.jim` stays blocked (lossy: 8 pals / 5-bit)
 - **Packed** is enabled only when the chosen format has both packed and unpacked (Genesis `.map.jim` and NHL 94 SNES zip). `.map.sjim` is always packed
 - Download uses the opened file name; nothing is written into a ROM
 - Pal 0 color 0 is opaque on pictures by default; Transparency is a preview of VDP holes
@@ -200,7 +200,7 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 
-If an export would be illegal for that picture (wrong platform, portrait as SJIM, 94S ZIP from a Genesis map, and so on), **tell the person and stop**. Do not write a file they cannot use.
+If an export would be illegal for that picture (SNES→Genesis is lossy; SNES indexes above 1024 tiles), **tell the person and stop**. Do not write a file they cannot use. Explicit format picks that fit (Genesis→sjim or Genesis→94S zip at ≤1024 tiles) are conversions, not errors.
 
 ---
 
@@ -257,6 +257,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |
 | 2026-10-29 | Rewrote as a product-requirements document. Technical sections moved to IMPLEMENTATION.md. Image Editor: labeled tool icons, tool cursors, back arrow, export modal, floating paste/import, H/V-aware dedupe, erase-to-blank-tile. |
 | 2026-10 | Earlier versions mixed product vision with implementation (see git history of this file and IMPLEMENTATION.md). |

@@ -2616,8 +2616,20 @@ remember();
       return true;
     }
     if (kind === 'jim') return !!(doc && !isSnes());
-    if (kind === 'snes94') return !!(doc && doc.variant === 'snes94');
+    if (kind === 'snes94') return true;
     return false;
+  }
+  function snesIndexBlocker() {
+    if (!doc) return 'Open a picture first.';
+    if (doc.tiles.length > 1024) {
+      return 'SNES name table is 10 bits (1024 tiles). This picture has ' + doc.tiles.length + '.';
+    }
+    for (let i = 0; i < doc.cells.length; i++) {
+      if (doc.cells[i].tile > 1023) {
+        return 'A cell uses tile ' + doc.cells[i].tile + ', which does not fit in the SNES 10-bit index.';
+      }
+    }
+    return '';
   }
   function exportBlocker(kind) {
     kind = kind || exportKind();
@@ -2629,34 +2641,52 @@ remember();
       }
       return '';
     }
-    if (kind === 'sjim') {
-      if (doc.tiles.length > 1024) {
-        return 'SNES name table is 10 bits (1024 tiles). This picture has ' + doc.tiles.length + '.';
-      }
-      for (let i = 0; i < doc.cells.length; i++) {
-        if (doc.cells[i].tile > 1023) {
-          return 'A cell uses tile ' + doc.cells[i].tile + ', which does not fit in the SNES 10-bit index.';
-        }
-      }
-      return '';
+    if (kind === 'sjim' || kind === 'snes94') return snesIndexBlocker();
+    return '';
+  }
+  function exportConvertHint(kind) {
+    kind = kind || exportKind();
+    if (!doc || exportBlocker(kind)) return '';
+    if (kind === 'sjim' && !(isSnes() && doc.variant !== 'snes94')) {
+      return 'Converts to one packed 93S stream: SNES planar tiles, 5-bit palettes, 10-bit map words.';
     }
-    if (kind === 'snes94') {
-      if (doc.variant !== 'snes94') {
-        return 'NHL 94 SNES .zip is the chr/map/pal layout those screens use in the ROM. This picture is not one of those screens — pick SNES .map.sjim for a SNES tilemap.';
-      }
-      return '';
+    if (kind === 'snes94' && doc.variant !== 'snes94') {
+      return '94S screens in the ROM are three blobs, not one file: tiles (.chr), map (width/height/$0308 then words), palettes. Same picture as this map; planar 4bpp, 5-bit color, 10-bit indexes. Packed is Huffman/RLE/LZ, not Genesis bytecode.';
     }
     return '';
   }
+  function snes94Doc() {
+    return {
+      name: (doc.name || 'map').replace(/\.(map\.)?(jim|sjim|zip)$/i, '') + '.snes94.zip',
+      platform: 'snes',
+      variant: 'snes94',
+      tiles: doc.tiles,
+      mapW: doc.mapW,
+      mapH: doc.mapH,
+      cells: doc.cells,
+      palettes: snesPalettesFromDoc(),
+      embedPalettes: doc.embedPalettes !== false,
+      dirty: true,
+      sscr: doc.sscr || {
+        extraWord: (Sscr && Sscr.EXTRA_BG) || 0x0308,
+        tileFormat: 'huffman',
+        mapFormat: 'rle',
+        palFormat: 'huffman',
+        linear: false,
+        paletteCount: 128
+      }
+    };
+  }
   function zipExportHint() {
+    const packed = packedApplies('snes94') ? $('jim-packed').checked : true;
     if (doc && doc.variant === 'snes94' && Sscr && typeof Sscr.encodeScreen94 === 'function') {
       try {
-        const packed = packedApplies('snes94') ? $('jim-packed').checked : true;
         const encoded = Sscr.encodeScreen94(doc, { packed: packed });
         return encoded.files.map((f) => f.name).join(', ');
       } catch (err) { /* fall through */ }
     }
-    return 'Tiles.chr, Map.map, palette, screen.json';
+    if (packed) return 'Tiles.chr.huf, Map.map.rle, screen.pal.huf, screen.json';
+    return 'Tiles.chr.bin, Map.map.bin, screen.pal, screen.json';
   }
   function snesPalettesFromDoc() {
     const lines = [];
@@ -2703,6 +2733,14 @@ remember();
     download(bytes, name);
     status('Exported ' + name + ' (SNES .map.sjim, packed, ' + bytes.length + ' bytes).');
   }
+  function exportAsSnes94() {
+    if (!Sscr || typeof Sscr.encodeScreen94Zip !== 'function') throw new Error('lib/sscr.js did not load.');
+    const packed = packedApplies('snes94') ? $('jim-packed').checked : true;
+    const payload = snes94Doc();
+    const bytes = Sscr.encodeScreen94Zip(payload, { packed: packed });
+    download(bytes, payload.name);
+    status('Exported ' + payload.name + ' (' + (packed ? 'packed' : 'raw') + ' 94S zip, ' + bytes.length + ' bytes).');
+  }
   function syncExportModal() {
     if (!$('jim-export-dlg') || $('jim-export-dlg').hidden) return;
     const kind = exportKind();
@@ -2710,7 +2748,10 @@ remember();
     const ok = $('jim-export-ok');
     const note = $('jim-export-why');
     if (ok) ok.disabled = !!why;
-    if (note) note.textContent = why;
+    if (note) {
+      note.textContent = why || exportConvertHint(kind);
+      note.classList.toggle('is-block', !!why);
+    }
     const packedOk = packedApplies(kind);
     if ($('jim-packed')) {
       $('jim-packed').disabled = !packedOk;
@@ -2766,7 +2807,8 @@ remember();
         return;
       }
       if (kind === 'snes94') {
-        doExport();
+        if (doc.variant === 'snes94') doExport();
+        else exportAsSnes94();
         return;
       }
       doExport();

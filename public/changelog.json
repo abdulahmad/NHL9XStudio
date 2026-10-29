@@ -15,7 +15,7 @@
         "The zoomed tile preview only picks a color (it no longer paints)",
         "Cell inspector: tile index beside palette, H-flip beside V-flip, Word next to Cell, View under Priority",
         "Import Tiles appends to the tile set and leaves the map picture alone",
-        "Export greys out with a reason next to the buttons instead of an error popup; picking SNES .map.sjim from a Genesis map converts when it fits",
+        "Export greys out with a reason next to the buttons instead of an error popup; picking SNES .map.sjim or NHL 94 SNES .zip from a Genesis map converts when tiles fit (1024)",
         "Packed is only offered when the format has both packed and unpacked; the 94S zip line lists the files inside",
         "Export .ACT is a dialog (one palette or all combined), not a radio on the format picker",
         "← NHL9X Studio | page title sits on one line in the Image Editor, Jerseys, and Chip lab headers"
