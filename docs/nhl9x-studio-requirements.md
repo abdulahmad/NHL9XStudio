@@ -158,7 +158,7 @@ Reuse `public/ice.js` / `jed.html` habits:
 - [x] Cell inspector: tile index, pal 0–3 (0–7 on SNES), H/V flip, priority.
 - [x] **Undo / Redo** (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y), ≥100 steps, like ice and JED.
 - [x] Copy / cut / paste / clear selection.
-- [x] Zoom 1–16×, nearest-neighbor, grid toggle.
+- [x] Zoom 1–32×, nearest-neighbor, grid toggle. Maps bigger than 4096 pixels on a side CSS-scale so the slider zoom is what you see.
 - [x] Floating import (drag to place, Apply / Cancel) — same as ice image import.
 - [x] Status line: tile count / 2048 (1024 on SNES), colors used / budget, packed vs raw, warnings.
 
@@ -482,6 +482,7 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (separate chr/map/pal blobs). |
 | 2026-10-29 | Toolbar order Pan→Erase / Undo-Redo / Grid-Trans-Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line (Image Editor, Jerseys, Chip lab). |
 | 2026-10-28 | First requirements + implementation plan (Chip Lab hide, `.map.jim` editor). |

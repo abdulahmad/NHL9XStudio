@@ -189,6 +189,16 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.mouse.up();
   const mapH1 = await page.locator('#jim-scroll').evaluate((e) => e.getBoundingClientRect().height);
   assert.ok(mapH1 > mapH0 + 20, 'map splitter shows more of the map ' + mapH0 + ' -> ' + mapH1);
+  assert.strictEqual(await page.locator('#jim-zoom').getAttribute('max'), '32');
+  await page.locator('#jim-zoom').evaluate((el) => {
+    el.value = '32';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  assert.strictEqual(await page.locator('#jim-zoom').inputValue(), '32');
+  assert.strictEqual((await page.locator('#jim-zoom-val').textContent()).trim(), '32×');
+  const zoom32 = await page.locator('#jim-map').evaluate((c) => ({ css: parseFloat(c.style.width), bitmap: c.width }));
+  assert.strictEqual(zoom32.css, 8 * 8 * 32, '32× CSS size, got ' + zoom32.css);
+  assert.ok(!(await page.locator('#jim-zoom-val').textContent() || '').includes('drawn'));
   await page.locator('#jim-zoom').evaluate((el) => {
     el.value = '2';
     el.dispatchEvent(new Event('input', { bubbles: true }));

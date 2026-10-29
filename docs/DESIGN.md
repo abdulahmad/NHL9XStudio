@@ -120,7 +120,7 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 
 - Tools, first row, in this order: **Pan, Select, Pick, Place tile, Paint, Erase**, then **Undo, Redo**, then **Grid / Trans / Seams** as labeled icons that highlight when on, with a vertical separator after Redo. **Select is the default** when the editor opens
 - Tools, Undo/Redo, and map-view options sit in **separate toolbar groups** so they wrap as units
-- Zoom sits next to **270°** on the block bar, with a vertical separator
+- Zoom 1–32× sits next to **270°** on the block bar, with a vertical separator. Large maps keep a 4096-pixel bitmap cap and CSS-scale the rest so the slider zoom is what you see
 - Every tool, edit action, and tile action has an **icon with a short label underneath** (the editor is new; labels teach the icons)
 - The map cursor matches the active tool (pencil, stamp, eraser, marquee, eyedropper, hand)
 - The zoomed tile preview on the right **does not paint**. Clicks do nothing unless **Pick** is on, then they sample that pixel’s color
@@ -257,6 +257,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |
 | 2026-10-29 | Rewrote as a product-requirements document. Technical sections moved to IMPLEMENTATION.md. Image Editor: labeled tool icons, tool cursors, back arrow, export modal, floating paste/import, H/V-aware dedupe, erase-to-blank-tile. |

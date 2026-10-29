@@ -16,6 +16,8 @@
   const Quant = typeof NhlGenesisQuantize === 'undefined' ? null : NhlGenesisQuantize;
   const QKEY = 'nhl9x-jim-quantize';
   const UNDO_MAX = 100;
+  const ZOOM_MAX = 32;
+  const DRAW_PX_MAX = 4096;
   const METHODS = ['perceptual', 'selective', 'adaptive', 'uniform', 'weighted-kmeans'];
   const DITHERS = ['none', 'diffusion', 'pattern', 'noise'];
 
@@ -1025,7 +1027,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   function drawZoom() {
     let z = state.zoom;
     const size = viewMap();
-    while (z > 1 && (size.w * 8 * z > 4096 || size.h * 8 * z > 4096)) z--;
+    while (z > 1 && (size.w * 8 * z > DRAW_PX_MAX || size.h * 8 * z > DRAW_PX_MAX)) z--;
     return z;
   }
   function samplePreview(cell, px, py) {
@@ -1135,6 +1137,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const canvas = $('jim-map');
     canvas.width = W * z;
     canvas.height = H * z;
+    canvas.style.width = (W * state.zoom) + 'px';
+    canvas.style.height = (H * state.zoom) + 'px';
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(state.scratch, 0, 0, canvas.width, canvas.height);
@@ -1192,8 +1196,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     ctx.strokeStyle = '#ffffff';
     ctx.strokeRect(state.focus.x * 8 * z + 0.5, state.focus.y * 8 * z + 0.5, 8 * z - 1, 8 * z - 1);
     canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
-    const label = state.zoom + '×';
-    $('jim-zoom-val').textContent = z === state.zoom ? label : label + ' (drawn ' + z + '×)';
+    $('jim-zoom-val').textContent = state.zoom + '×';
   }
   function blitFloat(data, W, H, mapW, mapH) {
     const f = state.float;
@@ -3131,7 +3134,7 @@ remember();
     });
     $('jim-tile-edit').addEventListener('contextmenu', (e) => e.preventDefault());
     function setZoom(z) {
-      z = Math.max(1, Math.min(16, z | 0));
+      z = Math.max(1, Math.min(ZOOM_MAX, z | 0));
       state.zoom = z;
       if ($('jim-zoom')) $('jim-zoom').value = String(z);
       renderMap();

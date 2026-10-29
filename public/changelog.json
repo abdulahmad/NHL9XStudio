@@ -11,7 +11,7 @@
         "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically",
         "Import .pal and .snespal palettes and choose which file lines fill which editor pals",
         "Select is the default Image Editor tool; toolbar order is Pan, Select, Pick, Place, Paint, Erase, then Undo/Redo, then Grid/Trans/Seams icons that highlight when on",
-        "Zoom sits next to 270°; Resize and Kind stay compact",
+        "Zoom sits next to 270° and goes to 32×; Resize and Kind stay compact",
         "The zoomed tile preview only picks a color (it no longer paints)",
         "Cell inspector: tile index beside palette, H-flip beside V-flip, Word next to Cell, View under Priority",
         "Import Tiles appends to the tile set and leaves the map picture alone",
