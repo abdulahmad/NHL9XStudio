@@ -54,7 +54,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 
 | ID | Scope | Notes |
 |----|--------|------|
-| **MAPS** | Genesis JIM / SNES SJIM editor | Hide Chip Lab; `.map.jim` and `.map.sjim` import/edit/export; portrait encode. Spec: `docs/nhl9x-studio-requirements.md` |
+| **MAPS** | Image Editor (JIM / SJIM) | Hide Chip Lab; `.map.jim` and `.map.sjim` import/edit/export; portrait encode. Spec: `docs/nhl9x-studio-requirements.md` |
 | **GAP-2** | 93G | JIM inventory polish optional |
 | **GAP-3** | 94G | Done — SPA/SPF/image search aliases + celebrate vs bench-check blurbs |
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |

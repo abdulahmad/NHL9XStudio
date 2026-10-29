@@ -47,7 +47,7 @@ Must all appear in the shipped tool.
 | U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
 | U6 | See the tile map | Grid of map cells, selected tile highlighted, zoom, optional 8×8 grid overlay. |
 | U7 | Place tiles and rotate them | Paint / place / erase like `ice.js`. **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. |
-| U8 | Batch import | Several images in one session. Each batch (or layer) can target a palette or “any open palette”. |
+| U8 | Import an image | **Overwrite cells** (keep map size), **add tiles** (append to the set), or **new image** (resize the map to the picture). Change quantize options on the floating preview before Apply. |
 | U9 | Transparency | Source alpha &lt; threshold → palette index **0**. Checkerboard for holes. Pal 0 color 0 is still stored (backdrop). |
 | U10 | Two-step color conversion | (A) snap to **3-bit** Genesis CRAM (512 colors) or **5-bit** SNES BGR555 (32,768 colors). (B) reduce to **15–61** (Genesis) or **15–121** (SNES) unique inks by palette config. **Optional reverse order** (reduce count first, then snap to the lattice). |
 | U11 | Per-step method + dither | At **each** of A and B the user picks: color method and dither. See §2.3. |
@@ -481,3 +481,4 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 | 2026-10-28 | Portrait `UnpackPicture` encode and NHLPA 93 SNES `.map.sjim` are in the Maps editor. |
 | 2026-10-28 | v1.1 polish: ACT auto-lock, session quantize, batch lock-from-ACT, dobitmap mask, PNG/ACT export, unused-tile highlight, compare view, sheet kind, note field. |
 | 2026-10-28 | SNES Maps path uses pals 0–7, 5-bit BGR555, 1024 tiles, and unique-ink budget 15–121. |
+| 2026-10-28 | Image Editor: overwrite/add/new-image import, live quantize, step previews, palette mapping dialog, dobitmap select, exit warning, viewer Edit map for dropped JIMs. |

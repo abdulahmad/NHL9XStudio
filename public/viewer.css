@@ -104,6 +104,8 @@ a.ghost-btn {
   align-items: center;
   text-decoration: none;
 }
+a.ghost-btn[hidden], button.ghost-btn[hidden] { display: none !important; }
+#edit-map { margin: 8px 0; }
 
 .ghost-btn {
   background: var(--bg);

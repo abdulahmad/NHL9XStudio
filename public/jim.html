@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Maps — NHL9X Studio</title>
+  <title>Image Editor — NHL9X Studio</title>
   <link rel="stylesheet" href="viewer.css">
   <link rel="stylesheet" href="jed.css">
   <link rel="stylesheet" href="jim.css">
@@ -14,16 +14,15 @@
   </div>
   <header class="jed-head">
     <div>
-      <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Maps</h1>
+      <h1 class="product-name"><a href="index.html" id="jim-home">NHL9X Studio</a> · Image Editor</h1>
       <p id="jim-status" class="jed-status">Open a Genesis .map.jim or a SNES .map.sjim. Nothing is written back into a ROM.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
+      <button type="button" id="jim-exit" class="ghost-btn" title="Back to the image viewer">Close</button>
       <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, or SNES .map.sjim">Open…</button>
-      <button type="button" id="jim-donor-btn" class="ghost-btn" title="Genesis: 128-byte CRAM (four lines) or a 32-byte line. SNES: 32, 128, or 256 bytes of little-endian BGR555.">Donor…</button>
       <button type="button" id="jim-export" class="ghost-btn" title="Download using the opened file name">Export</button>
       <label class="check" title="Off: uncompressed tiles (92G / DoDMApro). On: bit 15 set and a bytecode stream. SNES .map.sjim is always a packed stream."><input type="checkbox" id="jim-packed"> Packed export</label>
       <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim">
-      <input type="file" id="jim-donor" hidden accept=".bin,.pal">
     </div>
   </header>
   <main class="jim-main">
@@ -35,6 +34,7 @@
         <label>W <input type="number" id="jim-map-w" min="1" max="1024" value="8"></label>
         <label>H <input type="number" id="jim-map-h" min="1" max="1024" value="8"></label>
         <button type="button" id="jim-resize" class="ghost-btn jim-edit">Resize…</button>
+        <p id="jim-map-px" class="muted">64×64 pixels</p>
       </fieldset>
       <label>Kind <select id="jim-kind" class="jim-edit" title="Map writes name-table cells. Tile sheet is sequential tiles with a shared zero header (95G ArenaGfx).">
         <option value="map">Map</option>
@@ -56,13 +56,18 @@
         <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
       </div>
       <div class="jed-io">
-        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Genesis: colors 1–64 fill pals 0–3. SNES: colors 1–128 fill pals 0–7. Importing locks those lines; uncheck Lock to leave a line open.">Import .ACT…</button>
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, .pal, .bin, .map.jim, or .map.sjim. A dialog maps source lines onto editor pals.">Import palettes…</button>
         <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of the four (or eight) lines. Optional 772-byte trailer with color count.">Export .ACT</button>
         <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
-        <input type="file" id="jim-act" hidden accept=".act">
+        <input type="file" id="jim-act" hidden accept=".act,.pal,.bin,.jim,.map.jim,.sjim,.map.sjim">
       </div>
 
       <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
+      <label>Mode <select id="jim-import-mode" class="jim-edit" title="Overwrite cells keeps this map size. Add tiles appends to the tile set. New image resizes the map to the picture.">
+        <option value="place">Overwrite cells (keep map size)</option>
+        <option value="add">Add tiles (append to the set)</option>
+        <option value="replace">New image (resize map)</option>
+      </select></label>
       <fieldset class="ice-popts" id="jim-q-opts">
         <legend>Two-step color</legend>
         <label>Order <select id="jim-q-order">
@@ -80,14 +85,9 @@
         <label class="check"><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
       </fieldset>
       <div class="jed-io">
-        <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image over the map. Drag, then Apply.">Import image…</button>
-        <button type="button" id="jim-batch-add" class="ghost-btn jim-edit">Add to batch…</button>
-        <button type="button" id="jim-batch-preview" class="ghost-btn jim-edit" title="Quantize the list in order into one floating preview">Preview batch</button>
-        <button type="button" id="jim-batch-clear" class="ghost-btn">Clear batch</button>
+        <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image. Change color options before Apply. Mode chooses overwrite, add tiles, or resize as a new image.">Import image…</button>
         <input type="file" id="jim-image" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
-        <input type="file" id="jim-batch-file" hidden multiple accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg,.act">
       </div>
-      <ul id="jim-batch" class="jim-batch"></ul>
       <p id="jim-q-warn" class="muted"></p>
     </section>
 
@@ -145,8 +145,8 @@
         </span>
         <label class="check" title="When the game draws a plane it XORs printa onto every map word. That can flip priority and palette relative to the file. This preview XORs only the $F800 attribute bits, so the tile index stays. Default $F800 matches dobitmap."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
         <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask" title="Hex mask XORed onto each map word for preview. Only bits 15–11 are used ($F800).">
-        <label class="check" title="d5 bitmask dobitmap uses when copying CRAM lines (bit 0 = pal 0). Not stored in the file. Defaults to the lines the map references."><input type="checkbox" id="jim-dobitmap-on"> dobitmap mask</label>
-        <input type="text" id="jim-dobitmap" class="mono" value="" size="4" maxlength="2" spellcheck="false" aria-label="dobitmap palette bitmask" title="Hex bitmask of palette lines dobitmap would load. Bit 0 = pal 0.">
+        <label class="check" title="d5 bitmask dobitmap uses when copying CRAM lines (bit 0 = pal 0). Not stored in the file. Auto follows the lines the map references."><input type="checkbox" id="jim-dobitmap-on"> dobitmap mask</label>
+        <select id="jim-dobitmap" class="mono" aria-label="dobitmap palette bitmask" title="Which palette lines dobitmap would load. Auto follows the map."></select>
         <span id="jim-dobitmap-hint" class="muted"></span>
         <label>Note <input type="text" id="jim-memo" maxlength="120" placeholder="printa / VRAM start (not in the file)"></label>
       </fieldset>
@@ -156,8 +156,12 @@
           <figcaption>Original</figcaption>
         </figure>
         <figure>
+          <canvas id="jim-compare-a" width="64" height="64"></canvas>
+          <figcaption id="jim-compare-a-cap">Step A</figcaption>
+        </figure>
+        <figure>
           <canvas id="jim-compare-q" width="64" height="64"></canvas>
-          <figcaption>Quantized</figcaption>
+          <figcaption id="jim-compare-b-cap">Step B</figcaption>
         </figure>
       </div>
       <div class="ice-scroll" id="jim-scroll"><canvas id="jim-map" width="64" height="64"></canvas></div>
@@ -200,6 +204,17 @@
       <label class="check" title="Outline tiles no cell uses"><input type="checkbox" id="jim-show-unused"> Highlight unused tiles</label>
     </section>
   </main>
+  <div id="jim-palmap" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-palmap-title">
+      <h2 id="jim-palmap-title">Assign palettes</h2>
+      <p class="muted">Map each source line onto an editor palette. Skip a line to leave it. Lock keeps the destination out of quantization.</p>
+      <div id="jim-palmap-rows"></div>
+      <div class="jed-io">
+        <button type="button" id="jim-palmap-ok" class="ghost-btn">Apply</button>
+        <button type="button" id="jim-palmap-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script src="lib/anim.js"></script>
   <script src="lib/jim-compress.js"></script>
   <script src="lib/jim.js"></script>

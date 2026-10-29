@@ -67,10 +67,45 @@
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-#jim-printa, #jim-dobitmap, #jim-memo { background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+#jim-printa, #jim-dobitmap, #jim-memo, #jim-import-mode { background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
 #jim-printa { width: 5em; }
-#jim-dobitmap { width: 3em; }
+#jim-dobitmap { width: 14em; }
 #jim-memo { width: 16em; }
+#jim-import-mode { max-width: 100%; }
+.jim-palmap {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+.jim-palmap[hidden] { display: none; }
+.jim-palmap-card {
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  max-width: min(560px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+}
+.jim-palmap-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.jim-palmap-sw { display: flex; gap: 1px; flex-wrap: wrap; }
+.jim-palmap-sw i {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border: 1px solid var(--line);
+}
 #jim-kind { background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
 .jim-compare {
   display: flex;

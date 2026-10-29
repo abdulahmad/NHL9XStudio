@@ -83,6 +83,11 @@
 
   function isSnes() { return !!(doc && doc.platform === 'snes'); }
   function palCount() { return isSnes() ? 8 : 4; }
+  function importMode() {
+    const el = $('jim-import-mode');
+    return el && el.value ? el.value : 'place';
+  }
+  function mapPixelText(w, h) { return (w * 8) + '×' + (h * 8) + ' pixels'; }
   function tileCap() { return isSnes() ? 1024 : 2048; }
   function expand5(v) { return ((v & 31) * 255 / 31) | 0; }
   function encode5(value) {
@@ -837,13 +842,43 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       if (row) row.classList.toggle('is-masked', $('jim-dobitmap-on').checked && !(mask & (1 << p)));
     }
   }
-  function dobitmapMask() {
-    const typed = parseInt($('jim-dobitmap').value, 16);
-    if ($('jim-dobitmap').value && Number.isFinite(typed)) return typed & 0xff;
+  function usedPalMask() {
     let mask = 0;
     if (!doc) return 1;
     doc.cells.forEach((c) => { mask |= 1 << (c.pal & 7); });
     return mask || 1;
+  }
+  function dobitmapMask() {
+    const raw = (($('jim-dobitmap') && $('jim-dobitmap').value) || 'auto').trim();
+    if (!raw || raw === 'auto') return usedPalMask();
+    const typed = parseInt(raw, 16);
+    return Number.isFinite(typed) ? typed & 0xff : usedPalMask();
+  }
+  function fillDobitmapSelect() {
+    const sel = $('jim-dobitmap');
+    if (!sel || sel.tagName !== 'SELECT') return;
+    const n = palCount();
+    if (sel.dataset.n === String(n) && sel.options.length === n + 1) return;
+    const prev = sel.value || 'auto';
+    sel.innerHTML = '';
+    const add = (value, label) => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    };
+    add('auto', 'Auto (pals used on map)');
+    let bits = 0;
+    for (let p = 0; p < n; p++) {
+      bits |= 1 << p;
+      const pals = [];
+      for (let i = 0; i <= p; i++) pals.push(String(i));
+      add(bits.toString(16).toUpperCase().padStart(2, '0'),
+        (p === 0 ? 'Pal 0' : 'Pals ' + pals.join(', ')) +
+        '  $' + bits.toString(16).toUpperCase().padStart(2, '0'));
+    }
+    sel.dataset.n = String(n);
+    sel.value = [...sel.options].some((o) => o.value === prev) ? prev : 'auto';
   }
   function renderMeta() {
     const where = [];
@@ -856,6 +891,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-header-mode').textContent = headerMode();
     if (!focused('jim-map-w')) $('jim-map-w').value = String(doc.mapW);
     if (!focused('jim-map-h')) $('jim-map-h').value = String(doc.mapH);
+    const px = $('jim-map-px');
+    if (px) px.textContent = mapPixelText(doc.mapW, doc.mapH);
+    fillDobitmapSelect();
     if (document.activeElement !== $('jim-embed')) $('jim-embed').checked = !!doc.embedPalettes;
     if ($('jim-kind') && document.activeElement !== $('jim-kind')) {
       $('jim-kind').value = (doc.variant === 'sheet' || doc.variant === 'shared') ? 'sheet' : 'map';
@@ -1231,6 +1269,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (!f || !f.original) { box.hidden = true; return; }
     box.hidden = false;
     blitRgba($('jim-compare-src'), f.original.rgba, f.original.w, f.original.h);
+    const bit = isSnes() ? '5-bit' : '3-bit';
+    const aCap = $('jim-compare-a-cap');
+    const bCap = $('jim-compare-b-cap');
+    if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
+    if (bCap) bCap.textContent = $('jim-q-order').value === 'countFirst' ? bit : 'Count';
+    if (f.stepA && $('jim-compare-a')) blitRgba($('jim-compare-a'), f.stepA, f.original.w, f.original.h);
     if (f.quantRgba) blitRgba($('jim-compare-q'), f.quantRgba, f.original.w, f.original.h);
     else {
       const ctx = $('jim-compare-q').getContext('2d');
@@ -1240,6 +1284,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
   function renderBatch() {
     const ul = $('jim-batch');
+    if (!ul) return;
     ul.innerHTML = '';
     state.batch.forEach((item, index) => {
       const li = document.createElement('li');
@@ -1708,6 +1753,14 @@ remember();
     renderTileEdit();
     renderNote();
   }
+  function selectedIndexes() {
+    if (!state.sel) return [state.focus.y * doc.mapW + state.focus.x];
+    const out = [];
+    for (let y = 0; y < state.sel.h; y++) {
+      for (let x = 0; x < state.sel.w; x++) out.push((state.sel.y + y) * doc.mapW + (state.sel.x + x));
+    }
+    return out;
+  }
   function applyInspector() {
     if (!canEdit()) return;
     const k = state.focus.y * doc.mapW + state.focus.x;
@@ -1715,18 +1768,29 @@ remember();
     let tile = parseInt($('jim-tile').value, 10);
     if (!Number.isFinite(tile)) tile = prev.tile;
     tile = Math.max(0, Math.min(tileCap() - 1, tile));
-    const next = {
-      tile: tile,
-      pal: parseInt($('jim-pal').value, 10) & (isSnes() ? 7 : 3),
-      hFlip: $('jim-h').checked ? 1 : 0,
-      vFlip: $('jim-v').checked ? 1 : 0,
-      priority: $('jim-pri').checked ? 1 : 0
-    };
-    if (prev.tile === next.tile && prev.pal === next.pal && prev.hFlip === next.hFlip && prev.vFlip === next.vFlip && prev.priority === next.priority) return;
+    const pal = parseInt($('jim-pal').value, 10) & (isSnes() ? 7 : 3);
+    const hFlip = $('jim-h').checked ? 1 : 0;
+    const vFlip = $('jim-v').checked ? 1 : 0;
+    const priority = $('jim-pri').checked ? 1 : 0;
+    const palChanged = prev.pal !== pal;
+    const tileChanged = prev.tile !== tile;
+    const hChanged = prev.hFlip !== hFlip;
+    const vChanged = prev.vFlip !== vFlip;
+    const priChanged = prev.priority !== priority;
+    if (!palChanged && !tileChanged && !hChanged && !vChanged && !priChanged) return;
+    const targets = selectedIndexes();
     remember();
-    doc.cells[k] = next;
+    targets.forEach((i) => {
+      const c = doc.cells[i];
+      if (tileChanged) c.tile = tile;
+      if (palChanged) c.pal = pal;
+      if (hChanged) c.hFlip = hFlip;
+      if (vChanged) c.vFlip = vFlip;
+      if (priChanged) c.priority = priority;
+    });
     doc.dirtyMap = true;
-    state.tile = next.tile < doc.tiles.length ? next.tile : state.tile;
+    state.tile = tile < doc.tiles.length ? tile : state.tile;
+    if (targets.length > 1 && palChanged) status('Palette ' + pal + ' on ' + targets.length + ' cells.');
     renderAll();
   }
 
@@ -1910,16 +1974,34 @@ remember();
         ? ('count, then ' + (isSnes() ? '5-bit' : '3-bit'))
         : ((isSnes() ? '5-bit' : '3-bit') + ', then count');
       const warnings = (result.warnings || []).slice();
-      warnings.unshift('Preview is after both steps (' + order + ').');
+      warnings.unshift('Change color options before Apply. Previews: original, ' + order.replace(', then ', ', then ') + '.');
       const fl = floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
       fl.original = padded;
       fl.quantRgba = result.rgbaOut;
+      fl.stepA = result.stepA;
+      fl.stepB = result.stepB || result.rgbaOut;
+      fl.source = { name: image.name, w: image.w, h: image.h, rgba: image.rgba };
+      fl.mode = importMode();
       return fl;
     }
     const stub = snapStub(padded, Number($('jim-alpha').value));
     const fl = floatFrom(image.name, padded, stub.tiles, stub.palettes, ['quantize pending'].concat(stub.warnings), true, onlyEmpty);
     fl.original = padded;
+    fl.source = { name: image.name, w: image.w, h: image.h, rgba: image.rgba };
+    fl.mode = importMode();
     return fl;
+  }
+  function requantizeFloat() {
+    const f = state.float;
+    if (!f || !f.source || !canEdit()) return;
+    try {
+      const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
+      next.x = f.x;
+      next.y = f.y;
+      next.mode = importMode();
+      state.float = next;
+      renderAll();
+    } catch (err) { status(err.message || String(err), true); }
   }
   function mergeFloat(base, extra) {
     const w = Math.max(base.w, extra.w);
@@ -1958,11 +2040,83 @@ remember();
     tiles.push(Uint8Array.from(nibbles));
     return { tile: tiles.length - 1, hFlip: 0, vFlip: 0 };
   }
+  function appendTile(tiles, nibbles) {
+    tiles.push(Uint8Array.from(nibbles));
+    return { tile: tiles.length - 1, hFlip: 0, vFlip: 0 };
+  }
+  function tilesFromFloat(f, start) {
+    const tiles = start.map((t) => Uint8Array.from(t));
+    const cells = [];
+    for (let y = 0; y < f.h; y++) {
+      for (let x = 0; x < f.w; x++) {
+        const src = f.cells[y * f.w + x];
+        if (!src) { cells.push(zeroCell()); continue; }
+        const hit = adoptFlip(tiles, src.nibbles);
+        cells.push({ tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal, priority: 0 });
+      }
+    }
+    return { tiles: tiles, cells: cells };
+  }
+  function applyFloatPalettes(f) {
+    if (!f.palettes) return;
+    const n = palCount();
+    const locked = [];
+    for (let p = 0; p < n; p++) locked[p] = !!( $('jim-lock-' + p) && $('jim-lock-' + p).checked );
+    for (let p = 0; p < n; p++) {
+      if (locked[p] || !f.palettes[p]) continue;
+      for (let i = 0; i < 16; i++) {
+        const c = f.palettes[p][i];
+        if (!c) continue;
+        const next = { r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 };
+        if (c.r5 != null) { next.r5 = c.r5 & 31; next.g5 = c.g5 & 31; next.b5 = c.b5 & 31; }
+        else if (isSnes()) {
+          next.r5 = ((c.r3 & 7) << 2) | ((c.r3 & 7) >> 1);
+          next.g5 = ((c.g3 & 7) << 2) | ((c.g3 & 7) >> 1);
+          next.b5 = ((c.b3 & 7) << 2) | ((c.b3 & 7) >> 1);
+        }
+        doc.palettes[p][i] = next;
+      }
+    }
+    doc.dirtyPal = true;
+  }
   function applyFloat() {
     const f = state.float;
     if (!f || !canEdit()) return;
+    const mode = f.mode || importMode();
+    if (mode === 'replace') {
+      const w = f.w, h = f.h;
+      if (w < 1 || h < 1 || w > 1024 || h > 1024) {
+        status('New image map is ' + w + '×' + h + '; size must be 1–1024.', true);
+        return;
+      }
+      const msg = 'Resize the map from ' + doc.mapW + '×' + doc.mapH + ' (' + mapPixelText(doc.mapW, doc.mapH) +
+        ') to ' + w + '×' + h + ' (' + mapPixelText(w, h) + ') and replace tiles?';
+      if (!window.confirm(msg)) return;
+      const built = tilesFromFloat(f, []);
+      if (built.tiles.length > tileCap()) {
+        status('That image needs ' + built.tiles.length + ' tiles. The name table holds ' + tileCap() + '.', true);
+        return;
+      }
+      remember();
+      doc.mapW = w;
+      doc.mapH = h;
+      doc.tiles = built.tiles.length ? built.tiles : [new Uint8Array(64)];
+      doc.cells = built.cells;
+      doc.dirtyTiles = true;
+      doc.dirtyMap = true;
+      applyFloatPalettes(f);
+      state.float = null;
+      state.focus = { x: 0, y: 0 };
+      state.sel = null;
+      state.tile = 0;
+      status('New image ' + f.name + ': ' + w + '×' + h + ' cells (' + mapPixelText(w, h) + '), ' +
+        doc.tiles.length + ' tiles.');
+      renderAll();
+      return;
+    }
     const tiles = doc.tiles.map((t) => Uint8Array.from(t));
     const cells = doc.cells.map(cloneCell);
+    const reuse = mode !== 'add';
     for (let y = 0; y < f.h; y++) {
       for (let x = 0; x < f.w; x++) {
         const src = f.cells[y * f.w + x];
@@ -1971,7 +2125,7 @@ remember();
         const Y = f.y + y;
         if (X < 0 || Y < 0 || X >= doc.mapW || Y >= doc.mapH) continue;
         if (f.onlyEmpty && !isZero(cells[Y * doc.mapW + X])) continue;
-        const hit = adoptFlip(tiles, src.nibbles);
+        const hit = reuse ? adoptFlip(tiles, src.nibbles) : appendTile(tiles, src.nibbles);
         cells[Y * doc.mapW + X] = { tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal, priority: 0 };
       }
     }
@@ -1984,31 +2138,12 @@ remember();
     doc.cells = cells;
     doc.dirtyTiles = true;
     doc.dirtyMap = true;
-    if (f.palettes) {
-      const n = palCount();
-      const locked = [];
-      for (let p = 0; p < n; p++) locked[p] = !!( $('jim-lock-' + p) && $('jim-lock-' + p).checked );
-      for (let p = 0; p < n; p++) {
-        if (locked[p] || !f.palettes[p]) continue;
-        for (let i = 0; i < 16; i++) {
-          const c = f.palettes[p][i];
-          if (!c) continue;
-          const next = { r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 };
-          if (c.r5 != null) { next.r5 = c.r5 & 31; next.g5 = c.g5 & 31; next.b5 = c.b5 & 31; }
-          else if (isSnes()) {
-            next.r5 = ((c.r3 & 7) << 2) | ((c.r3 & 7) >> 1);
-            next.g5 = ((c.g3 & 7) << 2) | ((c.g3 & 7) >> 1);
-            next.b5 = ((c.b3 & 7) << 2) | ((c.b3 & 7) >> 1);
-          }
-          doc.palettes[p][i] = next;
-        }
-      }
-      doc.dirtyPal = true;
-    }
+    applyFloatPalettes(f);
     const name = f.name;
+    const how = mode === 'add' ? 'Added tiles from ' : 'Overwrote cells from ';
     state.float = null;
     state.tile = Math.min(state.tile, doc.tiles.length - 1);
-    status('Applied ' + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles.');
+    status(how + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles.');
     renderAll();
   }
 
@@ -2035,49 +2170,181 @@ remember();
     const image = await readImage(file);
     state.float = quantizeToFloat(image, openPalList(), $('jim-only-empty').checked);
     const pending = state.float.pending ? ' quantize pending.' : '';
-    status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Drag it, then Apply or Cancel.' + pending);
+    const mode = importMode();
+    const hint = mode === 'replace'
+      ? ' Apply resizes the map to ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + ').'
+      : (mode === 'add' ? ' Apply appends new tiles.' : ' Apply overwrites cells on this map.');
+    status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
   }
-  function importAct(bytes) {
-    if (!canEdit()) return;
-    if (bytes.length !== 768 && bytes.length !== 772) throw new Error('ACT must be 768 or 772 bytes');
-    const n = palCount();
-    let snapped = false;
-    const lines = [];
-    const colors = Quant && typeof Quant.parseAct === 'function' ? Quant.parseAct(bytes) : null;
-    for (let p = 0; p < n; p++) {
-      const line = [];
-      for (let i = 0; i < 16; i++) {
-        const at = (p * 16 + i) * 3;
-        const parsed = colors && colors[p * 16 + i];
-        const next = parsed
-          ? { r3: parsed.r3, g3: parsed.g3, b3: parsed.b3 }
-          : { r3: encodeChannel(bytes[at]), g3: encodeChannel(bytes[at + 1]), b3: encodeChannel(bytes[at + 2]) };
-        if (isSnes()) {
-          next.r5 = parsed && parsed.r5 != null ? parsed.r5 : encode5(bytes[at]);
-          next.g5 = parsed && parsed.g5 != null ? parsed.g5 : encode5(bytes[at + 1]);
-          next.b5 = parsed && parsed.b5 != null ? parsed.b5 : encode5(bytes[at + 2]);
-          if (expand5(next.r5) !== bytes[at] || expand5(next.g5) !== bytes[at + 1] || expand5(next.b5) !== bytes[at + 2]) snapped = true;
-        } else if (expandChannel(next.r3) !== bytes[at] || expandChannel(next.g3) !== bytes[at + 1] || expandChannel(next.b3) !== bytes[at + 2]) {
-          snapped = true;
+  let palMapPending = null;
+  function parsePaletteFile(bytes, name) {
+    const lower = (name || '').toLowerCase();
+    if (bytes.length === 768 || bytes.length === 772 || /\.act$/i.test(lower)) {
+      if (bytes.length !== 768 && bytes.length !== 772) throw new Error('ACT must be 768 or 772 bytes');
+      if (!Quant || typeof Quant.parseAct !== 'function') throw new Error('ACT parser did not load.');
+      const colors = Quant.parseAct(bytes);
+      const n = palCount();
+      const lines = [];
+      for (let p = 0; p < n; p++) {
+        const line = [];
+        for (let i = 0; i < 16; i++) {
+          const c = colors[p * 16 + i];
+          const next = { r3: c.r3, g3: c.g3, b3: c.b3 };
+          if (isSnes()) { next.r5 = c.r5; next.g5 = c.g5; next.b5 = c.b5; }
+          line.push(next);
         }
-        line.push(next);
+        lines.push(line);
       }
-      lines.push(line);
+      return lines;
     }
+    if (/\.sjim$/i.test(lower)) {
+      if (!Sjim || typeof Sjim.parseSjim !== 'function') throw new Error('lib/sjim.js did not load.');
+      return Sjim.parseSjim(bytes, null, { name: name }).palettes;
+    }
+    if (/\.jim$/i.test(lower)) {
+      const parsed = openBytes(bytes, name);
+      if (!parsed || !parsed.palettes) throw new Error('That JIM has no palettes');
+      return parsed.palettes;
+    }
+    if (bytes.length === 32 || bytes.length === 128 || bytes.length === 256) {
+      if (isSnes() && Sjim && typeof Sjim.fromBgr555 === 'function') {
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const n = Math.min(palCount(), Math.max(1, bytes.length >> 5));
+        const lines = [];
+        for (let p = 0; p < n; p++) {
+          const line = [];
+          for (let i = 0; i < 16; i++) {
+            const at = bytes.length === 32 ? i * 2 : p * 32 + i * 2;
+            line.push(at + 1 < bytes.length ? Sjim.fromBgr555(view.getUint16(at, true)) : Sjim.fromBgr555(0));
+          }
+          lines.push(line);
+        }
+        return lines;
+      }
+      const n = Math.min(4, Math.max(1, bytes.length >> 5));
+      const lines = [];
+      for (let p = 0; p < n; p++) lines.push(readCram(bytes, bytes.length === 32 ? 0 : p * 32));
+      return lines;
+    }
+    throw new Error('Not a palette, ACT, JIM, PAL, or PAL-sized BIN');
+  }
+  function openPaletteMapper(bytes, name) {
+    if (!canEdit()) return;
+    const lines = parsePaletteFile(bytes, name);
+    palMapPending = { name: name || 'palette', lines: lines };
+    const host = $('jim-palmap-rows');
+    const overlay = $('jim-palmap');
+    if (!host || !overlay) {
+      importActDirect(lines, name);
+      return;
+    }
+    host.innerHTML = '';
+    const destN = palCount();
+    lines.forEach((line, src) => {
+      const row = document.createElement('div');
+      row.className = 'jim-palmap-row';
+      const lab = document.createElement('span');
+      lab.textContent = 'Source ' + src;
+      const sw = document.createElement('span');
+      sw.className = 'jim-palmap-sw';
+      (line || []).forEach((c) => {
+        const chip = document.createElement('i');
+        chip.style.background = rgbOf(c);
+        sw.appendChild(chip);
+      });
+      const dest = document.createElement('select');
+      dest.dataset.src = String(src);
+      const skip = document.createElement('option');
+      skip.value = '';
+      skip.textContent = 'Skip';
+      dest.appendChild(skip);
+      for (let p = 0; p < destN; p++) {
+        const opt = document.createElement('option');
+        opt.value = String(p);
+        opt.textContent = 'Pal ' + p;
+        if (p === src) opt.selected = true;
+        dest.appendChild(opt);
+      }
+      const lock = document.createElement('label');
+      lock.className = 'check';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = true;
+      box.dataset.lockSrc = String(src);
+      lock.appendChild(box);
+      lock.appendChild(document.createTextNode(' Lock'));
+      row.appendChild(lab);
+      row.appendChild(sw);
+      row.appendChild(dest);
+      row.appendChild(lock);
+      host.appendChild(row);
+    });
+    overlay.hidden = false;
+  }
+  function importActDirect(lines, name) {
     remember();
-    doc.palettes = lines;
+    const n = palCount();
+    doc.palettes = lines.slice(0, n);
     while (doc.palettes.length < n) doc.palettes.push(defaultLine(doc.palettes.length));
     doc.dirtyPal = true;
     for (let p = 0; p < n; p++) {
       const box = $('jim-lock-' + p);
       if (box) box.checked = true;
     }
-    const last = n * 16;
-    status('Loaded ACT colors 1–' + last + ' into palettes 0–' + (n - 1) +
-      ' and locked those lines. Uncheck Lock to leave a line open for import.' +
-      (snapped ? (isSnes() ? ' Some colors were snapped to 5-bit BGR555.' : ' Some colors were snapped to 3-bit CRAM.') : ''));
+    status('Loaded palettes from ' + (name || 'file') + ' and locked those lines.');
     renderAll();
+  }
+  function applyPaletteMapper() {
+    if (!palMapPending) return;
+    const destN = palCount();
+    const picks = [];
+    const used = new Set();
+    $('jim-palmap-rows').querySelectorAll('select[data-src]').forEach((sel) => {
+      const src = Number(sel.dataset.src);
+      const dest = sel.value === '' ? -1 : Number(sel.value);
+      const lock = $('jim-palmap-rows').querySelector('input[data-lock-src="' + src + '"]');
+      picks.push({ src: src, dest: dest, lock: !!(lock && lock.checked) });
+    });
+    for (const p of picks) {
+      if (p.dest < 0) continue;
+      if (used.has(p.dest)) {
+        status('Two source lines target pal ' + p.dest + '. Pick unique destinations.', true);
+        return;
+      }
+      used.add(p.dest);
+    }
+    remember();
+    while (doc.palettes.length < destN) doc.palettes.push(defaultLine(doc.palettes.length));
+    picks.forEach((p) => {
+      if (p.dest < 0 || p.dest >= destN) return;
+      const line = palMapPending.lines[p.src] || [];
+      doc.palettes[p.dest] = line.map((c) => {
+        const next = { r3: (c.r3 || 0) & 7, g3: (c.g3 || 0) & 7, b3: (c.b3 || 0) & 7 };
+        if (isSnes()) {
+          if (c.r5 != null) { next.r5 = c.r5 & 31; next.g5 = c.g5 & 31; next.b5 = c.b5 & 31; }
+          else {
+            next.r5 = ((c.r3 & 7) << 2) | ((c.r3 & 7) >> 1);
+            next.g5 = ((c.g3 & 7) << 2) | ((c.g3 & 7) >> 1);
+            next.b5 = ((c.b3 & 7) << 2) | ((c.b3 & 7) >> 1);
+          }
+        }
+        return next;
+      });
+      while (doc.palettes[p.dest].length < 16) doc.palettes[p.dest].push({ r3: 0, g3: 0, b3: 0 });
+      const lock = $('jim-lock-' + p.dest);
+      if (lock) lock.checked = p.lock;
+    });
+    doc.dirtyPal = true;
+    const overlay = $('jim-palmap');
+    if (overlay) overlay.hidden = true;
+    const from = palMapPending.name;
+    palMapPending = null;
+    status('Assigned palettes from ' + from + '.');
+    renderAll();
+  }
+  function importAct(bytes, name) {
+    openPaletteMapper(bytes, name || 'palette.act');
   }
   function applyDonor(bytes) {
     if (isSnes()) {
@@ -2140,9 +2407,8 @@ remember();
     buildPaletteChrome();
     fillPalSelect();
     syncRgbRange();
-    let mask = 0;
-    doc.cells.forEach((c) => { mask |= 1 << (c.pal & 7); });
-    $('jim-dobitmap').value = (mask || 1).toString(16).toUpperCase().padStart(2, '0');
+    fillDobitmapSelect();
+    $('jim-dobitmap').value = 'auto';
     status(note || ('Opened ' + doc.name + ' (' + variantLabel() + ', ' + doc.tiles.length + ' tiles).'));
     renderAll();
   }
@@ -2314,11 +2580,15 @@ remember();
       use.id = 'jim-use-' + p;
       use.checked = true;
       use.title = 'On: an imported image may put tiles on this palette line.';
+      use.addEventListener('change', () => { if (state.float && state.float.source) requantizeFloat(); });
       const lock = document.createElement('input');
       lock.type = 'checkbox';
       lock.id = 'jim-lock-' + p;
       lock.title = 'Quantize will not rewrite this line. ACT colors 1–16 are pal 0, 17–32 pal 1, and so on.';
-      lock.addEventListener('change', renderSwatches);
+      lock.addEventListener('change', () => {
+        renderSwatches();
+        if (state.float && state.float.source) requantizeFloat();
+      });
       const onMap = document.createElement('span');
       onMap.id = 'jim-onmap-' + p;
       const sw = document.createElement('div');
@@ -2346,28 +2616,23 @@ remember();
 
   async function ingestList(files) {
     const list = Array.from(files || []);
-    const images = [];
     for (const file of list) {
       const lower = file.name.toLowerCase();
-      if (isImageName(lower) || (file.type && file.type.indexOf('image/') === 0)) { images.push(file); continue; }
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      if (/\.act$/i.test(lower)) { importAct(bytes); continue; }
-      try { openJimBytes(bytes, file.name); }
-      catch (err) {
-        if ((bytes.length === 32 || bytes.length === 128 || bytes.length === 256) && /\.(pal|bin)$/i.test(lower)) applyDonor(bytes);
-        else status(err.message || String(err), true);
+      if (isImageName(lower) || (file.type && file.type.indexOf('image/') === 0)) {
+        await importOne(file);
+        continue;
       }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (/\.act$/i.test(lower) || /\.pal$/i.test(lower) ||
+          ((bytes.length === 32 || bytes.length === 128 || bytes.length === 256 ||
+            bytes.length === 768 || bytes.length === 772) && /\.(pal|bin|act)$/i.test(lower))) {
+        try { openPaletteMapper(bytes, file.name); }
+        catch (err) { status(err.message || String(err), true); }
+        continue;
+      }
+      try { openJimBytes(bytes, file.name); }
+      catch (err) { status(err.message || String(err), true); }
     }
-    for (const file of images) {
-      const image = await readImage(file);
-      state.batch.push({ name: image.name, w: image.w, h: image.h, rgba: image.rgba, pals: openPalList(), onlyEmpty: $('jim-only-empty').checked, lockAct: true });
-    }
-    if (images.length === 1 && list.length === 1) await importOne(images[0]);
-    else if (images.length) {
-      renderBatch();
-      status(images.length + ' image' + (images.length === 1 ? '' : 's') + ' added to the batch. Preview batch to float them together.');
-    }
-    renderBatch();
   }
 
   function setRemapPreview(remap) {
@@ -2386,7 +2651,9 @@ remember();
       if (!raw) return false;
       const data = JSON.parse(raw);
       sessionStorage.removeItem('nhl9x-jim');
-      const bytes = Uint8Array.from(data.bytes || []);
+      const bytes = data.b64
+        ? Uint8Array.from(atob(data.b64), (c) => c.charCodeAt(0))
+        : Uint8Array.from(data.bytes || []);
       if (!bytes.length) return false;
       const donor = data.donor && data.donor.length ? Uint8Array.from(data.donor) : null;
       loadDoc(openBytes(bytes, data.name || 'catalog.map.jim', donor, {
@@ -2406,8 +2673,8 @@ remember();
     if (!q.get('image')) return;
     const game = q.get('game');
     $('jim-hash').hidden = false;
-    $('jim-hash').textContent = 'ROM load is later (' + (game || 'game') + ' / ' + q.get('image') +
-      '). Open the .map.jim directly until the Images tab can hand the picture over.';
+    $('jim-hash').textContent = 'The Images tab did not hand over the map bytes. Use Edit map on the picture you are viewing, or Open the .map.jim here. (' +
+      (game || 'game') + ' / ' + q.get('image') + ')';
   }
 
   function wire() {
@@ -2543,19 +2810,11 @@ remember();
       if (!files || !files.length) return;
       ingestList(files).catch((err) => status(err.message, true)).finally(() => { $('jim-open').value = ''; });
     });
-    $('jim-donor-btn').addEventListener('click', () => $('jim-donor').click());
-    $('jim-donor').addEventListener('change', async () => {
-      const files = $('jim-donor').files;
-      if (!files || !files[0]) return;
-      try { applyDonor(new Uint8Array(await files[0].arrayBuffer())); }
-      catch (err) { status(err.message, true); }
-      $('jim-donor').value = '';
-    });
-    $('jim-act-btn').addEventListener('click', () => $('jim-act').click());
+    if ($('jim-act-btn')) $('jim-act-btn').addEventListener('click', () => $('jim-act').click());
     $('jim-act').addEventListener('change', async () => {
       const files = $('jim-act').files;
       if (!files || !files[0]) return;
-      try { importAct(new Uint8Array(await files[0].arrayBuffer())); }
+      try { importAct(new Uint8Array(await files[0].arrayBuffer()), files[0].name); }
       catch (err) { status(err.message, true); }
       $('jim-act').value = '';
     });
@@ -2567,28 +2826,31 @@ remember();
       catch (err) { status(err.message || String(err), true); }
       $('jim-image').value = '';
     });
-    $('jim-batch-add').addEventListener('click', () => $('jim-batch-file').click());
-    $('jim-batch-file').addEventListener('change', () => {
-      const files = $('jim-batch-file').files;
-      if (files) ingestList(files).catch((err) => status(err.message, true));
-      $('jim-batch-file').value = '';
+    if ($('jim-exit')) $('jim-exit').addEventListener('click', leaveEditor);
+    if ($('jim-home')) $('jim-home').addEventListener('click', (event) => {
+      if (!confirmLeave()) event.preventDefault();
+      else allowLeave = true;
     });
-    $('jim-batch-clear').addEventListener('click', () => { state.batch = []; renderBatch(); });
-    $('jim-batch-preview').addEventListener('click', () => {
-      if (!state.batch.length) { status('Add images to the batch first.'); return; }
-      try {
-        let float = null;
-        state.batch.forEach((item) => {
-          const part = quantizeToFloat(item, item.pals, item.onlyEmpty, item.lockAct);
-          float = float ? mergeFloat(float, part) : part;
-        });
-        float.name = 'Batch (' + state.batch.length + ')';
-        float.x = Math.max(0, Math.floor((doc.mapW - float.w) / 2));
-        float.y = Math.max(0, Math.floor((doc.mapH - float.h) / 2));
-        state.float = float;
-        status('Floating batch of ' + state.batch.length + '. Later files overwrote earlier ones. Drag, then Apply.');
-        renderAll();
-      } catch (err) { status(err.message || String(err), true); }
+    if ($('jim-palmap-ok')) $('jim-palmap-ok').addEventListener('click', applyPaletteMapper);
+    if ($('jim-palmap-cancel')) $('jim-palmap-cancel').addEventListener('click', () => {
+      palMapPending = null;
+      $('jim-palmap').hidden = true;
+    });
+    if ($('jim-import-mode')) $('jim-import-mode').addEventListener('change', () => {
+      if (state.float) {
+        state.float.mode = importMode();
+        status(importMode() === 'replace'
+          ? 'Apply will resize the map to the image.'
+          : (importMode() === 'add' ? 'Apply will append new tiles.' : 'Apply will overwrite cells on this map.'));
+      }
+    });
+    ['jim-map-w', 'jim-map-h'].forEach((id) => {
+      if ($(id)) $(id).addEventListener('input', () => {
+        const w = parseInt($('jim-map-w').value, 10);
+        const h = parseInt($('jim-map-h').value, 10);
+        const px = $('jim-map-px');
+        if (px && w > 0 && h > 0) px.textContent = mapPixelText(w, h);
+      });
     });
     $('jim-float-apply').addEventListener('click', () => { try { applyFloat(); } catch (err) { status(err.message, true); } });
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
@@ -2625,8 +2887,9 @@ remember();
       renderAll();
     });
     if ($('jim-memo')) $('jim-memo').addEventListener('input', () => { doc.memo = $('jim-memo').value; });
-    if ($('jim-dobitmap')) $('jim-dobitmap').addEventListener('input', () => { renderNote(); renderSwatches(); });
-    $('jim-q-opts').addEventListener('change', saveQuantize);
+    if ($('jim-dobitmap')) $('jim-dobitmap').addEventListener('change', () => { renderNote(); renderSwatches(); renderMap(); });
+    $('jim-q-opts').addEventListener('change', () => { saveQuantize(); requantizeFloat(); });
+    $('jim-q-opts').addEventListener('input', () => { if (state.float && state.float.source) requantizeFloat(); });
     document.addEventListener('keydown', (event) => {
       const tag = event.target && event.target.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
@@ -2638,7 +2901,17 @@ remember();
       else if ((event.ctrlKey || event.metaKey) && key === 'x') { copySel(true); event.preventDefault(); }
       else if ((event.ctrlKey || event.metaKey) && key === 'v') { paste(); event.preventDefault(); }
       else if (event.key === 'Delete' || event.key === 'Backspace') { clearSel(); event.preventDefault(); }
-      else if (event.key === 'Escape') { state.sel = null; if (state.float) { state.float = null; status('Cancelled the floating import.'); } renderAll(); }
+      else if (event.key === 'Escape') {
+        if ($('jim-palmap') && !$('jim-palmap').hidden) {
+          palMapPending = null;
+          $('jim-palmap').hidden = true;
+          event.preventDefault();
+          return;
+        }
+        state.sel = null;
+        if (state.float) { state.float = null; status('Cancelled the floating import.'); }
+        renderAll();
+      }
     });
 
     let dragging = false;
@@ -2663,6 +2936,24 @@ remember();
       show(false);
       ingestList(event.dataTransfer.files).catch((err) => status(err.message || String(err), true));
     });
+    window.addEventListener('beforeunload', (event) => {
+      if (allowLeave || !isDirty()) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
+  }
+
+  let allowLeave = false;
+  function confirmLeave() {
+    if (!isDirty()) return true;
+    return window.confirm('This map has unsaved changes. Leave the Image Editor anyway?');
+  }
+  function leaveEditor() {
+    if (!confirmLeave()) return;
+    allowLeave = true;
+    const back = sessionStorage.getItem('nhl9x-jim-return') || 'index.html';
+    sessionStorage.removeItem('nhl9x-jim-return');
+    location.href = back;
   }
 
   function boot() {

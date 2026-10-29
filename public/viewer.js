@@ -96,6 +96,7 @@ const state = {
 };
 
 const banks = new Map();
+const looseMaps = new Map();
 const paletteFiles = new Map();
 let ensuringOpposite = false;
 const bitmaps = new Map();
@@ -1363,7 +1364,7 @@ function renderMeta() {
     editMap.type = 'button';
     editMap.id = 'edit-map';
     editMap.className = 'ghost-btn';
-    editMap.textContent = 'Edit map';
+    editMap.textContent = 'Edit in Image Editor';
     el('detail').parentElement.appendChild(editMap);
     editMap.addEventListener('click', () => {
       openJimEditor().catch((err) => alert(err.message));
@@ -1372,8 +1373,11 @@ function renderMeta() {
   const jimImage = state.mode === 'image'
     ? ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image)
     : null;
+  const loose = state.mode === 'image' ? looseMaps.get(state.image) : null;
   const soundData = !!soundPanel();
-  editMap.hidden = soundData || !(jimImage && (jimImage.kind === 'jim' || jimImage.kind === 'snes93-screen'));
+  const canEditMap = !!(jimImage && (jimImage.kind === 'jim' || jimImage.kind === 'snes93-screen'))
+    || !!(loose && (loose.kind === 'jim' || loose.kind === 'sjim'));
+  editMap.hidden = soundData || !canEditMap;
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
   el('palette').closest('section').hidden = soundData;
@@ -2129,7 +2133,36 @@ async function ensureRink() {
   return colors;
 }
 
+function bytesToB64(u8) {
+  let s = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < u8.length; i += chunk) {
+    s += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+  }
+  return btoa(s);
+}
+
+function handOffJim(payload) {
+  sessionStorage.setItem('nhl9x-jim-return', location.href);
+  sessionStorage.setItem('nhl9x-jim', JSON.stringify(payload));
+  const q = payload.image
+    ? '#game=' + encodeURIComponent(payload.game || state.game) + '&image=' + encodeURIComponent(payload.image)
+    : '#from=viewer';
+  location.href = 'jim.html' + q;
+}
+
 async function openJimEditor() {
+  const loose = looseMaps.get(state.image);
+  if (loose && loose.bytes && loose.bytes.length) {
+    handOffJim({
+      name: loose.name,
+      game: state.game,
+      image: loose.name,
+      b64: bytesToB64(loose.bytes),
+      platform: loose.kind === 'sjim' ? 'snes' : 'genesis'
+    });
+    return;
+  }
   const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
   if (!image || (image.kind !== 'jim' && image.kind !== 'snes93-screen')) {
     throw new Error('This picture is not a JIM or SJIM map');
@@ -2161,17 +2194,16 @@ async function openJimEditor() {
   const fileName = (image.fileNames && image.fileNames[0] && !/\s/.test(image.fileNames[0]))
     ? image.fileNames[0]
     : (image.kind === 'snes93-screen' ? image.id + '.map.sjim' : image.id + '.map.jim');
-  sessionStorage.setItem('nhl9x-jim', JSON.stringify({
+  handOffJim({
     name: fileName,
     game: state.game,
     image: image.id,
-    bytes: Array.from(bytes),
+    b64: bytesToB64(bytes),
     donor: donor ? Array.from(donor) : null,
     remap: image.remap || null,
     platform: image.kind === 'snes93-screen' ? 'snes' : 'genesis',
     sjim: sjim
-  }));
-  location.href = 'jim.html#game=' + encodeURIComponent(state.game) + '&image=' + encodeURIComponent(image.id);
+  });
 }
 
 async function bytesFor(spec) {
@@ -2652,6 +2684,13 @@ async function ingestDroppedFiles(fileList) {
     gameInfo = games.find((game) => game.id === id) || gameInfo;
     refreshAll();
     return;
+  }
+  if (classified.kind === 'jim' || classified.kind === 'sjim') {
+    looseMaps.set(classified.label, {
+      name: classified.label,
+      bytes: classified.bytes,
+      kind: classified.kind
+    });
   }
   const decoded = NhlOpenAsset.decodeLoose(classified, {
     anim: Nhl92Anim,

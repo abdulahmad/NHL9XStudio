@@ -51,14 +51,21 @@ withBrowser('jim', async ({ url, newPage }) => {
   page.on('dialog', (dialog) => dialog.accept());
   await page.goto(url + 'jim.html');
   assert.strictEqual(page.problems.filter((p) => !/Failed to load resource/.test(p)).length, 0, page.problems.join('\n'));
+  assert.match(await page.title(), /Image Editor/);
   assert.ok(await page.locator('#jim-map').count());
+  assert.ok(await page.locator('#jim-exit').count());
   assert.ok(await page.locator('#jim-pri').count());
   assert.ok(await page.locator('#jim-png').count());
   assert.ok(await page.locator('#jim-act-export').count());
   assert.ok(await page.locator('#jim-kind').count());
   assert.ok(await page.locator('#jim-dobitmap').count());
+  assert.strictEqual(await page.locator('#jim-dobitmap').evaluate((el) => el.tagName), 'SELECT');
   assert.ok(await page.locator('#jim-memo').count());
   assert.ok(await page.locator('#jim-show-unused').count());
+  assert.ok(await page.locator('#jim-import-mode').count());
+  assert.ok(await page.locator('#jim-compare-a').count());
+  assert.ok(await page.locator('#jim-palmap').count());
+  assert.match(await page.textContent('#jim-map-px'), /pixels/);
 
   const buf = rawJim();
   await page.setInputFiles('#jim-open', [{
@@ -68,7 +75,14 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Opened pri\.map\.jim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-status'), /Opened pri\.map\.jim/);
+  assert.match(await page.textContent('#jim-map-px'), /8×8 pixels/);
   assert.ok(await page.isChecked('#jim-pri'));
+  await page.click('#jim-sel-all');
+  await page.selectOption('#jim-pal', '1');
+  assert.strictEqual(await page.locator('#jim-pal').inputValue(), '1');
+  await page.click('[data-tool="select"]');
+  await page.keyboard.press('Control+z');
+  assert.strictEqual(await page.locator('#jim-pal').inputValue(), '0');
   await page.click('[data-tool="place"]');
   const box = await page.locator('#jim-map').boundingBox();
   await page.mouse.click(box.x + 4, box.y + 4);

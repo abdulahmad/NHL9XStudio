@@ -223,4 +223,26 @@ function outputPixel(result, width, x, y) {
   assert.notStrictEqual(result.palettes[6][0].r5, 31);
 }
 
+{
+  const source = image(16, 16, (x, y) => {
+    const i = y * 16 + x;
+    return [
+      Q.expandChannel(i & 7),
+      Q.expandChannel((i >> 3) & 7),
+      Q.expandChannel((i * 3) & 7),
+      255
+    ];
+  });
+  const result = Q.quantize(source, 16, 16, {
+    order: 'bitFirst',
+    pals: [0],
+    opaquePal0: true,
+    stepA: { method: 'uniform', dither: 'none', strength: 0 },
+    stepB: { method: 'adaptive', dither: 'none', strength: 0 }
+  });
+  assert.ok(result.inkCount >= 12, 'bitFirst kept inks, got ' + result.inkCount);
+  assert.strictEqual(result.stepA.length, source.length);
+  assert.strictEqual(result.stepB.length, source.length);
+}
+
 console.log('genesis-quantize: ok');
