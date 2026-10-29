@@ -40,7 +40,7 @@
       <p id="jim-header-mode" class="muted"></p>
 
       <h2>Palettes <span class="muted">4 × 16 CRAM · 3-bit</span></h2>
-      <p class="muted">Pal 0 color 0 is opaque. Palettes 1–3 index 0 is a hole. Lock keeps a line out of quantization. Use chooses which lines an import may write.</p>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of palettes 1–3 is transparent. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
@@ -69,7 +69,7 @@
         <label>Step B <select id="jim-b-method"></select></label>
         <label>Dither <select id="jim-b-dither"></select></label>
         <label>Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
-        <label class="check" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not a hole."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
+        <label class="check" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
         <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
         <label class="check"><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
       </fieldset>
@@ -125,7 +125,8 @@
       </div>
       <fieldset class="jim-preview-set">
         <legend>Preview only, not saved</legend>
-        <label class="check" title="8-byte nibble table, the same shape as the bytes after DecompressGraphicsWithRemap. High nibble then low nibble in each box."><input type="checkbox" id="jim-remap-on"> Remap</label>
+        <p class="muted jim-preview-help">These change how the map looks here. They are not JIM fields. Export still writes the stored pixels and map words.</p>
+        <label class="check" title="When the game loads some screens it rewrites each tile pixel through an 8-byte nibble table in 68000 code (not in the .map.jim). Each box is two palette indexes: high nibble then low. Identity is 01 23 45 67 89 AB CD EF."><input type="checkbox" id="jim-remap-on"> Remap</label>
         <span id="jim-remap">
           <input class="jim-nibble mono" maxlength="2" size="2" value="01" aria-label="Remap byte 0, nibbles 0 and 1" title="Nibbles 0–1">
           <input class="jim-nibble mono" maxlength="2" size="2" value="23" aria-label="Remap byte 1, nibbles 2 and 3" title="Nibbles 2–3">
@@ -136,8 +137,8 @@
           <input class="jim-nibble mono" maxlength="2" size="2" value="CD" aria-label="Remap byte 6, nibbles 12 and 13" title="Nibbles 12–13">
           <input class="jim-nibble mono" maxlength="2" size="2" value="EF" aria-label="Remap byte 7, nibbles 14 and 15" title="Nibbles 14–15">
         </span>
-        <label class="check" title="dobitmap XORs printa onto every map word. This preview XORs the $F800 attribute bits only, so the tile index stays."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
-        <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask">
+        <label class="check" title="When the game draws a plane it XORs printa onto every map word. That can flip priority and palette relative to the file. This preview XORs only the $F800 attribute bits, so the tile index stays. Default $F800 matches dobitmap."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
+        <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask" title="Hex mask XORed onto each map word for preview. Only bits 15–11 are used ($F800).">
       </fieldset>
       <div class="ice-scroll" id="jim-scroll"><canvas id="jim-map" width="64" height="64"></canvas></div>
       <p id="jim-note" class="muted"></p>

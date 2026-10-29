@@ -915,7 +915,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
         btn.style.backgroundImage = hole ? 'repeating-conic-gradient(#555 0 25%, transparent 0 50%)' : 'none';
         btn.style.backgroundSize = hole ? '8px 8px' : '';
         btn.setAttribute('aria-selected', state.color.pal === p && state.color.index === i ? 'true' : 'false');
-        btn.title = 'Pal ' + p + ' index ' + i + ' ' + hexOf(c) + (hole ? ' (hole)' : '');
+        btn.title = 'Pal ' + p + ' index ' + i + ' ' + hexOf(c) + (hole ? ' (transparent)' : '');
       }
     }
     const c = doc.palettes[state.color.pal][state.color.index];
@@ -1899,7 +1899,9 @@ remember();
     try {
       const packed = $('jim-packed').checked;
       const bytes = buildExport(packed);
-      download(bytes, doc.name || 'untitled.map.jim');
+      let name = doc.name || 'untitled.map.jim';
+      if (/\.jzip$/i.test(name)) name = name.replace(/\.jzip$/i, '.map.jim');
+      download(bytes, name);
       status('Exported ' + doc.name + ' (' + (packed ? 'packed' : 'uncompressed') + ', ' + bytes.length + ' bytes).');
     } catch (err) {
       status(err.message || String(err), true);
@@ -1928,7 +1930,7 @@ remember();
       use.type = 'checkbox';
       use.id = 'jim-use-' + p;
       use.checked = true;
-      use.title = 'Quantize may assign tiles to this line';
+      use.title = 'On: an imported image may put tiles on this palette line.';
       const lock = document.createElement('input');
       lock.type = 'checkbox';
       lock.id = 'jim-lock-' + p;

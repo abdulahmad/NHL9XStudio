@@ -46,6 +46,7 @@
   padding: 4px 8px;
   font-size: 12px;
 }
+.jim-preview-help { flex: 1 0 100%; margin: 0; }
 .jim-nibble {
   width: 2.4em;
   background: var(--raise-2);
