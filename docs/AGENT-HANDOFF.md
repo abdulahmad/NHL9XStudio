@@ -25,6 +25,8 @@ Work only in **NHL9XStudio**. Push branches (`cursor/<name>-e6a9`), open PRs to 
 
 Do **not** commit `pc95` symlink or retail ROMs. Optional ROM paths for local tests are listed below.
 
+**Releases:** before merging user-visible work to `main`, increment `package.json` and prepend `public/changelog.json` (same version, what changed). That is the About window's changelog and is what reopens the pop-up. Do not merge without it; see AGENTS.md.
+
 Bundled regression fixtures live in `test/fixtures/` (ANIM/JIM/PAL). Full golden tests run without any external repo checkout.
 
 ---
