@@ -58,21 +58,22 @@
     <section class="jed-col jim-side" aria-label="File, palettes, and import">
       <h2>File <span class="muted" id="jim-variant"></span></h2>
       <p id="jim-file-meta" class="jim-meta"></p>
-      <fieldset class="ice-place">
+      <fieldset class="ice-place jim-bitonly-hide">
         <legend>Map size (cells)</legend>
         <label>W <input type="number" id="jim-map-w" min="1" max="1024" value="8"></label>
         <label>H <input type="number" id="jim-map-h" min="1" max="1024" value="8"></label>
         <button type="button" id="jim-resize" class="ghost-btn jim-edit">Resize…</button>
         <p id="jim-map-px" class="muted">64×64 pixels</p>
       </fieldset>
-      <label>Kind <select id="jim-kind" class="jim-edit" title="Map writes name-table cells. Tile sheet is sequential tiles with a shared zero header (95G ArenaGfx).">
+      <label class="jim-bitonly-hide">Kind <select id="jim-kind" class="jim-edit" title="Map writes name-table cells. Tile sheet is sequential tiles with a shared zero header (95G ArenaGfx).">
         <option value="map">Map</option>
         <option value="sheet">Tile sheet</option>
       </select></label>
-      <label class="check" title="Checked: write 128 bytes of CRAM (Genesis) or BGR555 lines (SNES). Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
+      <label class="check jim-bitonly-hide" title="Checked: write 128 bytes of CRAM (Genesis) or BGR555 lines (SNES). Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
       <p id="jim-header-mode" class="muted"></p>
 
-      <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit</span></h2>
+      <div id="jim-pal-block" class="jim-bitonly-hide">
+      <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit (GEN)</span></h2>
       <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is a VDP hole onto the backdrop (often the same ice ink). Check Transparency to show those holes. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
@@ -89,28 +90,35 @@
         <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of one palette line, or all lines combined. Optional 772-byte trailer with color count.">Export .ACT</button>
         <input type="file" id="jim-act" hidden accept=".act,.pal,.snespal,.bin,.jim,.map.jim,.sjim,.map.sjim">
       </div>
+      </div>
 
       <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
-      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture.">
+      <label>Color mode <select id="jim-color-mode" class="jim-edit" title="Genesis CRAM is 3-bit per channel (512 colors). SNES CGRAM is 5-bit BGR555 (32,768 colors). Import snaps to that lattice. Tile import then reduces onto the palettes in Use.">
+        <option value="genesis">Genesis — 3-bit (GEN), 512 colors</option>
+        <option value="snes">SNES — 5-bit (SNES), 32,768 colors</option>
+      </select></label>
+      <p class="muted" id="jim-color-mode-help">Genesis import snaps each channel to 8 levels (3-bit). SNES import snaps to 32 levels (5-bit) and does not do the 3-bit crush.</p>
+      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture. Color reduction only snaps to the 3-bit (GEN) or 5-bit (SNES) lattice and exports PNG.">
         <option value="replace">Import New Image &amp; Overwrite Tiles (Resize Map)</option>
         <option value="place">Import into current Image &amp; Add Tiles</option>
         <option value="add">Import Tiles (keep existing image &amp; tiles)</option>
+        <option value="bitonly" id="jim-import-bitonly">3-bit (GEN) color reduction only (for export)</option>
       </select></label>
       <fieldset class="ice-popts" id="jim-q-opts">
-        <legend>Two-step color</legend>
-        <label>Order <select id="jim-q-order">
-          <option value="bitFirst">3-bit, then reduce count</option>
-          <option value="countFirst">Reduce count, then 3-bit</option>
+        <legend id="jim-q-legend">Two-step color</legend>
+        <label class="jim-q-count">Order <select id="jim-q-order">
+          <option value="bitFirst">3-bit (GEN), then reduce count</option>
+          <option value="countFirst">Reduce count, then 3-bit (GEN)</option>
         </select></label>
         <label>Step A <select id="jim-a-method"></select></label>
         <label>Dither <select id="jim-a-dither"></select></label>
         <label>Strength <input type="number" id="jim-a-strength" min="0" max="100" value="100"></label>
-        <label>Step B <select id="jim-b-method"></select></label>
-        <label>Dither <select id="jim-b-dither"></select></label>
-        <label>Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
-        <label class="check" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
+        <label class="jim-q-count">Step B <select id="jim-b-method"></select></label>
+        <label class="jim-q-count">Dither <select id="jim-b-dither"></select></label>
+        <label class="jim-q-count">Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
+        <label class="check jim-q-count" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
         <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
-        <label class="check" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
+        <label class="check jim-q-count" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
       </fieldset>
       <div class="jed-io">
         <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image. Change color options before Apply. Mode chooses overwrite, add tiles, or resize as a new image.">Import image…</button>
@@ -238,7 +246,7 @@
           <canvas id="jim-compare-a" width="64" height="64"></canvas>
           <figcaption id="jim-compare-a-cap">Step A</figcaption>
         </figure>
-        <figure>
+        <figure class="jim-q-count">
           <canvas id="jim-compare-q" width="64" height="64"></canvas>
           <figcaption id="jim-compare-b-cap">Step B</figcaption>
         </figure>
@@ -249,7 +257,7 @@
       <p id="jim-note" class="muted"></p>
     </section>
 
-    <section class="jed-col jim-side" aria-label="Tiles, cell, export">
+    <section class="jed-col jim-side jim-tiles-col" aria-label="Tiles, cell, export">
       <h2>Tiles <span id="jim-count" class="muted"></span></h2>
       <div id="jim-tiles" class="ice-tiles jim-tiles"></div>
       <div class="jim-tiles-resize">
@@ -317,7 +325,7 @@
         <label><input type="radio" name="jim-export-kind" value="jim"> Genesis .map.jim</label>
         <label><input type="radio" name="jim-export-kind" value="sjim"> SNES .map.sjim</label>
         <label><input type="radio" name="jim-export-kind" value="snes94"> NHL 94 SNES screen (.zip: <span id="jim-export-zip-files">Tiles.chr, Map.map, palette, screen.json</span>)</label>
-        <label><input type="radio" name="jim-export-kind" value="png" id="jim-png"> Map PNG</label>
+        <label><input type="radio" name="jim-export-kind" value="png" id="jim-png"> <span id="jim-png-label">Map PNG</span></label>
         <label><input type="radio" name="jim-export-kind" value="tiles" id="jim-png-tiles"> Tiles PNG</label>
       </fieldset>
       <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE. Disabled when the format has only one packing."><input type="checkbox" id="jim-packed"> Packed export</label>

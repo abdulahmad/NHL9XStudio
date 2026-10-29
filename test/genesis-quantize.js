@@ -245,4 +245,68 @@ function outputPixel(result, width, x, y) {
   assert.strictEqual(result.stepB.length, source.length);
 }
 
+function uniqueRgb(rgba) {
+  const keys = new Set();
+  for (let i = 0; i < rgba.length; i += 4) {
+    keys.add(rgba[i] + ',' + rgba[i + 1] + ',' + rgba[i + 2]);
+  }
+  return keys.size;
+}
+
+{
+  assert.strictEqual(typeof Q.reduceBits, 'function');
+  const exact3 = [Q.expandChannel(3), Q.expandChannel(5), Q.expandChannel(1), 255];
+  const src3 = image(4, 4, () => exact3);
+  const g = Q.reduceBits(src3, 4, 4, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(g.bits, 3);
+  assert.deepStrictEqual(outputPixel(g, 4, 1, 1), exact3);
+
+  const exact5 = [Q.expand5(10), Q.expand5(20), Q.expand5(5), 255];
+  const src5 = image(4, 4, () => exact5);
+  const s = Q.reduceBits(src5, 4, 4, {
+    bits: 5,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(s.bits, 5);
+  assert.deepStrictEqual(outputPixel(s, 4, 1, 1), exact5);
+  const crushed = Q.reduceBits(src5, 4, 4, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.notDeepStrictEqual(outputPixel(s, 4, 0, 0).slice(0, 3),
+    outputPixel(crushed, 4, 0, 0).slice(0, 3),
+    '5-bit (SNES) must not crush to the 3-bit (GEN) lattice');
+}
+
+{
+  const source = image(8, 8, (x, y) => [x * 32, y * 31, 128, 255]);
+  const g = Q.reduceBits(source, 8, 8, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  const s = Q.reduceBits(source, 8, 8, {
+    bits: 5,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.ok(uniqueRgb(s.rgbaOut) > uniqueRgb(g.rgbaOut),
+    '5-bit lattice keeps more colors than 3-bit');
+}
+
+{
+  const source = Uint8Array.from([
+    255, 20, 30, 40,
+    Q.expand5(8), Q.expand5(16), Q.expand5(24), 200
+  ]);
+  const result = Q.reduceBits(source, 2, 1, {
+    bits: 5,
+    alphaThreshold: 128,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(result.rgbaOut[3], 40, 'transparent alpha is preserved');
+  assert.strictEqual(result.rgbaOut[7], 200);
+}
+
 console.log('genesis-quantize: ok');

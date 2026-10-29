@@ -108,7 +108,140 @@
     const el = $('jim-import-mode');
     return el && el.value ? el.value : 'place';
   }
-  function mapPixelText(w, h) { return (w * 8) + '×' + (h * 8) + ' pixels'; }
+  function colorMode() {
+    const el = $('jim-color-mode');
+    if (el && (el.value === 'snes' || el.value === 'genesis')) return el.value;
+    return isSnes() ? 'snes' : 'genesis';
+  }
+  function colorBits() { return colorMode() === 'snes' ? 5 : 3; }
+  function bitLabel() { return colorBits() === 5 ? '5-bit (SNES)' : '3-bit (GEN)'; }
+  function isBitonlyMode() { return importMode() === 'bitonly'; }
+  function showingBitonly() {
+    return isBitonlyMode() || !!(state.float && state.float.mode === 'bitonly') ||
+      !!(doc && doc.variant === 'bitonly' && (!state.float || state.float.mode === 'bitonly'));
+  }
+  function viewBitmap() {
+    if (state.float && state.float.bitmap) return state.float.bitmap;
+    if (doc && doc.bitmap && doc.variant === 'bitonly' && (!state.float || state.float.mode === 'bitonly')) {
+      return doc.bitmap;
+    }
+    return null;
+  }
+  function viewPixels() {
+    const bm = viewBitmap();
+    if (bm) return { w: bm.w, h: bm.h };
+    const size = viewMap();
+    return { w: size.w * 8, h: size.h * 8 };
+  }
+  function mapPixelText(w, h) {
+    const bm = viewBitmap();
+    if (bm) return bm.w + '×' + bm.h + ' pixels';
+    return (w * 8) + '×' + (h * 8) + ' pixels';
+  }
+  function setColorMode(mode) {
+    const next = mode === 'snes' ? 'snes' : 'genesis';
+    const el = $('jim-color-mode');
+    if (el) el.value = next;
+    convertDocPlatform(next);
+    syncImportUi();
+  }
+  function convertColor(c, snes) {
+    if (!c) {
+      return snes
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    if (snes) {
+      const r3 = c.r3 & 7, g3 = c.g3 & 7, b3 = c.b3 & 7;
+      return {
+        r3: r3, g3: g3, b3: b3,
+        r5: c.r5 != null ? c.r5 & 31 : (r3 << 2) | (r3 >> 1),
+        g5: c.g5 != null ? c.g5 & 31 : (g3 << 2) | (g3 >> 1),
+        b5: c.b5 != null ? c.b5 & 31 : (b3 << 2) | (b3 >> 1)
+      };
+    }
+    const r3 = c.r5 != null ? (c.r5 >> 2) : (c.r3 & 7);
+    const g3 = c.g5 != null ? (c.g5 >> 2) : (c.g3 & 7);
+    const b3 = c.b5 != null ? (c.b5 >> 2) : (c.b3 & 7);
+    return { r3: r3 & 7, g3: g3 & 7, b3: b3 & 7 };
+  }
+  function convertDocPlatform(platform) {
+    if (!doc) return;
+    const snes = platform === 'snes';
+    const was = doc.platform === 'snes';
+    if (snes === was) {
+      if (doc.variant === 'bitonly' && doc.bitmapSource) reReduceCommittedBitmap();
+      return;
+    }
+    remember();
+    doc.platform = snes ? 'snes' : 'genesis';
+    const n = snes ? 8 : 4;
+    const next = [];
+    for (let p = 0; p < n; p++) {
+      const src = doc.palettes[p];
+      next[p] = src ? src.map((c) => convertColor(c, snes)) : defaultLine(p, snes);
+    }
+    doc.palettes = next;
+    doc.dirtyPal = true;
+    if (!snes && doc.cells) doc.cells.forEach((c) => { c.pal &= 3; });
+    if (doc.via === 'new' && /^untitled\.map\.(s)?jim$/i.test(doc.name || '')) {
+      doc.name = snes ? 'untitled.map.sjim' : 'untitled.map.jim';
+    }
+    if (doc.variant === 'bitonly' && doc.bitmapSource) reReduceCommittedBitmap();
+    buildPaletteChrome();
+    fillPalSelect();
+    syncRgbRange();
+    fillDobitmapSelect();
+  }
+  function reReduceCommittedBitmap() {
+    if (!doc || !doc.bitmapSource) return;
+    const src = doc.bitmapSource;
+    const bits = colorBits();
+    const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
+    const stepA = {
+      method: $('jim-a-method') ? $('jim-a-method').value : 'uniform',
+      dither: $('jim-a-dither') ? $('jim-a-dither').value : 'none',
+      strength: $('jim-a-strength') ? Number($('jim-a-strength').value) : 100
+    };
+    if (Quant && typeof Quant.reduceBits === 'function') {
+      const result = Quant.reduceBits(src.rgba, src.w, src.h, {
+        bits: bits, stepA: stepA, step: stepA, alphaThreshold: alpha
+      });
+      doc.bitmap = { w: src.w, h: src.h, rgba: result.rgbaOut };
+    }
+    doc.dirtyMap = true;
+  }
+  function syncImportUi() {
+    const label = bitLabel();
+    const bits = colorBits();
+    const bitOpt = $('jim-import-bitonly');
+    if (bitOpt) bitOpt.textContent = label + ' color reduction only (for export)';
+    const order = $('jim-q-order');
+    if (order && order.options.length >= 2) {
+      order.options[0].textContent = label + ', then reduce count';
+      order.options[1].textContent = 'Reduce count, then ' + label;
+    }
+    const legend = $('jim-q-legend');
+    if (legend) legend.textContent = showingBitonly() ? (label + ' lattice') : 'Two-step color';
+    const palHead = $('jim-pal-sub');
+    if (palHead) palHead.textContent = isSnes()
+      ? '8 × 16 BGR555 · 5-bit (SNES)'
+      : '4 × 16 CRAM · 3-bit (GEN)';
+    const help = $('jim-color-mode-help');
+    if (help) {
+      help.textContent = bits === 5
+        ? 'SNES import snaps each channel to 32 levels (5-bit) and does not do the 3-bit crush.'
+        : 'Genesis import snaps each channel to 8 levels (3-bit).';
+    }
+    const pngLabel = $('jim-png-label');
+    if (pngLabel) pngLabel.textContent = showingBitonly() ? (label + ' PNG') : 'Map PNG';
+    const app = document.querySelector('.jim-app');
+    if (app) app.classList.toggle('is-bitonly', showingBitonly());
+  }
+  function copyBitmap(src) {
+    if (!src) return null;
+    return { name: src.name, w: src.w, h: src.h, rgba: Uint8Array.from(src.rgba) };
+  }
   function tileCap() { return isSnes() ? 1024 : 2048; }
   function expand5(v) { return ((v & 31) * 255 / 31) | 0; }
   function encode5(value) {
@@ -248,7 +381,8 @@
     if (el && mode) el.value = mode;
   }
   function floatReplace() {
-    return !!(state.float && (state.float.mode || importMode()) === 'replace');
+    const mode = state.float && (state.float.mode || importMode());
+    return !!(state.float && (mode === 'replace' || mode === 'bitonly'));
   }
   function floatAdd() {
     return !!(state.float && (state.float.mode || importMode()) === 'add');
@@ -262,7 +396,8 @@
   }
   function placeFloat(fl) {
     if (!fl) return fl;
-    if ((fl.mode || importMode()) === 'replace') {
+    const mode = fl.mode || importMode();
+    if (mode === 'replace' || mode === 'bitonly') {
       fl.x = 0;
       fl.y = 0;
     } else {
@@ -334,7 +469,17 @@
       embedPalettes: doc.embedPalettes,
       dirtyTiles: doc.dirtyTiles,
       dirtyPal: doc.dirtyPal,
-      dirtyMap: doc.dirtyMap
+      dirtyMap: doc.dirtyMap,
+      platform: doc.platform,
+      variant: doc.variant,
+      name: doc.name,
+      bitmap: doc.bitmap ? { w: doc.bitmap.w, h: doc.bitmap.h, rgba: Uint8Array.from(doc.bitmap.rgba) } : null,
+      bitmapSource: doc.bitmapSource ? {
+        name: doc.bitmapSource.name,
+        w: doc.bitmapSource.w,
+        h: doc.bitmapSource.h,
+        rgba: Uint8Array.from(doc.bitmapSource.rgba)
+      } : null
     };
   }
   function restore(snap) {
@@ -351,10 +496,31 @@
     doc.dirtyTiles = snap.dirtyTiles;
     doc.dirtyPal = snap.dirtyPal;
     doc.dirtyMap = snap.dirtyMap;
+    if (snap.platform) doc.platform = snap.platform;
+    if (snap.variant) doc.variant = snap.variant;
+    if (snap.name) doc.name = snap.name;
+    doc.bitmap = snap.bitmap
+      ? { w: snap.bitmap.w, h: snap.bitmap.h, rgba: Uint8Array.from(snap.bitmap.rgba) }
+      : null;
+    doc.bitmapSource = snap.bitmapSource
+      ? {
+        name: snap.bitmapSource.name,
+        w: snap.bitmapSource.w,
+        h: snap.bitmapSource.h,
+        rgba: Uint8Array.from(snap.bitmapSource.rgba)
+      }
+      : null;
+    if ($('jim-color-mode') && snap.platform) {
+      $('jim-color-mode').value = snap.platform === 'snes' ? 'snes' : 'genesis';
+    }
+    syncImportUi();
     if (state.focus.x >= doc.mapW) state.focus.x = doc.mapW - 1;
     if (state.focus.y >= doc.mapH) state.focus.y = doc.mapH - 1;
     if (state.tile >= doc.tiles.length) state.tile = Math.max(0, doc.tiles.length - 1);
     if (state.sel && (state.sel.x >= doc.mapW || state.sel.y >= doc.mapH)) state.sel = null;
+    buildPaletteChrome();
+    fillPalSelect();
+    syncRgbRange();
   }
   function remember() {
     if (doc.readOnly) return;
@@ -867,6 +1033,7 @@ function buildExport(packed) {
   function focused(id) { return document.activeElement && document.activeElement.id === id; }
 
   function headerMode() {
+if (doc.variant === 'bitonly') return 'Color reduction only. Palettes and tiles are off. Export is a ' + bitLabel() + ' PNG.';
 if (doc.variant === 'snes94') return 'Export writes a ZIP of the NHL 94 SNES files: tiles (.chr.huf/.lz/.rle), map (6-byte header then words), and BGR555 palettes. Packed uses Decompress $FB10/$FB30/$FB7A. Nothing is written into a ROM.';
 if (doc.platform === 'snes') return 'Export writes one DecompressBytecode stream: map words, BGR555 palettes, then planar tiles. Offsets are not in the file.';
 if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows (3 bits + 5). Shared faces keep a zero header.';
@@ -898,6 +1065,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     return { pals: Array.from(pals).sort(), inks: inks.size, budget: budget, bad: bad };
   }
   function variantLabel() {
+    if (doc.variant === 'bitonly') return bitLabel() + ' lattice PNG';
     if (doc.variant === 'nopal') return 'no palette ($FFFFFFFF)';
     if (doc.variant === 'snes94') return 'SNES 94 screen (huf/lz/rle)';
     if (doc.platform === 'snes') return 'SNES .map.sjim';
@@ -908,6 +1076,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
 
   function renderNote() {
+    if (doc.variant === 'bitonly' && doc.bitmap) {
+      $('jim-note').textContent = bitLabel() + ' lattice · ' + doc.bitmap.w + '×' + doc.bitmap.h + ' pixels · PNG only';
+      $('jim-count').textContent = '';
+      $('jim-count').classList.remove('error');
+      return;
+    }
     const s = stats();
     const warnings = [];
     const cap = tileCap();
@@ -1001,8 +1175,6 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     $('jim-portrait').hidden = doc.variant !== 'portrait';
     if ($('jim-memo') && document.activeElement !== $('jim-memo')) $('jim-memo').value = doc.memo || '';
-    const palHead = $('jim-pal-sub');
-    if (palHead) palHead.textContent = isSnes() ? '8 × 16 BGR555 · 5-bit' : '4 × 16 CRAM · 3-bit';
     const hBit = $('jim-h-bit');
     const vBit = $('jim-v-bit');
     const priBit = $('jim-pri-bit');
@@ -1011,11 +1183,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (priBit) priBit.textContent = isSnes() ? '(bit 13)' : '(bit 15)';
     syncRgbRange();
     fillPalSelect();
-    const order = $('jim-q-order');
-    if (order && order.options.length >= 2) {
-      order.options[0].textContent = isSnes() ? '5-bit, then reduce count' : '3-bit, then reduce count';
-      order.options[1].textContent = isSnes() ? 'Reduce count, then 5-bit' : 'Reduce count, then 3-bit';
-    }
+    syncImportUi();
     const actBtn = $('jim-act-btn');
     if (actBtn) {
       actBtn.title = isSnes()
@@ -1026,8 +1194,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
 
   function drawZoom() {
     let z = state.zoom;
-    const size = viewMap();
-    while (z > 1 && (size.w * 8 * z > DRAW_PX_MAX || size.h * 8 * z > DRAW_PX_MAX)) z--;
+    const pix = viewPixels();
+    while (z > 1 && (pix.w * z > DRAW_PX_MAX || pix.h * z > DRAW_PX_MAX)) z--;
     return z;
   }
   function samplePreview(cell, px, py) {
@@ -1095,7 +1263,63 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const fallback = tool === 'pan' ? 'grab' : (tool === 'place' ? 'copy' : 'crosshair');
     return 'url("data:image/svg+xml,' + encodeURIComponent(icon.svg) + '") ' + icon.x + ' ' + icon.y + ', ' + fallback;
   }
+  function paintBitmap(data, W, H, rgba) {
+    const n = W * H;
+    const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
+    const showHoles = $('jim-trans') && $('jim-trans').checked;
+    for (let i = 0; i < n; i++) {
+      const at = i * 4;
+      if (showHoles && rgba[at + 3] < alpha) {
+        const x = i % W;
+        const y = (i / W) | 0;
+        const v = ((x >> 3) ^ (y >> 3)) & 1 ? 86 : 138;
+        paintPixel(data, W, x, y, v, v, v, 255);
+      } else {
+        data[at] = rgba[at];
+        data[at + 1] = rgba[at + 1];
+        data[at + 2] = rgba[at + 2];
+        data[at + 3] = 255;
+      }
+    }
+  }
+  function renderBitmapMap(bm) {
+    const z = drawZoom();
+    const W = bm.w;
+    const H = bm.h;
+    if (!state.scratch || state.scratch.width !== W || state.scratch.height !== H) {
+      state.scratch = document.createElement('canvas');
+      state.scratch.width = W;
+      state.scratch.height = H;
+    }
+    const sctx = state.scratch.getContext('2d');
+    const img = sctx.createImageData(W, H);
+    paintBitmap(img.data, W, H, bm.rgba);
+    sctx.putImageData(img, 0, 0);
+    const canvas = $('jim-map');
+    canvas.width = W * z;
+    canvas.height = H * z;
+    canvas.style.width = (W * state.zoom) + 'px';
+    canvas.style.height = (H * state.zoom) + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(state.scratch, 0, 0, canvas.width, canvas.height);
+    if (state.float && state.float.bitmap) {
+      ctx.save();
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(1, 1, W * z - 2, H * z - 2);
+      ctx.restore();
+    }
+    canvas.style.cursor = toolCursor('pan');
+    $('jim-zoom-val').textContent = state.zoom + '×';
+  }
   function renderMap() {
+    const bm = viewBitmap();
+    if (bm) {
+      renderBitmapMap(bm);
+      return;
+    }
     const z = drawZoom();
     const size = viewMap();
     const replacing = floatReplace();
@@ -1339,7 +1563,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
   }
   function renderInspector() {
+    if (showingBitonly()) return;
     const cell = doc.cells[state.focus.y * doc.mapW + state.focus.x];
+    if (!cell) return;
     $('jim-cellpos').textContent = state.focus.x + ', ' + state.focus.y;
     if (!focused('jim-tile')) $('jim-tile').value = String(cell.tile);
     if (document.activeElement !== $('jim-pal')) $('jim-pal').value = String(cell.pal);
@@ -1361,6 +1587,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-sel-info').textContent = info;
   }
   function renderChrome() {
+    syncImportUi();
     const ro = !!doc.readOnly;
     document.querySelectorAll('.jim-edit').forEach((el) => { el.disabled = ro; });
     $('jim-undo').disabled = ro || !state.undo.length;
@@ -1376,6 +1603,11 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         $('jim-float-name').textContent = state.float.name + extra;
         if (hint) hint.hidden = true;
         if (hintAdd) hintAdd.hidden = false;
+      } else if (state.float.bitmap) {
+        $('jim-float-name').textContent = state.float.name + ' (' + state.float.bitmap.w + '×' +
+          state.float.bitmap.h + ' px)' + extra;
+        if (hint) hint.hidden = false;
+        if (hintAdd) hintAdd.hidden = true;
       } else {
         $('jim-float-name').textContent = state.float.name + ' (' + state.float.w + '×' + state.float.h + ') at ' +
           state.float.x + ', ' + state.float.y + extra;
@@ -1409,7 +1641,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (!f || !f.original) { box.hidden = true; return; }
     box.hidden = false;
     blitRgba($('jim-compare-src'), f.original.rgba, f.original.w, f.original.h);
-    const bit = isSnes() ? '5-bit' : '3-bit';
+    const bit = bitLabel();
     const aCap = $('jim-compare-a-cap');
     const bCap = $('jim-compare-b-cap');
     if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
@@ -1986,7 +2218,7 @@ remember();
       stepB: { method: $('jim-b-method').value, dither: $('jim-b-dither').value, strength: Number($('jim-b-strength').value) },
       pals: pals,
       palCount: n,
-      bits: isSnes() ? 5 : 3,
+      bits: colorBits(),
       lockedLines: locked,
       act: locked.some(Boolean) ? actFromDoc() : null,
       opaquePal0: $('jim-opaque0').checked,
@@ -2041,11 +2273,14 @@ remember();
     const found = [];
     const keys = new Map();
     let overflow = false;
+    const snes = colorBits() === 5;
     function slot(r, g, b) {
-      const key = (r << 6) | (g << 3) | b;
+      const key = snes ? ((r << 10) | (g << 5) | b) : ((r << 6) | (g << 3) | b);
       if (keys.has(key)) return keys.get(key);
       if (found.length < 15) {
-        found.push({ r3: r, g3: g, b3: b });
+        found.push(snes
+          ? { r3: r >> 2, g3: g >> 2, b3: b >> 2, r5: r, g5: g, b5: b }
+          : { r3: r, g3: g, b3: b });
         const idx = found.length;
         keys.set(key, idx);
         return idx;
@@ -2054,7 +2289,9 @@ remember();
       let best = 1;
       let dist = 1e9;
       found.forEach((c, i) => {
-        const d = (c.r3 - r) * (c.r3 - r) + (c.g3 - g) * (c.g3 - g) + (c.b3 - b) * (c.b3 - b);
+        const d = snes
+          ? (c.r5 - r) * (c.r5 - r) + (c.g5 - g) * (c.g5 - g) + (c.b5 - b) * (c.b5 - b)
+          : (c.r3 - r) * (c.r3 - r) + (c.g3 - g) * (c.g3 - g) + (c.b3 - b) * (c.b3 - b);
         if (d < dist) { dist = d; best = i + 1; }
       });
       return best;
@@ -2071,20 +2308,79 @@ remember();
             const py = ty * 8 + y;
             const at = (py * padded.w + px) * 4;
             if (padded.rgba[at + 3] < alpha) continue;
-            nibbles[y * 8 + x] = slot(encodeChannel(padded.rgba[at]), encodeChannel(padded.rgba[at + 1]), encodeChannel(padded.rgba[at + 2]));
+            nibbles[y * 8 + x] = slot(
+              snes ? encode5(padded.rgba[at]) : encodeChannel(padded.rgba[at]),
+              snes ? encode5(padded.rgba[at + 1]) : encodeChannel(padded.rgba[at + 1]),
+              snes ? encode5(padded.rgba[at + 2]) : encodeChannel(padded.rgba[at + 2])
+            );
           }
         }
         tiles.push({ x: tx, y: ty, pal: 0, nibbles: nibbles });
       }
     }
-    const line = defaultLine(0);
-    line[0] = { r3: 0, g3: 0, b3: 0 };
+    const line = defaultLine(0, snes);
+    line[0] = snes ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 } : { r3: 0, g3: 0, b3: 0 };
     found.forEach((c, i) => { line[i + 1] = c; });
+    const pals = defaultPalettes(snes ? 8 : 4, snes);
+    pals[0] = line;
     return {
       tiles: tiles,
-      palettes: defaultPalettes(),
+      palettes: pals,
       warnings: overflow ? ['More than 15 ink colors; extras were snapped to the nearest.'] : []
     };
+  }
+  function reduceBitsToFloat(image) {
+    const bits = colorBits();
+    const alpha = Number($('jim-alpha').value);
+    const stepA = {
+      method: $('jim-a-method').value,
+      dither: $('jim-a-dither').value,
+      strength: Number($('jim-a-strength').value)
+    };
+    const warnings = [];
+    let rgbaOut;
+    if (Quant && typeof Quant.reduceBits === 'function') {
+      const result = Quant.reduceBits(image.rgba, image.w, image.h, {
+        bits: bits, stepA: stepA, step: stepA, alphaThreshold: alpha
+      });
+      rgbaOut = result.rgbaOut;
+      if (result.warnings && result.warnings.length) warnings.push.apply(warnings, result.warnings);
+    } else {
+      rgbaOut = Uint8Array.from(image.rgba);
+      for (let i = 0; i < rgbaOut.length; i += 4) {
+        if (rgbaOut[i + 3] < alpha) continue;
+        if (bits === 5) {
+          rgbaOut[i] = expand5(encode5(rgbaOut[i]));
+          rgbaOut[i + 1] = expand5(encode5(rgbaOut[i + 1]));
+          rgbaOut[i + 2] = expand5(encode5(rgbaOut[i + 2]));
+        } else {
+          rgbaOut[i] = expandChannel(encodeChannel(rgbaOut[i]));
+          rgbaOut[i + 1] = expandChannel(encodeChannel(rgbaOut[i + 1]));
+          rgbaOut[i + 2] = expandChannel(encodeChannel(rgbaOut[i + 2]));
+        }
+      }
+    }
+    warnings.unshift(bitLabel() + ' lattice only. Palettes are off. Export PNG.');
+    const tw = Math.max(1, Math.ceil(image.w / 8));
+    const th = Math.max(1, Math.ceil(image.h / 8));
+    return placeFloat({
+      name: image.name,
+      mode: 'bitonly',
+      w: tw,
+      h: th,
+      x: 0,
+      y: 0,
+      cells: [],
+      palettes: null,
+      bitmap: { w: image.w, h: image.h, rgba: rgbaOut },
+      original: { rgba: image.rgba, w: image.w, h: image.h },
+      quantRgba: rgbaOut,
+      stepA: rgbaOut,
+      source: { name: image.name, w: image.w, h: image.h, rgba: Uint8Array.from(image.rgba) },
+      warnings: warnings,
+      pending: false,
+      onlyEmpty: false
+    });
   }
   function floatFrom(name, padded, tiles, palettes, warnings, pending, onlyEmpty) {
     const alpha = Number($('jim-alpha').value);
@@ -2113,6 +2409,7 @@ remember();
     });
   }
   function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
+    if (isBitonlyMode()) return reduceBitsToFloat(image);
     const padded = padImage(image);
     const use = pals == null ? openPalList() : pals.slice();
     if (!use.length) throw new Error('Pick at least one palette line (Use) for ' + image.name + '.');
@@ -2120,8 +2417,8 @@ remember();
     if (Quant && typeof Quant.quantize === 'function') {
       result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use, lockAct));
       const order = $('jim-q-order').value === 'countFirst'
-        ? ('count, then ' + (isSnes() ? '5-bit' : '3-bit'))
-        : ((isSnes() ? '5-bit' : '3-bit') + ', then count');
+        ? ('count, then ' + bitLabel())
+        : (bitLabel() + ', then count');
       const warnings = (result.warnings || []).slice();
       warnings.unshift('Change color options before Apply. Previews: original, ' + order.replace(', then ', ', then ') + '.');
       const fl = floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
@@ -2146,7 +2443,7 @@ remember();
     try {
       const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
       next.mode = importMode();
-      if (next.mode === 'replace') placeFloat(next);
+      if (next.mode === 'replace' || next.mode === 'bitonly') placeFloat(next);
       else { next.x = f.x; next.y = f.y; }
       state.float = next;
       renderAll();
@@ -2234,6 +2531,27 @@ remember();
     const f = state.float;
     if (!f || !canEdit()) return;
     const mode = f.mode || importMode();
+    if (mode === 'bitonly') {
+      if (!f.bitmap) return;
+      remember();
+      doc.variant = 'bitonly';
+      doc.platform = colorMode() === 'snes' ? 'snes' : 'genesis';
+      doc.bitmap = { w: f.bitmap.w, h: f.bitmap.h, rgba: Uint8Array.from(f.bitmap.rgba) };
+      doc.bitmapSource = copyBitmap(f.source);
+      doc.name = (f.name || 'image').replace(/\.[^.]+$/, '') + '.png';
+      doc.dirtyMap = true;
+      doc.tiles = [new Uint8Array(64)];
+      doc.cells = [zeroCell()];
+      doc.mapW = 1;
+      doc.mapH = 1;
+      state.float = null;
+      state.sel = null;
+      state.focus = { x: 0, y: 0 };
+      status('Reduced ' + f.name + ' to ' + bitLabel() + ' (' + doc.bitmap.w + '×' + doc.bitmap.h +
+        '). Palettes are off. Export PNG.');
+      renderAll();
+      return;
+    }
     if (mode === 'replace') {
       const w = f.w, h = f.h;
       if (w < 1 || h < 1 || w > 1024 || h > 1024) {
@@ -2253,6 +2571,9 @@ remember();
       doc.cells = built.cells;
       doc.dirtyTiles = true;
       doc.dirtyMap = true;
+      if (doc.variant === 'bitonly') doc.variant = 'map';
+      doc.bitmap = null;
+      doc.bitmapSource = null;
       applyFloatPalettes(f);
       state.float = null;
       state.focus = { x: 0, y: 0 };
@@ -2349,11 +2670,13 @@ remember();
     state.float = quantizeToFloat(image, openPalList(), $('jim-only-empty').checked);
     const pending = state.float.pending ? ' quantize pending.' : '';
     const mode = importMode();
-    const hint = mode === 'replace'
-      ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
-      : (mode === 'add'
-        ? ' Apply appends new tiles and leaves this map picture.'
-        : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).');
+    const hint = mode === 'bitonly'
+      ? ' ' + bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+      : (mode === 'replace'
+        ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
+        : (mode === 'add'
+          ? ' Apply appends new tiles and leaves this map picture.'
+          : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).'));
     status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
   }
@@ -2554,6 +2877,11 @@ remember();
     }
     if (state.tile >= doc.tiles.length) state.tile = 0;
     setImportMode((next.via === 'new' || !next.source) ? 'replace' : 'place');
+    if (!next.bitmap) {
+      doc.bitmap = null;
+      doc.bitmapSource = null;
+    }
+    if ($('jim-color-mode')) $('jim-color-mode').value = isSnes() ? 'snes' : 'genesis';
     $('jim-packed').checked = isSnes() || !!doc.packedOnDisk;
     if (!Array.isArray(doc.palettes)) doc.palettes = [];
     while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
@@ -2562,6 +2890,7 @@ remember();
     syncRgbRange();
     fillDobitmapSelect();
     $('jim-dobitmap').value = 'auto';
+    syncImportUi();
     status(note || ('Opened ' + doc.name + ' (' + variantLabel() + ', ' + doc.tiles.length + ' tiles).'));
     renderAll();
   }
@@ -2637,6 +2966,10 @@ remember();
   function exportBlocker(kind) {
     kind = kind || exportKind();
     if (!doc) return 'Open a picture first.';
+    if (doc.variant === 'bitonly') {
+      if (kind === 'png') return '';
+      return 'Color reduction only is a PNG. Map and tile formats need palettes.';
+    }
     if (kind === 'png' || kind === 'tiles' || kind === 'native') return '';
     if (kind === 'jim') {
       if (isSnes()) {
@@ -2769,8 +3102,9 @@ remember();
     if (!doc) return;
     const nameEl = $('jim-export-native-name');
     if (nameEl) nameEl.textContent = '(' + (doc.name || 'untitled.map.jim') + ')';
-    const native = document.querySelector('input[name="jim-export-kind"][value="native"]');
-    if (native) native.checked = true;
+    const pick = doc.variant === 'bitonly' ? 'png' : 'native';
+    const radio = document.querySelector('input[name="jim-export-kind"][value="' + pick + '"]');
+    if (radio) radio.checked = true;
     $('jim-export-dlg').hidden = false;
     syncExportModal();
   }
@@ -2791,7 +3125,7 @@ remember();
     closeExportModal();
     try {
       if (kind === 'png') {
-        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.png');
+        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(sjim|jim|png)$/i, '') + '.png');
         status('Exported the composed map as PNG.');
         return;
       }
@@ -2820,6 +3154,17 @@ remember();
     }
   }
   function mapPngPixels() {
+    const bm = (doc.variant === 'bitonly' && doc.bitmap) ? doc.bitmap : null;
+    if (bm) {
+      const canvas = document.createElement('canvas');
+      canvas.width = bm.w;
+      canvas.height = bm.h;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(bm.w, bm.h);
+      img.data.set(bm.rgba.subarray(0, bm.w * bm.h * 4));
+      ctx.putImageData(img, 0, 0);
+      return canvas;
+    }
     const W = doc.mapW * 8;
     const H = doc.mapH * 8;
     const canvas = document.createElement('canvas');
@@ -3391,15 +3736,32 @@ remember();
       palMapPending = null;
       $('jim-palmap').hidden = true;
     });
+    if ($('jim-color-mode')) $('jim-color-mode').addEventListener('change', () => {
+      setColorMode($('jim-color-mode').value);
+      if (state.float && state.float.source) requantizeFloat();
+      else {
+        status('Color mode is ' + bitLabel() + '.');
+        renderAll();
+      }
+    });
     if ($('jim-import-mode')) $('jim-import-mode').addEventListener('change', () => {
+      if (state.float && state.float.source) {
+        requantizeFloat();
+        status(importMode() === 'bitonly'
+          ? bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+          : (importMode() === 'replace'
+            ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
+            : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.')));
+        return;
+      }
       if (state.float) {
         state.float.mode = importMode();
         placeFloat(state.float);
         status(importMode() === 'replace'
           ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
           : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'));
-        renderAll();
       }
+      renderAll();
     });
     ['jim-map-w', 'jim-map-h'].forEach((id) => {
       if ($(id)) $(id).addEventListener('input', () => {

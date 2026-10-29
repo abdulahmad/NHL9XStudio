@@ -135,15 +135,17 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 
 **Must have — import**
 
-Three import modes, named in the UI as:
+Four import modes, named in the UI as:
 
 | Mode | Label | What Apply does |
 |------|--------|-----------------|
 | `replace` | Import New Image & Overwrite Tiles (Resize Map) | Map becomes the picture’s size; tiles are replaced; duplicates (incl. H/V) are removed automatically |
 | `place` | Import into current Image & Add Tiles | Floating layer on the current map; new unique tiles are added; duplicates (incl. H/V) are removed automatically |
 | `add` | Import Tiles (keep existing image & tiles) | Appends unique tiles to the set. The map picture is not overlaid and does not change |
+| `bitonly` | 3-bit (GEN) / 5-bit (SNES) color reduction only (for export) | Palettes and tiles are off. The picture snaps to the platform lattice. Export is PNG only |
 
-- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines
+- **Color mode** in Import: Genesis **3-bit (GEN)** (512 colors) or SNES **5-bit (SNES)** (32,768 colors). Tile import then reduces onto the palettes in Use. Switching the mode converts the open picture (4 pals ↔ 8, 3-bit ↔ 5-bit) so 5-bit import is not crushed into Genesis CRAM
+- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines (hidden in lattice-only)
 - Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)
 - Change color options while the float is pending; Apply is what commits
 - Only-empty-cells skip map words that already have a tile
@@ -257,6 +259,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import (no palettes, PNG export). 5-bit quantization wherever 3-bit exists. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |

@@ -211,7 +211,17 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.match(await page.locator('#jim-import-mode option[value="replace"]').textContent(), /Import New Image/);
   assert.match(await page.locator('#jim-import-mode option[value="place"]').textContent(), /Import into current Image/);
   assert.match(await page.locator('#jim-import-mode option[value="add"]').textContent(), /Import Tiles/);
+  assert.match(await page.locator('#jim-import-mode option[value="bitonly"]').textContent(), /3-bit \(GEN\) color reduction only/);
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
+  assert.ok(await page.locator('#jim-color-mode').count());
+  assert.strictEqual(await page.locator('#jim-color-mode').inputValue(), 'genesis');
+  assert.match(await page.locator('#jim-q-order option[value="bitFirst"]').textContent(), /3-bit \(GEN\)/);
+  await page.selectOption('#jim-color-mode', 'snes');
+  assert.match(await page.locator('#jim-import-bitonly').textContent(), /5-bit \(SNES\) color reduction only/);
+  assert.match(await page.locator('#jim-q-order option[value="bitFirst"]').textContent(), /5-bit \(SNES\)/);
+  assert.match(await page.textContent('#jim-pal-sub'), /5-bit \(SNES\)/);
+  await page.selectOption('#jim-color-mode', 'genesis');
+  assert.match(await page.locator('#jim-import-bitonly').textContent(), /3-bit \(GEN\)/);
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
   assert.ok(await page.locator('#jim-act').evaluate((el) => /\.snespal/.test(el.getAttribute('accept') || '')));
@@ -393,6 +403,39 @@ withBrowser('jim', async ({ url, newPage }) => {
   const out = fs.readFileSync(await dl.path());
   assert.strictEqual(out.readUInt16BE(out.length - 2), 0x8000, 'priority bit survived export');
   assert.strictEqual(await page.isChecked('#jim-trans'), false);
+
+  await page.selectOption('#jim-import-mode', 'bitonly');
+  assert.ok(await page.locator('.jim-app').evaluate((el) => el.classList.contains('is-bitonly')));
+  assert.ok(!(await page.locator('#jim-pal-block').isVisible()));
+  await page.setInputFiles('#jim-image', [{
+    name: 'lattice.png',
+    mimeType: 'image/png',
+    buffer: pngRgb(16, 8, [40, 90, 200])
+  }]);
+  await page.waitForFunction(() => /Floating lattice\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  assert.match(await page.textContent('#jim-status'), /3-bit \(GEN\)/);
+  await page.click('#jim-float-apply');
+  await page.waitForFunction(() => /Reduced lattice\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  const genPix = await sampleCanvas(page, '#jim-map');
+  await page.selectOption('#jim-color-mode', 'snes');
+  await page.waitForFunction(() => /5-bit \(SNES\)/.test(document.getElementById('jim-import-bitonly').textContent), null, { timeout: 5000 });
+  const snesPix = await sampleCanvas(page, '#jim-map');
+  assert.ok(genPix[0] !== snesPix[0] || genPix[1] !== snesPix[1] || genPix[2] !== snesPix[2],
+    '5-bit (SNES) lattice differs from 3-bit (GEN) ' + genPix + ' vs ' + snesPix);
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(await page.isChecked('#jim-png'));
+  await page.check('input[name="jim-export-kind"][value="native"]');
+  assert.ok(await page.locator('#jim-export-ok').isDisabled(), 'lattice-only cannot export a map file');
+  assert.match(await page.textContent('#jim-export-why'), /PNG/);
+  await page.check('input[name="jim-export-kind"][value="png"]');
+  assert.ok(!(await page.locator('#jim-export-ok').isDisabled()));
+  const [pngDl] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  assert.match(pngDl.suggestedFilename(), /\.png$/);
+  await page.selectOption('#jim-color-mode', 'genesis');
 
   await page.setInputFiles('#jim-open', [{
     name: 'ice.map.jim',
