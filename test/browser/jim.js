@@ -113,8 +113,15 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Floating wide\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-map-px'), /32×16 pixels/);
+  assert.strictEqual(await page.locator('#jim-map-w').inputValue(), '4');
+  assert.strictEqual(await page.locator('#jim-map-h').inputValue(), '2');
   assert.ok(await page.locator('#jim-float-bar').isVisible());
-  await page.click('#jim-float-cancel');
+  await page.click('#jim-float-apply');
+  await page.waitForFunction(() => /New image wide\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
+  assert.strictEqual(await page.locator('#jim-map-w').inputValue(), '4');
+  assert.strictEqual(await page.locator('#jim-map-h').inputValue(), '2');
+  assert.match(await page.textContent('#jim-map-px'), /32×16 pixels/);
 
   const buf = rawJim();
   await page.setInputFiles('#jim-open', [{
@@ -244,6 +251,39 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(round.cells[0].priority, 1);
   assert.strictEqual(round.cells[0].vFlip, 1);
   assert.strictEqual(round.tiles[0][0], 3);
+
+  const viewer = await newPage(1280);
+  viewer.on('dialog', (dialog) => dialog.accept());
+  await viewer.goto(url + '#game=nhl92&mode=image');
+  await viewer.waitForSelector('#edit-image', { timeout: 10000 });
+  await viewer.waitForSelector('.about-scrim:not([hidden])', { timeout: 5000 }).catch(() => null);
+  const aboutOk = viewer.locator('.about-scrim:not([hidden]) button', { hasText: 'Got it' });
+  if (await aboutOk.count()) await aboutOk.click();
+  await viewer.waitForFunction(() => {
+    const btn = document.getElementById('edit-image');
+    const about = document.querySelector('.about-scrim');
+    return btn && !btn.classList.contains('is-hidden') && btn.offsetParent !== null &&
+      (!about || about.hidden);
+  }, null, { timeout: 10000 });
+  assert.ok(await viewer.locator('#edit-image').isVisible(), 'Images tab should show Edit image');
+  await viewer.setInputFiles('#file-open', [{
+    name: 'pri.map.jim',
+    mimeType: 'application/octet-stream',
+    buffer: rawJim()
+  }]);
+  await viewer.waitForFunction(() => {
+    const detail = (document.getElementById('detail') || {}).innerText || '';
+    const cap = (document.getElementById('caption') || {}).textContent || '';
+    return /pri\.map\.jim/i.test(detail + ' ' + cap);
+  }, null, { timeout: 10000 });
+  await viewer.click('#edit-image');
+  await viewer.waitForURL(/jim\.html/, { timeout: 10000 });
+  await viewer.waitForFunction(() => /Opened pri\.map\.jim|Imported pri/i.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 8000 });
+  assert.match(await viewer.title(), /Image Editor/);
+  assert.strictEqual(await viewer.locator('#jim-import-mode').inputValue(), 'place');
+  await viewer.close();
 
   console.log('jim browser: ok');
 });

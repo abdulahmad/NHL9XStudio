@@ -2808,9 +2808,10 @@ async function ingestDroppedFiles(fileList) {
     el('game').value = decoded.gameId;
     gameInfo = games.find((game) => game.id === decoded.gameId);
   }
-  banks.set(decoded.bankId, decoded.parsed);
+  const bankKey = decoded.bankId || decoded.imageId;
+  if (bankKey) banks.set(bankKey, decoded.parsed);
   state.mode = decoded.mode;
-  state.bank = decoded.bankId;
+  state.bank = decoded.bankId || bankKey || state.bank;
   if (decoded.mode === 'image') state.image = decoded.imageId || decoded.bankId;
   state.frame = 1;
   state.step = 0;
