@@ -32,6 +32,10 @@ withBrowser('jed', async ({ url, newPage }) => {
   const page = await newPage(1400);
   await page.goto(url + 'jed.html');
   assert.ok(await page.locator('#jed-exit.studio-back').count());
+  assert.match(await page.locator('#jed-exit').textContent(), /←\s*NHL9X Studio/);
+  const jedBack = await page.locator('#jed-exit').boundingBox();
+  const jedOpen = await page.locator('#jed-open-files').boundingBox();
+  assert.ok(jedBack && jedOpen && jedBack.x < jedOpen.x - 80, 'jersey back link is in the top left');
   await page.setInputFiles('#jed-files', [fix('HOMEPALS95.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS95.BIN', 'AWAYPALS.BIN')]);
   await page.waitForSelector('#jed-team-list .item');
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);

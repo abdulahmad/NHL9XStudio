@@ -76,7 +76,7 @@ If a title is missing a bank or a picture that exists in the ROM, that is a cata
 
 ## 3. Product surfaces
 
-Every page shares the NHL9X Studio header (product name, game where it applies, About). Editors that leave the main viewer use a **back arrow** in the top right — the same control Chip Lab uses — not a “Close” button.
+Every page shares the NHL9X Studio header (product name, game where it applies, About). Editors that leave the main viewer use a **← NHL9X Studio** text link in the top left, not a “Close” button.
 
 ### 3.1 Sprite viewer (`index.html`)
 
@@ -129,7 +129,7 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 - New tile, delete tile, remove unused tiles, **remove duplicate tiles** (including tiles that only match after H-flip and/or V-flip; cells keep the flip bits)
 - Resize the map; edit a cell’s tile index, palette, H-flip, V-flip, priority. The inspector keeps **tile index beside palette**, **H-flip beside V-flip**, the map **Word** on the Cell heading, and View directly under Priority
 - Grid, zoom, seams, highlight cells that use this tile, highlight unused tiles
-- Back arrow returns to the viewer (or the page that opened the editor), with a leave confirm if dirty
+- **← NHL9X Studio** in the top left returns to the viewer (or the page that opened the editor), with a leave confirm if dirty
 
 **Must have — import**
 

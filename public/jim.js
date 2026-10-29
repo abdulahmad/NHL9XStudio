@@ -3190,10 +3190,9 @@ remember();
       catch (err) { status(err.message || String(err), true); }
       $('jim-image').value = '';
     });
-    if ($('jim-exit')) $('jim-exit').addEventListener('click', leaveEditor);
-    if ($('jim-home')) $('jim-home').addEventListener('click', (event) => {
-      if (!confirmLeave()) event.preventDefault();
-      else allowLeave = true;
+    if ($('jim-exit')) $('jim-exit').addEventListener('click', (event) => {
+      event.preventDefault();
+      leaveEditor();
     });
     if ($('jim-palmap-ok')) $('jim-palmap-ok').addEventListener('click', applyPaletteMapper);
     if ($('jim-palmap-cancel')) $('jim-palmap-cancel').addEventListener('click', () => {

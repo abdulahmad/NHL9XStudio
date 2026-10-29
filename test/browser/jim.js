@@ -128,7 +128,11 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.match(await page.title(), /Image Editor/);
   assert.ok(await page.locator('#jim-map').count());
   assert.ok(await page.locator('#jim-exit.studio-back').count());
+  assert.match(await page.locator('#jim-exit').textContent(), /←\s*NHL9X Studio/);
   assert.ok(!(await page.locator('#jim-exit').textContent() || '').includes('Close'));
+  const backBox = await page.locator('#jim-exit').boundingBox();
+  const openBox = await page.locator('#jim-open-btn').boundingBox();
+  assert.ok(backBox && openBox && backBox.x < openBox.x - 80, 'back link is in the top left');
   assert.ok(await page.locator('#jim-pri').count());
   assert.ok(await page.locator('#jim-png').count());
   assert.ok(await page.locator('#jim-act-export').count());
