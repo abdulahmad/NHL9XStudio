@@ -1357,7 +1357,23 @@ function renderMeta() {
     detail.append(dt, dd);
   }
   el('detail-title').textContent = frame ? 'Frame ' + shownFrame(frame.frame) : 'Frame';
+  let editMap = el('edit-map');
+  if (!editMap) {
+    editMap = document.createElement('button');
+    editMap.type = 'button';
+    editMap.id = 'edit-map';
+    editMap.className = 'ghost-btn';
+    editMap.textContent = 'Edit map';
+    el('detail').parentElement.appendChild(editMap);
+    editMap.addEventListener('click', () => {
+      openJimEditor().catch((err) => alert(err.message));
+    });
+  }
+  const jimImage = state.mode === 'image'
+    ? ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image)
+    : null;
   const soundData = !!soundPanel();
+  editMap.hidden = soundData || !(jimImage && jimImage.kind === 'jim');
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
   el('palette').closest('section').hidden = soundData;
@@ -2111,6 +2127,29 @@ async function ensureRink() {
   const colors = Nhl92Snes.decodeRinkPalette(await response.arrayBuffer());
   rinkColors.set(gameInfo.id, colors);
   return colors;
+}
+
+async function openJimEditor() {
+  const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
+  if (!image || image.kind !== 'jim') throw new Error('This picture is not a JIM map');
+  const bytes = await bytesFor(image);
+  if (!bytes) throw new Error('Could not load the JIM bytes (ROM missing?)');
+  let donor = null;
+  if (image.paletteAt != null) {
+    const rom = await ensureRom();
+    if (rom && image.paletteAt >= 0 && image.paletteAt + 128 <= rom.length) {
+      donor = rom.subarray(image.paletteAt, image.paletteAt + 128);
+    }
+  }
+  sessionStorage.setItem('nhl9x-jim', JSON.stringify({
+    name: (image.fileNames && image.fileNames[0]) || image.id + '.map.jim',
+    game: state.game,
+    image: image.id,
+    bytes: Array.from(bytes),
+    donor: donor ? Array.from(donor) : null,
+    remap: image.remap || null
+  }));
+  location.href = 'jim.html#game=' + encodeURIComponent(state.game) + '&image=' + encodeURIComponent(image.id);
 }
 
 async function bytesFor(spec) {

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maps — NHL9X Studio</title>
+  <link rel="stylesheet" href="viewer.css">
+  <link rel="stylesheet" href="jed.css">
+  <link rel="stylesheet" href="jim.css">
+</head>
+<body class="jed jim-app">
+  <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
+    <p>Drop a .map.jim, .jim, .bin, image, or .act</p>
+  </div>
+  <header class="jed-head">
+    <div>
+      <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Maps</h1>
+      <p id="jim-status" class="jed-status">Open a Genesis .map.jim, .jim, or .bin. Nothing is written back into a ROM.</p>
+    </div>
+    <div class="jed-actions" role="group" aria-label="Files">
+      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, or .bin (packed or raw)">Open…</button>
+      <button type="button" id="jim-donor-btn" class="ghost-btn" title="128-byte CRAM (four lines) or 32-byte line for pictures with no palette">Donor CRAM…</button>
+      <button type="button" id="jim-export" class="ghost-btn" title="Download using the opened file name">Export</button>
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro). On: bit 15 set and a bytecode stream. If packed encode is not available, the error is shown and nothing is saved."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin">
+      <input type="file" id="jim-donor" hidden accept=".bin,.pal">
+    </div>
+  </header>
+  <main class="jim-main">
+    <section class="jed-col jim-side" aria-label="File, palettes, and import">
+      <h2>File <span class="muted" id="jim-variant"></span></h2>
+      <p id="jim-file-meta" class="jim-meta"></p>
+      <fieldset class="ice-place">
+        <legend>Map size (cells)</legend>
+        <label>W <input type="number" id="jim-map-w" min="1" max="1024" value="8"></label>
+        <label>H <input type="number" id="jim-map-h" min="1" max="1024" value="8"></label>
+        <button type="button" id="jim-resize" class="ghost-btn jim-edit">Resize…</button>
+      </fieldset>
+      <label class="check" title="Checked: write 128 bytes of CRAM. Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
+      <p id="jim-header-mode" class="muted"></p>
+
+      <h2>Palettes <span class="muted">4 × 16 CRAM · 3-bit</span></h2>
+      <p class="muted">Pal 0 color 0 is opaque. Palettes 1–3 index 0 is a hole. Lock keeps a line out of quantization. Use chooses which lines an import may write.</p>
+      <div class="jim-pal-flags" id="jim-pal-flags">
+        <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
+      </div>
+      <div id="jim-swatches" class="jim-swatches"></div>
+      <p id="jim-color-line" class="ice-colorline"></p>
+      <div class="jed-rgb jim-rgb">
+        <label>R <input type="range" min="0" max="7" id="jim-r"><input type="number" min="0" max="7" id="jim-rn"></label>
+        <label>G <input type="range" min="0" max="7" id="jim-g"><input type="number" min="0" max="7" id="jim-gn"></label>
+        <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
+      </div>
+      <div class="jed-io">
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Colors 1–16 fill pal 0, 17–32 pal 1, 33–48 pal 2, 49–64 pal 3. Locked lines are the ones quantization will not rewrite.">Import .ACT…</button>
+        <input type="file" id="jim-act" hidden accept=".act">
+      </div>
+
+      <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
+      <fieldset class="ice-popts" id="jim-q-opts">
+        <legend>Two-step color</legend>
+        <label>Order <select id="jim-q-order">
+          <option value="bitFirst">3-bit, then reduce count</option>
+          <option value="countFirst">Reduce count, then 3-bit</option>
+        </select></label>
+        <label>Step A <select id="jim-a-method"></select></label>
+        <label>Dither <select id="jim-a-dither"></select></label>
+        <label>Strength <input type="number" id="jim-a-strength" min="0" max="100" value="100"></label>
+        <label>Step B <select id="jim-b-method"></select></label>
+        <label>Dither <select id="jim-b-dither"></select></label>
+        <label>Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
+        <label class="check" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not a hole."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
+        <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
+        <label class="check"><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
+      </fieldset>
+      <div class="jed-io">
+        <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image over the map. Drag, then Apply.">Import image…</button>
+        <button type="button" id="jim-batch-add" class="ghost-btn jim-edit">Add to batch…</button>
+        <button type="button" id="jim-batch-preview" class="ghost-btn jim-edit" title="Quantize the list in order into one floating preview">Preview batch</button>
+        <button type="button" id="jim-batch-clear" class="ghost-btn">Clear batch</button>
+        <input type="file" id="jim-image" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
+        <input type="file" id="jim-batch-file" hidden multiple accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg,.act">
+      </div>
+      <ul id="jim-batch" class="jim-batch"></ul>
+      <p id="jim-q-warn" class="muted"></p>
+    </section>
+
+    <section class="jed-col jim-view" aria-label="Map">
+      <p id="jim-portrait" class="ice-warn" hidden>Portrait variant: read-only. Rows are 3-byte packed (3 bits + 5). Export keeps the original bytes.</p>
+      <p id="jim-hash" class="ice-warn" hidden></p>
+      <div class="ice-toolbar">
+        <div class="pin-options jim-tools" role="group" aria-label="Tool">
+          <button type="button" data-tool="paint" aria-pressed="true" class="jim-edit">Paint pixel</button>
+          <button type="button" data-tool="place" aria-pressed="false" class="jim-edit">Place tile</button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="jim-edit">Erase cell</button>
+          <button type="button" data-tool="select" aria-pressed="false" class="jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">Select</button>
+          <button type="button" data-tool="pick" aria-pressed="false">Pick color</button>
+          <button type="button" data-tool="pan" aria-pressed="false">Pan</button>
+        </div>
+        <label class="ice-zoom">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4"> <output id="jim-zoom-val">4×</output></label>
+        <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
+        <label class="check"><input type="checkbox" id="jim-trans" checked> Transparency</label>
+        <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
+        <button type="button" id="jim-undo" class="ghost-btn" title="Ctrl+Z" disabled>Undo</button>
+        <button type="button" id="jim-redo" class="ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>Redo</button>
+      </div>
+      <div class="ice-blockbar" id="jim-blockbar">
+        <button type="button" id="jim-sel-all" class="ghost-btn jim-edit" title="Select every cell">Select all</button>
+        <button type="button" id="jim-copy" class="ghost-btn jim-edit jim-needsel" title="Ctrl+C">Copy</button>
+        <button type="button" id="jim-cut" class="ghost-btn jim-edit jim-needsel" title="Ctrl+X">Cut</button>
+        <button type="button" id="jim-paste" class="ghost-btn jim-edit" title="Ctrl+V">Paste</button>
+        <button type="button" id="jim-clear" class="ghost-btn jim-edit jim-needsel" title="Delete">Clear</button>
+        <button type="button" data-xf="h" class="ghost-btn jim-edit jim-needsel" title="XOR the H-flip bit and reorder the block. Tile pixels stay as they are.">Mirror ↔</button>
+        <button type="button" data-xf="v" class="ghost-btn jim-edit jim-needsel" title="XOR the V-flip bit and reorder the block. Tile pixels stay as they are.">Flip ↕</button>
+        <button type="button" data-xf="90" class="ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">⟳ 90°</button>
+        <button type="button" data-xf="180" class="ghost-btn jim-edit jim-needsel" title="XOR both flip bits and reorder the block. No new tiles.">180°</button>
+        <button type="button" data-xf="270" class="ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">⟲ 270°</button>
+        <span id="jim-sel-info" class="muted"></span>
+      </div>
+      <div class="ice-float-bar" id="jim-float-bar" hidden>
+        <b id="jim-float-name"></b>
+        <span class="muted">drag to place · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
+        <button type="button" id="jim-float-apply" class="ghost-btn">Apply</button>
+        <button type="button" id="jim-float-cancel" class="ghost-btn">Cancel</button>
+      </div>
+      <fieldset class="jim-preview-set">
+        <legend>Preview only, not saved</legend>
+        <label class="check" title="8-byte nibble table, the same shape as the bytes after DecompressGraphicsWithRemap. High nibble then low nibble in each box."><input type="checkbox" id="jim-remap-on"> Remap</label>
+        <span id="jim-remap">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="01" aria-label="Remap byte 0, nibbles 0 and 1" title="Nibbles 0–1">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="23" aria-label="Remap byte 1, nibbles 2 and 3" title="Nibbles 2–3">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="45" aria-label="Remap byte 2, nibbles 4 and 5" title="Nibbles 4–5">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="67" aria-label="Remap byte 3, nibbles 6 and 7" title="Nibbles 6–7">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="89" aria-label="Remap byte 4, nibbles 8 and 9" title="Nibbles 8–9">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="AB" aria-label="Remap byte 5, nibbles 10 and 11" title="Nibbles 10–11">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="CD" aria-label="Remap byte 6, nibbles 12 and 13" title="Nibbles 12–13">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="EF" aria-label="Remap byte 7, nibbles 14 and 15" title="Nibbles 14–15">
+        </span>
+        <label class="check" title="dobitmap XORs printa onto every map word. This preview XORs the $F800 attribute bits only, so the tile index stays."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
+        <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask">
+      </fieldset>
+      <div class="ice-scroll" id="jim-scroll"><canvas id="jim-map" width="64" height="64"></canvas></div>
+      <p id="jim-note" class="muted"></p>
+    </section>
+
+    <section class="jed-col jim-side" aria-label="Tiles, cell, export">
+      <h2>Tiles <span id="jim-count" class="muted"></span></h2>
+      <div id="jim-tiles" class="ice-tiles jim-tiles"></div>
+      <div class="ice-tilebox">
+        <canvas id="jim-tile-edit" width="128" height="128" title="Tile pixels. Mirror and Flip here change the bitmap. Map Mirror and Flip change the cell bits."></canvas>
+        <div class="ice-tilebtns">
+          <button type="button" id="jim-new-tile" class="ghost-btn jim-edit">New</button>
+          <button type="button" id="jim-del-tile" class="ghost-btn jim-edit" title="Remove this tile. Cells that used it become a zero word. Later tiles renumber.">Delete</button>
+          <button type="button" id="jim-unused" class="ghost-btn jim-edit" title="Drop tiles no cell uses and renumber">Remove unused</button>
+          <button type="button" id="jim-mirror" class="ghost-btn jim-edit" title="Mirror this tile's pixels left-right">Mirror</button>
+          <button type="button" id="jim-flip" class="ghost-btn jim-edit" title="Flip this tile's pixels top-bottom">Flip</button>
+        </div>
+      </div>
+      <p class="muted">Strip Mirror / Flip edit tile pixels. The block bar edits H-flip and V-flip on the cells.</p>
+
+      <h2>Cell <span class="muted" id="jim-cellpos"></span></h2>
+      <div class="jim-inspector">
+        <label>Tile index <input type="number" id="jim-tile" class="jim-edit" min="0" max="2047"></label>
+        <label>Palette <select id="jim-pal" class="jim-edit">
+          <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        </select></label>
+        <label class="check"><input type="checkbox" id="jim-h" class="jim-edit"> H-flip (bit 11)</label>
+        <label class="check"><input type="checkbox" id="jim-v" class="jim-edit"> V-flip (bit 12)</label>
+        <label class="check"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority (bit 15)</label>
+        <p class="mono" id="jim-word"></p>
+        <p class="mono muted" id="jim-preview-word"></p>
+      </div>
+
+      <h2>Export</h2>
+      <p class="muted">Uncompressed is the default. Packed sets bit 15 of the tile-count word. The download uses the name you opened. Tile indexes above 2047, or a set bigger than 2048 tiles, are refused.</p>
+      <label class="check" title="Outline every cell that uses the tile selected in the strip"><input type="checkbox" id="jim-show-users"> Highlight cells using this tile</label>
+    </section>
+  </main>
+  <script src="lib/anim.js"></script>
+  <script src="lib/jim-compress.js"></script>
+  <script src="lib/jim.js"></script>
+  <script src="lib/open-asset.js"></script>
+  <script src="lib/genesis-quantize.js"></script>
+  <script src="jim.js"></script>
+</body>
+</html>

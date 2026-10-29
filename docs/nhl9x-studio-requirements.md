@@ -46,7 +46,7 @@ Must all appear in the shipped tool.
 | U4 | Seamless multi-palette tiles | If more than one palette is in use, adjacent tiles on different palettes must not show a hard color break. Assignment is per **8×8 tile**, not JIM-Tools’ 4/9 rectangles. |
 | U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
 | U6 | See the tile map | Grid of map cells, selected tile highlighted, zoom, optional 8×8 grid overlay. |
-| U7 | Place tiles and rotate them | Paint / place / erase like `ice.js`. H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP has no rotate bit — same as PC ice). 180° = both flip bits. |
+| U7 | Place tiles and rotate them | Paint / place / erase like `ice.js`. **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. |
 | U8 | Batch import | Several images in one session. Each batch (or layer) can target a palette or “any open palette”. |
 | U9 | Transparency | Source alpha &lt; threshold → palette index **0**. Checkerboard for holes. Pal 0 color 0 is still stored (backdrop). |
 | U10 | Two-step color conversion | (A) reduce to **3-bit** Genesis RGB (512 CRAM colors). (B) reduce to **15–61** unique colors by palette config. **Optional reverse order** (reduce count first, then snap to 3-bit). |
@@ -81,15 +81,19 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
 #### Genesis VDP / tiles / palettes
 
 - Tiles are **8×8**, **4bpp**, **32 bytes**, **row-major** (VDP stamp format). This is **not** the sprite path: `.anim` frames are **column-major** (`lib/anim.js`). Do not mix packers.
-- Name-table word (93G `docs/file-formats.md` Map section; same bits in JIM-Tools map table, which *is* correct):
+- Name-table word (93G `docs/file-formats.md` Map section; same bits in JIM-Tools map table, which *is* correct). **This is the entire per-cell record.** There is no rotate bit, collision bit, or extra attribute byte.
 
-  | Bits | Field |
-  |------|--------|
-  | 10–0 | Tile index (0–2047) |
-  | 11 | H-flip |
-  | 12 | V-flip |
-  | 14–13 | Palette 0–3 |
-  | 15 | Priority (low/high) |
+  | Bits | Field | In `.map.jim`? | Editor |
+  |------|--------|----------------|--------|
+  | 10–0 | Tile index (0–2047) | yes | place / paint / erase |
+  | 11 | H-flip | yes | Mirror ↔ toggles the bit; tile pixels unchanged |
+  | 12 | V-flip | yes | Flip ↕ toggles the bit; tile pixels unchanged |
+  | 14–13 | Palette 0–3 | yes | cell inspector + import assign |
+  | 15 | Priority (low/high) | yes | cell inspector; **must round-trip** (`decodeJim` currently ignores it when rasterizing) |
+  | — | 90° / 270° rotate | **no** | bake new 8×8 tiles, then place them unflipped (same as `lib/pc-rink.js` `transform`) |
+  | — | 180° rotate | **no** (emulated) | reorder the block and XOR **both** flip bits; no new tiles |
+
+  `parseJim` / `encodeJim` must keep **all 16 bits** of every map word. A no-op open/save of a raw 92G JIM is byte-identical, including cells that only differ by priority.
 
 - **2048 unique tiles** is the hardware cap (11-bit index). `lib/jim.js` currently allows decode up to 4096 — the editor must **warn at 2048** and refuse export above that.
 - CRAM: 4 lines × 16 colors. Word format **`0000 BBB0 GGG0 RRR0`** (`lib/anim.js` `decodeCram` / 93G palettes section). 3 bits per channel, 512 legal colors. Encode with the inverse of `expandChannel` (round to 0–7, pack).
@@ -126,6 +130,23 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
 | Arena gfx sheet | no map, sequential tiles | Optional tile-sheet mode (95G `ArenaGfx*`) — **v1.1** |
 
 File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bin` for JIM-shaped blobs (`EASportsMap.bin`, `Card*.bin`). Open those if `decodeJim` accepts them; export using the **opened name**.
+
+#### File features the editor must round-trip (nothing else is in the JIM)
+
+| Feature | Where | v1 |
+|---------|--------|----|
+| Palette offset / `$FFFFFFFF` | header +0 | keep; optional “embed palettes” |
+| Map offset | header +4 | keep; 0 = sheet/shared |
+| Tile count | header +8 bits 14–0 | warn at 2048, refuse export above |
+| Packed flag | header +8 bit 15 | decode always; export raw or packed |
+| 4bpp row-major tiles | after header | edit; 32 bytes/tile |
+| 4×16 CRAM palettes | pal offset, 128 bytes | edit unlocked lines; ACT lock |
+| Map width/height | map offset | resizable; scroll if > visible |
+| Tile index, H-flip, V-flip, palette, priority | each map word | cell inspector + tools |
+| Portrait 3-byte packing | variant | read-only + message |
+| Remap table / `printa` | **not in file** | preview only, never baked on export |
+
+**Rotation is an editor tool, not a file feature.** Same UX as Centre ice: Mirror/Flip/180 use name-table bits; 90/270 add tiles.
 
 #### Map editing UX (parity with PC ice, Genesis-specific where needed)
 
@@ -453,3 +474,4 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 | Date | Change |
 |------|--------|
 | 2026-10-28 | First requirements + implementation plan (Chip Lab hide, `.map.jim` editor). |
+| 2026-10-28 | Clarified: JIM has no rotate field; editor must round-trip every name-table bit (tile, H/V flip, palette, priority). |
