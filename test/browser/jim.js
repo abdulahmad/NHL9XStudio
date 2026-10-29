@@ -96,6 +96,9 @@ withBrowser('jim', async ({ url, newPage }) => {
   const palOptions = await page.locator('#jim-pal option').count();
   assert.strictEqual(palOptions, 8);
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
+  assert.ok(await page.locator('#jim-use-7').count());
+  assert.ok(await page.locator('#jim-lock-7').count());
+  assert.ok(await page.isChecked('#jim-use-5'));
   let sjimDl;
   try {
     [sjimDl] = await Promise.all([

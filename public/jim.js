@@ -196,7 +196,16 @@
   function defaultLine(p) {
     const line = [];
     for (let i = 0; i < 16; i++) {
-      line.push({ r3: (i + p) & 7, g3: (i * 2 + p) & 7, b3: (7 - i + p * 3) & 7 });
+      const r3 = (i + p) & 7;
+      const g3 = (i * 2 + p) & 7;
+      const b3 = (7 - i + p * 3) & 7;
+      const c = { r3: r3, g3: g3, b3: b3 };
+      if (isSnes()) {
+        c.r5 = (r3 << 2) | (r3 >> 1);
+        c.g5 = (g3 << 2) | (g3 >> 1);
+        c.b5 = (b3 << 2) | (b3 >> 1);
+      }
+      line.push(c);
     }
     return line;
   }
@@ -865,6 +874,17 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (priBit) priBit.textContent = isSnes() ? '(bit 13)' : '(bit 15)';
     syncRgbRange();
     fillPalSelect();
+    const order = $('jim-q-order');
+    if (order && order.options.length >= 2) {
+      order.options[0].textContent = isSnes() ? '5-bit, then reduce count' : '3-bit, then reduce count';
+      order.options[1].textContent = isSnes() ? 'Reduce count, then 5-bit' : 'Reduce count, then 3-bit';
+    }
+    const actBtn = $('jim-act-btn');
+    if (actBtn) {
+      actBtn.title = isSnes()
+        ? 'Adobe Color Table. Colors 1–16 fill pal 0, …, 113–128 pal 7. Importing locks those eight lines; uncheck Lock to leave a line open.'
+        : 'Adobe Color Table. Colors 1–16 fill pal 0, 17–32 pal 1, 33–48 pal 2, 49–64 pal 3. Importing locks those lines; uncheck Lock to leave a line open.';
+    }
   }
 
   function drawZoom() {
@@ -1226,7 +1246,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       const name = document.createElement('span');
       name.textContent = item.name + ' ' + item.w + '×' + item.h;
       li.appendChild(name);
-      for (let p = 0; p < Math.min(4, palCount()); p++) {
+      for (let p = 0; p < palCount(); p++) {
         const label = document.createElement('label');
         const box = document.createElement('input');
         box.type = 'checkbox';
@@ -1743,12 +1763,18 @@ remember();
   }
 
   function quantizeOpts(pals, lockAct) {
-    const locked = [0, 1, 2, 3].map((p) => !!(lockAct !== false && $('jim-lock-' + p) && $('jim-lock-' + p).checked));
+    const n = palCount();
+    const locked = [];
+    for (let p = 0; p < n; p++) {
+      locked[p] = !!(lockAct !== false && $('jim-lock-' + p) && $('jim-lock-' + p).checked);
+    }
     return {
       order: $('jim-q-order').value,
       stepA: { method: $('jim-a-method').value, dither: $('jim-a-dither').value, strength: Number($('jim-a-strength').value) },
       stepB: { method: $('jim-b-method').value, dither: $('jim-b-dither').value, strength: Number($('jim-b-strength').value) },
       pals: pals,
+      palCount: n,
+      bits: isSnes() ? 5 : 3,
       lockedLines: locked,
       act: locked.some(Boolean) ? actFromDoc() : null,
       opaquePal0: $('jim-opaque0').checked,
@@ -1774,7 +1800,7 @@ remember();
   }
   function openPalList() {
     const pals = [];
-    for (let p = 0; p < Math.min(4, palCount()); p++) {
+    for (let p = 0; p < palCount(); p++) {
       const box = $('jim-use-' + p);
       if (box && box.checked) pals.push(p);
     }
@@ -1844,7 +1870,7 @@ remember();
     found.forEach((c, i) => { line[i + 1] = c; });
     return {
       tiles: tiles,
-      palettes: [line, defaultLine(1), defaultLine(2), defaultLine(3)],
+      palettes: defaultPalettes(),
       warnings: overflow ? ['More than 15 ink colors; extras were snapped to the nearest.'] : []
     };
   }
@@ -1880,7 +1906,9 @@ remember();
     let result;
     if (Quant && typeof Quant.quantize === 'function') {
       result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use, lockAct));
-      const order = $('jim-q-order').value === 'countFirst' ? 'count, then 3-bit' : '3-bit, then count';
+      const order = $('jim-q-order').value === 'countFirst'
+        ? ('count, then ' + (isSnes() ? '5-bit' : '3-bit'))
+        : ((isSnes() ? '5-bit' : '3-bit') + ', then count');
       const warnings = (result.warnings || []).slice();
       warnings.unshift('Preview is after both steps (' + order + ').');
       const fl = floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
@@ -2013,43 +2041,42 @@ remember();
   function importAct(bytes) {
     if (!canEdit()) return;
     if (bytes.length !== 768 && bytes.length !== 772) throw new Error('ACT must be 768 or 772 bytes');
+    const n = palCount();
     let snapped = false;
     const lines = [];
-    if (Quant && typeof Quant.parseAct === 'function') {
-      const colors = Quant.parseAct(bytes);
-      for (let p = 0; p < 4; p++) lines.push(colors.slice(p * 16, p * 16 + 16).map((c) => ({ r3: c.r3, g3: c.g3, b3: c.b3 })));
-    } else {
-      for (let p = 0; p < 4; p++) {
-        const line = [];
-        for (let i = 0; i < 16; i++) {
-          const at = (p * 16 + i) * 3;
-          const r3 = encodeChannel(bytes[at]);
-          const g3 = encodeChannel(bytes[at + 1]);
-          const b3 = encodeChannel(bytes[at + 2]);
-          if (expandChannel(r3) !== bytes[at] || expandChannel(g3) !== bytes[at + 1] || expandChannel(b3) !== bytes[at + 2]) snapped = true;
-          line.push({ r3: r3, g3: g3, b3: b3 });
-        }
-        lines.push(line);
-      }
-    }
-    for (let p = 0; p < 4; p++) {
+    const colors = Quant && typeof Quant.parseAct === 'function' ? Quant.parseAct(bytes) : null;
+    for (let p = 0; p < n; p++) {
+      const line = [];
       for (let i = 0; i < 16; i++) {
-        const c = lines[p][i];
         const at = (p * 16 + i) * 3;
-        if (expandChannel(c.r3) !== bytes[at] || expandChannel(c.g3) !== bytes[at + 1] || expandChannel(c.b3) !== bytes[at + 2]) snapped = true;
+        const parsed = colors && colors[p * 16 + i];
+        const next = parsed
+          ? { r3: parsed.r3, g3: parsed.g3, b3: parsed.b3 }
+          : { r3: encodeChannel(bytes[at]), g3: encodeChannel(bytes[at + 1]), b3: encodeChannel(bytes[at + 2]) };
+        if (isSnes()) {
+          next.r5 = parsed && parsed.r5 != null ? parsed.r5 : encode5(bytes[at]);
+          next.g5 = parsed && parsed.g5 != null ? parsed.g5 : encode5(bytes[at + 1]);
+          next.b5 = parsed && parsed.b5 != null ? parsed.b5 : encode5(bytes[at + 2]);
+          if (expand5(next.r5) !== bytes[at] || expand5(next.g5) !== bytes[at + 1] || expand5(next.b5) !== bytes[at + 2]) snapped = true;
+        } else if (expandChannel(next.r3) !== bytes[at] || expandChannel(next.g3) !== bytes[at + 1] || expandChannel(next.b3) !== bytes[at + 2]) {
+          snapped = true;
+        }
+        line.push(next);
       }
+      lines.push(line);
     }
     remember();
-    const keep = palCount() > 4 ? doc.palettes.slice(4) : [];
-    doc.palettes = lines.concat(keep);
-    while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
+    doc.palettes = lines;
+    while (doc.palettes.length < n) doc.palettes.push(defaultLine(doc.palettes.length));
     doc.dirtyPal = true;
-    for (let p = 0; p < 4; p++) {
+    for (let p = 0; p < n; p++) {
       const box = $('jim-lock-' + p);
       if (box) box.checked = true;
     }
-    status('Loaded ACT colors 1–64 into palettes 0–3 and locked those lines. Uncheck Lock to leave a line open for import.' +
-      (snapped ? ' Some colors were snapped to 3-bit CRAM.' : ''));
+    const last = n * 16;
+    status('Loaded ACT colors 1–' + last + ' into palettes 0–' + (n - 1) +
+      ' and locked those lines. Uncheck Lock to leave a line open for import.' +
+      (snapped ? (isSnes() ? ' Some colors were snapped to 5-bit BGR555.' : ' Some colors were snapped to 3-bit CRAM.') : ''));
     renderAll();
   }
   function applyDonor(bytes) {
@@ -2108,6 +2135,8 @@ remember();
     }
     if (state.tile >= doc.tiles.length) state.tile = 0;
     $('jim-packed').checked = isSnes() || !!doc.packedOnDisk;
+    if (!Array.isArray(doc.palettes)) doc.palettes = [];
+    while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
     buildPaletteChrome();
     fillPalSelect();
     syncRgbRange();

@@ -16,9 +16,9 @@ This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL
 | Canonical compressed JIM | Same `.map.jim` container as uncompressed. Packed iff **bit 15 of the tile-count word at `0x08`** is set. **Do not** invent `.jzip` as a game format. |
 | Compression source of truth | **93G** `src/decompress93.asm` `DecompressBytecode` and **94G** `src/decompress94.asm` (same opcode table). Studio already ports this in `lib/jim.js` `decompressBytecode`. There is **no compressor** in 93/94 source — write a new encoder that this decompressor accepts. |
 | Do not copy | EA-NHL-Tools `JIM-Tools/Readme.md` “JZIP” opcode table. It is incomplete and disagrees with the game (see §4). |
-| Color 0 | Index 0 of a palette is **transparent** on import when the source has alpha. Palette **0** may also be an opaque backdrop fill (Studio already treats pal 0 color 0 as drawn; pals 1–3 color 0 as a hole — `lib/jim.js` `picturePixelHidden`). |
-| Unique colors | **15–61** depending on how many palettes are open and whether pal 0 color 0 is opaque. See §3.4. |
-| ACT lock | One `.act`: colors **1–16 → pal 0**, **17–32 → pal 1**, **33–48 → pal 2**, **49–64 → pal 3** (1-based Photoshop numbering = ACT indices 0–15, 16–31, …). Lock per palette independently. |
+| Color 0 | Index 0 of a palette is **transparent** on import when the source has alpha. Palette **0** may also be an opaque backdrop fill (Studio already treats pal 0 color 0 as drawn; other lines’ color 0 as a hole — `lib/jim.js` `picturePixelHidden`). |
+| Unique colors | Genesis **15–61** (1–4 lines). SNES **15–121** (1–8 BGR555 lines). See §3.4. |
+| ACT lock | One `.act`: colors **1–16 → pal 0**, **17–32 → pal 1**, and so on. Genesis uses pals 0–3 (64 colors). SNES uses pals 0–7 (128 colors). Lock per palette independently. |
 | UI home | New **Maps** page next to **Jerseys** (`jed.html` / `ice.js` pattern), plus **Edit map** from the Images tab for `kind: 'jim'`. |
 | v1 non-goals | ANIM sprites, PC TIL/MAP, writing back into a ROM. Portrait encode and SNES `.map.sjim` are in the Maps editor. |
 
@@ -41,7 +41,7 @@ Must all appear in the shipped tool.
 | # | Requirement | Notes |
 |---|-------------|--------|
 | U1 | Import / edit / export `.map.jim` | Open a loose file, a catalog Images-tab picture, or a ROM slice. Export a new `.map.jim`. |
-| U2 | Choose how many palettes | User picks which of **0, 1, 2, 3** to use, and how many (1–4). Unused palettes stay empty / unused in the map. |
+| U2 | Choose how many palettes | Genesis: which of **0–3** (1–4 lines). SNES: which of **0–7** (1–8 BGR555 lines). Unused palettes stay empty / unused in the map. |
 | U3 | Lock palettes from one `.act` | Import Adobe Color Table. Colors 1–16 lock pal 0, 17–32 pal 1, etc. **Lock pal 0 and leave pal 1 open** (and any other mix). Locked palettes are not rewritten by quantization. |
 | U4 | Seamless multi-palette tiles | If more than one palette is in use, adjacent tiles on different palettes must not show a hard color break. Assignment is per **8×8 tile**, not JIM-Tools’ 4/9 rectangles. |
 | U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
@@ -49,7 +49,7 @@ Must all appear in the shipped tool.
 | U7 | Place tiles and rotate them | Paint / place / erase like `ice.js`. **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. |
 | U8 | Batch import | Several images in one session. Each batch (or layer) can target a palette or “any open palette”. |
 | U9 | Transparency | Source alpha &lt; threshold → palette index **0**. Checkerboard for holes. Pal 0 color 0 is still stored (backdrop). |
-| U10 | Two-step color conversion | (A) reduce to **3-bit** Genesis RGB (512 CRAM colors). (B) reduce to **15–61** unique colors by palette config. **Optional reverse order** (reduce count first, then snap to 3-bit). |
+| U10 | Two-step color conversion | (A) snap to **3-bit** Genesis CRAM (512 colors) or **5-bit** SNES BGR555 (32,768 colors). (B) reduce to **15–61** (Genesis) or **15–121** (SNES) unique inks by palette config. **Optional reverse order** (reduce count first, then snap to the lattice). |
 | U11 | Per-step method + dither | At **each** of A and B the user picks: color method and dither. See §2.3. |
 | U12 | Think ahead | Features below that the codebases already imply. |
 
@@ -108,8 +108,9 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
   | 3 | | 16+15+15 = 46 |
   | 4 | | 16+15+15+15 = **61** |
   | 4 | all holes | 15×4 = 60 |
+  | SNES 8 | pal0 yes, rest holes | 16+15×7 = **121** |
 
-  That is the user’s **15–61** range. Show the live count.
+  That is the user’s **15–61** (Genesis) / **15–121** (SNES) range. Show the live count.
 
 - **Dedup:** identical 8×8 pixel tiles (and H/V-flipped copies) collapse to one tile + flip bits, as `ice.js` / `lib/pc-rink.js` already do for PC. Copy-on-write when painting a shared tile.
 - **Priority:** expose per cell (bit 15). Default 0. `dobitmap` **XORs** `printa` (`$F800` attribute bits) onto every map word, so in-game priority/palette can flip relative to the file. Show a “preview with `printa`” toggle; do not bake `printa` into export unless the user asks.
@@ -159,7 +160,7 @@ Reuse `public/ice.js` / `jed.html` habits:
 - [x] Copy / cut / paste / clear selection.
 - [x] Zoom 1–16×, nearest-neighbor, grid toggle.
 - [x] Floating import (drag to place, Apply / Cancel) — same as ice image import.
-- [x] Status line: tile count / 2048, colors used / budget, packed vs raw, warnings.
+- [x] Status line: tile count / 2048 (1024 on SNES), colors used / budget, packed vs raw, warnings.
 
 Preview:
 
@@ -271,18 +272,18 @@ Editor tiles are **unflipped, single-palette nibbles**. Flip bits live on the ce
 
 User-visible order toggle:
 
-1. **Default (JIM-Tools order):** snap to 3-bit lattice → then cluster into 15–61 ink colors with palette assignment.
-2. **Reverse:** cluster in 8-bit (or working space) down to the budget → then snap each chosen color to 3-bit (may collapse two inks; warn and merge).
+1. **Default (JIM-Tools order):** snap to the platform lattice (3-bit Genesis / 5-bit SNES) → then cluster into 15–61 (Genesis) or 15–121 (SNES) ink colors with palette assignment.
+2. **Reverse:** cluster in 8-bit (or working space) down to the budget → then snap each chosen color to the lattice (may collapse two inks; warn and merge).
 
 Per step: method + dither from §2.3. Preview A, preview B, then commit to the floating import.
 
-**ACT lock:** for each locked palette *p*, ACT entries `16p .. 16p+15` (0-based) become that line’s 16 CRAM colors (snap to 3-bit if needed, warn if they were not already Genesis colors). Index 0 of that line stays the transparent slot unless pal 0 is marked opaque. Quantizer **must not** rewrite locked lines; it may only **match** image pixels to them.
+**ACT lock:** for each locked palette *p*, ACT entries `16p .. 16p+15` (0-based) become that line’s 16 colors (snap to 3-bit CRAM or 5-bit BGR555 if needed, warn if they were not already on the lattice). Index 0 of that line stays the transparent slot unless pal 0 is marked opaque. Quantizer **must not** rewrite locked lines; it may only **match** image pixels to them.
 
 JIM-Tools `--forcepalN=file.act` reads **the first 16 colors of a separate ACT per slot**. Studio follows the **user’s one-ACT layout**, not that CLI.
 
 **Seam blending (U4) — required algorithm, not 4/9 boxes:**
 
-1. After step A, every pixel is a 3-bit RGB (or transparent).
+1. After step A, every pixel is a lattice RGB (3-bit Genesis / 5-bit SNES) or transparent.
 2. For each 8×8 tile, collect its ink colors (ignore index-0 / alpha).
 3. Assign each tile a palette in `{open pals}` that can hold its colors, preferring:
    - reuse a palette that already contains those CRAM colors;
@@ -479,3 +480,4 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 | 2026-10-28 | Clarified: JIM has no rotate field; editor must round-trip every name-table bit (tile, H/V flip, palette, priority). |
 | 2026-10-28 | Portrait `UnpackPicture` encode and NHLPA 93 SNES `.map.sjim` are in the Maps editor. |
 | 2026-10-28 | v1.1 polish: ACT auto-lock, session quantize, batch lock-from-ACT, dobitmap mask, PNG/ACT export, unused-tile highlight, compare view, sheet kind, note field. |
+| 2026-10-28 | SNES Maps path uses pals 0–7, 5-bit BGR555, 1024 tiles, and unique-ink budget 15–121. |

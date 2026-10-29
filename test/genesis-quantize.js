@@ -186,4 +186,41 @@ function outputPixel(result, width, x, y) {
   assert.strictEqual(snesAct[1], 0);
 }
 
+{
+  const source = image(8, 8, () => [255, 0, 0, 255]);
+  const genesis = Q.quantize(source, 8, 8);
+  assert.strictEqual(genesis.palettes.length, 4);
+  assert.ok(genesis.palettes[0][0].r5 == null);
+}
+
+{
+  const source = image(8, 8, () => [255, 0, 0, 255]);
+  const result = Q.quantize(source, 8, 8, {
+    pals: [5, 6], palCount: 8, bits: 5, opaquePal0: true
+  });
+  assert.strictEqual(result.palettes.length, 8);
+  assert.ok(result.usedPals.every((p) => p === 5 || p === 6));
+  assert.ok(result.usedPals.indexOf(5) >= 0 || result.usedPals.indexOf(6) >= 0);
+  const line = result.palettes[result.usedPals[0]];
+  const ink = line[1];
+  assert.strictEqual(ink.r5, 31);
+  assert.strictEqual(ink.g5, 0);
+  assert.strictEqual(ink.b5, 0);
+  assert.strictEqual(line[0].r5, 0);
+}
+
+{
+  const act = new Uint8Array(768);
+  act[5 * 16 * 3] = 255;
+  const source = image(8, 8, () => [0, 255, 0, 255]);
+  const locked = [false, false, false, false, false, true, false, false];
+  const result = Q.quantize(source, 8, 8, {
+    pals: [6], palCount: 8, bits: 5, act, lockedLines: locked, opaquePal0: true
+  });
+  assert.strictEqual(result.palettes[5][0].r5, 31);
+  assert.strictEqual(result.palettes[5][0].g5, 0);
+  assert.ok(result.usedPals.indexOf(6) >= 0);
+  assert.notStrictEqual(result.palettes[6][0].r5, 31);
+}
+
 console.log('genesis-quantize: ok');

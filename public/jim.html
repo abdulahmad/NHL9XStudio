@@ -44,7 +44,7 @@
       <p id="jim-header-mode" class="muted"></p>
 
       <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit</span></h2>
-      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is transparent. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is transparent. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
@@ -56,7 +56,7 @@
         <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
       </div>
       <div class="jed-io">
-        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Colors 1–16 fill pal 0, 17–32 pal 1, 33–48 pal 2, 49–64 pal 3. Importing locks those lines; uncheck Lock to leave a line open.">Import .ACT…</button>
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Genesis: colors 1–64 fill pals 0–3. SNES: colors 1–128 fill pals 0–7. Importing locks those lines; uncheck Lock to leave a line open.">Import .ACT…</button>
         <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of the four (or eight) lines. Optional 772-byte trailer with color count.">Export .ACT</button>
         <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
         <input type="file" id="jim-act" hidden accept=".act">

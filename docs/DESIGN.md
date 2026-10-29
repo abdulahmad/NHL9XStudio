@@ -378,7 +378,7 @@ Full requirements, format truth vs JIM-Tools, architecture, and step × model ta
 Short version:
 
 - Hide **Chip lab** in the header; keep `public/chip-lab.html`.
-- New **Maps** tool (JED/ice-style page): import PNG/BMP, lock palettes from one `.act` (colors 1–16 = pal 0, …), 3-bit then 15–61 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), and open/export NHLPA 93 SNES `.map.sjim`.
+- New **Maps** tool (JED/ice-style page): import PNG/BMP, lock palettes from one `.act` (colors 1–16 = pal 0, …), Genesis 3-bit / 15–61 colors or SNES 5-bit / 15–121 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), and open/export NHLPA 93 SNES `.map.sjim` (8 BGR555 pals, 10-bit tile index).
 - Compression: implement from 93G `src/decompress93.asm` / 94G `src/decompress94.asm` / `lib/jim.js` `decompressBytecode`. Do **not** follow EA-NHL-Tools `JIM-Tools/Readme.md` “JZIP” opcodes.
 
 ---
