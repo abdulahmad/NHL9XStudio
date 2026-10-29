@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.2.3",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor: a color swatch sits left of the R/G/B sliders, 8-bit RGB sits next to Hex, and the Pal/index/CRAM header line is gone"
+      ]
+    },
+    {
       "version": "1.2.2",
       "date": "2026-10-29",
       "changes": [

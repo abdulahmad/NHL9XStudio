@@ -82,12 +82,17 @@
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
       <div id="jim-swatches" class="jim-swatches"></div>
-      <p id="jim-color-line" class="ice-colorline"></p>
-      <div class="jed-rgb jim-rgb">
-        <label>R <input type="range" min="0" max="7" id="jim-r"><input type="number" min="0" max="7" id="jim-rn"></label>
-        <label>G <input type="range" min="0" max="7" id="jim-g"><input type="number" min="0" max="7" id="jim-gn"></label>
-        <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
-        <label title="Type #RRGGBB. Genesis snaps to 3-bit × 36 (0, 36, …, 252). SNES snaps to 5-bit.">Hex <input type="text" id="jim-hex" class="mono" size="8" maxlength="7" spellcheck="false"></label>
+      <div class="jim-color">
+        <div class="jim-color-swatch" id="jim-color-swatch" role="img" aria-label="Selected color"></div>
+        <div class="jed-rgb jim-rgb">
+          <label>R <input type="range" min="0" max="7" id="jim-r"><input type="number" min="0" max="7" id="jim-rn"></label>
+          <label>G <input type="range" min="0" max="7" id="jim-g"><input type="number" min="0" max="7" id="jim-gn"></label>
+          <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
+          <div class="jim-hex-row">
+            <label title="Type #RRGGBB. Genesis snaps to 3-bit × 36 (0, 36, …, 252). SNES snaps to 5-bit.">Hex <input type="text" id="jim-hex" class="mono" size="8" maxlength="7" spellcheck="false"></label>
+            <span id="jim-rgb-readout" class="mono muted"></span>
+          </div>
+        </div>
       </div>
       <div class="jed-io">
         <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, Genesis .pal, SNES .snespal, .bin, .map.jim, or .map.sjim. A dialog maps each file palette onto an editor pal.">Import palettes…</button>
