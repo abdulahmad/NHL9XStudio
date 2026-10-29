@@ -5,7 +5,7 @@ const {
   decodeJim, parseJim, encodeJim, unpackMapWord, packMapWord, unpackTile, packTile,
   compressBytecode, decompressBytecode, transformBlock, grabBlock, stampBlock, cloneJim,
   encodeCramWord, decodeCramWord, encodePaletteLine, packPortrait, unpackPortrait,
-  matchTile, applyDonorPalette, flippedTile, rasterize
+  matchTile, collapseDuplicateTiles, applyDonorPalette, flippedTile, rasterize
 } = require('../lib/jim');
 const { classify } = require('../lib/open-asset');
 
@@ -295,6 +295,29 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   assert.strictEqual(turned.cells[0].pal, 2);
   assert.strictEqual(turned.cells[0].priority, 1);
   assert.ok(doc.dirty);
+}
+
+{
+  const a = new Uint8Array(64);
+  a[0] = 3;
+  const mirror = flippedTile(a, true, false);
+  const unique = new Uint8Array(64);
+  unique[1] = 7;
+  const r = collapseDuplicateTiles([a, mirror, unique], [
+    { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 1 },
+    { tile: 1, hFlip: 0, vFlip: 0, pal: 2, priority: 0 },
+    { tile: 2, hFlip: 1, vFlip: 0, pal: 0, priority: 0 }
+  ]);
+  assert.strictEqual(r.removed, 1);
+  assert.strictEqual(r.tiles.length, 2);
+  assert.strictEqual(r.cells[0].tile, 0);
+  assert.strictEqual(r.cells[0].hFlip, 0);
+  assert.strictEqual(r.cells[0].priority, 1);
+  assert.strictEqual(r.cells[1].tile, 0);
+  assert.strictEqual(r.cells[1].hFlip, 1);
+  assert.strictEqual(r.cells[1].pal, 2);
+  assert.strictEqual(r.cells[2].tile, 1);
+  assert.strictEqual(r.cells[2].hFlip, 1);
 }
 
 console.log('jim-roundtrip: ok');

@@ -2,7 +2,7 @@
  * Browser smoke: public/jim.html loads, opens a synthetic raw JIM, undoes a
  * paint, and exports an uncompressed file whose map word still has priority.
  * Also opens a packed SNES .map.sjim and a portrait, edits the portrait, and
- * checks the v1.1 chrome (PNG/ACT, dobitmap, kind, note).
+ * checks v1.2 chrome (icons, export modal, back arrow, floating paste).
  *
  *   node test/browser/jim.js
  */
@@ -79,6 +79,17 @@ function iceHoleJim() {
   return out;
 }
 
+async function exportNative(page) {
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  await page.check('input[name="jim-export-kind"][value="native"]');
+  const [dl] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  return dl;
+}
+
 function sampleCanvas(page, sel) {
   return page.locator(sel).evaluate((c) => {
     const ctx = c.getContext('2d');
@@ -116,12 +127,15 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(page.problems.filter((p) => !/Failed to load resource/.test(p)).length, 0, page.problems.join('\n'));
   assert.match(await page.title(), /Image Editor/);
   assert.ok(await page.locator('#jim-map').count());
-  assert.ok(await page.locator('#jim-exit').count());
+  assert.ok(await page.locator('#jim-exit.studio-back').count());
+  assert.ok(!(await page.locator('#jim-exit').textContent() || '').includes('Close'));
   assert.ok(await page.locator('#jim-pri').count());
   assert.ok(await page.locator('#jim-png').count());
   assert.ok(await page.locator('#jim-act-export').count());
   assert.ok(await page.locator('#jim-kind').count());
   assert.ok(await page.locator('#jim-dobitmap').count());
+  assert.ok(await page.locator('#jim-dedupe').count());
+  assert.ok(await page.locator('#jim-export-dlg').count());
   assert.strictEqual(await page.locator('#jim-dobitmap').evaluate((el) => el.tagName), 'SELECT');
   const dobitmap = await page.locator('#jim-dobitmap option').evaluateAll((opts) => opts.map((o) => o.value));
   assert.strictEqual(dobitmap.length, 17, 'Genesis dobitmap lists Auto plus every 4-bit mask');
@@ -131,8 +145,10 @@ withBrowser('jim', async ({ url, newPage }) => {
   const chromeFit = await page.locator('#jim-chrome').evaluate((el) => ({ h: el.clientHeight, sh: el.scrollHeight }));
   assert.ok(chromeFit.sh <= chromeFit.h + 2, 'middle-pane tools fit without scrolling ' + JSON.stringify(chromeFit));
   assert.ok(await page.locator('[data-tool="paint"]').isVisible());
+  assert.match(await page.locator('[data-tool="paint"]').textContent(), /Paint/);
+  assert.match(await page.locator('[data-tool="erase"]').textContent(), /Erase/);
   assert.ok(await page.locator('#jim-sel-all').isVisible());
-  assert.ok(await page.locator('.jim-preview-set').isVisible());
+  assert.ok(await page.locator('.jim-preview-set').isHidden());
   assert.ok(await page.locator('#jim-tiles-more').count());
   const tilesH0 = await page.locator('#jim-tiles').evaluate((e) => e.getBoundingClientRect().height);
   await page.click('#jim-tiles-more');
@@ -156,6 +172,9 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-show-unused').count());
   assert.ok(await page.locator('#jim-import-mode').count());
   assert.match(await page.locator('label:has(#jim-import-mode)').textContent(), /Import mode/);
+  assert.match(await page.locator('#jim-import-mode option[value="replace"]').textContent(), /Import New Image/);
+  assert.match(await page.locator('#jim-import-mode option[value="place"]').textContent(), /Import into current Image/);
+  assert.match(await page.locator('#jim-import-mode option[value="add"]').textContent(), /Import Tiles/);
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
@@ -201,10 +220,24 @@ withBrowser('jim', async ({ url, newPage }) => {
   const box = await page.locator('#jim-map').boundingBox();
   await page.mouse.click(box.x + 4, box.y + 4);
   await page.keyboard.press('Control+z');
-  const [dl] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#jim-export')
-  ]);
+  await page.click('#jim-sel-all');
+  await page.click('#jim-copy');
+  await page.click('#jim-paste');
+  assert.ok(await page.locator('#jim-float-bar').isVisible());
+  assert.match(await page.textContent('#jim-float-name'), /Paste/);
+  await page.click('#jim-float-cancel');
+  await page.click('[data-tool="erase"]');
+  await page.mouse.click(box.x + 4, box.y + 4);
+  assert.match(await page.textContent('#jim-count'), /^2 \//);
+  await page.keyboard.press('Control+z');
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  await page.check('input[name="jim-export-kind"][value="sjim"]');
+  await page.click('#jim-export-ok');
+  await page.waitForFunction(() => /cannot be exported as SNES/.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 5000 });
+  const dl = await exportNative(page);
   const name = dl.suggestedFilename();
   assert.match(name, /pri\.map\.jim/);
   const out = fs.readFileSync(await dl.path());
@@ -246,10 +279,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.isChecked('#jim-use-5'));
   let sjimDl;
   try {
-    [sjimDl] = await Promise.all([
-      page.waitForEvent('download', { timeout: 8000 }),
-      page.click('#jim-export')
-    ]);
+    sjimDl = await exportNative(page);
   } catch (err) {
     throw new Error('sjim export failed: status=' + (await page.textContent('#jim-status')) +
       ' note=' + (await page.textContent('#jim-note')) +
@@ -274,10 +304,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.click('[data-tool="paint"]');
   const tileBox = await page.locator('#jim-tile-edit').boundingBox();
   await page.mouse.click(tileBox.x + 24, tileBox.y + 8);
-  const [portDl] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#jim-export')
-  ]);
+  const portDl = await exportNative(page);
   const portOut = fs.readFileSync(await portDl.path());
   assert.strictEqual(portOut.readUInt16BE(8), 36);
   const back = unpackPortrait(portOut, 10, 36);
@@ -310,10 +337,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
   let zipDl;
   try {
-    [zipDl] = await Promise.all([
-      page.waitForEvent('download', { timeout: 8000 }),
-      page.click('#jim-export')
-    ]);
+    zipDl = await exportNative(page);
   } catch (err) {
     throw new Error('94S export failed: status=' + (await page.textContent('#jim-status')) +
       ' note=' + (await page.textContent('#jim-note')) + ' orig=' + err.message);

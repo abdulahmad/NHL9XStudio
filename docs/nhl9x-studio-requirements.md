@@ -2,7 +2,7 @@
 
 **In-repo copy:** [docs/nhl9x-studio-requirements.md](https://github.com/abdulahmad/nhl9xstudio/blob/main/docs/nhl9x-studio-requirements.md) in [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio). Keep both files the same.
 
-**Related:** `docs/DESIGN.md` (product shell), `lib/jim.js` + `lib/sjim.js` + `lib/sscr.js` (parse/encode), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
+**Related:** `docs/DESIGN.md` (product requirements), `docs/IMPLEMENTATION.md` (architecture), `lib/jim.js` + `lib/sjim.js` + `lib/sscr.js` (parse/encode), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
 
 This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL9X Studio, plus **hiding Chip Lab** in the product chrome. It is not a rewrite of the viewer, the PC ice editor, or ANIM/SHPI editing.
 

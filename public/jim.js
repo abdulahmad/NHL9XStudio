@@ -49,6 +49,24 @@
     };
   }
   function zeroCell() { return { tile: 0, hFlip: 0, vFlip: 0, pal: 0, priority: 0 }; }
+  function ensureBlankTile() {
+    const blank = new Uint8Array(64);
+    if (Jim && typeof Jim.matchTile === 'function') {
+      const hit = Jim.matchTile(doc.tiles, blank);
+      if (hit) return hit.tile;
+    } else {
+      for (let i = 0; i < doc.tiles.length; i++) {
+        if (keyOf(doc.tiles[i]) === keyOf(blank)) return i;
+      }
+    }
+    if (doc.tiles.length >= tileCap()) return 0;
+    doc.tiles.push(blank);
+    doc.dirtyTiles = true;
+    return doc.tiles.length - 1;
+  }
+  function blankCell() {
+    return { tile: ensureBlankTile(), hFlip: 0, vFlip: 0, pal: 0, priority: 0 };
+  }
   function isZero(c) { return !c.tile && !c.hFlip && !c.vFlip && !c.pal && !c.priority; }
 
   function expandChannel(c) {
@@ -1057,6 +1075,20 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const at = (y * w + x) * 4;
     data[at] = r; data[at + 1] = g; data[at + 2] = b; data[at + 3] = a;
   }
+  function toolCursor(tool) {
+    const icons = {
+      paint: { x: 3, y: 21, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linejoin="round" d="M14.8 3.8l5.4 5.4-11.6 11.6H3.2v-5.4L14.8 3.8z"/></svg>' },
+      place: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#f0b429" stroke-width="2"/><path stroke="#f0b429" stroke-width="1.4" d="M3 9h18M3 15h18M9 3v18M15 3v18"/><rect x="9" y="9" width="6" height="6" fill="#f0b429"/></svg>' },
+      erase: { x: 4, y: 20, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linejoin="round" d="M4 14.5l7.2-7.2 6.5 6.5-4.4 4.4H6.2L4 16.2z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M8.2 18.2H20"/></svg>' },
+      select: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="#f0b429" stroke-width="2" stroke-dasharray="3 2.5"/></svg>' },
+      pick: { x: 4, y: 21, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" d="M14.2 4.2l5.6 5.6-8.4 8.4-3.2-3.2 6-10.8z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M7.2 16.2L4 20"/></svg>' },
+      pan: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" d="M8 11V6.5a1.5 1.5 0 013 0V11m0-3.2V5.5a1.5 1.5 0 013 0V11m0-2.2V6.8a1.5 1.5 0 013 0V13c0 3-1.4 6.5-4.6 6.5H12c-2.8 0-5-1.6-6.2-3.4L4.2 13.2A1.4 1.4 0 016.6 12L8 13"/></svg>' }
+    };
+    const icon = icons[tool];
+    if (!icon) return 'crosshair';
+    const fallback = tool === 'pan' ? 'grab' : (tool === 'place' ? 'copy' : 'crosshair');
+    return 'url("data:image/svg+xml,' + encodeURIComponent(icon.svg) + '") ' + icon.x + ' ' + icon.y + ', ' + fallback;
+  }
   function renderMap() {
     const z = drawZoom();
     const size = viewMap();
@@ -1144,10 +1176,18 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       ctx.strokeRect(state.sel.x * 8 * z + 1, state.sel.y * 8 * z + 1, state.sel.w * 8 * z - 2, state.sel.h * 8 * z - 2);
       ctx.lineWidth = 1;
     }
+    if (state.float) {
+      const f = state.float;
+      ctx.save();
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(f.x * 8 * z + 1, f.y * 8 * z + 1, f.w * 8 * z - 2, f.h * 8 * z - 2);
+      ctx.restore();
+    }
     ctx.strokeStyle = '#ffffff';
     ctx.strokeRect(state.focus.x * 8 * z + 0.5, state.focus.y * 8 * z + 0.5, 8 * z - 1, 8 * z - 1);
-    const cursors = { paint: 'crosshair', place: 'copy', erase: 'cell', select: 'crosshair', pick: 'crosshair', pan: 'grab' };
-    canvas.style.cursor = state.float && state.tool !== 'pan' ? 'move' : (cursors[state.tool] || 'crosshair');
+    canvas.style.cursor = state.float && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
     const label = state.zoom + '×';
     $('jim-zoom-val').textContent = z === state.zoom ? label : label + ' (drawn ' + z + '×)';
   }
@@ -1485,7 +1525,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     state.focus = { x: p.x, y: p.y };
   }
   function eraseAt(p) {
-    doc.cells[p.y * doc.mapW + p.x] = zeroCell();
+    doc.cells[p.y * doc.mapW + p.x] = blankCell();
     doc.dirtyMap = true;
     state.focus = { x: p.x, y: p.y };
   }
@@ -1497,11 +1537,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     return { w: rect.w, h: rect.h, cells: cells };
   }
   function clearRect(rect) {
+    const blank = blankCell();
     for (let y = 0; y < rect.h; y++) {
       for (let x = 0; x < rect.w; x++) {
         const X = rect.x + x;
         const Y = rect.y + y;
-        if (X >= 0 && Y >= 0 && X < doc.mapW && Y < doc.mapH) doc.cells[Y * doc.mapW + X] = zeroCell();
+        if (X >= 0 && Y >= 0 && X < doc.mapW && Y < doc.mapH) doc.cells[Y * doc.mapW + X] = cloneCell(blank);
       }
     }
     doc.dirtyMap = true;
@@ -1644,22 +1685,28 @@ remember();
   }
   function paste() {
     if (!canEdit() || !state.clip) return;
-    remember();
-    const x = state.sel ? state.sel.x : 0;
-    const y = state.sel ? state.sel.y : 0;
-    const block = { w: state.clip.w, h: state.clip.h, cells: [] };
-    state.clip.cells.forEach((c) => {
-      block.cells.push({ tile: adoptExact(doc.tiles, c.nibbles), hFlip: c.hFlip, vFlip: c.vFlip, pal: c.pal, priority: c.priority });
-    });
-    stamp(block, x, y, false);
-    state.sel = {
-      x: x, y: y,
-      w: Math.min(state.clip.w, doc.mapW - x),
-      h: Math.min(state.clip.h, doc.mapH - y)
+    const x = state.sel ? state.sel.x : state.focus.x;
+    const y = state.sel ? state.sel.y : state.focus.y;
+    state.float = {
+      name: 'Paste',
+      w: state.clip.w,
+      h: state.clip.h,
+      x: x,
+      y: y,
+      cells: state.clip.cells.map((c) => ({
+        nibbles: flipNibbles(c.nibbles, c.hFlip, c.vFlip),
+        pal: c.pal,
+        priority: c.priority || 0
+      })),
+      palettes: null,
+      warnings: [],
+      pending: false,
+      onlyEmpty: false,
+      mode: 'place'
     };
     state.tool = 'select';
     document.querySelectorAll('[data-tool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tool === 'select')));
-    status('Pasted ' + state.clip.w + '×' + state.clip.h + ' at ' + x + ', ' + y + '.');
+    status('Floating paste ' + state.clip.w + '×' + state.clip.h + ' at ' + x + ', ' + y + '. Apply to commit.');
     renderAll();
   }
   function clearSel() {
@@ -2163,6 +2210,12 @@ remember();
     }
     doc.dirtyPal = true;
   }
+  function collapseTiles(tiles, cells, mode) {
+    if (mode === 'add' || !Jim || typeof Jim.collapseDuplicateTiles !== 'function') {
+      return { tiles: tiles, cells: cells, removed: 0 };
+    }
+    return Jim.collapseDuplicateTiles(tiles, cells);
+  }
   function applyFloat() {
     const f = state.float;
     if (!f || !canEdit()) return;
@@ -2173,7 +2226,8 @@ remember();
         status('New image map is ' + w + '×' + h + '; size must be 1–1024.', true);
         return;
       }
-      const built = tilesFromFloat(f, []);
+      let built = tilesFromFloat(f, []);
+      built = collapseTiles(built.tiles, built.cells, 'replace');
       if (built.tiles.length > tileCap()) {
         status('That image needs ' + built.tiles.length + ' tiles. The name table holds ' + tileCap() + '.', true);
         return;
@@ -2191,12 +2245,12 @@ remember();
       state.sel = null;
       state.tile = 0;
       status('New image ' + f.name + ': ' + w + '×' + h + ' cells (' + mapPixelText(w, h) + '), ' +
-        doc.tiles.length + ' tiles.');
+        doc.tiles.length + ' tiles' + (built.removed ? ', removed ' + built.removed + ' duplicate' + (built.removed === 1 ? '' : 's') : '') + '.');
       renderAll();
       return;
     }
-    const tiles = doc.tiles.map((t) => Uint8Array.from(t));
-    const cells = doc.cells.map(cloneCell);
+    let tiles = doc.tiles.map((t) => Uint8Array.from(t));
+    let cells = doc.cells.map(cloneCell);
     const reuse = mode !== 'add';
     for (let y = 0; y < f.h; y++) {
       for (let x = 0; x < f.w; x++) {
@@ -2207,9 +2261,15 @@ remember();
         if (X < 0 || Y < 0 || X >= doc.mapW || Y >= doc.mapH) continue;
         if (f.onlyEmpty && !isZero(cells[Y * doc.mapW + X])) continue;
         const hit = reuse ? adoptFlip(tiles, src.nibbles) : appendTile(tiles, src.nibbles);
-        cells[Y * doc.mapW + X] = { tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal, priority: 0 };
+        cells[Y * doc.mapW + X] = {
+          tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal,
+          priority: src.priority || 0
+        };
       }
     }
+    const collapsed = collapseTiles(tiles, cells, mode);
+    tiles = collapsed.tiles;
+    cells = collapsed.cells;
     if (tiles.length > tileCap()) {
       status('That import needs ' + tiles.length + ' tiles. The name table holds ' + tileCap() + ', so it was not applied.', true);
       return;
@@ -2221,10 +2281,11 @@ remember();
     doc.dirtyMap = true;
     applyFloatPalettes(f);
     const name = f.name;
-    const how = mode === 'add' ? 'Added tiles from ' : 'Overwrote cells from ';
+    const how = mode === 'add' ? 'Added tiles from ' : (name === 'Paste' ? 'Applied paste from ' : 'Imported into the map from ');
     state.float = null;
     state.tile = Math.min(state.tile, doc.tiles.length - 1);
-    status(how + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles.');
+    status(how + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles' +
+      (collapsed.removed ? ', removed ' + collapsed.removed + ' duplicate' + (collapsed.removed === 1 ? '' : 's') : '') + '.');
     renderAll();
   }
 
@@ -2253,8 +2314,10 @@ remember();
     const pending = state.float.pending ? ' quantize pending.' : '';
     const mode = importMode();
     const hint = mode === 'replace'
-      ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
-      : (mode === 'add' ? ' Apply appends new tiles.' : ' Apply overwrites cells on this map.');
+      ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
+      : (mode === 'add'
+        ? ' Apply appends new tiles and leaves this map picture.'
+        : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).');
     status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
   }
@@ -2529,8 +2592,75 @@ remember();
         : (doc.platform === 'snes' ? 'packed sjim' : (packed ? 'packed' : 'uncompressed'))) + ', ' + bytes.length + ' bytes).');
     } catch (err) {
       status(err.message || String(err), true);
+      window.alert(err.message || String(err));
     }
     renderNote();
+  }
+  function exportKind() {
+    const el = document.querySelector('input[name="jim-export-kind"]:checked');
+    return el && el.value ? el.value : 'native';
+  }
+  function openExportModal() {
+    if (!doc) return;
+    const nameEl = $('jim-export-native-name');
+    if (nameEl) nameEl.textContent = '(' + (doc.name || 'untitled.map.jim') + ')';
+    $('jim-export-dlg').hidden = false;
+  }
+  function closeExportModal() {
+    if ($('jim-export-dlg')) $('jim-export-dlg').hidden = true;
+  }
+  function exportPopup(msg) {
+    status(msg, true);
+    window.alert(msg);
+  }
+  function runChosenExport() {
+    const kind = exportKind();
+    closeExportModal();
+    try {
+      if (kind === 'png') {
+        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.png');
+        status('Exported the composed map as PNG.');
+        return;
+      }
+      if (kind === 'tiles') {
+        downloadCanvas(tilesPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '-tiles.png');
+        status('Exported the tile sheet as PNG.');
+        return;
+      }
+      if (kind === 'act') {
+        exportActFile();
+        return;
+      }
+      if (kind === 'jim') {
+        if (isSnes()) {
+          exportPopup('This is a SNES picture. It cannot be exported as Genesis .map.jim.');
+          return;
+        }
+        doExport();
+        return;
+      }
+      if (kind === 'sjim') {
+        if (!isSnes() || doc.variant === 'snes94') {
+          exportPopup(doc.variant === 'snes94'
+            ? 'NHL 94 SNES screens export as a ZIP of chr/map/pal files, not as .map.sjim.'
+            : 'This is a Genesis picture. It cannot be exported as SNES .map.sjim.');
+          return;
+        }
+        doExport();
+        return;
+      }
+      if (kind === 'snes94') {
+        if (doc.variant !== 'snes94') {
+          exportPopup('This is not an NHL 94 SNES screen. Export as .map.sjim, .map.jim, or PNG.');
+          return;
+        }
+        doExport();
+        return;
+      }
+      doExport();
+    } catch (err) {
+      exportPopup(err.message || String(err));
+    }
   }
   function mapPngPixels() {
     const W = doc.mapW * 8;
@@ -2967,9 +3097,15 @@ remember();
       const gone = state.tile;
       doc.tiles.splice(gone, 1);
       if (!doc.tiles.length) doc.tiles.push(new Uint8Array(64));
+      const blank = ensureBlankTile();
       doc.cells.forEach((c) => {
-        if (c.tile === gone) Object.assign(c, zeroCell());
-        else if (c.tile > gone) c.tile--;
+        if (c.tile === gone) {
+          c.tile = blank;
+          c.hFlip = 0;
+          c.vFlip = 0;
+          c.pal = 0;
+          c.priority = 0;
+        } else if (c.tile > gone) c.tile--;
       });
       doc.dirtyTiles = true;
       doc.dirtyMap = true;
@@ -2995,6 +3131,27 @@ remember();
       if (!remap.has(state.tile)) state.tile = 0;
       else state.tile = remap.get(state.tile);
       status('Removed ' + removed + ' unused tile' + (removed === 1 ? '' : 's') + '.');
+      renderAll();
+    });
+    if ($('jim-dedupe')) $('jim-dedupe').addEventListener('click', () => {
+      if (!canEdit()) return;
+      if (!Jim || typeof Jim.collapseDuplicateTiles !== 'function') {
+        status('Duplicate folding is not available.', true);
+        return;
+      }
+      const result = Jim.collapseDuplicateTiles(doc.tiles, doc.cells);
+      if (!result.removed) {
+        status('No duplicate tiles (including H-flip / V-flip matches).');
+        return;
+      }
+      remember();
+      doc.tiles = result.tiles;
+      doc.cells = result.cells;
+      doc.dirtyTiles = true;
+      doc.dirtyMap = true;
+      if (state.tile >= doc.tiles.length) state.tile = 0;
+      status('Removed ' + result.removed + ' duplicate tile' + (result.removed === 1 ? '' : 's') +
+        ' (H-flip and V-flip matches reuse one tile). ' + doc.tiles.length + ' / ' + tileCap() + ' left.');
       renderAll();
     });
     $('jim-open-btn').addEventListener('click', () => $('jim-open').click());
@@ -3035,7 +3192,7 @@ remember();
         placeFloat(state.float);
         status(importMode() === 'replace'
           ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
-          : (importMode() === 'add' ? 'Apply will append new tiles.' : 'Apply will overwrite cells on this map.'));
+          : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'));
         renderAll();
       }
     });
@@ -3049,20 +3206,10 @@ remember();
     });
     $('jim-float-apply').addEventListener('click', () => { try { applyFloat(); } catch (err) { status(err.message, true); } });
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
-    $('jim-export').addEventListener('click', doExport);
+    $('jim-export').addEventListener('click', openExportModal);
+    if ($('jim-export-ok')) $('jim-export-ok').addEventListener('click', runChosenExport);
+    if ($('jim-export-cancel')) $('jim-export-cancel').addEventListener('click', closeExportModal);
     $('jim-packed').addEventListener('change', renderNote);
-    if ($('jim-png')) $('jim-png').addEventListener('click', () => {
-      try {
-        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.png');
-        status('Exported the composed map as PNG.');
-      } catch (err) { status(err.message, true); }
-    });
-    if ($('jim-png-tiles')) $('jim-png-tiles').addEventListener('click', () => {
-      try {
-        downloadCanvas(tilesPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '-tiles.png');
-        status('Exported the tile sheet as PNG.');
-      } catch (err) { status(err.message, true); }
-    });
     if ($('jim-act-export')) $('jim-act-export').addEventListener('click', () => {
       try { exportActFile(); } catch (err) { status(err.message, true); }
     });
@@ -3097,6 +3244,11 @@ remember();
       else if ((event.ctrlKey || event.metaKey) && key === 'v') { paste(); event.preventDefault(); }
       else if (event.key === 'Delete' || event.key === 'Backspace') { clearSel(); event.preventDefault(); }
       else if (event.key === 'Escape') {
+        if ($('jim-export-dlg') && !$('jim-export-dlg').hidden) {
+          closeExportModal();
+          event.preventDefault();
+          return;
+        }
         if ($('jim-palmap') && !$('jim-palmap').hidden) {
           palMapPending = null;
           $('jim-palmap').hidden = true;
@@ -3104,7 +3256,7 @@ remember();
           return;
         }
         state.sel = null;
-        if (state.float) { state.float = null; status('Cancelled the floating import.'); }
+        if (state.float) { state.float = null; status('Cancelled the floating layer.'); }
         renderAll();
       }
     });

@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "1.2.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor tools have icons, labels, and a mouse cursor that matches the selected tool",
+        "Back arrow in the top right leaves the Image Editor and Jerseys pages (Close is gone)",
+        "Erase cell writes a blank tile filled with palette color 0",
+        "Paste and Import into current Image float with a dotted outline until you Apply",
+        "Export is a format picker; formats this picture cannot be show an error",
+        "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically"
+      ]
+    },
+    {
       "version": "1.1.0",
       "date": "2026-10-29",
       "changes": [

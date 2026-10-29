@@ -31,6 +31,7 @@ async function upload(page, button, file) {
 withBrowser('jed', async ({ url, newPage }) => {
   const page = await newPage(1400);
   await page.goto(url + 'jed.html');
+  assert.ok(await page.locator('#jed-exit.studio-back').count());
   await page.setInputFiles('#jed-files', [fix('HOMEPALS95.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS95.BIN', 'AWAYPALS.BIN')]);
   await page.waitForSelector('#jed-team-list .item');
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);

@@ -9,6 +9,31 @@
   <link rel="stylesheet" href="jim.css">
 </head>
 <body class="jed jim-app">
+  <svg class="jim-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-paint" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M14.8 3.8l5.4 5.4-11.6 11.6H3.2v-5.4L14.8 3.8z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M13 5.6l5.4 5.4"/></symbol>
+    <symbol id="i-place" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.4" d="M3 9h18M3 15h18M9 3v18M15 3v18"/><rect x="9" y="9" width="6" height="6" fill="currentColor" opacity="0.85"/></symbol>
+    <symbol id="i-erase" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M4 14.5l7.2-7.2 6.5 6.5-4.4 4.4H6.2L4 16.2z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8.2 18.2H20"/></symbol>
+    <symbol id="i-select" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3 2.5"/></symbol>
+    <symbol id="i-pick" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M14.2 4.2l5.6 5.6-8.4 8.4-3.2-3.2 6-10.8z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M7.2 16.2L4 20"/><path fill="currentColor" d="M8.8 17.2l3.2-3.2 1.8 1.8-3.2 3.2z"/></symbol>
+    <symbol id="i-pan" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11m0-3.2V5.5a1.5 1.5 0 0 1 3 0V11m0-2.2V6.8a1.5 1.5 0 0 1 3 0V13c0 3-1.4 6.5-4.6 6.5H12c-2.8 0-5-1.6-6.2-3.4L4.2 13.2A1.4 1.4 0 0 1 6.6 12L8 13"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M7 8H3.5V4.5M3.8 7.6A8 8 0 1 1 4 16"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M17 8h3.5V4.5M20.2 7.6A8 8 0 1 0 20 16"/></symbol>
+    <symbol id="i-selall" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8 16H5.5A1.5 1.5 0 0 1 4 14.5v-10A1.5 1.5 0 0 1 5.5 3h10A1.5 1.5 0 0 1 17 4.5V8"/></symbol>
+    <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="17.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8.4 16.2L20 4M15.6 16.2L4 4"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><path fill="none" stroke="currentColor" stroke-width="1.6" d="M8 11h8M8 15h6"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 6h16M10 6V4h4v2M10 11l4 4m0-4l-4 4"/></symbol>
+    <symbol id="i-mirror" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 3v18"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 7L4 12l6 5M14 7l6 5-6 5"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M3 12h18"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M7 10L12 4l5 6M7 14l5 6 5-6"/></symbol>
+    <symbol id="i-rot90" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.2-5.6"/><path fill="currentColor" d="M20 4v6h-6z"/></symbol>
+    <symbol id="i-rot180" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 5a7 7 0 1 1-5 2.1"/><path fill="currentColor" d="M4 4h6v6z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 15h6M12 12v6"/></symbol>
+    <symbol id="i-rot270" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 12a8 8 0 1 0 2.2-5.6"/><path fill="currentColor" d="M4 4v6h6z"/></symbol>
+    <symbol id="i-new" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M12 9v6M9 12h6"/></symbol>
+    <symbol id="i-delete" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M5 7h14l-1.2 13H6.2L5 7z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M9 4h6v3H9zM4 7h16"/></symbol>
+    <symbol id="i-unused" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M7 7l10 10"/></symbol>
+    <symbol id="i-dedupe" viewBox="0 0 24 24"><rect x="3" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M8 12h8"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5l-7 7 7 7"/></symbol>
+  </svg>
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
       <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, or .act</p>
   </div>
@@ -18,10 +43,11 @@
       <p id="jim-status" class="jed-status">Open a Genesis .map.jim, a 93S .map.sjim, or an NHL 94 SNES screen. Nothing is written back into a ROM.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
-      <button type="button" id="jim-exit" class="ghost-btn" title="Back to the image viewer">Close</button>
       <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, SNES .map.sjim, or NHL 94 SNES .zip/.huf/.lz/.rle">Open…</button>
-      <button type="button" id="jim-export" class="ghost-btn" title="Download using the opened file name">Export</button>
-      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <button type="button" id="jim-export" class="ghost-btn" title="Choose a format and download">Export…</button>
+      <button type="button" id="jim-exit" class="studio-back" title="Back to NHL9X Studio" aria-label="Back to NHL9X Studio">
+        <svg width="18" height="18"><use href="#i-back"/></svg>
+      </button>
       <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim,.huf,.lz,.rle,.pairs,.zip,.chr,.pal">
     </div>
   </header>
@@ -63,10 +89,10 @@
       </div>
 
       <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
-      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="Overwrite cells keeps this map size. Add tiles appends to the tile set. New image resizes the map to the picture so you can see the whole quantized import.">
-        <option value="replace">New image (resize map)</option>
-        <option value="place">Overwrite cells (keep map size)</option>
-        <option value="add">Add tiles (append to the set)</option>
+      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture.">
+        <option value="replace">Import New Image &amp; Overwrite Tiles (Resize Map)</option>
+        <option value="place">Import into current Image &amp; Add Tiles</option>
+        <option value="add">Import Tiles (keep existing image &amp; tiles)</option>
       </select></label>
       <fieldset class="ice-popts" id="jim-q-opts">
         <legend>Two-step color</legend>
@@ -97,40 +123,76 @@
       <p id="jim-hash" class="ice-warn" hidden></p>
       <div class="ice-toolbar">
         <div class="pin-options jim-tools" role="group" aria-label="Tool">
-          <button type="button" data-tool="paint" aria-pressed="true" class="jim-edit">Paint pixel</button>
-          <button type="button" data-tool="place" aria-pressed="false" class="jim-edit">Place tile</button>
-          <button type="button" data-tool="erase" aria-pressed="false" class="jim-edit">Erase cell</button>
-          <button type="button" data-tool="select" aria-pressed="false" class="jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">Select</button>
-          <button type="button" data-tool="pick" aria-pressed="false">Pick color</button>
-          <button type="button" data-tool="pan" aria-pressed="false">Pan</button>
+          <button type="button" data-tool="paint" aria-pressed="true" class="jim-icon-btn jim-edit" title="Paint pixel">
+            <svg><use href="#i-paint"/></svg><span>Paint</span>
+          </button>
+          <button type="button" data-tool="place" aria-pressed="false" class="jim-icon-btn jim-edit" title="Place tile">
+            <svg><use href="#i-place"/></svg><span>Place</span>
+          </button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="jim-icon-btn jim-edit" title="Erase cell">
+            <svg><use href="#i-erase"/></svg><span>Erase</span>
+          </button>
+          <button type="button" data-tool="select" aria-pressed="false" class="jim-icon-btn jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">
+            <svg><use href="#i-select"/></svg><span>Select</span>
+          </button>
+          <button type="button" data-tool="pick" aria-pressed="false" class="jim-icon-btn" title="Pick color">
+            <svg><use href="#i-pick"/></svg><span>Pick</span>
+          </button>
+          <button type="button" data-tool="pan" aria-pressed="false" class="jim-icon-btn" title="Pan">
+            <svg><use href="#i-pan"/></svg><span>Pan</span>
+          </button>
         </div>
         <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
         <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
         <label class="check" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color, which is how a full screen looks over pal 0 color 0."><input type="checkbox" id="jim-trans"> Transparency</label>
         <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
-        <button type="button" id="jim-undo" class="ghost-btn" title="Ctrl+Z" disabled>Undo</button>
-        <button type="button" id="jim-redo" class="ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>Redo</button>
+        <button type="button" id="jim-undo" class="jim-icon-btn ghost-btn" title="Ctrl+Z" disabled>
+          <svg><use href="#i-undo"/></svg><span>Undo</span>
+        </button>
+        <button type="button" id="jim-redo" class="jim-icon-btn ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>
+          <svg><use href="#i-redo"/></svg><span>Redo</span>
+        </button>
       </div>
       <div class="ice-blockbar" id="jim-blockbar">
-        <button type="button" id="jim-sel-all" class="ghost-btn jim-edit" title="Select every cell">Select all</button>
-        <button type="button" id="jim-copy" class="ghost-btn jim-edit jim-needsel" title="Ctrl+C">Copy</button>
-        <button type="button" id="jim-cut" class="ghost-btn jim-edit jim-needsel" title="Ctrl+X">Cut</button>
-        <button type="button" id="jim-paste" class="ghost-btn jim-edit" title="Ctrl+V">Paste</button>
-        <button type="button" id="jim-clear" class="ghost-btn jim-edit jim-needsel" title="Delete">Clear</button>
-        <button type="button" data-xf="h" class="ghost-btn jim-edit jim-needsel" title="XOR the H-flip bit and reorder the block. Tile pixels stay as they are.">Mirror ↔</button>
-        <button type="button" data-xf="v" class="ghost-btn jim-edit jim-needsel" title="XOR the V-flip bit and reorder the block. Tile pixels stay as they are.">Flip ↕</button>
-        <button type="button" data-xf="90" class="ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">⟳ 90°</button>
-        <button type="button" data-xf="180" class="ghost-btn jim-edit jim-needsel" title="XOR both flip bits and reorder the block. No new tiles.">180°</button>
-        <button type="button" data-xf="270" class="ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">⟲ 270°</button>
+        <button type="button" id="jim-sel-all" class="jim-icon-btn ghost-btn jim-edit" title="Select every cell">
+          <svg><use href="#i-selall"/></svg><span>Select all</span>
+        </button>
+        <button type="button" id="jim-copy" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Ctrl+C">
+          <svg><use href="#i-copy"/></svg><span>Copy</span>
+        </button>
+        <button type="button" id="jim-cut" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Ctrl+X">
+          <svg><use href="#i-cut"/></svg><span>Cut</span>
+        </button>
+        <button type="button" id="jim-paste" class="jim-icon-btn ghost-btn jim-edit" title="Ctrl+V">
+          <svg><use href="#i-paste"/></svg><span>Paste</span>
+        </button>
+        <button type="button" id="jim-clear" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Delete">
+          <svg><use href="#i-clear"/></svg><span>Clear</span>
+        </button>
+        <button type="button" data-xf="h" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR the H-flip bit and reorder the block. Tile pixels stay as they are.">
+          <svg><use href="#i-mirror"/></svg><span>Mirror</span>
+        </button>
+        <button type="button" data-xf="v" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR the V-flip bit and reorder the block. Tile pixels stay as they are.">
+          <svg><use href="#i-flip"/></svg><span>Flip</span>
+        </button>
+        <button type="button" data-xf="90" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">
+          <svg><use href="#i-rot90"/></svg><span>90°</span>
+        </button>
+        <button type="button" data-xf="180" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR both flip bits and reorder the block. No new tiles.">
+          <svg><use href="#i-rot180"/></svg><span>180°</span>
+        </button>
+        <button type="button" data-xf="270" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">
+          <svg><use href="#i-rot270"/></svg><span>270°</span>
+        </button>
         <span id="jim-sel-info" class="muted"></span>
       </div>
       <div class="ice-float-bar" id="jim-float-bar" hidden>
         <b id="jim-float-name"></b>
-        <span class="muted">drag to place · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
+        <span class="muted">dotted outline · drag to place · Apply to commit · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
         <button type="button" id="jim-float-apply" class="ghost-btn">Apply</button>
         <button type="button" id="jim-float-cancel" class="ghost-btn">Cancel</button>
       </div>
-      <fieldset class="jim-preview-set">
+      <fieldset class="jim-preview-set" hidden>
         <legend>Preview only, not saved</legend>
         <p class="muted jim-preview-help">These change how the map looks here. They are not JIM fields. Export still writes the stored pixels and map words.</p>
         <label class="check" title="When the game loads some screens it rewrites each tile pixel through an 8-byte nibble table in 68000 code (not in the .map.jim). Each box is two palette indexes: high nibble then low. Identity is 01 23 45 67 89 AB CD EF."><input type="checkbox" id="jim-remap-on"> Remap</label>
@@ -181,14 +243,27 @@
       <div class="ice-tilebox">
         <canvas id="jim-tile-edit" width="128" height="128" title="Tile pixels. Mirror and Flip here change the bitmap. Map Mirror and Flip change the cell bits."></canvas>
         <div class="ice-tilebtns">
-          <button type="button" id="jim-new-tile" class="ghost-btn jim-edit">New</button>
-          <button type="button" id="jim-del-tile" class="ghost-btn jim-edit" title="Remove this tile. Cells that used it become a zero word. Later tiles renumber.">Delete</button>
-          <button type="button" id="jim-unused" class="ghost-btn jim-edit" title="Drop tiles no cell uses and renumber">Remove unused</button>
-          <button type="button" id="jim-mirror" class="ghost-btn jim-edit" title="Mirror this tile's pixels left-right">Mirror</button>
-          <button type="button" id="jim-flip" class="ghost-btn jim-edit" title="Flip this tile's pixels top-bottom">Flip</button>
+          <button type="button" id="jim-new-tile" class="jim-icon-btn ghost-btn jim-edit" title="Add a blank tile filled with palette color 0">
+            <svg><use href="#i-new"/></svg><span>New</span>
+          </button>
+          <button type="button" id="jim-del-tile" class="jim-icon-btn ghost-btn jim-edit" title="Remove this tile. Cells that used it become a blank pal-0 tile. Later tiles renumber.">
+            <svg><use href="#i-delete"/></svg><span>Delete</span>
+          </button>
+          <button type="button" id="jim-unused" class="jim-icon-btn ghost-btn jim-edit" title="Drop tiles no cell uses and renumber">
+            <svg><use href="#i-unused"/></svg><span>Unused</span>
+          </button>
+          <button type="button" id="jim-dedupe" class="jim-icon-btn ghost-btn jim-edit" title="Reuse identical tiles, including ones that only match after H-flip and/or V-flip">
+            <svg><use href="#i-dedupe"/></svg><span>Duplicates</span>
+          </button>
+          <button type="button" id="jim-mirror" class="jim-icon-btn ghost-btn jim-edit" title="Mirror this tile's pixels left-right">
+            <svg><use href="#i-mirror"/></svg><span>Mirror</span>
+          </button>
+          <button type="button" id="jim-flip" class="jim-icon-btn ghost-btn jim-edit" title="Flip this tile's pixels top-bottom">
+            <svg><use href="#i-flip"/></svg><span>Flip</span>
+          </button>
         </div>
       </div>
-      <p class="muted">Strip Mirror / Flip edit tile pixels. The block bar edits H-flip and V-flip on the cells.</p>
+      <p class="muted">Strip Mirror / Flip edit tile pixels. The block bar edits H-flip and V-flip on the cells. Duplicates also folds H/V mirrors into one tile.</p>
 
       <h2>Cell <span class="muted" id="jim-cellpos"></span></h2>
       <div class="jim-inspector">
@@ -201,12 +276,7 @@
         <p class="mono muted" id="jim-preview-word"></p>
       </div>
 
-      <h2>Export</h2>
-      <p class="muted">Uncompressed is the default for Genesis. Packed sets bit 15 of the tile-count word. SNES .map.sjim is one packed stream (map, pal, tiles). The download uses the name you opened.</p>
-      <div class="jed-io">
-        <button type="button" id="jim-png" class="ghost-btn" title="PNG of the composed map at 1×">Export map PNG</button>
-        <button type="button" id="jim-png-tiles" class="ghost-btn" title="PNG of the tile strip, 16 tiles per row">Export tiles PNG</button>
-      </div>
+      <h2>View</h2>
       <label class="check" title="Outline every cell that uses the tile selected in the strip"><input type="checkbox" id="jim-show-users"> Highlight cells using this tile</label>
       <label class="check" title="Outline tiles no cell uses"><input type="checkbox" id="jim-show-unused"> Highlight unused tiles</label>
     </section>
@@ -219,6 +289,27 @@
       <div class="jed-io">
         <button type="button" id="jim-palmap-ok" class="ghost-btn">Apply</button>
         <button type="button" id="jim-palmap-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="jim-export-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-export-title">
+      <h2 id="jim-export-title">Export</h2>
+      <p class="muted">Pick a format. If this picture cannot be that file, you will get an error and nothing is downloaded.</p>
+      <fieldset class="jim-export-kinds">
+        <legend class="muted">Format</legend>
+        <label><input type="radio" name="jim-export-kind" value="native" checked> Native file <span class="muted" id="jim-export-native-name"></span></label>
+        <label><input type="radio" name="jim-export-kind" value="jim"> Genesis .map.jim</label>
+        <label><input type="radio" name="jim-export-kind" value="sjim"> SNES .map.sjim</label>
+        <label><input type="radio" name="jim-export-kind" value="snes94"> NHL 94 SNES screen (.zip)</label>
+        <label><input type="radio" name="jim-export-kind" value="png" id="jim-png"> Map PNG</label>
+        <label><input type="radio" name="jim-export-kind" value="tiles" id="jim-png-tiles"> Tiles PNG</label>
+        <label><input type="radio" name="jim-export-kind" value="act"> Adobe .ACT</label>
+      </fieldset>
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <div class="jed-io">
+        <button type="button" id="jim-export-ok" class="ghost-btn">Export</button>
+        <button type="button" id="jim-export-cancel" class="ghost-btn">Cancel</button>
       </div>
     </div>
   </div>
