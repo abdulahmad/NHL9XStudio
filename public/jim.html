@@ -44,7 +44,7 @@
       <p id="jim-header-mode" class="muted"></p>
 
       <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit</span></h2>
-      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is transparent. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is a VDP hole onto the backdrop (often the same ice ink). Check Transparency to show those holes. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
@@ -106,7 +106,7 @@
         </div>
         <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
         <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
-        <label class="check"><input type="checkbox" id="jim-trans" checked> Transparency</label>
+        <label class="check" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color, which is how a full screen looks over pal 0 color 0."><input type="checkbox" id="jim-trans"> Transparency</label>
         <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
         <button type="button" id="jim-undo" class="ghost-btn" title="Ctrl+Z" disabled>Undo</button>
         <button type="button" id="jim-redo" class="ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>Redo</button>

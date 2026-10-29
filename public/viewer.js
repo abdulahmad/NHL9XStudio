@@ -479,12 +479,14 @@ function bitmapFor(frame, colors) {
   return canvas;
 }
 
-/** Native 1:1 bitmap of a frame in the selected palette, color 0 see-through, no marks (the stage's bitmapFor path). */
+/** Native 1:1 bitmap of a frame in the selected palette, no marks. Sprites skip color 0; pictures follow Transparency. */
 function exportCanvas(frame, colors) {
   const saved = state.transparentOverride;
   const savedMode = state.mode;
-  state.transparentOverride = true;
-  state.mode = 'image'; // bitmapFor only honors the override in image mode
+  // bitmapFor only honors the override in image mode. Pictures keep the
+  // stage's hole rule (screens default opaque); sprites still skip color 0.
+  state.transparentOverride = frame && frame.picture ? imageTransparencyOn(frame) : true;
+  state.mode = 'image';
   try {
     const src = bitmapFor(frame, colors);
     const out = document.createElement('canvas');
@@ -2274,7 +2276,9 @@ async function openJimEditor() {
   } : null;
   const fileName = (image.fileNames && image.fileNames[0] && !/\s/.test(image.fileNames[0]))
     ? image.fileNames[0]
-    : (image.kind === 'snes93-screen' ? image.id + '.map.sjim' : image.id + '.map.jim');
+    : (image.kind === 'snes93-screen'
+      ? (/\.sjim$/i.test(image.id) ? image.id : image.id + '.map.sjim')
+      : (/\.jim$/i.test(image.id) ? image.id : image.id + '.map.jim'));
   handOffJim({
     name: fileName,
     game: state.game,

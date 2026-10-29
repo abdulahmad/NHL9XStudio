@@ -7,6 +7,8 @@
  *   node test/browser/jim.js
  */
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { withBrowser } = require('./harness');
 const { compressBytecode, packPortrait, unpackPortrait } = require('../../lib/jim');
 const { packSnesMapWord, packSnesTile, parseSjim } = require('../../lib/sjim');
@@ -59,6 +61,30 @@ function rawJim() {
   out.writeUInt16BE(1, mapOff + 2);
   out.writeUInt16BE(0x8000, mapOff + 4); // tile 0, priority
   return out;
+}
+
+/** One pal-1 cell of nibble 0, ice in pal 0 and pal 1 color 0 (Title1's hole pattern). */
+function iceHoleJim() {
+  const tiles = 1, palOff = 10 + 32, mapOff = palOff + 128;
+  const out = Buffer.alloc(mapOff + 6);
+  out.writeUInt32BE(palOff, 0);
+  out.writeUInt32BE(mapOff, 4);
+  out.writeUInt16BE(tiles, 8);
+  const ice = 0x0ee8; // r3=4 g3=7 b3=7 → expandChannel 146,255,255
+  out.writeUInt16BE(ice, palOff);
+  out.writeUInt16BE(ice, palOff + 32);
+  out.writeUInt16BE(1, mapOff);
+  out.writeUInt16BE(1, mapOff + 2);
+  out.writeUInt16BE(0x2000, mapOff + 4); // pal 1
+  return out;
+}
+
+function sampleCanvas(page, sel) {
+  return page.locator(sel).evaluate((c) => {
+    const ctx = c.getContext('2d');
+    const p = ctx.getImageData(Math.max(0, (c.width >> 1) - 1), Math.max(0, (c.height >> 1) - 1), 1, 1).data;
+    return [p[0], p[1], p[2], p[3]];
+  });
 }
 
 function packedSjim() {
@@ -134,6 +160,8 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
   assert.match(await page.textContent('#jim-map-px'), /pixels/);
+  assert.strictEqual(await page.isChecked('#jim-trans'), false, 'editor Transparency defaults off');
+  assert.match(await page.locator('label:has(#jim-trans)').getAttribute('title'), /VDP-transparent/i);
 
   await page.setInputFiles('#jim-image', [{
     name: 'wide.png',
@@ -179,9 +207,26 @@ withBrowser('jim', async ({ url, newPage }) => {
   ]);
   const name = dl.suggestedFilename();
   assert.match(name, /pri\.map\.jim/);
-  const fs = require('fs');
   const out = fs.readFileSync(await dl.path());
   assert.strictEqual(out.readUInt16BE(out.length - 2), 0x8000, 'priority bit survived export');
+  assert.strictEqual(await page.isChecked('#jim-trans'), false);
+
+  await page.setInputFiles('#jim-open', [{
+    name: 'ice.map.jim',
+    mimeType: 'application/octet-stream',
+    buffer: iceHoleJim()
+  }]);
+  await page.waitForFunction(() => /Opened ice\.map\.jim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  if (await page.isChecked('#jim-grid')) await page.uncheck('#jim-grid');
+  assert.strictEqual(await page.isChecked('#jim-trans'), false);
+  const iceRgb = await sampleCanvas(page, '#jim-map');
+  assert.ok(iceRgb[1] > 200 && iceRgb[2] > 200 && iceRgb[0] > 100 && iceRgb[0] < 190,
+    'pal 1 color 0 ice is drawn, not a hole ' + iceRgb);
+  await page.check('#jim-trans');
+  const holeRgb = await sampleCanvas(page, '#jim-map');
+  assert.ok(Math.abs(holeRgb[0] - holeRgb[1]) < 8 && holeRgb[0] < 170,
+    'Transparency punches pal 1 color 0 as gray ' + holeRgb);
+  await page.uncheck('#jim-trans');
 
   const sjimBuf = packedSjim();
   await page.setInputFiles('#jim-open', [{
@@ -296,6 +341,48 @@ withBrowser('jim', async ({ url, newPage }) => {
   }, null, { timeout: 10000 });
   assert.ok(await viewer.locator('#edit-image').isVisible(), 'Images tab should show Edit image');
   assert.strictEqual(await viewer.locator('#edit-map').count(), 0, 'Details pane should not have a second Edit image');
+  await viewer.setInputFiles('#file-open', [{
+    name: 'ice.map.jim',
+    mimeType: 'application/octet-stream',
+    buffer: iceHoleJim()
+  }]);
+  await viewer.waitForFunction(() => {
+    const detail = (document.getElementById('detail') || {}).innerText || '';
+    const cap = (document.getElementById('caption') || {}).textContent || '';
+    return /ice\.map\.jim/i.test(detail + ' ' + cap);
+  }, null, { timeout: 10000 });
+  await viewer.waitForFunction(() => {
+    const field = document.getElementById('transparent-field');
+    return field && !field.classList.contains('is-hidden');
+  }, null, { timeout: 5000 });
+  assert.strictEqual(await viewer.isChecked('#transparent'), false, 'viewer Transparency defaults off for JIM pictures');
+  const romFile = [
+    '/home/ubuntu/.cursor/projects/agent/uploads/nhl92retail_a08d.bin',
+    '/tmp/nhl92retail.bin',
+    path.join(__dirname, '..', '..', 'roms', 'nhl92.bin')
+  ].find((p) => fs.existsSync(p));
+  if (romFile) {
+    await viewer.setInputFiles('#file-open', [{
+      name: 'nhl92.bin',
+      mimeType: 'application/octet-stream',
+      buffer: fs.readFileSync(romFile)
+    }]);
+    await viewer.waitForFunction(() => {
+      const cap = (document.getElementById('caption') || {}).textContent || '';
+      return !/Add the ROM/i.test(cap);
+    }, null, { timeout: 15000 });
+    await viewer.click('#mode-image');
+    await viewer.fill('#search', 'Title1');
+    await viewer.waitForFunction(() => {
+      return [...document.querySelectorAll('#catalog .item .name')].some((n) => /^Title$/.test((n.textContent || '').trim()));
+    }, null, { timeout: 8000 });
+    await viewer.locator('#catalog .item .name').filter({ hasText: /^Title$/ }).first().click();
+    await viewer.waitForFunction(() => {
+      const cap = (document.getElementById('caption') || {}).textContent || '';
+      return /Title · step/i.test(cap);
+    }, null, { timeout: 15000 });
+    assert.strictEqual(await viewer.isChecked('#transparent'), false, 'Title1 does not start with Transparency on');
+  }
   await viewer.setInputFiles('#file-open', [{
     name: 'pri.map.jim',
     mimeType: 'application/octet-stream',
