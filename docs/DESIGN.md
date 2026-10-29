@@ -40,7 +40,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | `server.js` | Node HTTP server (default port **8732**). Serves `public/`, `lib/*.js`, `data/*.asm`, ROMs from `roms/`, PC assets from `pc95/`, palettes from sibling tool folders. |
 | `public/viewer.js` | Single-page UI: catalog, stage, transport, filmstrip, compass, jersey palette, URL hash state. |
 | `lib/games.js` | **Game profiles**: frames file, platform, banks, image catalog, ROM hints, sheet/SNES/PC options. |
-| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). |
+| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). |
 | `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames95pc.asm` for 95 DOS. |
 | `test.js` | Parser tests, PC95 tests, NHL 92 frame BMP cross-check when ROM present. |
 
@@ -83,6 +83,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `sheet` | `lib/sheet.js` on ROM sprite sheet | Same tile model + hotlist from ROM |
 | `snes93` / `snes94` | `lib/snes.js`, `snespak.js` | Planar 4bpp, mode-specific maps/screens/cards |
 | `jim` | `lib/jim.js` | Genesis compressed maps (images tab) |
+| `sjim` | `lib/sjim.js` | NHLPA 93 SNES packed screens (map + pal + planar tiles) |
 | `pc95` | `lib/pc95.js` | RefPack QFS → SHPI → SPIT; PPV SHPI banks; team/rink palettes |
 
 **Catalog data:** SPF/SPA from `data/frames*.asm` via `lib/parse-frames.js` (including ascending SPF range fix). Genesis image lists from `lib/genesis-images.js` (generated from disassembly extracts). SNES 94 frames partly generated (`tools/build-snes-frames.js`).
@@ -377,7 +378,7 @@ Full requirements, format truth vs JIM-Tools, architecture, and step × model ta
 Short version:
 
 - Hide **Chip lab** in the header; keep `public/chip-lab.html`.
-- New **Maps** tool (JED/ice-style page): import PNG/BMP, lock palettes from one `.act` (colors 1–16 = pal 0, …), 3-bit then 15–61 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`.
+- New **Maps** tool (JED/ice-style page): import PNG/BMP, lock palettes from one `.act` (colors 1–16 = pal 0, …), 3-bit then 15–61 colors (or reverse), Photoshop-like methods + dither, per-tile multi-palette seams, place/rotate tiles, export raw or `DecompressBytecode`-packed `.map.jim`, encode portraits (`UnpackPicture` 3-byte rows), and open/export NHLPA 93 SNES `.map.sjim`.
 - Compression: implement from 93G `src/decompress93.asm` / 94G `src/decompress94.asm` / `lib/jim.js` `decompressBytecode`. Do **not** follow EA-NHL-Tools `JIM-Tools/Readme.md` “JZIP” opcodes.
 
 ---

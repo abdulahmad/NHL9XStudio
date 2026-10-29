@@ -16,11 +16,11 @@ const SUITES = [
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests',
-  'jim-roundtrip', 'genesis-quantize', 'jim-compress'
+  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
 const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'jed', 'jed-ice', 'jed-server', 'jim'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -63,8 +63,9 @@ const RULES = [
   { re: /^public\/ice\.js$/, tests: ['browser:jed-ice'], why: 'centre ice tab' },
   { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },
-  { re: /^lib\/jim\.js$/, tests: ['core', 'jim-roundtrip', 'jim-compress'], why: 'JIM parse / encode' },
-  { re: /^lib\/jim-compress\.js$/, tests: ['jim-compress', 'jim-roundtrip'], why: 'JIM tile compressor' },
+  { re: /^lib\/jim\.js$/, tests: ['core', 'jim-roundtrip', 'jim-compress', 'sjim'], why: 'JIM parse / encode' },
+  { re: /^lib\/jim-compress\.js$/, tests: ['jim-compress', 'jim-roundtrip', 'sjim'], why: 'JIM tile compressor' },
+  { re: /^lib\/sjim\.js$/, tests: ['sjim', 'jim-roundtrip'], why: 'SNES .map.sjim parse / encode' },
   { re: /^lib\/genesis-quantize\.js$/, tests: ['genesis-quantize'], why: 'Genesis palette quantize' },
   { re: /^public\/jim\.(js|css|html)$/, tests: ['browser:jim', 'browser:load-errors'], why: 'Maps editor page' },
   // Image / parser libraries and data: the core checks only.

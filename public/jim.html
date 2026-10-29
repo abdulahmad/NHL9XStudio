@@ -10,19 +10,19 @@
 </head>
 <body class="jed jim-app">
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
-    <p>Drop a .map.jim, .jim, .bin, image, or .act</p>
+      <p>Drop a .map.jim, .map.sjim, .jim, .bin, image, or .act</p>
   </div>
   <header class="jed-head">
     <div>
       <h1 class="product-name"><a href="index.html">NHL9X Studio</a> · Maps</h1>
-      <p id="jim-status" class="jed-status">Open a Genesis .map.jim, .jim, or .bin. Nothing is written back into a ROM.</p>
+      <p id="jim-status" class="jed-status">Open a Genesis .map.jim or a SNES .map.sjim. Nothing is written back into a ROM.</p>
     </div>
     <div class="jed-actions" role="group" aria-label="Files">
-      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, or .bin (packed or raw)">Open…</button>
-      <button type="button" id="jim-donor-btn" class="ghost-btn" title="128-byte CRAM (four lines) or 32-byte line for pictures with no palette">Donor CRAM…</button>
+      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, or SNES .map.sjim">Open…</button>
+      <button type="button" id="jim-donor-btn" class="ghost-btn" title="Genesis: 128-byte CRAM (four lines) or a 32-byte line. SNES: 32, 128, or 256 bytes of little-endian BGR555.">Donor…</button>
       <button type="button" id="jim-export" class="ghost-btn" title="Download using the opened file name">Export</button>
-      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro). On: bit 15 set and a bytecode stream. If packed encode is not available, the error is shown and nothing is saved."><input type="checkbox" id="jim-packed"> Packed export</label>
-      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin">
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro). On: bit 15 set and a bytecode stream. SNES .map.sjim is always a packed stream."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim">
       <input type="file" id="jim-donor" hidden accept=".bin,.pal">
     </div>
   </header>
@@ -36,11 +36,15 @@
         <label>H <input type="number" id="jim-map-h" min="1" max="1024" value="8"></label>
         <button type="button" id="jim-resize" class="ghost-btn jim-edit">Resize…</button>
       </fieldset>
-      <label class="check" title="Checked: write 128 bytes of CRAM. Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
+      <label>Kind <select id="jim-kind" class="jim-edit" title="Map writes name-table cells. Tile sheet is sequential tiles with a shared zero header (95G ArenaGfx).">
+        <option value="map">Map</option>
+        <option value="sheet">Tile sheet</option>
+      </select></label>
+      <label class="check" title="Checked: write 128 bytes of CRAM (Genesis) or BGR555 lines (SNES). Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
       <p id="jim-header-mode" class="muted"></p>
 
-      <h2>Palettes <span class="muted">4 × 16 CRAM · 3-bit</span></h2>
-      <p class="muted">Pal 0 color 0 is opaque. Index 0 of palettes 1–3 is transparent. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line.</p>
+      <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit</span></h2>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is transparent. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills.</p>
       <div class="jim-pal-flags" id="jim-pal-flags">
         <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
       </div>
@@ -52,7 +56,9 @@
         <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
       </div>
       <div class="jed-io">
-        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Colors 1–16 fill pal 0, 17–32 pal 1, 33–48 pal 2, 49–64 pal 3. Locked lines are the ones quantization will not rewrite.">Import .ACT…</button>
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Adobe Color Table. Colors 1–16 fill pal 0, 17–32 pal 1, 33–48 pal 2, 49–64 pal 3. Importing locks those lines; uncheck Lock to leave a line open.">Import .ACT…</button>
+        <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of the four (or eight) lines. Optional 772-byte trailer with color count.">Export .ACT</button>
+        <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
         <input type="file" id="jim-act" hidden accept=".act">
       </div>
 
@@ -86,7 +92,7 @@
     </section>
 
     <section class="jed-col jim-view" aria-label="Map">
-      <p id="jim-portrait" class="ice-warn" hidden>Portrait variant: read-only. Rows are 3-byte packed (3 bits + 5). Export keeps the original bytes.</p>
+      <p id="jim-portrait" class="ice-warn" hidden>Portrait: each row is 3 bytes of 3-bit pixels plus 5 (indexes 5–12). Export writes UnpackPicture rows.</p>
       <p id="jim-hash" class="ice-warn" hidden></p>
       <div class="ice-toolbar">
         <div class="pin-options jim-tools" role="group" aria-label="Tool">
@@ -139,7 +145,21 @@
         </span>
         <label class="check" title="When the game draws a plane it XORs printa onto every map word. That can flip priority and palette relative to the file. This preview XORs only the $F800 attribute bits, so the tile index stays. Default $F800 matches dobitmap."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
         <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask" title="Hex mask XORed onto each map word for preview. Only bits 15–11 are used ($F800).">
+        <label class="check" title="d5 bitmask dobitmap uses when copying CRAM lines (bit 0 = pal 0). Not stored in the file. Defaults to the lines the map references."><input type="checkbox" id="jim-dobitmap-on"> dobitmap mask</label>
+        <input type="text" id="jim-dobitmap" class="mono" value="" size="4" maxlength="2" spellcheck="false" aria-label="dobitmap palette bitmask" title="Hex bitmask of palette lines dobitmap would load. Bit 0 = pal 0.">
+        <span id="jim-dobitmap-hint" class="muted"></span>
+        <label>Note <input type="text" id="jim-memo" maxlength="120" placeholder="printa / VRAM start (not in the file)"></label>
       </fieldset>
+      <div id="jim-compare" class="jim-compare" hidden>
+        <figure>
+          <canvas id="jim-compare-src" width="64" height="64"></canvas>
+          <figcaption>Original</figcaption>
+        </figure>
+        <figure>
+          <canvas id="jim-compare-q" width="64" height="64"></canvas>
+          <figcaption>Quantized</figcaption>
+        </figure>
+      </div>
       <div class="ice-scroll" id="jim-scroll"><canvas id="jim-map" width="64" height="64"></canvas></div>
       <p id="jim-note" class="muted"></p>
     </section>
@@ -162,24 +182,28 @@
       <h2>Cell <span class="muted" id="jim-cellpos"></span></h2>
       <div class="jim-inspector">
         <label>Tile index <input type="number" id="jim-tile" class="jim-edit" min="0" max="2047"></label>
-        <label>Palette <select id="jim-pal" class="jim-edit">
-          <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
-        </select></label>
-        <label class="check"><input type="checkbox" id="jim-h" class="jim-edit"> H-flip (bit 11)</label>
-        <label class="check"><input type="checkbox" id="jim-v" class="jim-edit"> V-flip (bit 12)</label>
-        <label class="check"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority (bit 15)</label>
+        <label>Palette <select id="jim-pal" class="jim-edit"></select></label>
+        <label class="check"><input type="checkbox" id="jim-h" class="jim-edit"> H-flip <span id="jim-h-bit">(bit 11)</span></label>
+        <label class="check"><input type="checkbox" id="jim-v" class="jim-edit"> V-flip <span id="jim-v-bit">(bit 12)</span></label>
+        <label class="check"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority <span id="jim-pri-bit">(bit 15)</span></label>
         <p class="mono" id="jim-word"></p>
         <p class="mono muted" id="jim-preview-word"></p>
       </div>
 
       <h2>Export</h2>
-      <p class="muted">Uncompressed is the default. Packed sets bit 15 of the tile-count word. The download uses the name you opened. Tile indexes above 2047, or a set bigger than 2048 tiles, are refused.</p>
+      <p class="muted">Uncompressed is the default for Genesis. Packed sets bit 15 of the tile-count word. SNES .map.sjim is one packed stream (map, pal, tiles). The download uses the name you opened.</p>
+      <div class="jed-io">
+        <button type="button" id="jim-png" class="ghost-btn" title="PNG of the composed map at 1×">Export map PNG</button>
+        <button type="button" id="jim-png-tiles" class="ghost-btn" title="PNG of the tile strip, 16 tiles per row">Export tiles PNG</button>
+      </div>
       <label class="check" title="Outline every cell that uses the tile selected in the strip"><input type="checkbox" id="jim-show-users"> Highlight cells using this tile</label>
+      <label class="check" title="Outline tiles no cell uses"><input type="checkbox" id="jim-show-unused"> Highlight unused tiles</label>
     </section>
   </main>
   <script src="lib/anim.js"></script>
   <script src="lib/jim-compress.js"></script>
   <script src="lib/jim.js"></script>
+  <script src="lib/sjim.js"></script>
   <script src="lib/open-asset.js"></script>
   <script src="lib/genesis-quantize.js"></script>
   <script src="jim.js"></script>

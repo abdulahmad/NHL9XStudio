@@ -4,7 +4,7 @@ const path = require('path');
 const {
   decodeJim, parseJim, encodeJim, unpackMapWord, packMapWord, unpackTile, packTile,
   compressBytecode, decompressBytecode, transformBlock, grabBlock, stampBlock, cloneJim,
-  encodeCramWord, decodeCramWord, encodePaletteLine,
+  encodeCramWord, decodeCramWord, encodePaletteLine, packPortrait, unpackPortrait,
   matchTile, applyDonorPalette, flippedTile, rasterize
 } = require('../lib/jim');
 const { classify } = require('../lib/open-asset');
@@ -239,9 +239,22 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   portrait.writeUInt16BE(36, 8);
   const doc = parseJim(portrait);
   assert.strictEqual(doc.variant, 'portrait');
-  assert.strictEqual(doc.readOnly, true);
+  assert.strictEqual(doc.readOnly, false);
   assert.strictEqual(decodeJim(portrait).renderFrame(1).width, 48);
   assert.deepStrictEqual(Buffer.from(encodeJim(doc)), portrait);
+  doc.tiles[0][0] = 9;
+  doc.dirty = true;
+  const packed = encodeJim(doc);
+  const again = parseJim(packed);
+  assert.strictEqual(again.variant, 'portrait');
+  assert.strictEqual(again.tiles[0][0], 9);
+  const rows = packPortrait(doc.tiles);
+  const backTiles = unpackPortrait(rows, 0, doc.tiles.length);
+  assert.strictEqual((backTiles[0] >> 4) & 15, 9);
+  doc.tiles[0][1] = 0;
+  const clamped = packPortrait(doc.tiles);
+  const clampedBack = unpackPortrait(clamped, 0, doc.tiles.length);
+  assert.strictEqual(clampedBack[0] & 15, 5);
 }
 
 {
@@ -258,6 +271,8 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   assert.notStrictEqual(classify('', prefix).kind, 'jim');
   assert.notStrictEqual(classify('ronbarr.map.jzip', prefix).kind, 'jim');
   assert.strictEqual(classify('RonBarr.map.jim', prefix).kind, 'jim');
+  assert.strictEqual(classify('Title1.map.sjim', prefix).kind, 'sjim');
+  assert.notStrictEqual(classify('Title1.map.sjim', prefix).kind, 'jim');
   assert.notStrictEqual(classify('x.bin', Uint8Array.from([0x4a, 0x49, 0, 0])).kind, 'jim');
 }
 

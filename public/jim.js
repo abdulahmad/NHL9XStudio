@@ -11,7 +11,9 @@
   'use strict';
 
   const Jim = typeof Nhl92Jim === 'undefined' ? null : Nhl92Jim;
+  const Sjim = typeof Nhl92Sjim === 'undefined' ? null : Nhl92Sjim;
   const Quant = typeof NhlGenesisQuantize === 'undefined' ? null : NhlGenesisQuantize;
+  const QKEY = 'nhl9x-jim-quantize';
   const UNDO_MAX = 100;
   const METHODS = ['perceptual', 'selective', 'adaptive', 'uniform', 'weighted-kmeans'];
   const DITHERS = ['none', 'diffusion', 'pattern', 'noise'];
@@ -41,7 +43,7 @@
       tile: c.tile | 0,
       hFlip: c.hFlip ? 1 : 0,
       vFlip: c.vFlip ? 1 : 0,
-      pal: c.pal & 3,
+      pal: c.pal & 7,
       priority: c.priority ? 1 : 0
     };
   }
@@ -65,15 +67,46 @@
     return best;
   }
   function rgbOf(c) {
+    if (isSnes() && c.r5 != null) {
+      return 'rgb(' + expand5(c.r5) + ',' + expand5(c.g5) + ',' + expand5(c.b5) + ')';
+    }
     return 'rgb(' + expandChannel(c.r3) + ',' + expandChannel(c.g3) + ',' + expandChannel(c.b3) + ')';
   }
   function hexOf(c) {
-    function h(n) { return expandChannel(n).toString(16).padStart(2, '0'); }
-    return '#' + h(c.r3) + h(c.g3) + h(c.b3);
+    function h(n, bits) {
+      const v = bits === 5 ? expand5(n) : expandChannel(n);
+      return v.toString(16).padStart(2, '0');
+    }
+    if (isSnes() && c.r5 != null) return '#' + h(c.r5, 5) + h(c.g5, 5) + h(c.b5, 5);
+    return '#' + h(c.r3, 3) + h(c.g3, 3) + h(c.b3, 3);
   }
 
+  function isSnes() { return !!(doc && doc.platform === 'snes'); }
+  function palCount() { return isSnes() ? 8 : 4; }
+  function tileCap() { return isSnes() ? 1024 : 2048; }
+  function expand5(v) { return ((v & 31) * 255 / 31) | 0; }
+  function encode5(value) {
+    value = Math.max(0, Math.min(255, Number(value) || 0));
+    let best = 0;
+    let err = 1e9;
+    for (let c = 0; c < 32; c++) {
+      const d = Math.abs(value - expand5(c));
+      if (d < err) { err = d; best = c; }
+    }
+    return best;
+  }
   function unpackWord(word) {
     word &= 0xffff;
+    if (isSnes()) {
+      if (Sjim && typeof Sjim.unpackSnesMapWord === 'function') return Sjim.unpackSnesMapWord(word);
+      return {
+        tile: word & 0x3ff,
+        pal: (word >>> 10) & 7,
+        priority: (word >>> 13) & 1,
+        hFlip: (word >>> 14) & 1,
+        vFlip: (word >>> 15) & 1
+      };
+    }
     return {
       tile: word & 0x7ff,
       hFlip: (word >>> 11) & 1,
@@ -83,6 +116,14 @@
     };
   }
   function packWord(cell) {
+    if (isSnes()) {
+      if (Sjim && typeof Sjim.packSnesMapWord === 'function') return Sjim.packSnesMapWord(cell) & 0xffff;
+      return (cell.tile & 0x3ff)
+        | ((cell.pal & 7) << 10)
+        | ((cell.priority ? 1 : 0) << 13)
+        | ((cell.hFlip ? 1 : 0) << 14)
+        | ((cell.vFlip ? 1 : 0) << 15);
+    }
     if (Jim && typeof Jim.packMapWord === 'function') {
       try {
         const packed = Jim.packMapWord(cell);
@@ -103,7 +144,7 @@
       tile: (value.tile != null ? value.tile : value.index) | 0,
       hFlip: value.hFlip ? 1 : 0,
       vFlip: value.vFlip ? 1 : 0,
-      pal: (pal | 0) & 3,
+      pal: (pal | 0) & 7,
       priority: value.priority ? 1 : 0
     };
   }
@@ -159,8 +200,11 @@
     }
     return line;
   }
-  function defaultPalettes() {
-    return [0, 1, 2, 3].map(defaultLine);
+  function defaultPalettes(count) {
+    const n = count || palCount();
+    const lines = [];
+    for (let p = 0; p < n; p++) lines.push(defaultLine(p));
+    return lines;
   }
   function copyBytes(src) {
     const u = src instanceof Uint8Array ? src : new Uint8Array(src);
@@ -215,7 +259,11 @@
     return {
       tiles: doc.tiles.map((t) => Uint8Array.from(t)),
       cells: doc.cells.map(cloneCell),
-      palettes: doc.palettes.map((line) => line.map((c) => ({ r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 }))),
+      palettes: doc.palettes.map((line) => line.map((c) => {
+        const color = { r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 };
+        if (c.r5 != null) { color.r5 = c.r5 & 31; color.g5 = c.g5 & 31; color.b5 = c.b5 & 31; }
+        return color;
+      })),
       mapW: doc.mapW,
       mapH: doc.mapH,
       embedPalettes: doc.embedPalettes,
@@ -227,7 +275,11 @@
   function restore(snap) {
     doc.tiles = snap.tiles.map((t) => Uint8Array.from(t));
     doc.cells = snap.cells.map(cloneCell);
-    doc.palettes = snap.palettes.map((line) => line.map((c) => ({ r3: c.r3, g3: c.g3, b3: c.b3 })));
+    doc.palettes = snap.palettes.map((line) => line.map((c) => {
+      const color = { r3: c.r3, g3: c.g3, b3: c.b3 };
+      if (c.r5 != null) { color.r5 = c.r5; color.g5 = c.g5; color.b5 = c.b5; }
+      return color;
+    }));
     doc.mapW = snap.mapW;
     doc.mapH = snap.mapH;
     doc.embedPalettes = snap.embedPalettes;
@@ -260,9 +312,7 @@
     renderAll();
   }
   function canEdit() {
-    if (!doc || !doc.readOnly) return true;
-    status('This portrait is read-only.', true);
-    return false;
+    return true;
   }
 
   function blankDoc() {
@@ -318,7 +368,11 @@
     if (line instanceof Uint8Array && line.length === 32) return readCram(line, 0);
     if (typeof line.length === 'number' && line.length === 16) {
       return Array.from(line, (entry) => {
-        if (entry && entry.r3 != null) return { r3: entry.r3 & 7, g3: entry.g3 & 7, b3: entry.b3 & 7 };
+        if (entry && entry.r3 != null) {
+          const color = { r3: entry.r3 & 7, g3: entry.g3 & 7, b3: entry.b3 & 7 };
+          if (entry.r5 != null) { color.r5 = entry.r5 & 31; color.g5 = entry.g5 & 31; color.b5 = entry.b5 & 31; }
+          return color;
+        }
         if (Array.isArray(entry) || ArrayBuffer.isView(entry)) {
           const r = entry[0], g = entry[1], b = entry[2];
           if (r <= 7 && g <= 7 && b <= 7) return { r3: r | 0, g3: g | 0, b3: b | 0 };
@@ -338,9 +392,9 @@
       }
       return lines;
     }
-    if (value && value.length === 4) {
+    if (value && (value.length === 4 || value.length === 8)) {
       const lines = [];
-      for (let p = 0; p < 4; p++) {
+      for (let p = 0; p < value.length; p++) {
         const line = lineFromParsed(value[p]);
         if (!line || line.some((c) => !c)) return null;
         lines.push(line);
@@ -387,12 +441,15 @@
       rawPal = bytes.subarray(palOff, palOff + 128);
       if (!palettes) palettes = [0, 1, 2, 3].map((p) => readCram(rawPal, p * 32));
     }
-    if (!palettes) palettes = defaultPalettes();
+    if (raw.palettes && raw.palettes.length > 4) palettes = raw.palettes;
+    if (!palettes) palettes = defaultPalettes(raw.platform === 'snes' ? 8 : 4);
     const embed = raw.embedPalettes != null ? !!raw.embedPalettes : !noPal && variant !== 'logo' && variant !== 'shared' && variant !== 'portrait';
     return {
       name: name,
       variant: variant,
-      readOnly: variant === 'portrait' || !!raw.readOnly,
+      platform: raw.platform || 'genesis',
+      sjim: raw.sjim || null,
+      readOnly: !!raw.readOnly,
       packedOnDisk: !!(raw.packedOnDisk || raw.packed),
       embedPalettes: embed,
       originEmbed: embed,
@@ -409,8 +466,9 @@
       dirtyTiles: false,
       dirtyPal: false,
       dirtyMap: false,
-      via: 'parseJim',
-      readerNote: ''
+      via: raw.platform === 'snes' ? 'parseSjim' : 'parseJim',
+      readerNote: '',
+      memo: raw.memo || ''
     };
   }
 
@@ -483,7 +541,7 @@
     return {
       name: name,
       variant: variant,
-      readOnly: portrait,
+      readOnly: false,
       packedOnDisk: packed,
       embedPalettes: embed,
       originEmbed: embed,
@@ -505,9 +563,21 @@
     };
   }
 
-  function openBytes(bytes, name, donor) {
+  function openBytes(bytes, name, donor, extra) {
     bytes = copyBytes(bytes);
     const donorBytes = donor && donor.length ? copyBytes(donor) : null;
+    extra = extra || {};
+    if ((extra.platform === 'snes' || (Sjim && Sjim.isSjimName && Sjim.isSjimName(name))) && Sjim && typeof Sjim.parseSjim === 'function') {
+      const parsed = Sjim.parseSjim(bytes, donorBytes, { name: name, layout: extra.sjim || extra.layout, remap: extra.remap });
+      const adapted = adaptParsed(parsed, name, bytes);
+      if (adapted) {
+        adapted.platform = 'snes';
+        adapted.sjim = parsed.sjim;
+        adapted.palettes = parsed.palettes;
+        adapted.packedOnDisk = true;
+        return adapted;
+      }
+    }
     let parsedErr = null;
     if (Jim && typeof Jim.parseJim === 'function') {
       try {
@@ -542,19 +612,31 @@ function identityMap(model) {
     return out;
   }
   function localEncode(model, packed) {
-    if (model.tiles.length > 2048) {
-      throw new Error('Export refused: ' + model.tiles.length + ' tiles is above the 2048 name-table limit.');
+    const cap = model.platform === 'snes' ? 1024 : 2048;
+    const bits = model.platform === 'snes' ? 10 : 11;
+    if (model.tiles.length > cap) {
+      throw new Error('Export refused: ' + model.tiles.length + ' tiles is above the ' + cap + ' name-table limit.');
     }
     for (let i = 0; i < model.cells.length; i++) {
       const c = model.cells[i];
-      if (c.tile > 2047) throw new Error('Export refused: cell ' + (i % model.mapW) + ',' + Math.floor(i / model.mapW) + ' tile ' + c.tile + ' does not fit in 11 bits.');
+      if (c.tile > cap - 1) throw new Error('Export refused: cell ' + (i % model.mapW) + ',' + Math.floor(i / model.mapW) + ' tile ' + c.tile + ' does not fit in ' + bits + ' bits.');
       if (c.tile >= model.tiles.length) throw new Error('Export refused: cell ' + (i % model.mapW) + ',' + Math.floor(i / model.mapW) + ' uses tile ' + c.tile + ' but the file has ' + model.tiles.length + '.');
     }
+    if (model.platform === 'snes') {
+      if (!Sjim || typeof Sjim.encodeSjim !== 'function') throw new Error('lib/sjim.js did not load.');
+      const dirty = !!(model.dirtyTiles || model.dirtyPal || model.dirtyMap);
+      if (!dirty && model.source) return model.source;
+      const payload = Object.assign({}, model, { dirty: true, originalBytes: model.source });
+      return Sjim.encodeSjim(payload, { force: true });
+    }
     if (model.variant === 'portrait') {
-      if (!model.source) throw new Error('This portrait has no original bytes to export.');
-      if (packed !== model.packedOnDisk || model.dirtyTiles || model.dirtyPal || model.dirtyMap || model.embedPalettes !== model.originEmbed) {
-        throw new Error('Portrait packing is read-only. Export keeps the original file, so leave Packed export matching the file and do not edit it.');
+      if (Jim && typeof Jim.encodeJim === 'function') {
+        return callBytes(Jim.encodeJim(Object.assign({}, model, {
+          dirty: !!(model.dirtyTiles || model.dirtyPal || model.dirtyMap),
+          originalBytes: model.source
+        })));
       }
+      if (!model.source) throw new Error('This portrait has no original bytes to export.');
       return model.source;
     }
     if (model.source && !model.dirtyTiles && !model.dirtyPal && !model.dirtyMap && !!packed === !!model.packedOnDisk && !!model.embedPalettes === !!model.originEmbed) {
@@ -641,9 +723,10 @@ function callEncodeJim(packed) {
   }
 function buildExport(packed) {
   const unchanged = doc.source && !doc.dirtyTiles && !doc.dirtyPal && !doc.dirtyMap
-    && !!packed === !!doc.packedOnDisk && !!doc.embedPalettes === !!doc.originEmbed;
-  if (unchanged) return doc.source;
-  if (doc.readOnly || doc.variant === 'portrait') return localEncode(doc, packed);
+    && !!packed === !!doc.packedOnDisk && !!doc.embedPalettes === !!doc.originEmbed
+    && doc.platform !== 'snes';
+  if (unchanged && doc.variant !== 'portrait') return doc.source;
+  if (doc.platform === 'snes' || doc.variant === 'portrait') return localEncode(doc, packed);
   if (Jim && typeof Jim.encodeJim === 'function') {
       try { return callBytes(callEncodeJim(packed)); }
       catch (err) {
@@ -677,7 +760,8 @@ function buildExport(packed) {
   function focused(id) { return document.activeElement && document.activeElement.id === id; }
 
   function headerMode() {
-if (doc.variant === 'portrait') return 'Export keeps the original portrait bytes.';
+if (doc.platform === 'snes') return 'Export writes one DecompressBytecode stream: map words, BGR555 palettes, then planar tiles. Offsets are not in the file.';
+if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows (3 bits + 5). Shared faces keep a zero header.';
   if (doc.embedPalettes) return 'Export writes 128 bytes of CRAM, then the map.';
   if (doc.variant === 'logo') return 'Export keeps the logo header: palette offset equals the map offset (no CRAM).';
   if ((doc.variant === 'shared' || doc.variant === 'sheet') && identityMap(doc)) return 'Export keeps the shared zero header (no map words, no CRAM).';
@@ -690,13 +774,15 @@ if (doc.variant === 'portrait') return 'Export keeps the original portrait bytes
     let bad = 0;
     doc.cells.forEach((c) => {
       pals.add(c.pal);
-      if (c.tile >= doc.tiles.length || c.tile > 2047) { bad++; return; }
+      if (c.tile >= doc.tiles.length || c.tile > tileCap() - 1) { bad++; return; }
       const tile = doc.tiles[c.tile];
       for (let i = 0; i < 64; i++) {
         const nib = tile[i] & 15;
         if (hiddenPixel(c.pal, nib)) continue;
         const col = doc.palettes[c.pal][nib];
-        inks.add(col.r3 + ',' + col.g3 + ',' + col.b3);
+        inks.add(col.r5 != null
+          ? col.r5 + ',' + col.g5 + ',' + col.b5
+          : col.r3 + ',' + col.g3 + ',' + col.b3);
       }
     });
     let budget = 0;
@@ -705,33 +791,50 @@ if (doc.variant === 'portrait') return 'Export keeps the original portrait bytes
   }
   function variantLabel() {
     if (doc.variant === 'nopal') return 'no palette ($FFFFFFFF)';
-    if (doc.variant === 'portrait') return 'portrait (read-only)';
-if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
-  if (doc.variant === 'logo') return 'logo (palette offset = map offset)';
+    if (doc.platform === 'snes') return 'SNES .map.sjim';
+    if (doc.variant === 'portrait') return 'portrait (UnpackPicture)';
+    if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
+    if (doc.variant === 'logo') return 'logo (palette offset = map offset)';
     return 'map';
   }
 
   function renderNote() {
     const s = stats();
     const warnings = [];
-    if (doc.tiles.length > 2048) warnings.push('above 2048 tiles — export refused');
-    else if (doc.tiles.length === 2048) warnings.push('at the 2048 tile cap');
+    const cap = tileCap();
+    if (doc.tiles.length > cap) warnings.push('above ' + cap + ' tiles — export refused');
+    else if (doc.tiles.length === cap) warnings.push('at the ' + cap + ' tile cap');
     if (s.bad) warnings.push(s.bad + ' cell' + (s.bad === 1 ? '' : 's') + ' point past the tile set');
     if (s.inks > s.budget) warnings.push('more ink colors than the open lines can hold');
     if (doc.mapW > 1024 || doc.mapH > 1024 || !doc.mapW || !doc.mapH) warnings.push('map size is outside 1–1024');
     if (doc.readerNote) warnings.push(doc.readerNote);
     const packedBox = $('jim-packed').checked;
-    const text = doc.tiles.length + '/2048 tiles · ' + s.inks + '/' + s.budget + ' colors · lines ' +
+    const mask = dobitmapMask();
+    const loaded = [];
+    for (let p = 0; p < palCount(); p++) if (mask & (1 << p)) loaded.push(p);
+    $('jim-dobitmap-hint').textContent = 'map ' + (s.pals.length ? s.pals.join(',') : 'none') +
+      ' · dobitmap $' + mask.toString(16).toUpperCase().padStart(2, '0') + ' loads ' + (loaded.length ? loaded.join(',') : 'none');
+    const text = doc.tiles.length + '/' + cap + ' tiles · ' + s.inks + '/' + s.budget + ' colors · lines ' +
       (s.pals.length ? s.pals.join(',') : 'none') + ' · on disk ' + (doc.packedOnDisk ? 'packed' : 'raw') +
-      ' · export ' + (packedBox ? 'packed' : 'uncompressed') + ' · ' + variantLabel() +
+      ' · export ' + (doc.platform === 'snes' ? 'packed sjim' : (packedBox ? 'packed' : 'uncompressed')) + ' · ' + variantLabel() +
       (warnings.length ? ' · ' + warnings.join(' · ') : '');
     $('jim-note').textContent = text;
-    $('jim-count').textContent = doc.tiles.length + ' / 2048';
-    $('jim-count').classList.toggle('error', doc.tiles.length > 2048);
-    for (let p = 0; p < 4; p++) {
+    $('jim-count').textContent = doc.tiles.length + ' / ' + cap;
+    $('jim-count').classList.toggle('error', doc.tiles.length > cap);
+    for (let p = 0; p < palCount(); p++) {
       const mark = $('jim-onmap-' + p);
       if (mark) mark.textContent = s.pals.indexOf(p) >= 0 ? 'yes' : '';
+      const row = mark && mark.parentElement;
+      if (row) row.classList.toggle('is-masked', $('jim-dobitmap-on').checked && !(mask & (1 << p)));
     }
+  }
+  function dobitmapMask() {
+    const typed = parseInt($('jim-dobitmap').value, 16);
+    if ($('jim-dobitmap').value && Number.isFinite(typed)) return typed & 0xff;
+    let mask = 0;
+    if (!doc) return 1;
+    doc.cells.forEach((c) => { mask |= 1 << (c.pal & 7); });
+    return mask || 1;
   }
   function renderMeta() {
     const where = [];
@@ -745,7 +848,23 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     if (!focused('jim-map-w')) $('jim-map-w').value = String(doc.mapW);
     if (!focused('jim-map-h')) $('jim-map-h').value = String(doc.mapH);
     if (document.activeElement !== $('jim-embed')) $('jim-embed').checked = !!doc.embedPalettes;
+    if ($('jim-kind') && document.activeElement !== $('jim-kind')) {
+      $('jim-kind').value = (doc.variant === 'sheet' || doc.variant === 'shared') ? 'sheet' : 'map';
+    }
     $('jim-portrait').hidden = doc.variant !== 'portrait';
+    $('jim-packed').disabled = isSnes();
+    if (isSnes()) $('jim-packed').checked = true;
+    if ($('jim-memo') && document.activeElement !== $('jim-memo')) $('jim-memo').value = doc.memo || '';
+    const palHead = $('jim-pal-sub');
+    if (palHead) palHead.textContent = isSnes() ? '8 × 16 BGR555 · 5-bit' : '4 × 16 CRAM · 3-bit';
+    const hBit = $('jim-h-bit');
+    const vBit = $('jim-v-bit');
+    const priBit = $('jim-pri-bit');
+    if (hBit) hBit.textContent = isSnes() ? '(bit 14)' : '(bit 11)';
+    if (vBit) vBit.textContent = isSnes() ? '(bit 15)' : '(bit 12)';
+    if (priBit) priBit.textContent = isSnes() ? '(bit 13)' : '(bit 15)';
+    syncRgbRange();
+    fillPalSelect();
   }
 
   function drawZoom() {
@@ -787,6 +906,19 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     return table;
   }
 
+  function rgbChannels(c) {
+    if (!c) return [0, 0, 0];
+    if (isSnes() && c.r5 != null) return [expand5(c.r5), expand5(c.g5), expand5(c.b5)];
+    return [expandChannel(c.r3), expandChannel(c.g3), expandChannel(c.b3)];
+  }
+  function portraitNibble(n) {
+    n &= 15;
+    if (!doc || doc.variant !== 'portrait') return n;
+    if (n === 0) return 0;
+    if (n < 5) return 5;
+    if (n > 12) return 12;
+    return n;
+  }
   function paintPixel(data, w, x, y, r, g, b, a) {
     const at = (y * w + x) * 4;
     data[at] = r; data[at + 1] = g; data[at + 2] = b; data[at + 3] = a;
@@ -817,7 +949,8 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
               paintPixel(data, W, x, y, v, v, v, 255);
             } else {
               const col = doc.palettes[sample.pal][sample.nib];
-              paintPixel(data, W, x, y, expandChannel(col.r3), expandChannel(col.g3), expandChannel(col.b3), 255);
+              const rgb = rgbChannels(col);
+              paintPixel(data, W, x, y, rgb[0], rgb[1], rgb[2], 255);
             }
           }
         }
@@ -897,7 +1030,8 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
             const y = my * 8 + py;
             if (showHoles && hiddenPixel(cell.pal, nib)) continue;
             const col = (f.palettes || doc.palettes)[cell.pal][nib];
-            paintPixel(data, W, x, y, expandChannel(col.r3), expandChannel(col.g3), expandChannel(col.b3), 255);
+            const rgb = rgbChannels(col);
+            paintPixel(data, W, x, y, rgb[0], rgb[1], rgb[2], 255);
           }
         }
       }
@@ -905,7 +1039,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
   }
 
   function renderSwatches() {
-    for (let p = 0; p < 4; p++) {
+    for (let p = 0; p < palCount(); p++) {
       for (let i = 0; i < 16; i++) {
         const btn = $('jim-sw-' + p + '-' + i);
         if (!btn) continue;
@@ -922,12 +1056,17 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     const locked = $('jim-lock-' + state.color.pal).checked || doc.readOnly;
     $('jim-color-line').textContent = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + hexOf(c) +
       '  CRAM ' + cramHex(c) + (locked ? '  (locked)' : '');
-    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(c.r3); $('jim-rn').value = String(c.r3); }
-    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(c.g3); $('jim-gn').value = String(c.g3); }
-    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(c.b3); $('jim-bn').value = String(c.b3); }
+    const ch = isSnes() && c.r5 != null;
+    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(ch ? c.r5 : c.r3); $('jim-rn').value = String(ch ? c.r5 : c.r3); }
+    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(ch ? c.g5 : c.g3); $('jim-gn').value = String(ch ? c.g5 : c.g3); }
+    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(ch ? c.b5 : c.b3); $('jim-bn').value = String(ch ? c.b5 : c.b3); }
     ['jim-r', 'jim-g', 'jim-b', 'jim-rn', 'jim-gn', 'jim-bn'].forEach((id) => { $(id).disabled = locked; });
   }
   function cramHex(c) {
+    if (isSnes() && c.r5 != null) {
+      const word = (c.r5 & 31) | ((c.g5 & 31) << 5) | ((c.b5 & 31) << 10);
+      return '$' + word.toString(16).toUpperCase().padStart(4, '0') + ' BGR555';
+    }
     const word = ((c.b3 & 7) << 9) | ((c.g3 & 7) << 5) | ((c.r3 & 7) << 1);
     return '$' + word.toString(16).toUpperCase().padStart(4, '0');
   }
@@ -947,7 +1086,8 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
           r = g = b = v;
         } else {
           const col = doc.palettes[pal][nib];
-          r = expandChannel(col.r3); g = expandChannel(col.g3); b = expandChannel(col.b3);
+          if (isSnes() && col.r5 != null) { r = expand5(col.r5); g = expand5(col.g5); b = expand5(col.b5); }
+          else { r = expandChannel(col.r3); g = expandChannel(col.g3); b = expandChannel(col.b3); }
         }
         for (let py = 0; py < z; py++) for (let px = 0; px < z; px++) {
           paintPixel(img.data, size, x * z + px, y * z + py, r, g, b, 255);
@@ -965,11 +1105,18 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     const host = $('jim-tiles');
     host.innerHTML = '';
     const size = doc.tiles.length > 400 ? 16 : 24;
+    const used = new Set();
+    doc.cells.forEach((c) => used.add(c.tile));
+    const markUnused = $('jim-show-unused') && $('jim-show-unused').checked;
     doc.tiles.forEach((tile, i) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'ice-tile';
-      btn.title = 'Tile ' + i;
+      if (!used.has(i)) {
+        btn.classList.add('unused');
+        if (markUnused) btn.classList.add('unused-mark');
+        btn.title = 'Tile ' + i + ' (unused)';
+      } else btn.title = 'Tile ' + i;
       btn.setAttribute('aria-selected', i === state.tile ? 'true' : 'false');
       btn.appendChild(thumb(tile, palForTile(i), size));
       btn.addEventListener('click', () => {
@@ -1012,7 +1159,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     if (document.activeElement !== $('jim-v')) $('jim-v').checked = !!cell.vFlip;
     if (document.activeElement !== $('jim-pri')) $('jim-pri').checked = !!cell.priority;
     const word = packWord(cell);
-    const bad = cell.tile >= doc.tiles.length || cell.tile > 2047;
+    const bad = cell.tile >= doc.tiles.length || cell.tile > tileCap() - 1;
     $('jim-word').textContent = 'Word $' + word.toString(16).toUpperCase().padStart(4, '0') +
       (bad ? '  (tile is outside the set)' : '');
     $('jim-word').classList.toggle('error', bad);
@@ -1041,6 +1188,35 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     $('jim-q-warn').textContent = state.float && state.float.warnings && state.float.warnings.length
       ? state.float.warnings.join(' ')
       : '';
+    renderCompare();
+  }
+  function blitRgba(canvas, rgba, w, h) {
+    const max = 160;
+    const scale = Math.max(1, Math.floor(Math.min(max / w, max / h)));
+    canvas.width = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    const img = ctx.createImageData(w, h);
+    img.data.set(rgba.subarray(0, w * h * 4));
+    const tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    tmp.getContext('2d').putImageData(img, 0, 0);
+    ctx.drawImage(tmp, 0, 0, w * scale, h * scale);
+  }
+  function renderCompare() {
+    const box = $('jim-compare');
+    if (!box) return;
+    const f = state.float;
+    if (!f || !f.original) { box.hidden = true; return; }
+    box.hidden = false;
+    blitRgba($('jim-compare-src'), f.original.rgba, f.original.w, f.original.h);
+    if (f.quantRgba) blitRgba($('jim-compare-q'), f.quantRgba, f.original.w, f.original.h);
+    else {
+      const ctx = $('jim-compare-q').getContext('2d');
+      $('jim-compare-q').width = 64; $('jim-compare-q').height = 24;
+      ctx.fillStyle = '#222'; ctx.fillRect(0, 0, 64, 24);
+    }
   }
   function renderBatch() {
     const ul = $('jim-batch');
@@ -1050,7 +1226,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
       const name = document.createElement('span');
       name.textContent = item.name + ' ' + item.w + '×' + item.h;
       li.appendChild(name);
-      for (let p = 0; p < 4; p++) {
+      for (let p = 0; p < Math.min(4, palCount()); p++) {
         const label = document.createElement('label');
         const box = document.createElement('input');
         box.type = 'checkbox';
@@ -1064,6 +1240,14 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
         label.appendChild(document.createTextNode(' ' + p));
         li.appendChild(label);
       }
+      const lockAct = document.createElement('label');
+      const lockBox = document.createElement('input');
+      lockBox.type = 'checkbox';
+      lockBox.checked = item.lockAct !== false;
+      lockBox.addEventListener('change', () => { item.lockAct = lockBox.checked; });
+      lockAct.appendChild(lockBox);
+      lockAct.appendChild(document.createTextNode(' lock ACT'));
+      li.appendChild(lockAct);
       const empty = document.createElement('label');
       const emptyBox = document.createElement('input');
       emptyBox.type = 'checkbox';
@@ -1127,7 +1311,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     const k = p.y * doc.mapW + p.x;
     let cell = doc.cells[k];
     if (!doc.tiles[cell.tile]) return;
-    const nib = state.strokeNib & 15;
+    const nib = portraitNibble(state.strokeNib);
     if (nib === nibbleAt(cell, p.px, p.py) && (state.strokeForcePal == null || cell.pal === state.strokeForcePal)) {
       state.tile = cell.tile;
       return;
@@ -1147,7 +1331,7 @@ if (doc.variant === 'shared' || doc.variant === 'sheet') return 'shared header';
     if (state.tile >= doc.tiles.length) state.tile = 0;
     const prev = doc.cells[p.y * doc.mapW + p.x];
     doc.cells[p.y * doc.mapW + p.x] = {
-      tile: state.tile, hFlip: 0, vFlip: 0, pal: state.color.pal & 3, priority: prev ? prev.priority : 0
+      tile: state.tile, hFlip: 0, vFlip: 0, pal: state.color.pal & (isSnes() ? 7 : 3), priority: prev ? prev.priority : 0
     };
     doc.dirtyMap = true;
     state.focus = { x: p.x, y: p.y };
@@ -1470,7 +1654,7 @@ remember();
     if (x < 0 || y < 0 || x > 7 || y > 7) return;
     const tile = doc.tiles[state.tile];
     if (!tile) return;
-    const nib = event.button === 2 || event.altKey ? 0 : (state.color.index & 15);
+    const nib = portraitNibble(event.button === 2 || event.altKey ? 0 : (state.color.index & 15));
     if ((tile[y * 8 + x] & 15) === nib) return;
     if (!state.tileStroke) { remember(); state.tileStroke = true; }
     tile[y * 8 + x] = nib;
@@ -1483,11 +1667,21 @@ remember();
   function setChannel(ch, value) {
     const p = state.color.pal;
     const i = state.color.index;
-    if ($('jim-lock-' + p).checked || doc.readOnly) return;
-    const v = Math.max(0, Math.min(7, value | 0));
-    if ((doc.palettes[p][i][ch] & 7) === v) return;
-    if (!state.colorStroke) { remember(); state.colorStroke = true; }
-    doc.palettes[p][i][ch] = v;
+    if ($('jim-lock-' + p) && $('jim-lock-' + p).checked) return;
+    const max = isSnes() ? 31 : 7;
+    const v = Math.max(0, Math.min(max, value | 0));
+    const color = doc.palettes[p][i];
+    if (isSnes()) {
+      const key = ch === 'r3' ? 'r5' : ch === 'g3' ? 'g5' : 'b5';
+      if ((color[key] & 31) === v) return;
+      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      color[key] = v;
+      color[ch] = v >> 2;
+    } else {
+      if ((color[ch] & 7) === v) return;
+      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      color[ch] = v;
+    }
     doc.dirtyPal = true;
     renderSwatches();
     renderMap();
@@ -1500,10 +1694,10 @@ remember();
     const prev = doc.cells[k];
     let tile = parseInt($('jim-tile').value, 10);
     if (!Number.isFinite(tile)) tile = prev.tile;
-    tile = Math.max(0, Math.min(2047, tile));
+    tile = Math.max(0, Math.min(tileCap() - 1, tile));
     const next = {
       tile: tile,
-      pal: parseInt($('jim-pal').value, 10) & 3,
+      pal: parseInt($('jim-pal').value, 10) & (isSnes() ? 7 : 3),
       hFlip: $('jim-h').checked ? 1 : 0,
       vFlip: $('jim-v').checked ? 1 : 0,
       priority: $('jim-pri').checked ? 1 : 0
@@ -1548,8 +1742,8 @@ remember();
     renderAll();
   }
 
-  function quantizeOpts(pals) {
-    const locked = [0, 1, 2, 3].map((p) => $('jim-lock-' + p).checked);
+  function quantizeOpts(pals, lockAct) {
+    const locked = [0, 1, 2, 3].map((p) => !!(lockAct !== false && $('jim-lock-' + p) && $('jim-lock-' + p).checked));
     return {
       order: $('jim-q-order').value,
       stepA: { method: $('jim-a-method').value, dither: $('jim-a-dither').value, strength: Number($('jim-a-strength').value) },
@@ -1562,21 +1756,28 @@ remember();
     };
   }
   function actFromDoc() {
+    const lines = palCount();
     const out = new Uint8Array(768);
-    for (let p = 0; p < 4; p++) {
+    for (let p = 0; p < lines; p++) {
       for (let i = 0; i < 16; i++) {
-        const c = doc.palettes[p][i];
+        const c = doc.palettes[p] && doc.palettes[p][i];
+        if (!c) continue;
         const at = (p * 16 + i) * 3;
-        out[at] = expandChannel(c.r3);
-        out[at + 1] = expandChannel(c.g3);
-        out[at + 2] = expandChannel(c.b3);
+        if (c.r5 != null) {
+          out[at] = expand5(c.r5); out[at + 1] = expand5(c.g5); out[at + 2] = expand5(c.b5);
+        } else {
+          out[at] = expandChannel(c.r3); out[at + 1] = expandChannel(c.g3); out[at + 2] = expandChannel(c.b3);
+        }
       }
     }
     return out;
   }
   function openPalList() {
     const pals = [];
-    for (let p = 0; p < 4; p++) if ($('jim-use-' + p).checked) pals.push(p);
+    for (let p = 0; p < Math.min(4, palCount()); p++) {
+      const box = $('jim-use-' + p);
+      if (box && box.checked) pals.push(p);
+    }
     return pals;
   }
   function padImage(image) {
@@ -1656,7 +1857,7 @@ remember();
       if (!tileOpaque(padded.rgba, padded.w, padded.h, tile.x, tile.y, alpha)) return;
       cells[tile.y * tw + tile.x] = {
         nibbles: Uint8Array.from(tile.nibbles || tile.pixels || []),
-        pal: (tile.pal | 0) & 3
+        pal: (tile.pal | 0) & (isSnes() ? 7 : 3)
       };
     });
     return {
@@ -1672,19 +1873,25 @@ remember();
       onlyEmpty: !!onlyEmpty
     };
   }
-  function quantizeToFloat(image, pals, onlyEmpty) {
+  function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
     const padded = padImage(image);
     const use = pals == null ? openPalList() : pals.slice();
     if (!use.length) throw new Error('Pick at least one palette line (Use) for ' + image.name + '.');
+    let result;
     if (Quant && typeof Quant.quantize === 'function') {
-      const result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use));
+      result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use, lockAct));
       const order = $('jim-q-order').value === 'countFirst' ? 'count, then 3-bit' : '3-bit, then count';
       const warnings = (result.warnings || []).slice();
       warnings.unshift('Preview is after both steps (' + order + ').');
-      return floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
+      const fl = floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
+      fl.original = padded;
+      fl.quantRgba = result.rgbaOut;
+      return fl;
     }
     const stub = snapStub(padded, Number($('jim-alpha').value));
-    return floatFrom(image.name, padded, stub.tiles, stub.palettes, ['quantize pending'].concat(stub.warnings), true, onlyEmpty);
+    const fl = floatFrom(image.name, padded, stub.tiles, stub.palettes, ['quantize pending'].concat(stub.warnings), true, onlyEmpty);
+    fl.original = padded;
+    return fl;
   }
   function mergeFloat(base, extra) {
     const w = Math.max(base.w, extra.w);
@@ -1740,8 +1947,8 @@ remember();
         cells[Y * doc.mapW + X] = { tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal, priority: 0 };
       }
     }
-    if (tiles.length > 2048) {
-      status('That import needs ' + tiles.length + ' tiles. The name table holds 2048, so it was not applied.', true);
+    if (tiles.length > tileCap()) {
+      status('That import needs ' + tiles.length + ' tiles. The name table holds ' + tileCap() + ', so it was not applied.', true);
       return;
     }
     remember();
@@ -1750,13 +1957,22 @@ remember();
     doc.dirtyTiles = true;
     doc.dirtyMap = true;
     if (f.palettes) {
-      const locked = [0, 1, 2, 3].map((p) => $('jim-lock-' + p).checked);
-      for (let p = 0; p < 4; p++) {
+      const n = palCount();
+      const locked = [];
+      for (let p = 0; p < n; p++) locked[p] = !!( $('jim-lock-' + p) && $('jim-lock-' + p).checked );
+      for (let p = 0; p < n; p++) {
         if (locked[p] || !f.palettes[p]) continue;
         for (let i = 0; i < 16; i++) {
           const c = f.palettes[p][i];
           if (!c) continue;
-          doc.palettes[p][i] = { r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 };
+          const next = { r3: c.r3 & 7, g3: c.g3 & 7, b3: c.b3 & 7 };
+          if (c.r5 != null) { next.r5 = c.r5 & 31; next.g5 = c.g5 & 31; next.b5 = c.b5 & 31; }
+          else if (isSnes()) {
+            next.r5 = ((c.r3 & 7) << 2) | ((c.r3 & 7) >> 1);
+            next.g5 = ((c.g3 & 7) << 2) | ((c.g3 & 7) >> 1);
+            next.b5 = ((c.b3 & 7) << 2) | ((c.b3 & 7) >> 1);
+          }
+          doc.palettes[p][i] = next;
         }
       }
       doc.dirtyPal = true;
@@ -1764,7 +1980,7 @@ remember();
     const name = f.name;
     state.float = null;
     state.tile = Math.min(state.tile, doc.tiles.length - 1);
-    status('Applied ' + name + '. ' + doc.tiles.length + ' / 2048 tiles.');
+    status('Applied ' + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles.');
     renderAll();
   }
 
@@ -1824,24 +2040,44 @@ remember();
       }
     }
     remember();
-    doc.palettes = lines;
+    const keep = palCount() > 4 ? doc.palettes.slice(4) : [];
+    doc.palettes = lines.concat(keep);
+    while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
     doc.dirtyPal = true;
-    const locks = [0, 1, 2, 3].filter((p) => $('jim-lock-' + p).checked);
-    status('Loaded ACT colors 1–64 into palettes 0–3.' +
-      (locks.length ? ' Locked lines: ' + locks.join(', ') + '.' : ' No line is locked yet.') +
+    for (let p = 0; p < 4; p++) {
+      const box = $('jim-lock-' + p);
+      if (box) box.checked = true;
+    }
+    status('Loaded ACT colors 1–64 into palettes 0–3 and locked those lines. Uncheck Lock to leave a line open for import.' +
       (snapped ? ' Some colors were snapped to 3-bit CRAM.' : ''));
     renderAll();
   }
   function applyDonor(bytes) {
-    if (bytes.length !== 32 && bytes.length !== 128) throw new Error('Donor CRAM must be 32 or 128 bytes');
-    if (doc.readOnly) {
-      const line = readCram(bytes, bytes.length === 128 ? 32 : 0);
-      doc.palettes = [0, 1, 2, 3].map(() => line.map((c) => ({ r3: c.r3, g3: c.g3, b3: c.b3 })));
-      doc.dirtyPal = false;
-      status('Donor colors are for display only. The portrait file is unchanged.');
+    if (isSnes()) {
+      if (bytes.length !== 32 && bytes.length !== 128 && bytes.length !== 256) {
+        throw new Error('SNES donor is 32, 128, or 256 bytes of little-endian BGR555');
+      }
+      if (!Sjim || typeof Sjim.fromBgr555 !== 'function') throw new Error('lib/sjim.js did not load.');
+      remember();
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      const lines = Math.min(8, bytes.length >> 5);
+      while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
+      for (let p = 0; p < lines; p++) {
+        const lock = $('jim-lock-' + p);
+        if (lock && lock.checked) continue;
+        const line = [];
+        for (let i = 0; i < 16; i++) {
+          const at = bytes.length === 32 ? i * 2 : p * 32 + i * 2;
+          line.push(at + 1 < bytes.length ? Sjim.fromBgr555(view.getUint16(at, true)) : Sjim.fromBgr555(0));
+        }
+        doc.palettes[p] = line;
+      }
+      doc.dirtyPal = true;
+      status(bytes.length === 256 ? 'SNES BGR555 replaced unlocked lines.' : 'SNES donor applied.');
       renderAll();
       return;
     }
+    if (bytes.length !== 32 && bytes.length !== 128) throw new Error('Donor CRAM must be 32 or 128 bytes');
     remember();
     const lines = bytes.length === 128
       ? [0, 1, 2, 3].map((p) => readCram(bytes, p * 32))
@@ -1871,14 +2107,20 @@ remember();
       if (doc.cells[i].tile) { state.tile = doc.cells[i].tile; break; }
     }
     if (state.tile >= doc.tiles.length) state.tile = 0;
-    $('jim-packed').checked = false;
+    $('jim-packed').checked = isSnes() || !!doc.packedOnDisk;
+    buildPaletteChrome();
+    fillPalSelect();
+    syncRgbRange();
+    let mask = 0;
+    doc.cells.forEach((c) => { mask |= 1 << (c.pal & 7); });
+    $('jim-dobitmap').value = (mask || 1).toString(16).toUpperCase().padStart(2, '0');
     status(note || ('Opened ' + doc.name + ' (' + variantLabel() + ', ' + doc.tiles.length + ' tiles).'));
     renderAll();
   }
   function openJimBytes(bytes, name) {
     if (isDirty() && !window.confirm('Discard unsaved map edits and open ' + name + '?')) return;
     const next = openBytes(bytes, name);
-    if (typeof Jim.decodeJim === 'function') {
+    if (next.platform !== 'snes' && Jim && typeof Jim.decodeJim === 'function') {
       try { Jim.decodeJim(bytes); } catch (err) { next.readerNote = (next.readerNote ? next.readerNote + ' ' : '') + err.message; }
     }
     loadDoc(next);
@@ -1902,11 +2144,100 @@ remember();
       let name = doc.name || 'untitled.map.jim';
       if (/\.jzip$/i.test(name)) name = name.replace(/\.jzip$/i, '.map.jim');
       download(bytes, name);
-      status('Exported ' + doc.name + ' (' + (packed ? 'packed' : 'uncompressed') + ', ' + bytes.length + ' bytes).');
+      status('Exported ' + doc.name + ' (' + (doc.platform === 'snes' ? 'packed sjim' : (packed ? 'packed' : 'uncompressed')) + ', ' + bytes.length + ' bytes).');
     } catch (err) {
       status(err.message || String(err), true);
     }
     renderNote();
+  }
+  function mapPngPixels() {
+    const W = doc.mapW * 8;
+    const H = doc.mapH * 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(W, H);
+    for (let ty = 0; ty < doc.mapH; ty++) {
+      for (let tx = 0; tx < doc.mapW; tx++) {
+        const cell = doc.cells[ty * doc.mapW + tx];
+        for (let py = 0; py < 8; py++) {
+          for (let px = 0; px < 8; px++) {
+            const nib = nibbleAt(cell, px, py);
+            const col = doc.palettes[cell.pal][nib];
+            const rgb = rgbChannels(col);
+            paintPixel(img.data, W, tx * 8 + px, ty * 8 + py, rgb[0], rgb[1], rgb[2], 255);
+          }
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas;
+  }
+  function tilesPngPixels() {
+    const cols = Math.min(16, Math.max(1, doc.tiles.length));
+    const rows = Math.ceil(doc.tiles.length / cols);
+    const W = cols * 8;
+    const H = rows * 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(W, H);
+    doc.tiles.forEach((tile, i) => {
+      const tx = i % cols;
+      const ty = (i / cols) | 0;
+      const pal = palForTile(i);
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const col = doc.palettes[pal][tile[y * 8 + x] & 15];
+          const rgb = rgbChannels(col);
+          paintPixel(img.data, W, tx * 8 + x, ty * 8 + y, rgb[0], rgb[1], rgb[2], 255);
+        }
+      }
+    });
+    ctx.putImageData(img, 0, 0);
+    return canvas;
+  }
+  function downloadCanvas(canvas, name) {
+    canvas.toBlob((blob) => {
+      if (!blob) { status('Could not build the PNG.', true); return; }
+      blob.arrayBuffer().then((buf) => download(new Uint8Array(buf), name));
+    }, 'image/png');
+  }
+  function exportActFile() {
+    const bytes = Quant && typeof Quant.writeAct === 'function'
+      ? Quant.writeAct(doc.palettes, { trailer: $('jim-act-trailer').checked, count: palCount() * 16 })
+      : actFromDoc();
+    const name = (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.act';
+    download(bytes.length === 768 && $('jim-act-trailer').checked
+      ? (Quant && Quant.writeAct ? Quant.writeAct(doc.palettes, { trailer: true, count: palCount() * 16 }) : bytes)
+      : bytes, name);
+    status('Exported ' + name + ' (' + bytes.length + ' bytes).');
+  }
+  function saveQuantize() {
+    try {
+      sessionStorage.setItem(QKEY, JSON.stringify({
+        order: $('jim-q-order').value,
+        aMethod: $('jim-a-method').value, aDither: $('jim-a-dither').value, aStrength: $('jim-a-strength').value,
+        bMethod: $('jim-b-method').value, bDither: $('jim-b-dither').value, bStrength: $('jim-b-strength').value,
+        opaque0: $('jim-opaque0').checked, alpha: $('jim-alpha').value
+      }));
+    } catch (err) { /* quota */ }
+  }
+  function loadQuantize() {
+    try {
+      const raw = sessionStorage.getItem(QKEY);
+      if (!raw) return;
+      const q = JSON.parse(raw);
+      if (q.order) $('jim-q-order').value = q.order;
+      if (q.aMethod) $('jim-a-method').value = q.aMethod;
+      if (q.aDither) $('jim-a-dither').value = q.aDither;
+      if (q.aStrength != null) $('jim-a-strength').value = q.aStrength;
+      if (q.bMethod) $('jim-b-method').value = q.bMethod;
+      if (q.bDither) $('jim-b-dither').value = q.bDither;
+      if (q.bStrength != null) $('jim-b-strength').value = q.bStrength;
+      if (q.opaque0 != null) $('jim-opaque0').checked = !!q.opaque0;
+      if (q.alpha != null) $('jim-alpha').value = q.alpha;
+    } catch (err) { /* ignore */ }
   }
 
   function fillSelect(id, values, selected) {
@@ -1919,9 +2250,32 @@ remember();
       el.appendChild(opt);
     });
   }
+  function fillPalSelect() {
+    const sel = $('jim-pal');
+    if (!sel) return;
+    const want = palCount();
+    if (sel.options.length === want) return;
+    sel.innerHTML = '';
+    for (let p = 0; p < want; p++) {
+      const opt = document.createElement('option');
+      opt.value = String(p);
+      opt.textContent = String(p);
+      sel.appendChild(opt);
+    }
+  }
+  function syncRgbRange() {
+    const max = isSnes() ? 31 : 7;
+    ['jim-r', 'jim-g', 'jim-b', 'jim-rn', 'jim-gn', 'jim-bn'].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.max = String(max);
+    });
+  }
   function buildPaletteChrome() {
     const host = $('jim-swatches');
-    for (let p = 0; p < 4; p++) {
+    host.innerHTML = '';
+    const n = palCount();
+    for (let p = 0; p < n; p++) {
       const row = document.createElement('div');
       row.className = 'jim-swatch-row';
       const name = document.createElement('span');
@@ -1971,13 +2325,13 @@ remember();
       if (/\.act$/i.test(lower)) { importAct(bytes); continue; }
       try { openJimBytes(bytes, file.name); }
       catch (err) {
-        if ((bytes.length === 32 || bytes.length === 128) && /\.(pal|bin)$/i.test(lower)) applyDonor(bytes);
+        if ((bytes.length === 32 || bytes.length === 128 || bytes.length === 256) && /\.(pal|bin)$/i.test(lower)) applyDonor(bytes);
         else status(err.message || String(err), true);
       }
     }
     for (const file of images) {
       const image = await readImage(file);
-      state.batch.push({ name: image.name, w: image.w, h: image.h, rgba: image.rgba, pals: openPalList(), onlyEmpty: $('jim-only-empty').checked });
+      state.batch.push({ name: image.name, w: image.w, h: image.h, rgba: image.rgba, pals: openPalList(), onlyEmpty: $('jim-only-empty').checked, lockAct: true });
     }
     if (images.length === 1 && list.length === 1) await importOne(images[0]);
     else if (images.length) {
@@ -2006,7 +2360,11 @@ remember();
       const bytes = Uint8Array.from(data.bytes || []);
       if (!bytes.length) return false;
       const donor = data.donor && data.donor.length ? Uint8Array.from(data.donor) : null;
-      loadDoc(openBytes(bytes, data.name || 'catalog.map.jim', donor));
+      loadDoc(openBytes(bytes, data.name || 'catalog.map.jim', donor, {
+        platform: data.platform,
+        sjim: data.sjim,
+        remap: data.remap
+      }));
       setRemapPreview(data.remap);
       return true;
     } catch (err) {
@@ -2045,8 +2403,8 @@ remember();
     });
     $('jim-tile-edit').addEventListener('contextmenu', (e) => e.preventDefault());
     $('jim-zoom').addEventListener('input', () => { state.zoom = Number($('jim-zoom').value); renderMap(); });
-    ['jim-grid', 'jim-trans', 'jim-seam', 'jim-show-users', 'jim-remap-on', 'jim-printa-on'].forEach((id) => {
-      $(id).addEventListener('change', () => { renderMap(); renderTiles(); renderInspector(); });
+    ['jim-grid', 'jim-trans', 'jim-seam', 'jim-show-users', 'jim-show-unused', 'jim-remap-on', 'jim-printa-on', 'jim-dobitmap-on'].forEach((id) => {
+      if ($(id)) $(id).addEventListener('change', () => { renderMap(); renderTiles(); renderInspector(); renderNote(); });
     });
     $('jim-printa').addEventListener('input', () => { renderMap(); renderInspector(); });
     $('jim-remap').addEventListener('input', () => { renderMap(); });
@@ -2192,7 +2550,7 @@ remember();
       try {
         let float = null;
         state.batch.forEach((item) => {
-          const part = quantizeToFloat(item, item.pals, item.onlyEmpty);
+          const part = quantizeToFloat(item, item.pals, item.onlyEmpty, item.lockAct);
           float = float ? mergeFloat(float, part) : part;
         });
         float.name = 'Batch (' + state.batch.length + ')';
@@ -2207,6 +2565,39 @@ remember();
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
     $('jim-export').addEventListener('click', doExport);
     $('jim-packed').addEventListener('change', renderNote);
+    if ($('jim-png')) $('jim-png').addEventListener('click', () => {
+      try {
+        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.png');
+        status('Exported the composed map as PNG.');
+      } catch (err) { status(err.message, true); }
+    });
+    if ($('jim-png-tiles')) $('jim-png-tiles').addEventListener('click', () => {
+      try {
+        downloadCanvas(tilesPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '-tiles.png');
+        status('Exported the tile sheet as PNG.');
+      } catch (err) { status(err.message, true); }
+    });
+    if ($('jim-act-export')) $('jim-act-export').addEventListener('click', () => {
+      try { exportActFile(); } catch (err) { status(err.message, true); }
+    });
+    if ($('jim-kind')) $('jim-kind').addEventListener('change', () => {
+      if (!canEdit()) return;
+      remember();
+      if ($('jim-kind').value === 'sheet') {
+        doc.variant = 'sheet';
+        doc.embedPalettes = false;
+        $('jim-embed').checked = false;
+        status('Tile sheet: export uses a shared zero header when cells stay sequential.');
+      } else {
+        if (doc.variant === 'sheet' || doc.variant === 'shared') doc.variant = 'map';
+        doc.embedPalettes = true;
+        $('jim-embed').checked = true;
+      }
+      renderAll();
+    });
+    if ($('jim-memo')) $('jim-memo').addEventListener('input', () => { doc.memo = $('jim-memo').value; });
+    if ($('jim-dobitmap')) $('jim-dobitmap').addEventListener('input', () => { renderNote(); renderSwatches(); });
+    $('jim-q-opts').addEventListener('change', saveQuantize);
     document.addEventListener('keydown', (event) => {
       const tag = event.target && event.target.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
@@ -2254,11 +2645,13 @@ remember();
     fillSelect('jim-b-method', METHODS, 'adaptive');
     fillSelect('jim-a-dither', DITHERS, 'none');
     fillSelect('jim-b-dither', DITHERS, 'none');
+    loadQuantize();
     buildPaletteChrome();
+    fillPalSelect();
     wire();
-    hashNote();
     if (!fromSession()) {
-      loadDoc(blankDoc(), 'Open a Genesis .map.jim, .jim, or .bin. Export stays on this machine — nothing is written into a ROM.');
+      hashNote();
+      loadDoc(blankDoc(), 'Open a Genesis .map.jim or a SNES .map.sjim. Export stays on this machine — nothing is written into a ROM.');
     }
   }
 

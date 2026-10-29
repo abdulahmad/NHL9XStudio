@@ -42,7 +42,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/DESIGN.md`)
 
 ## Graphics / images
-- **MAPS:** [x] Hide Chip Lab header link; [x] Maps page (`jim.html`) import/edit/export of Genesis `.map.jim` (raw and `DecompressBytecode` packed). Spec: [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md).
+- **MAPS:** [x] Hide Chip Lab header link; [x] Maps page (`jim.html`) import/edit/export of Genesis `.map.jim` (raw and `DecompressBytecode` packed), portrait `UnpackPicture` encode, and NHLPA 93 SNES `.map.sjim`. Spec: [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md).
 - GAP-2 (93G): JIM inventory polish (optional). (`docs/AGENT-HANDOFF.md`, Backlog)
 - GAP-4 (95G): [x] 27 `ArenaGfx*` in `genesis-images.js`, contiguous retail slices, decode test when ROM present (`docs/GAP-4-95G-ARENA.md`). Full dev `extractAssets95.js` bitwise audit still optional.
 - GAP-5/6 (93S/94S): [x] 94S framer, energy bar, playoff arrows, crowd sprite strip (658–720), scouting backdrop (`scout` = `MenuBackMap` / `LoadScoutingScreen.asm`), 93S NHLPA logo (`$8C8000` / `NHLPALogo.map.sjim`), 93S playoff bracket (`PlayoffBracketMap` `$8AF880`), and 93S scouting backdrop (`scout` = `EASNBG` per `ScoutingReport.asm`). No separate ROM for the full 93S scouting layout (composite of EASNBG, team blocks, framer, Ron Barr). Genesis JIM scouting maps stay on 93G/94G only.

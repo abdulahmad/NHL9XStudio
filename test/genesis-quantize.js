@@ -172,4 +172,18 @@ function outputPixel(result, width, x, y) {
   assert.throws(() => Q.parseAct(new Uint8Array(769)), /768 or 772/);
 }
 
+{
+  const palettes = [Array.from({ length: 16 }, (_, i) => ({ r3: i & 7, g3: 1, b3: 2 }))];
+  const act = Q.writeAct(palettes);
+  assert.strictEqual(act.length, 768);
+  assert.strictEqual(act[3], Q.expandChannel(1));
+  const trailer = Q.writeAct(palettes, { trailer: true, count: 16 });
+  assert.strictEqual(trailer.length, 772);
+  assert.strictEqual(trailer[769], 16);
+  const snes = [Array.from({ length: 16 }, () => ({ r3: 7, g3: 0, b3: 0, r5: 31, g5: 0, b5: 0 }))];
+  const snesAct = Q.writeAct(snes);
+  assert.strictEqual(snesAct[0], 255);
+  assert.strictEqual(snesAct[1], 0);
+}
+
 console.log('genesis-quantize: ok');

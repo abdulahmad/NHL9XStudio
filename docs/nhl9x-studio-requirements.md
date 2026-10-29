@@ -2,7 +2,7 @@
 
 **In-repo copy:** [docs/nhl9x-studio-requirements.md](https://github.com/abdulahmad/nhl9xstudio/blob/main/docs/nhl9x-studio-requirements.md) in [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio). Keep both files the same.
 
-**Related:** `docs/DESIGN.md` (product shell), `lib/jim.js` (decode-only today), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
+**Related:** `docs/DESIGN.md` (product shell), `lib/jim.js` + `lib/sjim.js` (parse/encode), `public/ice.js` + `jed.html` (PC ice/jersey UX to reuse), EA-NHL-Tools `JIM-Tools/` (do **not** treat as format truth).
 
 This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL9X Studio, plus **hiding Chip Lab** in the product chrome. It is not a rewrite of the viewer, the PC ice editor, or ANIM/SHPI editing.
 
@@ -20,7 +20,7 @@ This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL
 | Unique colors | **15–61** depending on how many palettes are open and whether pal 0 color 0 is opaque. See §3.4. |
 | ACT lock | One `.act`: colors **1–16 → pal 0**, **17–32 → pal 1**, **33–48 → pal 2**, **49–64 → pal 3** (1-based Photoshop numbering = ACT indices 0–15, 16–31, …). Lock per palette independently. |
 | UI home | New **Maps** page next to **Jerseys** (`jed.html` / `ice.js` pattern), plus **Edit map** from the Images tab for `kind: 'jim'`. |
-| v1 non-goals | Portrait 3-byte packing, ANIM sprites, SNES `.map.sjim`, PC TIL/MAP, writing back into a ROM. |
+| v1 non-goals | ANIM sprites, PC TIL/MAP, writing back into a ROM. Portrait encode and SNES `.map.sjim` are in the Maps editor. |
 
 ---
 
@@ -28,11 +28,11 @@ This plan is for a **Genesis `.map.jim` import / edit / export tool** inside NHL
 
 ### 2.1 Chip Lab (now)
 
-- [ ] Remove the **Chip lab** button from `public/index.html` header (`<a href="chip-lab.html">`).
-- [ ] Keep `public/chip-lab.html`, `chip-lab.js`, `chip-lab.css`, `lib/audio/chip-lab-*.js`, and `test/chip-audio.js`. Do not delete.
-- [ ] `server.js` may keep serving those paths.
+- [x] Remove the **Chip lab** button from `public/index.html` header (`<a href="chip-lab.html">`).
+- [x] Keep `public/chip-lab.html`, `chip-lab.js`, `chip-lab.css`, `lib/audio/chip-lab-*.js`, and `test/chip-audio.js`. Do not delete.
+- [x] `server.js` may keep serving those paths.
 - [ ] Optional later: a small “dev tools” disclosure or `?chip=1` to show the link. Not required for v1 hide.
-- [ ] Update copy that tells people to open Chip Lab from the header (`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md` “local viewer + chip lab”). Sound test and sequencer stay.
+- [x] Update copy that tells people to open Chip Lab from the header (`docs/NHL92-SOUND-HANDOFF-FOR-CLAUDE.md` “local viewer + chip lab”). Sound test and sequencer stay.
 
 ### 2.2 Map editor — user-required features
 
@@ -125,9 +125,9 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
 | Packed tiles | tile word bit 15 set | Decode with `decompressBytecode`; encode with new compressor |
 | No palette (`$FFFFFFFF` at +0) | donor CRAM (ice palette) | Edit pixels; export with `$FFFFFFFF` or embed palettes |
 | Shared / zero header | palOff = mapOff = 0 | Often portraits or arena sheets |
-| Portrait 3-byte rows | palOff = 10 + tiles×24, or 6×6 shared 36 tiles | **Read-only** + message. `UnpackPicture` in 94G `title94.asm`: 3 bits/pixel **+ 5** |
+| Portrait 3-byte rows | palOff = 10 + tiles×24, or 6×6 shared 36 tiles | **Edit + encode.** `UnpackPicture` in 94G `title94.asm`: 3 bits/pixel **+ 5** (indexes 5–12). |
 | Logo, palOff === mapOff | team CRAM from ROM (`TeamLogoPalettes`) | Edit map/tiles; palette from donor / lock-ACT |
-| Arena gfx sheet | no map, sequential tiles | Optional tile-sheet mode (95G `ArenaGfx*`) — **v1.1** |
+| Arena gfx sheet | no map, sequential tiles | Tile-sheet kind (95G `ArenaGfx*`) |
 
 File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bin` for JIM-shaped blobs (`EASportsMap.bin`, `Card*.bin`). Open those if `decodeJim` accepts them; export using the **opened name**.
 
@@ -143,7 +143,7 @@ File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bi
 | 4×16 CRAM palettes | pal offset, 128 bytes | edit unlocked lines; ACT lock |
 | Map width/height | map offset | resizable; scroll if > visible |
 | Tile index, H-flip, V-flip, palette, priority | each map word | cell inspector + tools |
-| Portrait 3-byte packing | variant | read-only + message |
+| Portrait 3-byte packing | variant | encode UnpackPicture rows |
 | Remap table / `printa` | **not in file** | preview only, never baked on export |
 
 **Rotation is an editor tool, not a file feature.** Same UX as Centre ice: Mirror/Flip/180 use name-table bits; 90/270 add tiles.
@@ -152,52 +152,52 @@ File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bi
 
 Reuse `public/ice.js` / `jed.html` habits:
 
-- [ ] Tools: **Paint pixel**, **Place tile**, **Erase cell**, **Select**, **Pick color**, **Pan**.
-- [ ] Tile strip: used tiles, New / Delete / Remove unused / Mirror / Flip.
-- [ ] Cell inspector: tile index, pal 0–3, H/V flip, priority.
-- [ ] **Undo / Redo** (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y), ≥100 steps, like ice and JED.
-- [ ] Copy / cut / paste / clear selection.
-- [ ] Zoom 1–16×, nearest-neighbor, grid toggle.
-- [ ] Floating import (drag to place, Apply / Cancel) — same as ice image import.
-- [ ] Status line: tile count / 2048, colors used / budget, packed vs raw, warnings.
+- [x] Tools: **Paint pixel**, **Place tile**, **Erase cell**, **Select**, **Pick color**, **Pan**.
+- [x] Tile strip: used tiles, New / Delete / Remove unused / Mirror / Flip.
+- [x] Cell inspector: tile index, pal 0–3 (0–7 on SNES), H/V flip, priority.
+- [x] **Undo / Redo** (Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y), ≥100 steps, like ice and JED.
+- [x] Copy / cut / paste / clear selection.
+- [x] Zoom 1–16×, nearest-neighbor, grid toggle.
+- [x] Floating import (drag to place, Apply / Cancel) — same as ice image import.
+- [x] Status line: tile count / 2048, colors used / budget, packed vs raw, warnings.
 
 Preview:
 
-- [ ] Full composed bitmap (current `decodeJim` pixels).
-- [ ] Transparency on/off (Images tab already has this).
-- [ ] Optional jersey/team donor palette for pictures that use ice/team CRAM.
-- [ ] **Seam overlay:** highlight tile borders where left/right or up/down palettes differ.
+- [x] Full composed bitmap (current `decodeJim` pixels).
+- [x] Transparency on/off (Images tab already has this).
+- [x] Optional jersey/team donor palette for pictures that use ice/team CRAM.
+- [x] **Seam overlay:** highlight tile borders where left/right or up/down palettes differ.
 
 Validation before export:
 
-- [ ] Every map tile index &lt; tile count.
-- [ ] Every tile uses only indices 0–15 of **its** palette (never raw 0–63 in the 4bpp nibble).
-- [ ] Locked ACT colors unchanged.
-- [ ] Packed stream decompresses to `tiles × 32` bytes with Studio’s `decompressBytecode`.
-- [ ] Uncompressed export is byte-identical on a no-op round-trip of a raw 92G JIM (tiles + pal + map). Packed export need **not** match EA’s compressed bytes — only the decompressed tiles.
+- [x] Every map tile index &lt; tile count.
+- [x] Every tile uses only indices 0–15 of **its** palette (never raw 0–63 in the 4bpp nibble).
+- [x] Locked ACT colors unchanged.
+- [x] Packed stream decompresses to `tiles × 32` bytes with Studio’s `decompressBytecode`.
+- [x] Uncompressed export is byte-identical on a no-op round-trip of a raw 92G JIM (tiles + pal + map). Packed export need **not** match EA’s compressed bytes — only the decompressed tiles.
 
 Round-trip:
 
-- [ ] Open retail `IceRink.map.jim` / `Title1.map.jim` / `RonBarr.map.jim` (fixture `test/fixtures/JIM-Tools/ronbarr.map.jzip` is a **packed** JIM, tile word `0x803D` = 61 tiles) → export uncompressed → decode → pixels and map words match.
-- [ ] Export compressed → `decompressBytecode` → same tile bytes.
-- [ ] Re-import the exported file with no edits → no dirty flag.
+- [x] Open retail `IceRink.map.jim` / `Title1.map.jim` / `RonBarr.map.jim` (fixture `test/fixtures/JIM-Tools/ronbarr.map.jzip` is a **packed** JIM, tile word `0x803D` = 61 tiles) → export uncompressed → decode → pixels and map words match.
+- [x] Export compressed → `decompressBytecode` → same tile bytes.
+- [x] Re-import the exported file with no edits → no dirty flag.
 
 ### 2.5 Batch import UX
 
-- [ ] Add files (PNG / BMP / GIF / JPEG, plus `.act`).
-- [ ] Per file: target palettes (subset of the document’s open pals), lock-from-ACT or not, crop to 8-pixel multiple (pad with transparent).
-- [ ] Order in the list is paint order (later files overwrite cells unless “only empty cells”).
-- [ ] One **Apply all** after a combined preview.
+- [x] Add files (PNG / BMP / GIF / JPEG, plus `.act`).
+- [x] Per file: target palettes (subset of the document’s open pals), lock-from-ACT or not, crop to 8-pixel multiple (pad with transparent).
+- [x] Order in the list is paint order (later files overwrite cells unless “only empty cells”).
+- [x] One **Apply all** after a combined preview.
 
 ### 2.6 Nice-to-have (v1.1, still worth designing for)
 
-- Eyedropper that shows CRAM word + RGB8 + palette line.
-- Export PNG of the composed map and of the tile sheet.
-- Export / import `.act` of the four lines (768-byte and 772-byte trailer, as JED already does).
-- Palette editor (3-bit sliders) for **unlocked** lines; locked lines are read-only.
-- “Show unused tiles” and “show cells using this tile”.
-- Compare view: original vs quantized vs dithered.
-- Note field for `printa` / VRAM start char (not stored in JIM; useful when pasting into a disassembly).
+- Eyedropper that shows CRAM word + RGB8 + palette line. **Done** (color line).
+- Export PNG of the composed map and of the tile sheet. **Done**.
+- Export / import `.act` of the four lines (768-byte and 772-byte trailer, as JED already does). **Done**.
+- Palette editor (3-bit sliders) for **unlocked** lines; locked lines are read-only. **Done**.
+- “Show unused tiles” and “show cells using this tile”. **Done**.
+- Compare view: original vs quantized vs dithered. **Done** (original vs quantized on float).
+- Note field for `printa` / VRAM start char (not stored in JIM; useful when pasting into a disassembly). **Done**.
 
 ### 2.7 Explicitly later / out of scope
 
@@ -205,9 +205,7 @@ Round-trip:
 |------|-----|
 | Writing the JIM into a ROM / rebuilding 93G/94G | Needs size budget; 93G packed sizes are baked into extract slices. Export a file; the user `incbin`s it. |
 | ANIM / sprite editor | Different tile order and frame table. DESIGN.md “repack ANIM” stays later. |
-| SNES `.map.sjim` | Same bytecode, different wrapping (`nhlpa93snes/docs/file-formats.md`). |
 | PC centre-ice TIL/MAP | Already `ice.js`. Do not merge formats. |
-| Portrait `UnpackPicture` encode | Different 3-bit packing (`title94.asm`). |
 | Chip Lab feature work | Hidden, not improved. |
 | Collision / walkable overlay | Not in the JIM. |
 
@@ -220,14 +218,15 @@ Round-trip:
 ```
 public/index.html          hide Chip Lab link; add Maps button
 public/jim.html            Map editor shell (jed.html layout: chrome + canvas + side panels)
-public/jim.js              UI: tools, undo, import wizard, preview
-lib/jim.js                 TODAY: decodeJim, decompressBytecode, unpackPortrait
-                           ADD:  parseJim, encodeJim, compressBytecode, tile/map helpers
-lib/genesis-quantize.js    NEW: 3-bit snap, reduction methods, dither, ACT lock, seam-aware pal assign
-lib/open-asset.js          already classifies .jim / .map.jim
-lib/games.js               Images catalog; “Edit map” uses existing jim slices
+public/jim.js              UI: tools, undo, import wizard, preview, sjim/portrait
+lib/jim.js                 parseJim, encodeJim, compressBytecode, packPortrait
+lib/sjim.js                NHLPA 93 SNES .map.sjim parse/encode (DecompressBytecode stream)
+lib/genesis-quantize.js    3-bit snap, reduction methods, dither, ACT lock, writeAct
+lib/open-asset.js          classifies .jim / .map.jim / .sjim
+lib/games.js               Images catalog; “Edit map” uses jim and 93S screen slices
 public/viewer.js           Images tab: Edit map → jim.html#game=&image=
-test/jim-roundtrip.js      NEW: codec + compressor vs 93/94 fixtures / ROM slices
+test/jim-roundtrip.js      codec + compressor vs 93/94 fixtures / ROM slices
+test/sjim.js               SNES word/tile/stream round-trip
 ```
 
 Reuse, do not fork:
@@ -251,15 +250,17 @@ Do **not** import `JIM-Tools/decompressJim.js`, `uncompress-jzip.js`, or `genesi
 ```text
 JimDoc {
   name,               // IceRink.map.jim
-  variant,            // 'map' | 'nopal' | 'shared' | 'portrait' | 'sheet'
-  packedOnDisk,       // bit 15 was set when opened
+  variant,            // 'map' | 'nopal' | 'shared' | 'portrait' | 'sheet' | 'sjim'
+  platform,           // 'genesis' | 'snes'
+  packedOnDisk,       // Genesis: bit 15 of tile word. SNES: always packed.
   tiles: Uint8Array[], // each 64 nibbles 0–15, row-major 8×8 (editor space)
   mapW, mapH,
   cells: { tile, hFlip, vFlip, pal, priority }[],
-  palettes: [16][4] of { r3,g3,b3, locked: bool },  // 4 lines
-  usedPals: Set<0-3>,
-  donor: Uint8Array | null,   // 128-byte CRAM when file has no palettes
+  palettes: [16][4 or 8] of { r3,g3,b3, r5?,g5?,b5?, locked },
+  usedPals: Set,
+  donor: Uint8Array | null,   // CRAM (Genesis) or BGR555 (SNES)
   remap: number[] | null,     // viewer remap, not stored
+  sjim: { mapW, mapH, pal, tiles, palBytes } | null,
   dirty, undo[], redo[]
 }
 ```
@@ -454,16 +455,17 @@ Each milestone is a PR titled `DOCS:` (M0) or `TOOLS:` / feature (`MAPS:` is fin
 
 ## 7. File-level checklist (when building)
 
-- [ ] `public/index.html` — Chip Lab link gone; Maps link added  
-- [ ] `public/jim.html` + `public/jim.js` + CSS (share `jed.css` if it fits)  
-- [ ] `lib/jim.js` — parse/encode/compress; keep `decodeJim` working for the viewer  
-- [ ] `lib/genesis-quantize.js` — new  
-- [ ] `lib/open-asset.js` — drop classification without `JI` magic  
-- [ ] `public/viewer.js` — Edit map  
-- [ ] `server.js` — serve `jim.html` / `jim.js`  
-- [ ] `test/jim-roundtrip.js` + `test/select.js`  
-- [ ] `docs/DESIGN.md` roadmap line (graphics editing)  
-- [ ] `docs/TODO.md` / `docs/AGENT-HANDOFF.md` backlog  
+- [x] `public/index.html` — Chip Lab link gone; Maps link added  
+- [x] `public/jim.html` + `public/jim.js` + CSS (share `jed.css` if it fits)  
+- [x] `lib/jim.js` — parse/encode/compress; keep `decodeJim` working for the viewer  
+- [x] `lib/sjim.js` — NHLPA 93 SNES `.map.sjim` parse/encode  
+- [x] `lib/genesis-quantize.js` — new  
+- [x] `lib/open-asset.js` — drop classification without `JI` magic  
+- [x] `public/viewer.js` — Edit map (JIM and 93S screens)  
+- [x] `server.js` — serve `jim.html` / `jim.js`  
+- [x] `test/jim-roundtrip.js` + `test/sjim.js` + `test/select.js`  
+- [x] `docs/DESIGN.md` roadmap line (graphics editing)  
+- [x] `docs/TODO.md` / `docs/AGENT-HANDOFF.md` backlog  
 
 Credits for any extracted encoder comments: 93G/94G authors as in those READMEs; Studio credits unchanged.
 
@@ -475,3 +477,5 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 |------|--------|
 | 2026-10-28 | First requirements + implementation plan (Chip Lab hide, `.map.jim` editor). |
 | 2026-10-28 | Clarified: JIM has no rotate field; editor must round-trip every name-table bit (tile, H/V flip, palette, priority). |
+| 2026-10-28 | Portrait `UnpackPicture` encode and NHLPA 93 SNES `.map.sjim` are in the Maps editor. |
+| 2026-10-28 | v1.1 polish: ACT auto-lock, session quantize, batch lock-from-ACT, dobitmap mask, PNG/ACT export, unused-tile highlight, compare view, sheet kind, note field. |

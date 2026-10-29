@@ -1373,7 +1373,7 @@ function renderMeta() {
     ? ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image)
     : null;
   const soundData = !!soundPanel();
-  editMap.hidden = soundData || !(jimImage && jimImage.kind === 'jim');
+  editMap.hidden = soundData || !(jimImage && (jimImage.kind === 'jim' || jimImage.kind === 'snes93-screen'));
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
   el('palette').closest('section').hidden = soundData;
@@ -2131,9 +2131,11 @@ async function ensureRink() {
 
 async function openJimEditor() {
   const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
-  if (!image || image.kind !== 'jim') throw new Error('This picture is not a JIM map');
+  if (!image || (image.kind !== 'jim' && image.kind !== 'snes93-screen')) {
+    throw new Error('This picture is not a JIM or SJIM map');
+  }
   const bytes = await bytesFor(image);
-  if (!bytes) throw new Error('Could not load the JIM bytes (ROM missing?)');
+  if (!bytes) throw new Error('Could not load the map bytes (ROM missing?)');
   let donor = null;
   if (image.paletteAt != null) {
     const rom = await ensureRom();
@@ -2141,13 +2143,33 @@ async function openJimEditor() {
       donor = rom.subarray(image.paletteAt, image.paletteAt + 128);
     }
   }
+  if (image.kind === 'snes93-screen' && image.palFrom) {
+    const rom = await ensureRom();
+    if (rom && typeof Nhl92Jim !== 'undefined' && Nhl92Jim.decompressBytecode) {
+      const blob = rom.subarray(image.palFrom.start, image.palFrom.end);
+      const unpacked = Nhl92Jim.decompressBytecode(blob, 0);
+      const off = image.palFrom.offset || 0;
+      const count = image.palFrom.count || 64;
+      if (off + count * 2 <= unpacked.length) donor = unpacked.subarray(off, off + count * 2);
+    }
+  }
+  const sjim = image.kind === 'snes93-screen' ? {
+    mapW: image.mapW, mapH: image.mapH, mapSize: image.mapSize,
+    pal: image.pal, tiles: image.tiles,
+    palBytes: image.pal == null ? 0 : ((image.tiles || 0) - (image.pal || 0))
+  } : null;
+  const fileName = (image.fileNames && image.fileNames[0] && !/\s/.test(image.fileNames[0]))
+    ? image.fileNames[0]
+    : (image.kind === 'snes93-screen' ? image.id + '.map.sjim' : image.id + '.map.jim');
   sessionStorage.setItem('nhl9x-jim', JSON.stringify({
-    name: (image.fileNames && image.fileNames[0]) || image.id + '.map.jim',
+    name: fileName,
     game: state.game,
     image: image.id,
     bytes: Array.from(bytes),
     donor: donor ? Array.from(donor) : null,
-    remap: image.remap || null
+    remap: image.remap || null,
+    platform: image.kind === 'snes93-screen' ? 'snes' : 'genesis',
+    sjim: sjim
   }));
   location.href = 'jim.html#game=' + encodeURIComponent(state.game) + '&image=' + encodeURIComponent(image.id);
 }
@@ -2635,6 +2657,7 @@ async function ingestDroppedFiles(fileList) {
     anim: Nhl92Anim,
     sheet: Nhl92Sheet,
     jim: Nhl92Jim,
+    sjim: typeof Nhl92Sjim === 'undefined' ? null : Nhl92Sjim,
     pc95: Nhl95Pc
   });
   if (!decoded) {

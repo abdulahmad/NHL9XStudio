@@ -67,7 +67,25 @@
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-#jim-printa { width: 5em; background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+#jim-printa, #jim-dobitmap, #jim-memo { background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+#jim-printa { width: 5em; }
+#jim-dobitmap { width: 3em; }
+#jim-memo { width: 16em; }
+#jim-kind { background: var(--raise-2); border: 1px solid var(--line); border-radius: 4px; }
+.jim-compare {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.jim-compare[hidden] { display: none; }
+.jim-compare figure { margin: 0; }
+.jim-compare canvas { image-rendering: pixelated; display: block; background: #111; border: 1px solid var(--line); max-width: 160px; }
+.ice-tile.unused { opacity: 0.4; }
+.ice-tile.unused-mark { outline: 2px solid #e85d4c; opacity: 1; }
+.jim-swatch-row.is-masked { opacity: 0.35; }
 @media (max-width: 980px) {
   .jim-app { height: auto; overflow: auto; }
   .jim-main { grid-template-columns: 1fr; }
