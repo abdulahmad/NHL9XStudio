@@ -925,11 +925,19 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const typed = parseInt(raw, 16);
     return Number.isFinite(typed) ? typed & 0xff : usedPalMask();
   }
+  function palMaskLabel(mask, n) {
+    const hex = (mask & 0xff).toString(16).toUpperCase().padStart(2, '0');
+    if (!mask) return 'None  $' + hex;
+    const pals = [];
+    for (let p = 0; p < n; p++) if (mask & (1 << p)) pals.push(String(p));
+    return (pals.length === 1 ? 'Pal ' : 'Pals ') + pals.join(', ') + '  $' + hex;
+  }
   function fillDobitmapSelect() {
     const sel = $('jim-dobitmap');
     if (!sel || sel.tagName !== 'SELECT') return;
     const n = palCount();
-    if (sel.dataset.n === String(n) && sel.options.length === n + 1) return;
+    const want = (1 << n) + 1;
+    if (sel.dataset.n === String(n) && sel.options.length === want) return;
     const prev = sel.value || 'auto';
     sel.innerHTML = '';
     const add = (value, label) => {
@@ -939,14 +947,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       sel.appendChild(opt);
     };
     add('auto', 'Auto (pals used on map)');
-    let bits = 0;
-    for (let p = 0; p < n; p++) {
-      bits |= 1 << p;
-      const pals = [];
-      for (let i = 0; i <= p; i++) pals.push(String(i));
-      add(bits.toString(16).toUpperCase().padStart(2, '0'),
-        (p === 0 ? 'Pal 0' : 'Pals ' + pals.join(', ')) +
-        '  $' + bits.toString(16).toUpperCase().padStart(2, '0'));
+    const max = 1 << n;
+    for (let mask = 0; mask < max; mask++) {
+      add(mask.toString(16).toUpperCase().padStart(2, '0'), palMaskLabel(mask, n));
     }
     sel.dataset.n = String(n);
     sel.value = [...sel.options].some((o) => o.value === prev) ? prev : 'auto';
@@ -1397,6 +1400,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       emptyBox.type = 'checkbox';
       emptyBox.checked = !!item.onlyEmpty;
       emptyBox.addEventListener('change', () => { item.onlyEmpty = emptyBox.checked; });
+      empty.title = 'Skip cells that already have a tile so this image does not overwrite earlier ones in the batch.';
       empty.appendChild(emptyBox);
       empty.appendChild(document.createTextNode(' empty only'));
       li.appendChild(empty);
@@ -2805,7 +2809,52 @@ remember();
       state.colorStroke = false;
     });
     $('jim-tile-edit').addEventListener('contextmenu', (e) => e.preventDefault());
-    $('jim-zoom').addEventListener('input', () => { state.zoom = Number($('jim-zoom').value); renderMap(); });
+    function setZoom(z) {
+      z = Math.max(1, Math.min(16, z | 0));
+      state.zoom = z;
+      if ($('jim-zoom')) $('jim-zoom').value = String(z);
+      renderMap();
+    }
+    $('jim-zoom').addEventListener('input', () => setZoom(Number($('jim-zoom').value)));
+    const mapScroll = $('jim-scroll');
+    if (mapScroll) mapScroll.addEventListener('wheel', (event) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      setZoom(state.zoom + (event.deltaY < 0 ? 1 : -1));
+    }, { passive: false });
+    (function wireMapSplit() {
+      const KEY = 'nhl9x-jim-map-h';
+      const view = $('jim-view');
+      const bar = $('jim-split');
+      const scroll = $('jim-scroll');
+      if (!view || !bar || !scroll) return;
+      function apply(h) {
+        const px = Math.round(h);
+        view.style.setProperty('--jim-map-h', px + 'px');
+        view.classList.add('is-split');
+      }
+      const saved = Number(localStorage.getItem(KEY));
+      if (saved > 80) apply(saved);
+      bar.addEventListener('pointerdown', (e) => {
+        bar.setPointerCapture(e.pointerId);
+        bar.classList.add('drag');
+        const y0 = e.clientY;
+        const h0 = scroll.getBoundingClientRect().height;
+        const col = view.getBoundingClientRect().height;
+        const note = $('jim-note');
+        const noteH = note ? note.getBoundingClientRect().height : 0;
+        const maxH = Math.max(80, col - 80 - bar.getBoundingClientRect().height - noteH);
+        const move = (m) => apply(Math.max(80, Math.min(maxH, h0 - (m.clientY - y0))));
+        const up = () => {
+          bar.classList.remove('drag');
+          bar.removeEventListener('pointermove', move);
+          bar.removeEventListener('pointerup', up);
+          try { localStorage.setItem(KEY, String(Math.round(scroll.getBoundingClientRect().height))); } catch (err) { /* private window */ }
+        };
+        bar.addEventListener('pointermove', move);
+        bar.addEventListener('pointerup', up);
+      });
+    })();
     ['jim-grid', 'jim-trans', 'jim-seam', 'jim-show-users', 'jim-show-unused', 'jim-remap-on', 'jim-printa-on', 'jim-dobitmap-on'].forEach((id) => {
       if ($(id)) $(id).addEventListener('change', () => { renderMap(); renderTiles(); renderInspector(); renderNote(); });
     });

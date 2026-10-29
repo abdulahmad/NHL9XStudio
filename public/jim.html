@@ -82,7 +82,7 @@
         <label>Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
         <label class="check" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
         <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
-        <label class="check"><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
+        <label class="check" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
       </fieldset>
       <div class="jed-io">
         <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image. Change color options before Apply. Mode chooses overwrite, add tiles, or resize as a new image.">Import image…</button>
@@ -91,7 +91,8 @@
       <p id="jim-q-warn" class="muted"></p>
     </section>
 
-    <section class="jed-col jim-view" aria-label="Map">
+    <section class="jed-col jim-view" id="jim-view" aria-label="Map">
+      <div class="jim-chrome" id="jim-chrome">
       <p id="jim-portrait" class="ice-warn" hidden>Portrait: each row is 3 bytes of 3-bit pixels plus 5 (indexes 5–12). Export writes UnpackPicture rows.</p>
       <p id="jim-hash" class="ice-warn" hidden></p>
       <div class="ice-toolbar">
@@ -103,7 +104,7 @@
           <button type="button" data-tool="pick" aria-pressed="false">Pick color</button>
           <button type="button" data-tool="pan" aria-pressed="false">Pan</button>
         </div>
-        <label class="ice-zoom">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4"> <output id="jim-zoom-val">4×</output></label>
+        <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
         <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
         <label class="check"><input type="checkbox" id="jim-trans" checked> Transparency</label>
         <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
@@ -146,7 +147,7 @@
         <label class="check" title="When the game draws a plane it XORs printa onto every map word. That can flip priority and palette relative to the file. This preview XORs only the $F800 attribute bits, so the tile index stays. Default $F800 matches dobitmap."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
         <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask" title="Hex mask XORed onto each map word for preview. Only bits 15–11 are used ($F800).">
         <label class="check" title="d5 bitmask dobitmap uses when copying CRAM lines (bit 0 = pal 0). Not stored in the file. Auto follows the lines the map references."><input type="checkbox" id="jim-dobitmap-on"> dobitmap mask</label>
-        <select id="jim-dobitmap" class="mono" aria-label="dobitmap palette bitmask" title="Which palette lines dobitmap would load. Auto follows the map."></select>
+        <select id="jim-dobitmap" class="mono" aria-label="dobitmap palette bitmask" title="d5 is any combination of pal bits (bit 0 = pal 0), not only consecutive lines from pal 0. Games use $00 (none), $02 (pal 1), $0C (pals 2–3), $0D (pals 0, 2, 3), $0F (all four), and the rest. Auto follows the map."></select>
         <span id="jim-dobitmap-hint" class="muted"></span>
         <label>Note <input type="text" id="jim-memo" maxlength="120" placeholder="printa / VRAM start (not in the file)"></label>
       </fieldset>
@@ -164,6 +165,8 @@
           <figcaption id="jim-compare-b-cap">Step B</figcaption>
         </figure>
       </div>
+      </div>
+      <div id="jim-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Resize the map" title="Drag to show more or less of the map"></div>
       <div class="ice-scroll" id="jim-scroll"><canvas id="jim-map" width="64" height="64"></canvas></div>
       <p id="jim-note" class="muted"></p>
     </section>

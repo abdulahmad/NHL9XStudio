@@ -97,6 +97,24 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-kind').count());
   assert.ok(await page.locator('#jim-dobitmap').count());
   assert.strictEqual(await page.locator('#jim-dobitmap').evaluate((el) => el.tagName), 'SELECT');
+  const dobitmap = await page.locator('#jim-dobitmap option').evaluateAll((opts) => opts.map((o) => o.value));
+  assert.strictEqual(dobitmap.length, 17, 'Genesis dobitmap lists Auto plus every 4-bit mask');
+  assert.ok(dobitmap.includes('auto') && dobitmap.includes('00') && dobitmap.includes('02') && dobitmap.includes('0C') && dobitmap.includes('0D') && dobitmap.includes('0F'));
+  assert.match(await page.locator('label:has(#jim-only-empty)').getAttribute('title'), /skip cells that already have a tile/i);
+  assert.ok(await page.locator('#jim-split').count());
+  const mapH0 = await page.locator('#jim-scroll').evaluate((e) => e.getBoundingClientRect().height);
+  const split = await page.locator('#jim-split').boundingBox();
+  await page.mouse.move(split.x + split.width / 2, split.y + 4);
+  await page.mouse.down();
+  await page.mouse.move(split.x + split.width / 2, split.y + 4 - 60, { steps: 5 });
+  await page.mouse.up();
+  const mapH1 = await page.locator('#jim-scroll').evaluate((e) => e.getBoundingClientRect().height);
+  assert.ok(mapH1 > mapH0 + 20, 'map splitter shows more of the map ' + mapH0 + ' -> ' + mapH1);
+  await page.locator('#jim-zoom').evaluate((el) => {
+    el.value = '2';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  assert.strictEqual(await page.locator('#jim-zoom').inputValue(), '2');
   assert.ok(await page.locator('#jim-memo').count());
   assert.ok(await page.locator('#jim-show-unused').count());
   assert.ok(await page.locator('#jim-import-mode').count());
