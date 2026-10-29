@@ -295,6 +295,7 @@ withBrowser('jim', async ({ url, newPage }) => {
       (!about || about.hidden);
   }, null, { timeout: 10000 });
   assert.ok(await viewer.locator('#edit-image').isVisible(), 'Images tab should show Edit image');
+  assert.strictEqual(await viewer.locator('#edit-map').count(), 0, 'Details pane should not have a second Edit image');
   await viewer.setInputFiles('#file-open', [{
     name: 'pri.map.jim',
     mimeType: 'application/octet-stream',

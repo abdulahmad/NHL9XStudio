@@ -106,7 +106,6 @@ a.ghost-btn {
 }
 a.ghost-btn[hidden], button.ghost-btn[hidden] { display: none !important; }
 .transport button.is-hidden { display: none; }
-#edit-map { margin: 8px 0; }
 
 .ghost-btn {
   background: var(--bg);

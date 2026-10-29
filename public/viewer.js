@@ -1358,21 +1358,9 @@ function renderMeta() {
     detail.append(dt, dd);
   }
   el('detail-title').textContent = frame ? 'Frame ' + shownFrame(frame.frame) : 'Frame';
-  let editMap = el('edit-map');
-  if (!editMap) {
-    editMap = document.createElement('button');
-    editMap.type = 'button';
-    editMap.id = 'edit-map';
-    editMap.className = 'ghost-btn';
-    editMap.textContent = 'Edit image';
-    el('detail').parentElement.appendChild(editMap);
-    editMap.addEventListener('click', () => {
-      openJimEditor().catch((err) => alert(err.message));
-    });
-  }
+  const leftoverEdit = el('edit-map');
+  if (leftoverEdit) leftoverEdit.remove();
   const soundData = !!soundPanel();
-  const canEditMap = state.mode === 'image' && !soundData;
-  editMap.hidden = !canEditMap;
   if (soundData) el('detail-title').textContent = soundPanel().title;
   el('sprites').closest('section').hidden = soundData;
   el('palette').closest('section').hidden = soundData;
