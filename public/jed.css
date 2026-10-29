@@ -108,8 +108,6 @@
 .ice-popts label[aria-disabled="true"] { opacity: .45; }
 .ice-float-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0; padding: 4px 8px; background: #2a2330; border: 1px solid #a55; }
 .ice-float-bar[hidden] { display: none; }
-#jim-float-seam[hidden] { display: none; }
-#jim-float-seam { display: inline-flex; gap: 8px; align-items: center; }
 .ice-redkey { display: inline-block; width: 12px; height: 12px; background: rgba(255,80,80,.45); vertical-align: middle; }
 .jed-crest-tools { flex-basis: 100%; width: 100%; display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
 .jed-crest-tools .ghost-btn { padding: 2px 8px; font-size: 12px; }

@@ -36,6 +36,7 @@
     <symbol id="i-trans" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="currentColor" d="M4.8 4.8h7.2v7.2H4.8zm7.2 7.2h7.2v7.2H12z"/></symbol>
     <symbol id="i-seams" viewBox="0 0 24 24"><rect x="3" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v16"/></symbol>
     <symbol id="i-pal" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="13" width="8" height="8" fill="currentColor" opacity="0.85"/></symbol>
+    <symbol id="i-optseams" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 12h4M13 9l3 3-3 3"/></symbol>
   </svg>
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
       <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, .act, .pal, or .snespal</p>
@@ -176,8 +177,11 @@
           <button type="button" class="jim-icon-btn" data-flag="jim-seam" aria-pressed="false" title="Tile edges where the palette line changes">
             <svg><use href="#i-seams"/></svg><span>Seams</span>
           </button>
-          <button type="button" class="jim-icon-btn jim-edit" data-tool="pal" aria-pressed="false" title="On a floating import, click a tile to put it on the palette selected in the left pane.">
+          <button type="button" class="jim-icon-btn jim-edit" data-tool="pal" aria-pressed="false" title="Click a floating tile, or drag a rectangle, to put those tiles on the palette selected in the left pane. Click Pal again for Pan.">
             <svg><use href="#i-pal"/></svg><span>Pal</span>
+          </button>
+          <button type="button" id="jim-float-opt" class="jim-icon-btn jim-edit" title="Move tiles that share colors onto the same palette so other lines get free ink slots.">
+            <svg><use href="#i-optseams"/></svg><span>Optimize</span>
           </button>
         </div>
       </div>
@@ -221,9 +225,6 @@
         <span class="muted" id="jim-float-hint-add" hidden>Apply appends tiles · the map picture stays</span>
         <button type="button" id="jim-float-apply" class="ghost-btn">Apply</button>
         <button type="button" id="jim-float-cancel" class="ghost-btn">Cancel</button>
-        <span id="jim-float-seam" hidden>
-          <button type="button" id="jim-float-opt" class="ghost-btn" title="Move tiles that share colors onto the same palette so other lines get free ink slots.">Optimize seams</button>
-        </span>
       </div>
       <fieldset class="jim-preview-set" hidden>
         <legend>Preview only, not saved</legend>

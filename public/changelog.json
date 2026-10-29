@@ -9,7 +9,7 @@
         "Reduce count only (for export): keeps 8-bit color, palettes off, export PNG",
         "Export asks to apply a floating image first, or cancel and leave Export closed",
         "The centre pane grows so Apply and import previews stay on screen",
-        "Floating import: Pal tool paints which tiles use which palette; Optimize seams groups matching tiles to free ink slots",
+        "Floating import: Pal paints one tile or a dragged rectangle; Optimize (next to Pal) groups matching tiles to free ink slots",
         "5-bit quantization is available everywhere 3-bit is"
       ]
     },

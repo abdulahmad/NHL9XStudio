@@ -150,7 +150,7 @@ Five import modes, named in the UI as:
 - Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)
 - Change color options while the float is pending; Apply is what commits
 - When Apply, import previews, or other chrome pop-ups appear, the **centre pane expands** so they stay on screen
-- On a floating import, **Pal** paints which 8×8 tiles use which palette. **Optimize seams** moves tiles that share colors onto the same palette so other lines get free ink slots
+- On a floating import, **Pal** (click one tile or drag a rectangle) paints which 8×8 tiles use which palette; click Pal again for Pan. **Optimize** (icon next to Pal) moves tiles that share colors onto the same palette so other lines get free ink slots. Pal and Seams stay off until you turn them on
 - Export with a floating image open asks to **Apply, then export**, or **Cancel** and leaves Export closed
 - Only-empty-cells skip map words that already have a tile
 

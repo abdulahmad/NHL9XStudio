@@ -1320,6 +1320,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const fallback = tool === 'pan' ? 'grab' : (tool === 'place' ? 'copy' : 'crosshair');
     return 'url("data:image/svg+xml,' + encodeURIComponent(icon.svg) + '") ' + icon.x + ' ' + icon.y + ', ' + fallback;
   }
+  function setTool(tool) {
+    state.tool = tool;
+    document.querySelectorAll('[data-tool]').forEach((el) => {
+      el.setAttribute('aria-pressed', String(el.dataset.tool === tool));
+    });
+  }
   function paintBitmap(data, W, H, rgba) {
     const n = W * H;
     const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
@@ -1448,8 +1454,16 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       }
       ctx.stroke();
     }
-    if (state.float && floatHasSeams() && ($('jim-seam').checked || state.tool === 'pal')) {
+    if (state.float && floatHasSeams()) {
       drawFloatSeams(ctx, z);
+    }
+    if (state.drag && state.drag.pal && state.drag.rect) {
+      const r = state.drag.rect;
+      ctx.save();
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x * 8 * z + 1, r.y * 8 * z + 1, r.w * 8 * z - 2, r.h * 8 * z - 2);
+      ctx.restore();
     }
     if ($('jim-show-users').checked) {
       ctx.strokeStyle = 'rgba(240, 180, 41, 0.95)';
@@ -1486,28 +1500,30 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const f = state.float;
     if (!f || !f.cells) return;
     ctx.save();
-    ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
-    ctx.beginPath();
-    for (let ty = 0; ty < f.h; ty++) {
-      for (let tx = 0; tx < f.w; tx++) {
-        const cell = f.cells[ty * f.w + tx];
-        if (!cell) continue;
-        const pal = cell.pal | 0;
-        const mx = f.x + tx;
-        const my = f.y + ty;
-        const right = f.cells[ty * f.w + tx + 1];
-        const below = f.cells[(ty + 1) * f.w + tx];
-        if (tx + 1 < f.w && right && (right.pal | 0) !== pal) {
-          const x = (mx + 1) * 8 * z + 0.5;
-          ctx.moveTo(x, my * 8 * z); ctx.lineTo(x, (my + 1) * 8 * z);
-        }
-        if (ty + 1 < f.h && below && (below.pal | 0) !== pal) {
-          const y = (my + 1) * 8 * z + 0.5;
-          ctx.moveTo(mx * 8 * z, y); ctx.lineTo((mx + 1) * 8 * z, y);
+    if ($('jim-seam') && $('jim-seam').checked) {
+      ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
+      ctx.beginPath();
+      for (let ty = 0; ty < f.h; ty++) {
+        for (let tx = 0; tx < f.w; tx++) {
+          const cell = f.cells[ty * f.w + tx];
+          if (!cell) continue;
+          const pal = cell.pal | 0;
+          const mx = f.x + tx;
+          const my = f.y + ty;
+          const right = f.cells[ty * f.w + tx + 1];
+          const below = f.cells[(ty + 1) * f.w + tx];
+          if (tx + 1 < f.w && right && (right.pal | 0) !== pal) {
+            const x = (mx + 1) * 8 * z + 0.5;
+            ctx.moveTo(x, my * 8 * z); ctx.lineTo(x, (my + 1) * 8 * z);
+          }
+          if (ty + 1 < f.h && below && (below.pal | 0) !== pal) {
+            const y = (my + 1) * 8 * z + 0.5;
+            ctx.moveTo(mx * 8 * z, y); ctx.lineTo((mx + 1) * 8 * z, y);
+          }
         }
       }
+      ctx.stroke();
     }
-    ctx.stroke();
     if (state.tool === 'pal' && z >= 2) {
       ctx.font = Math.max(9, Math.floor(z * 1.6)) + 'px sans-serif';
       ctx.textBaseline = 'top';
@@ -1700,8 +1716,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-paste').disabled = ro || !state.clip;
     document.querySelectorAll('.jim-needsel').forEach((el) => { el.disabled = ro || !state.sel; });
     $('jim-float-bar').hidden = !state.float;
-    const seamBox = $('jim-float-seam');
-    if (seamBox) seamBox.hidden = !floatHasSeams();
+    const opt = $('jim-float-opt');
+    if (opt) opt.disabled = !floatHasSeams() || ro;
     if (state.float) {
       const extra = state.float.pending ? ' · quantize pending' : '';
       const hint = $('jim-float-hint');
@@ -1721,9 +1737,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         if (hint) {
           hint.hidden = false;
           if (floatHasSeams()) {
-            hint.innerHTML = state.tool === 'pal'
-              ? ('Pal tool · click a tile to use pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · Apply to commit')
-              : 'dotted outline · Pal tool assigns palettes · Optimize seams · Apply to commit';
+            hint.textContent = state.tool === 'pal'
+              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click a tile or drag a rectangle · Apply to commit')
+              : 'dotted outline · Pal paints palettes · Optimize groups matching tiles · Apply to commit';
           }
         }
         if (hintAdd) hintAdd.hidden = true;
@@ -1888,8 +1904,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   function cellAt(event) {
     const canvas = $('jim-map');
     const rect = canvas.getBoundingClientRect();
-    const W = doc.mapW * 8;
-    const H = doc.mapH * 8;
+    const size = viewMap();
+    const W = size.w * 8;
+    const H = size.h * 8;
     if (rect.width < 1 || rect.height < 1) return null;
     const px = Math.floor((event.clientX - rect.left) * W / rect.width);
     const py = Math.floor((event.clientY - rect.top) * H / rect.height);
@@ -2144,7 +2161,11 @@ remember();
     const p = cellAt(event);
     if (!p) return;
     if (state.tool === 'pal') {
-      assignFloatPalAt(p, event.button === 2);
+      state.focus = { x: p.x, y: p.y };
+      state.drag = { pal: true, from: p, pick: event.button === 2, rect: { x: p.x, y: p.y, w: 1, h: 1 } };
+      $('jim-map').setPointerCapture(event.pointerId);
+      state.down = true;
+      renderMap();
       return;
     }
     if (floatPlaceable() && state.tool !== 'pan' && event.button === 0) {
@@ -2199,7 +2220,7 @@ remember();
     renderNote();
   }
   function onMove(event) {
-    if (!state.down || !state.drag && state.tool !== 'paint' && state.tool !== 'place' && state.tool !== 'erase') return;
+    if (!state.down || !state.drag && state.tool !== 'paint' && state.tool !== 'place' && state.tool !== 'erase' && state.tool !== 'pal') return;
     const p = cellAt(event);
     if (!p) return;
     if (state.drag && state.drag.pan) {
@@ -2216,6 +2237,15 @@ remember();
       state.drag.y = p.y;
       renderMap();
       renderChrome();
+      return;
+    }
+    if (state.drag && state.drag.pal) {
+      const a = state.drag.from;
+      state.drag.rect = {
+        x: Math.min(a.x, p.x), y: Math.min(a.y, p.y),
+        w: Math.abs(a.x - p.x) + 1, h: Math.abs(a.y - p.y) + 1
+      };
+      renderMap();
       return;
     }
     if (state.tool === 'paint') { paintAt(p); renderMap(); renderTileEdit(); return; }
@@ -2253,50 +2283,75 @@ remember();
   function onUp() {
     if (!state.down) return;
     state.down = false;
+    if (state.drag && state.drag.pal) {
+      const r = state.drag.rect || { x: state.drag.from.x, y: state.drag.from.y, w: 1, h: 1 };
+      const pick = !!state.drag.pick;
+      state.drag = null;
+      assignFloatPalRect(r, pick);
+      return;
+    }
     if (state.drag && state.drag.block && state.drag.moved && state.sel && state.sel.x === state.drag.sx && state.sel.y === state.drag.sy) {
       state.undo.pop();
     }
     state.drag = null;
     renderAll();
   }
-  function assignFloatPalAt(p, pick) {
+  function assignFloatPalRect(rect, pick) {
     if (!floatHasSeams()) {
       status('Palette paint works on a floating import. Import an image, then click tiles.', true);
+      renderAll();
       return;
     }
     const f = state.float;
-    const tx = p.x - f.x;
-    const ty = p.y - f.y;
-    if (tx < 0 || ty < 0 || tx >= f.w || ty >= f.h) return;
-    const cell = f.cells[ty * f.w + tx];
-    if (!cell) {
-      status('No imported tile in that cell.', true);
+    const x0 = Math.max(0, rect.x - f.x);
+    const y0 = Math.max(0, rect.y - f.y);
+    const x1 = Math.min(f.w, rect.x + rect.w - f.x);
+    const y1 = Math.min(f.h, rect.y + rect.h - f.y);
+    if (x0 >= x1 || y0 >= y1) {
+      status('Click a tile on the floating import.', true);
+      renderAll();
       return;
     }
     if (pick) {
+      const cell = f.cells[y0 * f.w + x0];
+      if (!cell) { renderAll(); return; }
       state.color = { pal: cell.pal | 0, index: state.color.index };
       status('Picked palette ' + (cell.pal | 0) + ' from the floating tile.');
       renderSwatches();
-      renderChrome();
+      renderAll();
       return;
     }
     const dest = state.color.pal & (isSnes() ? 7 : 3);
     const pals = f.palettes || doc.palettes;
-    if (Quant && typeof Quant.setTilePalette === 'function') {
-      const hit = Quant.setTilePalette(cell, dest, pals, {
-        bits: colorBits(),
-        opaquePal0: $('jim-opaque0').checked,
-        lockedLines: lockedPalList()
-      });
-      if (!hit.ok) { status(hit.reason, true); return; }
-      cell.nibbles = hit.nibbles;
-      cell.pal = hit.pal;
-    } else {
-      cell.pal = dest;
+    const opts = {
+      bits: colorBits(),
+      opaquePal0: $('jim-opaque0').checked,
+      lockedLines: lockedPalList()
+    };
+    let painted = 0, skipped = 0;
+    let reason = '';
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        const cell = f.cells[ty * f.w + tx];
+        if (!cell) continue;
+        if (Quant && typeof Quant.setTilePalette === 'function') {
+          const hit = Quant.setTilePalette(cell, dest, pals, opts);
+          if (!hit.ok) { skipped++; reason = hit.reason; continue; }
+          cell.nibbles = hit.nibbles;
+          cell.pal = hit.pal;
+        } else {
+          cell.pal = dest;
+        }
+        painted++;
+      }
     }
-    status('Tile ' + tx + ',' + ty + ' is pal ' + dest + '.');
-    renderMap();
-    renderChrome();
+    if (painted) {
+      status('Pal ' + dest + ' on ' + painted + ' tile' + (painted === 1 ? '' : 's') +
+        (skipped ? ' (' + skipped + ' did not fit)' : '') + '.');
+    } else {
+      status(reason || ('Those tiles are already pal ' + dest + '.'), !!reason);
+    }
+    renderAll();
   }
   function optimizeFloatSeams() {
     if (!floatHasSeams() || !canEdit()) return;
@@ -3759,12 +3814,8 @@ remember();
   function wire() {
     document.querySelectorAll('[data-tool]').forEach((btn) => btn.addEventListener('click', () => {
       if (doc.readOnly && btn.classList.contains('jim-edit')) return;
-      state.tool = btn.dataset.tool;
-      document.querySelectorAll('[data-tool]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
-      if (state.tool === 'pal' && floatHasSeams() && $('jim-seam') && !$('jim-seam').checked) {
-        $('jim-seam').checked = true;
-        $('jim-seam').dispatchEvent(new Event('change', { bubbles: true }));
-      }
+      if (btn.dataset.tool === 'pal' && state.tool === 'pal') setTool('pan');
+      else setTool(btn.dataset.tool);
       renderMap();
       renderChrome();
       if (doc) renderTileEdit();
