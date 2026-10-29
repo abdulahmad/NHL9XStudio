@@ -102,6 +102,17 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(dobitmap.includes('auto') && dobitmap.includes('00') && dobitmap.includes('02') && dobitmap.includes('0C') && dobitmap.includes('0D') && dobitmap.includes('0F'));
   assert.match(await page.locator('label:has(#jim-only-empty)').getAttribute('title'), /skip cells that already have a tile/i);
   assert.ok(await page.locator('#jim-split').count());
+  const chromeFit = await page.locator('#jim-chrome').evaluate((el) => ({ h: el.clientHeight, sh: el.scrollHeight }));
+  assert.ok(chromeFit.sh <= chromeFit.h + 2, 'middle-pane tools fit without scrolling ' + JSON.stringify(chromeFit));
+  assert.ok(await page.locator('[data-tool="paint"]').isVisible());
+  assert.ok(await page.locator('#jim-sel-all').isVisible());
+  assert.ok(await page.locator('.jim-preview-set').isVisible());
+  assert.ok(await page.locator('#jim-tiles-more').count());
+  const tilesH0 = await page.locator('#jim-tiles').evaluate((e) => e.getBoundingClientRect().height);
+  await page.click('#jim-tiles-more');
+  const tilesH1 = await page.locator('#jim-tiles').evaluate((e) => e.getBoundingClientRect().height);
+  assert.ok(tilesH1 > tilesH0 + 80, 'Show more tiles grows the sheet ' + tilesH0 + ' -> ' + tilesH1);
+  assert.match(await page.locator('#jim-tiles-more').textContent(), /fewer/i);
   const mapH0 = await page.locator('#jim-scroll').evaluate((e) => e.getBoundingClientRect().height);
   const split = await page.locator('#jim-split').boundingBox();
   await page.mouse.move(split.x + split.width / 2, split.y + 4);

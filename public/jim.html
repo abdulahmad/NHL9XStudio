@@ -174,6 +174,10 @@
     <section class="jed-col jim-side" aria-label="Tiles, cell, export">
       <h2>Tiles <span id="jim-count" class="muted"></span></h2>
       <div id="jim-tiles" class="ice-tiles jim-tiles"></div>
+      <div class="jim-tiles-resize">
+        <div id="jim-tiles-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Show more tiles" title="Drag to show more or fewer tiles at once"></div>
+        <button type="button" id="jim-tiles-more" class="ghost-btn" title="Show more of the tile sheet at once">Show more tiles</button>
+      </div>
       <div class="ice-tilebox">
         <canvas id="jim-tile-edit" width="128" height="128" title="Tile pixels. Mirror and Flip here change the bitmap. Map Mirror and Flip change the cell bits."></canvas>
         <div class="ice-tilebtns">

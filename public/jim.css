@@ -10,13 +10,26 @@
 }
 .jim-side { overflow: auto; }
 .jim-view { overflow: hidden; }
-.jim-chrome { flex: 0 1 auto; min-height: 64px; overflow: auto; }
-.jim-view.is-split .jim-chrome { flex: 1 1 auto; }
+.jim-chrome { flex: 0 0 auto; min-height: 0; overflow: visible; }
+.jim-view.is-split .jim-chrome { flex: 1 1 auto; min-height: 72px; overflow: auto; }
 .jim-main .ice-scroll { flex: 1 1 auto !important; min-height: 80px; }
 .jim-view.is-split .ice-scroll { flex: 0 0 var(--jim-map-h, 280px) !important; min-height: 80px; }
+.jim-tiles {
+  height: var(--jim-tiles-h, 220px);
+  max-height: none;
+  flex: none !important;
+  min-height: 80px;
+  overflow: auto;
+}
+.jim-tiles-resize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 8px;
+}
+.jim-tiles-resize .jed-split { flex: 1; margin: 0; }
 #jim-map, #jim-tile-edit { image-rendering: pixelated; display: block; cursor: crosshair; background: #111; }
 #jim-tile-edit { width: 128px; height: 128px; border: 1px solid var(--line); }
-.jim-tiles { max-height: 220px; }
 .jim-meta { margin: 0 0 6px; font-size: 12px; line-height: 1.4; }
 .jim-pal-flags, .jim-swatch-row {
   display: grid;

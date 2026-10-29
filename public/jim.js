@@ -2833,8 +2833,6 @@ remember();
         view.style.setProperty('--jim-map-h', px + 'px');
         view.classList.add('is-split');
       }
-      const saved = Number(localStorage.getItem(KEY));
-      if (saved > 80) apply(saved);
       bar.addEventListener('pointerdown', (e) => {
         bar.setPointerCapture(e.pointerId);
         bar.classList.add('drag');
@@ -2850,6 +2848,45 @@ remember();
           bar.removeEventListener('pointermove', move);
           bar.removeEventListener('pointerup', up);
           try { localStorage.setItem(KEY, String(Math.round(scroll.getBoundingClientRect().height))); } catch (err) { /* private window */ }
+        };
+        bar.addEventListener('pointermove', move);
+        bar.addEventListener('pointerup', up);
+      });
+    })();
+    (function wireTilesSplit() {
+      const KEY = 'nhl9x-jim-tiles-h';
+      const COMPACT = 220;
+      const host = $('jim-tiles');
+      const bar = $('jim-tiles-split');
+      const more = $('jim-tiles-more');
+      if (!host || !bar || !more) return;
+      function apply(h) {
+        const px = Math.max(80, Math.min(800, Math.round(h)));
+        host.style.setProperty('--jim-tiles-h', px + 'px');
+        more.textContent = px > COMPACT + 40 ? 'Show fewer tiles' : 'Show more tiles';
+        return px;
+      }
+      const saved = Number(localStorage.getItem(KEY));
+      if (saved > 80) apply(saved);
+      function persist() {
+        try { localStorage.setItem(KEY, String(Math.round(host.getBoundingClientRect().height))); } catch (err) { /* private window */ }
+      }
+      more.addEventListener('click', () => {
+        const now = host.getBoundingClientRect().height;
+        apply(now > COMPACT + 40 ? COMPACT : Math.max(480, now + 220));
+        persist();
+      });
+      bar.addEventListener('pointerdown', (e) => {
+        bar.setPointerCapture(e.pointerId);
+        bar.classList.add('drag');
+        const y0 = e.clientY;
+        const h0 = host.getBoundingClientRect().height;
+        const move = (m) => apply(h0 + (m.clientY - y0));
+        const up = () => {
+          bar.classList.remove('drag');
+          bar.removeEventListener('pointermove', move);
+          bar.removeEventListener('pointerup', up);
+          persist();
         };
         bar.addEventListener('pointermove', move);
         bar.addEventListener('pointerup', up);
