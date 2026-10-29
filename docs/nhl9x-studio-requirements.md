@@ -47,7 +47,7 @@ Must all appear in the shipped tool.
 | U5 | Export uncompressed **or** compressed | Uncompressed = 92G / `DoDMApro` path. Compressed = 93G/94G `DecompressBytecode` (also 95G). User picks per export **only when the chosen format has both packings** (Genesis `.map.jim`, NHL 94 SNES zip). `.map.sjim` is always packed. Default: uncompressed for 92G-shaped files, compressed for 93/94/95. |
 | U6 | See the tile map | Grid of map cells, selected tile highlighted, zoom, optional 8×8 grid overlay. |
 | U7 | Place tiles and rotate them | Toolbar order: **Pan, Select, Pick, Place tile, Paint, Erase**, then Undo/Redo, then Grid / Trans / Seams as labeled icons (highlight when on). **The JIM has no rotate field.** H-flip and V-flip are map bits. 90°/270° **create new tiles** (VDP name table has no rotate bit — same as PC ice). 180° = both flip bits. Zoom sits next to 270°. |
-| U8 | Import an image | **Overwrite cells** (keep map size), **add tiles** (append unique tiles to the set; the map picture is not overlaid), or **new image** (resize the map to the picture). Change quantize options on the floating preview before Apply. |
+| U8 | Import an image | **Overwrite cells** (keep map size), **add tiles** (append unique tiles to the set; the map picture is not overlaid), **new image** (resize the map to the picture), **color reduction only** (snap to the 3-bit (GEN) or 5-bit (SNES) lattice, Step A only, palettes off, PNG export), or **reduce count only** (keep 8-bit color, Step B + Colors, palettes off, PNG export). Import **Color mode** chooses Genesis 3-bit vs SNES 5-bit. Change quantize options on the floating preview before Apply. The centre pane expands so Apply and previews stay visible. On a float, Pal moves clicked or dragged tiles onto the selected palette and rebuilds that pal from every tile on it (pals with no tiles go back to black); Optimize seams groups matching tiles onto one palette; Lock seams keeps that assignment when two-step color options change. Checking Lock on a palette does not rebuild the float. A new document’s palettes start at 0,0,0. Hex #RRGGBB snaps to 3-bit × 36. Export with a float pending asks to Apply first, or Cancel and leave Export closed. |
 | U9 | Transparency | Source alpha &lt; threshold → palette index **0**. Checkerboard for holes. Pal 0 color 0 is still stored (backdrop). |
 | U10 | Two-step color conversion | (A) snap to **3-bit** Genesis CRAM (512 colors) or **5-bit** SNES BGR555 (32,768 colors). (B) reduce to **15–61** (Genesis) or **15–121** (SNES) unique inks by palette config. **Optional reverse order** (reduce count first, then snap to the lattice). |
 | U11 | Per-step method + dither | At **each** of A and B the user picks: color method and dither. See §2.3. |
@@ -62,7 +62,7 @@ Must all appear in the shipped tool.
 | **Perceptual** | Weighted luma (G &gt; R &gt; B); keep gradients | Photos, ice, crowd |
 | **Selective** | Protect ice whites, skin, primary jersey hues | Logos, portraits later, team art |
 | **Adaptive** | Actual image histogram (median-cut / popularity) | Default for screens |
-| **Uniform** | Snap only to the 3-bit lattice, no clustering | Step A with dither, or debug |
+| **Uniform** | Snap only to the 3-bit (GEN) or 5-bit (SNES) lattice, no clustering | Step A with dither, lattice-only export, or debug |
 | **Weighted k-means** | Same distance as `lib/pc-palette.js` (`2R²+4G²+3B²`) | Reuse proven Studio code; 6-bit PC vs 3-bit Genesis |
 
 **Dither:**
@@ -225,7 +225,7 @@ lib/jim.js                 parseJim, encodeJim, compressBytecode, packPortrait
 lib/sjim.js                NHLPA 93 SNES .map.sjim parse/encode (DecompressBytecode stream)
 lib/sscr.js                NHL 94 SNES screens (tiles + map + pal, ZIP export)
 lib/snespak.js             unpack/pack LZ, Huffman, pairs, RLE
-lib/genesis-quantize.js    3-bit snap, reduction methods, dither, ACT lock, writeAct
+lib/genesis-quantize.js    3-bit (GEN) / 5-bit (SNES) snap, lattice-only reduceBits, methods, dither, ACT lock, writeAct
 lib/open-asset.js          classifies .jim / .map.jim / .sjim / 94S packed / ZIP
 lib/games.js               Images catalog; “Edit map” uses jim, 93S, and 94S screens
 public/viewer.js           Images tab: Edit map → jim.html#game=&image=
@@ -482,6 +482,7 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Import Color mode Genesis 3-bit (GEN) / SNES 5-bit (SNES); lattice-only PNG path (Step A only); count-only PNG path; Apply-before-export when a float is pending; centre pane expands for Apply/previews; floating Pal moves tiles onto the selected palette and rebuilds that pal from all tiles on it (unused pals go black); Optimize seams; Lock seams; Lock on a pal does not rebuild a float; new palettes start at 0,0,0; Hex #RRGGBB is 3-bit × 36; 5-bit quantization in every 3-bit context. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (separate chr/map/pal blobs). |
 | 2026-10-29 | Toolbar order Pan→Erase / Undo-Redo / Grid-Trans-Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line (Image Editor, Jerseys, Chip lab). |

@@ -109,7 +109,7 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 **Must have — files**
 
 - Open any of those formats; status says what kind of file it is
-- Export through a **modal** that lists native, Genesis `.map.jim`, SNES `.map.sjim`, NHL 94 SNES `.zip` (with the files that will be in the archive listed next to `.zip`), map PNG, and tiles PNG. Adobe ACT is **not** on this list — **Export .ACT** on the left opens a dialog: one palette line, or all lines combined
+- Export through a **modal** that lists native, Genesis `.map.jim`, SNES `.map.sjim`, NHL 94 SNES `.zip` (with the files that will be in the archive listed next to `.zip`), map PNG, and tiles PNG. If a floating image is pending, Export asks to Apply first or Cancel and does not open the format picker. Adobe ACT is **not** on this list — **Export .ACT** on the left opens a dialog: one palette line, or all lines combined
 - If the open picture **cannot** become the chosen format, **Export is disabled** and the reason sits next to Export/Cancel. Do not pop an error for that case, and do not download a broken file
 - Picking SNES `.map.sjim` or NHL 94 SNES `.zip` from a Genesis map is an **explicit conversion** when tiles ≤ 1024 (3-bit→5-bit, pals padded to 8, map words 10-bit). 94S zip is tiles + map + pal as separate files (Huffman/RLE/LZ), not a JIM and not a 93S sjim stream. Silent conversion is still forbidden. SNES→Genesis `.map.jim` stays blocked (lossy: 8 pals / 5-bit)
 - **Packed** is enabled only when the chosen format has both packed and unpacked (Genesis `.map.jim` and NHL 94 SNES zip). `.map.sjim` is always packed
@@ -135,17 +135,23 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 
 **Must have — import**
 
-Three import modes, named in the UI as:
+Five import modes, named in the UI as:
 
 | Mode | Label | What Apply does |
 |------|--------|-----------------|
 | `replace` | Import New Image & Overwrite Tiles (Resize Map) | Map becomes the picture’s size; tiles are replaced; duplicates (incl. H/V) are removed automatically |
 | `place` | Import into current Image & Add Tiles | Floating layer on the current map; new unique tiles are added; duplicates (incl. H/V) are removed automatically |
 | `add` | Import Tiles (keep existing image & tiles) | Appends unique tiles to the set. The map picture is not overlaid and does not change |
+| `bitonly` | 3-bit (GEN) / 5-bit (SNES) color reduction only (for export) | Palettes and tiles are off. The picture snaps to the platform lattice. Quantize UI is **Step A only**. Export is PNG only |
+| `countonly` | Reduce count only (for export) | Palettes and tiles are off. Keeps 8-bit color (no 3-bit/5-bit snap). Quantize UI is **Step B + Colors**. Export is PNG only |
 
-- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines
+- **Color mode** in Import: Genesis **3-bit (GEN)** (512 colors) or SNES **5-bit (SNES)** (32,768 colors). Tile import then reduces onto the palettes in Use. Switching the mode converts the open picture (4 pals ↔ 8, 3-bit ↔ 5-bit) so 5-bit import is not crushed into Genesis CRAM. Count-only ignores Color mode
+- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines (hidden in lattice-only and count-only). A new Image Editor document starts with every palette slot 0,0,0. Type #RRGGBB in Hex; Genesis snaps to 3-bit × 36 (0, 36, …, 252) and the RGB readout shows that 8-bit triple. Pals with no tiles go back to black
 - Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)
 - Change color options while the float is pending; Apply is what commits
+- When Apply, import previews, or other chrome pop-ups appear, the **centre pane expands** so they stay on screen
+- On a floating import, **Pal** (click one tile or drag a rectangle) paints which 8×8 tiles use which palette; click Pal again for Pan. **Optimize** (icon next to Pal) moves tiles that share colors onto the same palette so other lines get free ink slots. **Lock seams** keeps that assignment when you change two-step color options. Checking **Lock** on a palette does not rebuild the float. Pal and Seams stay off until you turn them on
+- Export with a floating image open asks to **Apply, then export**, or **Cancel** and leaves Export closed
 - Only-empty-cells skip map words that already have a tile
 
 **Must not (v1)**
@@ -257,6 +263,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. Centre pane expands for Apply and import previews. Floating Pal moves tiles onto the selected palette and rebuilds that pal from all tiles on it; unused pals go black. Optimize seams groups matching tiles. Lock on a palette does not rebuild a float; Lock seams keeps Pal assignments when color options change. New Image Editor palettes start at 0,0,0; Hex is #RRGGBB snapped to 3-bit × 36. 5-bit quantization wherever 3-bit exists. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |
 | 2026-10-29 | Image Editor: Pan→Erase then Undo/Redo then Grid/Trans/Seams icons; zoom next to 270°; compact Resize/Kind; export greys out with a reason (Genesis→sjim is an explicit conversion); zip file list; packed only when both packings exist; ACT is a left-pane dialog; **← NHL9X Studio \| page title** on one line. |

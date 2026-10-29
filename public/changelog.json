@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "1.2.1",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor Import has a Color mode: Genesis 3-bit (GEN) or SNES 5-bit (SNES)",
+        "3-bit (GEN) / 5-bit (SNES) color reduction only: Step A only, palettes off, export PNG",
+        "Reduce count only (for export): keeps 8-bit color, palettes off, export PNG",
+        "Export asks to apply a floating image first, or cancel and leave Export closed",
+        "The centre pane grows so Apply and import previews stay on screen",
+        "Floating import: Pal moves clicked or dragged tiles onto the selected palette and rebuilds that pal from all tiles on it; Optimize (next to Pal) groups matching tiles to free ink slots",
+        "Lock on a palette does not rebuild a floating import; Lock seams keeps Pal assignments when color options change",
+        "Image Editor starts with palettes at 0,0,0; type #RRGGBB (Genesis snaps to 3-bit × 36); pals with no tiles go back to black",
+        "5-bit quantization is available everywhere 3-bit is"
+      ]
+    },
+    {
       "version": "1.2.0",
       "date": "2026-10-29",
       "changes": [

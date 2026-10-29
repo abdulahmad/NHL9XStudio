@@ -245,4 +245,302 @@ function outputPixel(result, width, x, y) {
   assert.strictEqual(result.stepB.length, source.length);
 }
 
+function uniqueRgb(rgba) {
+  const keys = new Set();
+  for (let i = 0; i < rgba.length; i += 4) {
+    keys.add(rgba[i] + ',' + rgba[i + 1] + ',' + rgba[i + 2]);
+  }
+  return keys.size;
+}
+
+{
+  assert.strictEqual(typeof Q.reduceBits, 'function');
+  const exact3 = [Q.expandChannel(3), Q.expandChannel(5), Q.expandChannel(1), 255];
+  const src3 = image(4, 4, () => exact3);
+  const g = Q.reduceBits(src3, 4, 4, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(g.bits, 3);
+  assert.deepStrictEqual(outputPixel(g, 4, 1, 1), exact3);
+
+  const exact5 = [Q.expand5(10), Q.expand5(20), Q.expand5(5), 255];
+  const src5 = image(4, 4, () => exact5);
+  const s = Q.reduceBits(src5, 4, 4, {
+    bits: 5,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(s.bits, 5);
+  assert.deepStrictEqual(outputPixel(s, 4, 1, 1), exact5);
+  const crushed = Q.reduceBits(src5, 4, 4, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.notDeepStrictEqual(outputPixel(s, 4, 0, 0).slice(0, 3),
+    outputPixel(crushed, 4, 0, 0).slice(0, 3),
+    '5-bit (SNES) must not crush to the 3-bit (GEN) lattice');
+}
+
+{
+  const source = image(8, 8, (x, y) => [x * 32, y * 31, 128, 255]);
+  const g = Q.reduceBits(source, 8, 8, {
+    bits: 3,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  const s = Q.reduceBits(source, 8, 8, {
+    bits: 5,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.ok(uniqueRgb(s.rgbaOut) > uniqueRgb(g.rgbaOut),
+    '5-bit lattice keeps more colors than 3-bit');
+}
+
+{
+  const source = Uint8Array.from([
+    255, 20, 30, 40,
+    Q.expand5(8), Q.expand5(16), Q.expand5(24), 200
+  ]);
+  const result = Q.reduceBits(source, 2, 1, {
+    bits: 5,
+    alphaThreshold: 128,
+    stepA: { method: 'uniform', dither: 'none' }
+  });
+  assert.strictEqual(result.rgbaOut[3], 40, 'transparent alpha is preserved');
+  assert.strictEqual(result.rgbaOut[7], 200);
+}
+
+{
+  assert.strictEqual(typeof Q.reduceCountOnly, 'function');
+  const off = [40, 90, 200, 255];
+  const kept = Q.reduceCountOnly(image(4, 4, () => off), 4, 4, {
+    count: 16,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(kept.count, 16);
+  assert.deepStrictEqual(outputPixel(kept, 4, 1, 1), off,
+    'count-only keeps 8-bit color when already under the cap');
+
+  const source = image(8, 8, (x, y) => {
+    const i = (x + y * 8) % 32;
+    return [(i * 7) & 255, 40 + (i * 3), 200 - i, 255];
+  });
+  const reduced = Q.reduceCountOnly(source, 8, 8, {
+    count: 4,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(reduced.count, 4);
+  assert.ok(uniqueRgb(reduced.rgbaOut) <= 4,
+    'count-only caps unique opaque colors, got ' + uniqueRgb(reduced.rgbaOut));
+
+  const holes = Uint8Array.from([
+    40, 90, 200, 40,
+    10, 20, 30, 200
+  ]);
+  const alpha = Q.reduceCountOnly(holes, 2, 1, {
+    count: 8,
+    alphaThreshold: 128,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(alpha.rgbaOut[3], 40, 'count-only preserves transparent alpha');
+  assert.strictEqual(alpha.rgbaOut[7], 200);
+}
+
+function palLine() {
+  const line = Array.from({ length: 16 }, () => null);
+  line[0] = { r3: 0, g3: 0, b3: 0 };
+  return line;
+}
+
+{
+  assert.strictEqual(typeof Q.setTilePalette, 'function');
+  const red = { r3: 7, g3: 0, b3: 0 };
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[0][1] = red;
+  const nib = new Uint8Array(64);
+  nib[0] = 1;
+  const hit = Q.setTilePalette({ nibbles: nib, pal: 0 }, 1, palettes, {
+    bits: 3, opaquePal0: true
+  });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.pal, 1);
+  assert.deepStrictEqual(palettes[1][hit.nibbles[0]], red);
+}
+
+function inkKeys(line, start) {
+  const keys = new Set();
+  for (let i = start; i < 16; i++) {
+    const c = line[i];
+    if (!c) continue;
+    keys.add((c.r3 << 6) | (c.g3 << 3) | c.b3);
+  }
+  return keys;
+}
+
+function dummyCell(pal) {
+  return { nibbles: new Uint8Array(64), pal: pal };
+}
+
+{
+  assert.strictEqual(typeof Q.quantizeTilesToPalette, 'function');
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const green = { r3: 0, g3: 7, b3: 0 };
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = green;
+  palettes[1][2] = { r3: 7, g3: 7, b3: 0 };
+  const cells = [dummyCell(0), dummyCell(0)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.assigned, 1);
+  assert.strictEqual(hit.cells[0].pal, 1);
+  assert.strictEqual(hit.cells[1].pal, 0, 'unselected tile stays on its pal');
+  const destKeys = inkKeys(hit.palettes[1], 0);
+  assert.ok(destKeys.has((7 << 6) | (0 << 3) | 0), 'dest pal is rebuilt from the red tile');
+  assert.ok(!destKeys.has((0 << 6) | (7 << 3) | 0),
+    'from-scratch Pal must drop leftover dest colors, not squeeze into free slots');
+  assert.ok(!destKeys.has((7 << 6) | (7 << 3) | 0),
+    'yellow leftover on dest pal must not survive a rebuild');
+  assert.strictEqual(palettes[1][1], green, 'input palettes are not mutated');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  const cells = [dummyCell(0), dummyCell(1)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.assigned, 1);
+  assert.ok(hit.remapped >= 1, 'other tiles already on dest pal stay on it, got remapped ' + hit.remapped);
+  assert.strictEqual(hit.cells[1].pal, 1);
+  const destKeys = inkKeys(hit.palettes[1], 0);
+  assert.ok(destKeys.has((7 << 6) | (0 << 3) | 0), 'moved red tile is in dest pal');
+  assert.ok(destKeys.has((0 << 6) | (0 << 3) | 7),
+    'moving one tile onto dest pal must not wipe colors still used by tiles on that pal');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const source = image(8, 8, () => red);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  const locked = Q.quantizeTilesToPalette(
+    source, 8, 8, [dummyCell(0)], 1, 1, [{ x: 0, y: 0 }], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      lockedLines: [false, true, false, false]
+    });
+  assert.ok(locked.ok, locked.reason);
+  assert.strictEqual(locked.cells[0].pal, 1);
+  assert.strictEqual(locked.palettes[1][1].g3, 7, 'locked dest pal is match-only');
+  assert.strictEqual(locked.assigned, 1);
+  assert.strictEqual(locked.remapped, 0);
+}
+
+{
+  const source = image(8, 8, (x, y) => [
+    (x * 36) & 255, (y * 28) & 255, ((x * y) * 17) & 255, 255
+  ]);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  const hit = Q.quantizeTilesToPalette(
+    source, 8, 8, [dummyCell(0)], 1, 1, [0], 1, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.ok(inkKeys(hit.palettes[1], 1).size <= 15,
+    'rebuilt dest pal must fit in 15 ink slots, got ' + inkKeys(hit.palettes[1], 1).size);
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[1][1] = { r3: 0, g3: 7, b3: 0 };
+  palettes[2][1] = { r3: 7, g3: 7, b3: 0 };
+  palettes[3][1] = { r3: 0, g3: 7, b3: 7 };
+  const cells = [dummyCell(1), dummyCell(2)];
+  const hit = Q.quantizeTilesToPalette(
+    source, 16, 8, cells, 2, 1, [{ x: 0, y: 0 }, { x: 1, y: 0 }], 0, palettes, {
+      bits: 3,
+      opaquePal0: true,
+      stepA: { method: 'uniform', dither: 'none' },
+      stepB: { method: 'adaptive', dither: 'none' }
+    });
+  assert.ok(hit.ok, hit.reason);
+  assert.strictEqual(hit.cells[0].pal, 0);
+  assert.strictEqual(hit.cells[1].pal, 0);
+  function isBlackLine(line) {
+    return line.every((c) => !c || ((c.r3 || 0) === 0 && (c.g3 || 0) === 0 && (c.b3 || 0) === 0));
+  }
+  assert.ok(isBlackLine(hit.palettes[1]), 'unused pal 1 must be empty when every tile is on pal 0');
+  assert.ok(isBlackLine(hit.palettes[2]), 'unused pal 2 must be empty when every tile is on pal 0');
+  assert.ok(isBlackLine(hit.palettes[3]), 'unused pal 3 must be empty when every tile is on pal 0');
+}
+
+{
+  const red = [Q.expandChannel(7), Q.expandChannel(0), Q.expandChannel(0), 255];
+  const blue = [Q.expandChannel(0), Q.expandChannel(0), Q.expandChannel(7), 255];
+  const source = image(16, 8, (x) => x < 8 ? red : blue);
+  const assignment = new Uint8Array([3, 3]);
+  const first = Q.quantize(source, 16, 8, {
+    pals: [0, 1, 2, 3],
+    opaquePal0: true,
+    assignment: assignment,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(first.tiles[0].pal, 3);
+  assert.strictEqual(first.tiles[1].pal, 3);
+  const second = Q.quantize(source, 16, 8, {
+    pals: [0, 1, 2, 3],
+    opaquePal0: true,
+    assignment: assignment,
+    stepB: { method: 'perceptual', dither: 'none' }
+  });
+  assert.strictEqual(second.tiles[0].pal, 3, 'frozen assignment survives a method change');
+  assert.strictEqual(second.tiles[1].pal, 3);
+}
+
+{
+  assert.strictEqual(typeof Q.optimizeSeams, 'function');
+  const red = { r3: 7, g3: 0, b3: 0 };
+  const blue = { r3: 0, g3: 0, b3: 7 };
+  const palettes = [palLine(), palLine(), palLine(), palLine()];
+  palettes[0][1] = red;
+  palettes[0][2] = blue;
+  palettes[1][1] = red;
+  palettes[1][2] = blue;
+  const nib = new Uint8Array(64);
+  nib[0] = 1;
+  nib[1] = 2;
+  const cells = [
+    { nibbles: Uint8Array.from(nib), pal: 0 },
+    { nibbles: Uint8Array.from(nib), pal: 1 }
+  ];
+  const result = Q.optimizeSeams(cells, palettes, 2, 1, { bits: 3, opaquePal0: true });
+  assert.strictEqual(result.cells[0].pal, result.cells[1].pal,
+    'matching tiles share a palette');
+  assert.ok(result.moved >= 1, 'at least one tile moved, got ' + result.moved);
+  assert.ok(result.freeAfter > result.freeBefore,
+    'shared palettes free ink slots ' + result.freeBefore + ' -> ' + result.freeAfter);
+}
+
 console.log('genesis-quantize: ok');

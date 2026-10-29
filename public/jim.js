@@ -71,23 +71,22 @@
   }
   function isZero(c) { return !c.tile && !c.hFlip && !c.vFlip && !c.pal && !c.priority; }
 
+  // Genesis CRAM 3-bit → 8-bit in this editor is n × 36 (0, 36, …, 252).
   function expandChannel(c) {
-    if (Quant && Quant.expandChannel) return Quant.expandChannel(c & 7);
-    if (typeof Nhl92Anim !== 'undefined' && Nhl92Anim.expandChannel) return Nhl92Anim.expandChannel(c & 7);
-    c &= 7;
-    return (c << 5) | (c << 2) | (c >> 1);
+    return (c & 7) * 36;
   }
   function encodeChannel(value) {
-    if (Quant && Quant.encodeChannel) return Quant.encodeChannel(value);
+    value = Math.max(0, Math.min(255, Number(value) || 0));
     let best = 0;
     let err = 1e9;
-    for (let c = 0; c < 8; c++) {
-      const d = Math.abs((value | 0) - expandChannel(c));
-      if (d < err) { err = d; best = c; }
+    for (let n = 0; n < 8; n++) {
+      const d = Math.abs(value - n * 36);
+      if (d < err) { err = d; best = n; }
     }
     return best;
   }
   function rgbOf(c) {
+    if (!c) return 'rgb(0,0,0)';
     if (isSnes() && c.r5 != null) {
       return 'rgb(' + expand5(c.r5) + ',' + expand5(c.g5) + ',' + expand5(c.b5) + ')';
     }
@@ -98,6 +97,7 @@
       const v = bits === 5 ? expand5(n) : expandChannel(n);
       return v.toString(16).padStart(2, '0');
     }
+    if (!c) return '#000000';
     if (isSnes() && c.r5 != null) return '#' + h(c.r5, 5) + h(c.g5, 5) + h(c.b5, 5);
     return '#' + h(c.r3, 3) + h(c.g3, 3) + h(c.b3, 3);
   }
@@ -108,7 +108,177 @@
     const el = $('jim-import-mode');
     return el && el.value ? el.value : 'place';
   }
-  function mapPixelText(w, h) { return (w * 8) + '×' + (h * 8) + ' pixels'; }
+  function colorMode() {
+    const el = $('jim-color-mode');
+    if (el && (el.value === 'snes' || el.value === 'genesis')) return el.value;
+    return isSnes() ? 'snes' : 'genesis';
+  }
+  function colorBits() { return colorMode() === 'snes' ? 5 : 3; }
+  function bitLabel() { return colorBits() === 5 ? '5-bit (SNES)' : '3-bit (GEN)'; }
+  function isPngReduce(mode) { return mode === 'bitonly' || mode === 'countonly'; }
+  function isBitonlyMode() { return importMode() === 'bitonly'; }
+  function isCountonlyMode() { return importMode() === 'countonly'; }
+  function isPngonlyMode() { return isPngReduce(importMode()); }
+  function pngReduceKind() {
+    if (state.float && isPngReduce(state.float.mode)) return state.float.mode;
+    if (isPngReduce(importMode())) return importMode();
+    if (doc && isPngReduce(doc.variant) && (!state.float || isPngReduce(state.float.mode))) return doc.variant;
+    return '';
+  }
+  function showingBitonly() { return pngReduceKind() === 'bitonly'; }
+  function showingCountonly() { return pngReduceKind() === 'countonly'; }
+  function showingPngonly() { return !!pngReduceKind(); }
+  function viewBitmap() {
+    if (state.float && state.float.bitmap) return state.float.bitmap;
+    if (doc && doc.bitmap && isPngReduce(doc.variant) && (!state.float || isPngReduce(state.float.mode))) {
+      return doc.bitmap;
+    }
+    return null;
+  }
+  function colorCount() {
+    const el = $('jim-color-count');
+    const n = el ? Number(el.value) : 16;
+    if (!Number.isFinite(n)) return 16;
+    return Math.max(2, Math.min(256, Math.round(n)));
+  }
+  function viewPixels() {
+    const bm = viewBitmap();
+    if (bm) return { w: bm.w, h: bm.h };
+    const size = viewMap();
+    return { w: size.w * 8, h: size.h * 8 };
+  }
+  function mapPixelText(w, h) {
+    const bm = viewBitmap();
+    if (bm) return bm.w + '×' + bm.h + ' pixels';
+    return (w * 8) + '×' + (h * 8) + ' pixels';
+  }
+  function setColorMode(mode) {
+    const next = mode === 'snes' ? 'snes' : 'genesis';
+    const el = $('jim-color-mode');
+    if (el) el.value = next;
+    convertDocPlatform(next);
+    syncImportUi();
+  }
+  function convertColor(c, snes) {
+    if (!c) {
+      return snes
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    if (snes) {
+      const r3 = c.r3 & 7, g3 = c.g3 & 7, b3 = c.b3 & 7;
+      return {
+        r3: r3, g3: g3, b3: b3,
+        r5: c.r5 != null ? c.r5 & 31 : (r3 << 2) | (r3 >> 1),
+        g5: c.g5 != null ? c.g5 & 31 : (g3 << 2) | (g3 >> 1),
+        b5: c.b5 != null ? c.b5 & 31 : (b3 << 2) | (b3 >> 1)
+      };
+    }
+    const r3 = c.r5 != null ? (c.r5 >> 2) : (c.r3 & 7);
+    const g3 = c.g5 != null ? (c.g5 >> 2) : (c.g3 & 7);
+    const b3 = c.b5 != null ? (c.b5 >> 2) : (c.b3 & 7);
+    return { r3: r3 & 7, g3: g3 & 7, b3: b3 & 7 };
+  }
+  function convertDocPlatform(platform) {
+    if (!doc) return;
+    const snes = platform === 'snes';
+    const was = doc.platform === 'snes';
+    if (snes === was) {
+      if (isPngReduce(doc.variant) && doc.bitmapSource) reReduceCommittedBitmap();
+      return;
+    }
+    remember();
+    doc.platform = snes ? 'snes' : 'genesis';
+    const n = snes ? 8 : 4;
+    const next = [];
+    for (let p = 0; p < n; p++) {
+      const src = doc.palettes[p];
+      next[p] = src ? src.map((c) => convertColor(c, snes)) : defaultLine(p, snes);
+    }
+    doc.palettes = next;
+    doc.dirtyPal = true;
+    if (!snes && doc.cells) doc.cells.forEach((c) => { c.pal &= 3; });
+    if (doc.via === 'new' && /^untitled\.map\.(s)?jim$/i.test(doc.name || '')) {
+      doc.name = snes ? 'untitled.map.sjim' : 'untitled.map.jim';
+    }
+    if (isPngReduce(doc.variant) && doc.bitmapSource) reReduceCommittedBitmap();
+    buildPaletteChrome();
+    fillPalSelect();
+    syncRgbRange();
+    fillDobitmapSelect();
+  }
+  function reReduceCommittedBitmap() {
+    if (!doc || !doc.bitmapSource) return;
+    const src = doc.bitmapSource;
+    const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
+    if (doc.variant === 'countonly' && Quant && typeof Quant.reduceCountOnly === 'function') {
+      const stepB = {
+        method: $('jim-b-method') ? $('jim-b-method').value : 'adaptive',
+        dither: $('jim-b-dither') ? $('jim-b-dither').value : 'none',
+        strength: $('jim-b-strength') ? Number($('jim-b-strength').value) : 100
+      };
+      const result = Quant.reduceCountOnly(src.rgba, src.w, src.h, {
+        count: colorCount(), stepB: stepB, step: stepB, alphaThreshold: alpha
+      });
+      doc.bitmap = { w: src.w, h: src.h, rgba: result.rgbaOut };
+    } else if (Quant && typeof Quant.reduceBits === 'function') {
+      const bits = colorBits();
+      const stepA = {
+        method: $('jim-a-method') ? $('jim-a-method').value : 'uniform',
+        dither: $('jim-a-dither') ? $('jim-a-dither').value : 'none',
+        strength: $('jim-a-strength') ? Number($('jim-a-strength').value) : 100
+      };
+      const result = Quant.reduceBits(src.rgba, src.w, src.h, {
+        bits: bits, stepA: stepA, step: stepA, alphaThreshold: alpha
+      });
+      doc.bitmap = { w: src.w, h: src.h, rgba: result.rgbaOut };
+    }
+    doc.dirtyMap = true;
+  }
+  function syncImportUi() {
+    const label = bitLabel();
+    const bits = colorBits();
+    const png = showingPngonly();
+    const bit = showingBitonly();
+    const count = showingCountonly();
+    const bitOpt = $('jim-import-bitonly');
+    if (bitOpt) bitOpt.textContent = label + ' color reduction only (for export)';
+    const order = $('jim-q-order');
+    if (order && order.options.length >= 2) {
+      order.options[0].textContent = label + ', then reduce count';
+      order.options[1].textContent = 'Reduce count, then ' + label;
+    }
+    const legend = $('jim-q-legend');
+    if (legend) {
+      legend.textContent = bit ? (label + ' lattice') : (count ? 'Reduce count' : 'Two-step color');
+    }
+    const palHead = $('jim-pal-sub');
+    if (palHead) palHead.textContent = isSnes()
+      ? '8 × 16 BGR555 · 5-bit (SNES)'
+      : '4 × 16 CRAM · 3-bit (GEN)';
+    const help = $('jim-color-mode-help');
+    if (help) {
+      help.textContent = count
+        ? 'Count-only keeps 8-bit color and does not snap to 3-bit (GEN) or 5-bit (SNES).'
+        : (bits === 5
+          ? 'SNES import snaps each channel to 32 levels (5-bit) and does not do the 3-bit crush.'
+          : 'Genesis import snaps each channel to 8 levels (3-bit).');
+    }
+    const pngLabel = $('jim-png-label');
+    if (pngLabel) {
+      pngLabel.textContent = bit ? (label + ' PNG') : (count ? 'Count PNG' : 'Map PNG');
+    }
+    const app = document.querySelector('.jim-app');
+    if (app) {
+      app.classList.toggle('is-pngonly', png);
+      app.classList.toggle('is-bitonly', bit);
+      app.classList.toggle('is-countonly', count);
+    }
+  }
+  function copyBitmap(src) {
+    if (!src) return null;
+    return { name: src.name, w: src.w, h: src.h, rgba: Uint8Array.from(src.rgba) };
+  }
   function tileCap() { return isSnes() ? 1024 : 2048; }
   function expand5(v) { return ((v & 31) * 255 / 31) | 0; }
   function encode5(value) {
@@ -223,15 +393,8 @@
     const use5 = snes == null ? isSnes() : !!snes;
     const line = [];
     for (let i = 0; i < 16; i++) {
-      const r3 = (i + p) & 7;
-      const g3 = (i * 2 + p) & 7;
-      const b3 = (7 - i + p * 3) & 7;
-      const c = { r3: r3, g3: g3, b3: b3 };
-      if (use5) {
-        c.r5 = (r3 << 2) | (r3 >> 1);
-        c.g5 = (g3 << 2) | (g3 >> 1);
-        c.b5 = (b3 << 2) | (b3 >> 1);
-      }
+      const c = { r3: 0, g3: 0, b3: 0 };
+      if (use5) { c.r5 = 0; c.g5 = 0; c.b5 = 0; }
       line.push(c);
     }
     return line;
@@ -248,7 +411,8 @@
     if (el && mode) el.value = mode;
   }
   function floatReplace() {
-    return !!(state.float && (state.float.mode || importMode()) === 'replace');
+    const mode = state.float && (state.float.mode || importMode());
+    return !!(state.float && (mode === 'replace' || isPngReduce(mode)));
   }
   function floatAdd() {
     return !!(state.float && (state.float.mode || importMode()) === 'add');
@@ -256,13 +420,77 @@
   function floatPlaceable() {
     return !!(state.float && !floatReplace() && !floatAdd());
   }
+  function floatHasSeams() {
+    const f = state.float;
+    if (!f || !f.palettes || !f.cells || !f.cells.length) return false;
+    if (floatAdd()) return false;
+    const mode = f.mode || importMode();
+    return !isPngReduce(mode);
+  }
+  function seamsLocked() {
+    return !!( $('jim-lock-seams') && $('jim-lock-seams').checked );
+  }
+  function setSeamsLocked(on) {
+    const box = $('jim-lock-seams');
+    if (!box) return;
+    box.checked = !!on;
+    const btn = document.querySelector('[data-flag="jim-lock-seams"]');
+    if (btn) btn.setAttribute('aria-pressed', String(!!on));
+  }
+  function assignmentFromFloat(f) {
+    const out = new Uint8Array(f.w * f.h);
+    for (let i = 0; i < f.cells.length; i++) {
+      out[i] = f.cells[i] ? (f.cells[i].pal | 0) : 0;
+    }
+    return out;
+  }
+  function viewPalettes() {
+    if (floatHasSeams() && state.float.palettes) return state.float.palettes;
+    return doc.palettes;
+  }
+  function floatRgba(f) {
+    if (f.original && f.original.rgba instanceof Uint8Array) {
+      if (f.original.w === f.w * 8 && f.original.h === f.h * 8) return f.original;
+      return padImage({ rgba: f.original.rgba, w: f.original.w, h: f.original.h });
+    }
+    const w = f.w * 8;
+    const h = f.h * 8;
+    const pals = f.palettes || doc.palettes;
+    const rgba = new Uint8Array(w * h * 4);
+    for (let ty = 0; ty < f.h; ty++) {
+      for (let tx = 0; tx < f.w; tx++) {
+        const cell = f.cells[ty * f.w + tx];
+        if (!cell || !cell.nibbles) continue;
+        const line = pals[cell.pal | 0];
+        for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+            const rgb = rgbChannels(line && line[cell.nibbles[y * 8 + x] & 15]);
+            const at = ((ty * 8 + y) * w + (tx * 8 + x)) * 4;
+            rgba[at] = rgb[0];
+            rgba[at + 1] = rgb[1];
+            rgba[at + 2] = rgb[2];
+            rgba[at + 3] = 255;
+          }
+        }
+      }
+    }
+    return { rgba: rgba, w: w, h: h };
+  }
+  function lockedPalList() {
+    const locked = [];
+    for (let p = 0; p < palCount(); p++) {
+      locked[p] = !!( $('jim-lock-' + p) && $('jim-lock-' + p).checked );
+    }
+    return locked;
+  }
   function viewMap() {
     if (floatReplace()) return { w: state.float.w, h: state.float.h };
     return { w: doc.mapW, h: doc.mapH };
   }
   function placeFloat(fl) {
     if (!fl) return fl;
-    if ((fl.mode || importMode()) === 'replace') {
+    const mode = fl.mode || importMode();
+    if (mode === 'replace' || isPngReduce(mode)) {
       fl.x = 0;
       fl.y = 0;
     } else {
@@ -334,7 +562,17 @@
       embedPalettes: doc.embedPalettes,
       dirtyTiles: doc.dirtyTiles,
       dirtyPal: doc.dirtyPal,
-      dirtyMap: doc.dirtyMap
+      dirtyMap: doc.dirtyMap,
+      platform: doc.platform,
+      variant: doc.variant,
+      name: doc.name,
+      bitmap: doc.bitmap ? { w: doc.bitmap.w, h: doc.bitmap.h, rgba: Uint8Array.from(doc.bitmap.rgba) } : null,
+      bitmapSource: doc.bitmapSource ? {
+        name: doc.bitmapSource.name,
+        w: doc.bitmapSource.w,
+        h: doc.bitmapSource.h,
+        rgba: Uint8Array.from(doc.bitmapSource.rgba)
+      } : null
     };
   }
   function restore(snap) {
@@ -351,10 +589,31 @@
     doc.dirtyTiles = snap.dirtyTiles;
     doc.dirtyPal = snap.dirtyPal;
     doc.dirtyMap = snap.dirtyMap;
+    if (snap.platform) doc.platform = snap.platform;
+    if (snap.variant) doc.variant = snap.variant;
+    if (snap.name) doc.name = snap.name;
+    doc.bitmap = snap.bitmap
+      ? { w: snap.bitmap.w, h: snap.bitmap.h, rgba: Uint8Array.from(snap.bitmap.rgba) }
+      : null;
+    doc.bitmapSource = snap.bitmapSource
+      ? {
+        name: snap.bitmapSource.name,
+        w: snap.bitmapSource.w,
+        h: snap.bitmapSource.h,
+        rgba: Uint8Array.from(snap.bitmapSource.rgba)
+      }
+      : null;
+    if ($('jim-color-mode') && snap.platform) {
+      $('jim-color-mode').value = snap.platform === 'snes' ? 'snes' : 'genesis';
+    }
+    syncImportUi();
     if (state.focus.x >= doc.mapW) state.focus.x = doc.mapW - 1;
     if (state.focus.y >= doc.mapH) state.focus.y = doc.mapH - 1;
     if (state.tile >= doc.tiles.length) state.tile = Math.max(0, doc.tiles.length - 1);
     if (state.sel && (state.sel.x >= doc.mapW || state.sel.y >= doc.mapH)) state.sel = null;
+    buildPaletteChrome();
+    fillPalSelect();
+    syncRgbRange();
   }
   function remember() {
     if (doc.readOnly) return;
@@ -867,6 +1126,8 @@ function buildExport(packed) {
   function focused(id) { return document.activeElement && document.activeElement.id === id; }
 
   function headerMode() {
+if (doc.variant === 'bitonly') return 'Color reduction only. Palettes and tiles are off. Export is a ' + bitLabel() + ' PNG.';
+if (doc.variant === 'countonly') return 'Count reduction only. Palettes and tiles are off. Export is a PNG.';
 if (doc.variant === 'snes94') return 'Export writes a ZIP of the NHL 94 SNES files: tiles (.chr.huf/.lz/.rle), map (6-byte header then words), and BGR555 palettes. Packed uses Decompress $FB10/$FB30/$FB7A. Nothing is written into a ROM.';
 if (doc.platform === 'snes') return 'Export writes one DecompressBytecode stream: map words, BGR555 palettes, then planar tiles. Offsets are not in the file.';
 if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows (3 bits + 5). Shared faces keep a zero header.';
@@ -898,6 +1159,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     return { pals: Array.from(pals).sort(), inks: inks.size, budget: budget, bad: bad };
   }
   function variantLabel() {
+    if (doc.variant === 'bitonly') return bitLabel() + ' lattice PNG';
+    if (doc.variant === 'countonly') return 'count-only PNG';
     if (doc.variant === 'nopal') return 'no palette ($FFFFFFFF)';
     if (doc.variant === 'snes94') return 'SNES 94 screen (huf/lz/rle)';
     if (doc.platform === 'snes') return 'SNES .map.sjim';
@@ -908,6 +1171,15 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
 
   function renderNote() {
+    if (isPngReduce(doc.variant) && doc.bitmap) {
+      $('jim-note').textContent = (doc.variant === 'countonly'
+        ? ('Count-only · ' + colorCount() + ' colors')
+        : (bitLabel() + ' lattice')) +
+        ' · ' + doc.bitmap.w + '×' + doc.bitmap.h + ' pixels · PNG only';
+      $('jim-count').textContent = '';
+      $('jim-count').classList.remove('error');
+      return;
+    }
     const s = stats();
     const warnings = [];
     const cap = tileCap();
@@ -1001,8 +1273,6 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     $('jim-portrait').hidden = doc.variant !== 'portrait';
     if ($('jim-memo') && document.activeElement !== $('jim-memo')) $('jim-memo').value = doc.memo || '';
-    const palHead = $('jim-pal-sub');
-    if (palHead) palHead.textContent = isSnes() ? '8 × 16 BGR555 · 5-bit' : '4 × 16 CRAM · 3-bit';
     const hBit = $('jim-h-bit');
     const vBit = $('jim-v-bit');
     const priBit = $('jim-pri-bit');
@@ -1011,11 +1281,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (priBit) priBit.textContent = isSnes() ? '(bit 13)' : '(bit 15)';
     syncRgbRange();
     fillPalSelect();
-    const order = $('jim-q-order');
-    if (order && order.options.length >= 2) {
-      order.options[0].textContent = isSnes() ? '5-bit, then reduce count' : '3-bit, then reduce count';
-      order.options[1].textContent = isSnes() ? 'Reduce count, then 5-bit' : 'Reduce count, then 3-bit';
-    }
+    syncImportUi();
     const actBtn = $('jim-act-btn');
     if (actBtn) {
       actBtn.title = isSnes()
@@ -1026,8 +1292,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
 
   function drawZoom() {
     let z = state.zoom;
-    const size = viewMap();
-    while (z > 1 && (size.w * 8 * z > DRAW_PX_MAX || size.h * 8 * z > DRAW_PX_MAX)) z--;
+    const pix = viewPixels();
+    while (z > 1 && (pix.w * z > DRAW_PX_MAX || pix.h * z > DRAW_PX_MAX)) z--;
     return z;
   }
   function samplePreview(cell, px, py) {
@@ -1088,6 +1354,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       erase: { x: 4, y: 20, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linejoin="round" d="M4 14.5l7.2-7.2 6.5 6.5-4.4 4.4H6.2L4 16.2z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M8.2 18.2H20"/></svg>' },
       select: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="#f0b429" stroke-width="2" stroke-dasharray="3 2.5"/></svg>' },
       pick: { x: 4, y: 21, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" d="M14.2 4.2l5.6 5.6-8.4 8.4-3.2-3.2 6-10.8z"/><path fill="none" stroke="#f0b429" stroke-width="2" d="M7.2 16.2L4 20"/></svg>' },
+      pal: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="#f0b429" stroke-width="2"/><rect x="13" y="13" width="8" height="8" fill="#f0b429"/></svg>' },
       pan: { x: 12, y: 12, svg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" d="M8 11V6.5a1.5 1.5 0 013 0V11m0-3.2V5.5a1.5 1.5 0 013 0V11m0-2.2V6.8a1.5 1.5 0 013 0V13c0 3-1.4 6.5-4.6 6.5H12c-2.8 0-5-1.6-6.2-3.4L4.2 13.2A1.4 1.4 0 016.6 12L8 13"/></svg>' }
     };
     const icon = icons[tool];
@@ -1095,7 +1362,69 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const fallback = tool === 'pan' ? 'grab' : (tool === 'place' ? 'copy' : 'crosshair');
     return 'url("data:image/svg+xml,' + encodeURIComponent(icon.svg) + '") ' + icon.x + ' ' + icon.y + ', ' + fallback;
   }
+  function setTool(tool) {
+    state.tool = tool;
+    document.querySelectorAll('[data-tool]').forEach((el) => {
+      el.setAttribute('aria-pressed', String(el.dataset.tool === tool));
+    });
+  }
+  function paintBitmap(data, W, H, rgba) {
+    const n = W * H;
+    const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
+    const showHoles = $('jim-trans') && $('jim-trans').checked;
+    for (let i = 0; i < n; i++) {
+      const at = i * 4;
+      if (showHoles && rgba[at + 3] < alpha) {
+        const x = i % W;
+        const y = (i / W) | 0;
+        const v = ((x >> 3) ^ (y >> 3)) & 1 ? 86 : 138;
+        paintPixel(data, W, x, y, v, v, v, 255);
+      } else {
+        data[at] = rgba[at];
+        data[at + 1] = rgba[at + 1];
+        data[at + 2] = rgba[at + 2];
+        data[at + 3] = 255;
+      }
+    }
+  }
+  function renderBitmapMap(bm) {
+    const z = drawZoom();
+    const W = bm.w;
+    const H = bm.h;
+    if (!state.scratch || state.scratch.width !== W || state.scratch.height !== H) {
+      state.scratch = document.createElement('canvas');
+      state.scratch.width = W;
+      state.scratch.height = H;
+    }
+    const sctx = state.scratch.getContext('2d');
+    const img = sctx.createImageData(W, H);
+    paintBitmap(img.data, W, H, bm.rgba);
+    sctx.putImageData(img, 0, 0);
+    const canvas = $('jim-map');
+    canvas.width = W * z;
+    canvas.height = H * z;
+    canvas.style.width = (W * state.zoom) + 'px';
+    canvas.style.height = (H * state.zoom) + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(state.scratch, 0, 0, canvas.width, canvas.height);
+    if (state.float && state.float.bitmap) {
+      ctx.save();
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(1, 1, W * z - 2, H * z - 2);
+      ctx.restore();
+    }
+    canvas.style.cursor = toolCursor('pan');
+    $('jim-zoom-val').textContent = state.zoom + '×';
+  }
   function renderMap() {
+    const bm = viewBitmap();
+    if (bm) {
+      renderBitmapMap(bm);
+      return;
+    }
     const z = drawZoom();
     const size = viewMap();
     const replacing = floatReplace();
@@ -1167,6 +1496,17 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       }
       ctx.stroke();
     }
+    if (state.float && floatHasSeams()) {
+      drawFloatSeams(ctx, z);
+    }
+    if (state.drag && state.drag.pal && state.drag.rect) {
+      const r = state.drag.rect;
+      ctx.save();
+      ctx.strokeStyle = '#f0b429';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x * 8 * z + 1, r.y * 8 * z + 1, r.w * 8 * z - 2, r.h * 8 * z - 2);
+      ctx.restore();
+    }
     if ($('jim-show-users').checked) {
       ctx.strokeStyle = 'rgba(240, 180, 41, 0.95)';
       ctx.beginPath();
@@ -1195,8 +1535,55 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     ctx.strokeStyle = '#ffffff';
     ctx.strokeRect(state.focus.x * 8 * z + 0.5, state.focus.y * 8 * z + 0.5, 8 * z - 1, 8 * z - 1);
-    canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
+    canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' && state.tool !== 'pal' ? 'move' : toolCursor(state.tool);
     $('jim-zoom-val').textContent = state.zoom + '×';
+  }
+  function drawFloatSeams(ctx, z) {
+    const f = state.float;
+    if (!f || !f.cells) return;
+    ctx.save();
+    if ($('jim-seam') && $('jim-seam').checked) {
+      ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
+      ctx.beginPath();
+      for (let ty = 0; ty < f.h; ty++) {
+        for (let tx = 0; tx < f.w; tx++) {
+          const cell = f.cells[ty * f.w + tx];
+          if (!cell) continue;
+          const pal = cell.pal | 0;
+          const mx = f.x + tx;
+          const my = f.y + ty;
+          const right = f.cells[ty * f.w + tx + 1];
+          const below = f.cells[(ty + 1) * f.w + tx];
+          if (tx + 1 < f.w && right && (right.pal | 0) !== pal) {
+            const x = (mx + 1) * 8 * z + 0.5;
+            ctx.moveTo(x, my * 8 * z); ctx.lineTo(x, (my + 1) * 8 * z);
+          }
+          if (ty + 1 < f.h && below && (below.pal | 0) !== pal) {
+            const y = (my + 1) * 8 * z + 0.5;
+            ctx.moveTo(mx * 8 * z, y); ctx.lineTo((mx + 1) * 8 * z, y);
+          }
+        }
+      }
+      ctx.stroke();
+    }
+    if (state.tool === 'pal' && z >= 2) {
+      ctx.font = Math.max(9, Math.floor(z * 1.6)) + 'px sans-serif';
+      ctx.textBaseline = 'top';
+      for (let ty = 0; ty < f.h; ty++) {
+        for (let tx = 0; tx < f.w; tx++) {
+          const cell = f.cells[ty * f.w + tx];
+          if (!cell) continue;
+          const x = (f.x + tx) * 8 * z + 2;
+          const y = (f.y + ty) * 8 * z + 1;
+          const label = String(cell.pal | 0);
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(x - 1, y, ctx.measureText(label).width + 3, Math.max(10, z * 1.8));
+          ctx.fillStyle = '#f0b429';
+          ctx.fillText(label, x, y);
+        }
+      }
+    }
+    ctx.restore();
   }
   function blitFloat(data, W, H, mapW, mapH) {
     const f = state.float;
@@ -1226,11 +1613,12 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
 
   function renderSwatches() {
+    const pals = viewPalettes();
     for (let p = 0; p < palCount(); p++) {
       for (let i = 0; i < 16; i++) {
         const btn = $('jim-sw-' + p + '-' + i);
         if (!btn) continue;
-        const c = doc.palettes[p][i];
+        const c = pals[p] && pals[p][i];
         btn.style.backgroundColor = rgbOf(c);
         const hole = hiddenPixel(p, i);
         btn.style.backgroundImage = hole ? 'repeating-conic-gradient(#555 0 25%, transparent 0 50%)' : 'none';
@@ -1239,17 +1627,29 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         btn.title = 'Pal ' + p + ' index ' + i + ' ' + hexOf(c) + (hole ? ' (transparent)' : '');
       }
     }
-    const c = doc.palettes[state.color.pal][state.color.index];
+    const c = pals[state.color.pal] && pals[state.color.pal][state.color.index];
     const locked = $('jim-lock-' + state.color.pal).checked || doc.readOnly;
+    const rgb = rgbChannels(c);
     $('jim-color-line').textContent = 'Pal ' + state.color.pal + ' index ' + state.color.index + '  ' + hexOf(c) +
+      '  RGB ' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] +
+      (isSnes() ? '' : ' (×36)') +
       '  CRAM ' + cramHex(c) + (locked ? '  (locked)' : '');
-    const ch = isSnes() && c.r5 != null;
-    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(ch ? c.r5 : c.r3); $('jim-rn').value = String(ch ? c.r5 : c.r3); }
-    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(ch ? c.g5 : c.g3); $('jim-gn').value = String(ch ? c.g5 : c.g3); }
-    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(ch ? c.b5 : c.b3); $('jim-bn').value = String(ch ? c.b5 : c.b3); }
+    if ($('jim-hex') && !focused('jim-hex')) {
+      $('jim-hex').value = hexOf(c).toUpperCase();
+      $('jim-hex').classList.remove('bad');
+    }
+    $('jim-hex') && ($('jim-hex').disabled = locked);
+    const ch = !!(c && isSnes() && c.r5 != null);
+    const rv = c ? (ch ? c.r5 : c.r3) : 0;
+    const gv = c ? (ch ? c.g5 : c.g3) : 0;
+    const bv = c ? (ch ? c.b5 : c.b3) : 0;
+    if (!focused('jim-r') && !focused('jim-rn')) { $('jim-r').value = String(rv); $('jim-rn').value = String(rv); }
+    if (!focused('jim-g') && !focused('jim-gn')) { $('jim-g').value = String(gv); $('jim-gn').value = String(gv); }
+    if (!focused('jim-b') && !focused('jim-bn')) { $('jim-b').value = String(bv); $('jim-bn').value = String(bv); }
     ['jim-r', 'jim-g', 'jim-b', 'jim-rn', 'jim-gn', 'jim-bn'].forEach((id) => { $(id).disabled = locked; });
   }
   function cramHex(c) {
+    if (!c) return '$0000';
     if (isSnes() && c.r5 != null) {
       const word = (c.r5 & 31) | ((c.g5 & 31) << 5) | ((c.b5 & 31) << 10);
       return '$' + word.toString(16).toUpperCase().padStart(4, '0') + ' BGR555';
@@ -1339,7 +1739,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
   }
   function renderInspector() {
+    if (showingPngonly()) return;
     const cell = doc.cells[state.focus.y * doc.mapW + state.focus.x];
+    if (!cell) return;
     $('jim-cellpos').textContent = state.focus.x + ', ' + state.focus.y;
     if (!focused('jim-tile')) $('jim-tile').value = String(cell.tile);
     if (document.activeElement !== $('jim-pal')) $('jim-pal').value = String(cell.pal);
@@ -1361,6 +1763,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-sel-info').textContent = info;
   }
   function renderChrome() {
+    syncImportUi();
     const ro = !!doc.readOnly;
     document.querySelectorAll('.jim-edit').forEach((el) => { el.disabled = ro; });
     $('jim-undo').disabled = ro || !state.undo.length;
@@ -1368,6 +1771,11 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-paste').disabled = ro || !state.clip;
     document.querySelectorAll('.jim-needsel').forEach((el) => { el.disabled = ro || !state.sel; });
     $('jim-float-bar').hidden = !state.float;
+    const opt = $('jim-float-opt');
+    if (opt) opt.disabled = !floatHasSeams() || ro;
+    const lockSeamsBtn = document.querySelector('[data-flag="jim-lock-seams"]');
+    if (lockSeamsBtn) lockSeamsBtn.disabled = !floatHasSeams() || ro;
+    if (!floatHasSeams() && seamsLocked()) setSeamsLocked(false);
     if (state.float) {
       const extra = state.float.pending ? ' · quantize pending' : '';
       const hint = $('jim-float-hint');
@@ -1376,10 +1784,25 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         $('jim-float-name').textContent = state.float.name + extra;
         if (hint) hint.hidden = true;
         if (hintAdd) hintAdd.hidden = false;
+      } else if (state.float.bitmap && !floatHasSeams()) {
+        $('jim-float-name').textContent = state.float.name + ' (' + state.float.bitmap.w + '×' +
+          state.float.bitmap.h + ' px)' + extra;
+        if (hint) hint.hidden = false;
+        if (hintAdd) hintAdd.hidden = true;
       } else {
         $('jim-float-name').textContent = state.float.name + ' (' + state.float.w + '×' + state.float.h + ') at ' +
           state.float.x + ', ' + state.float.y + extra;
-        if (hint) hint.hidden = false;
+        if (hint) {
+          hint.hidden = false;
+          if (floatHasSeams()) {
+            hint.textContent = state.tool === 'pal'
+              ? ('Pal ' + (state.color.pal & (isSnes() ? 7 : 3)) + ' · click or drag tiles to move them onto this pal' +
+                (seamsLocked() ? ' · seams locked' : '') + ' · Apply to commit')
+              : (seamsLocked()
+                ? 'dotted outline · seams locked · color options will not reassign tiles · Apply to commit'
+                : 'dotted outline · Pal moves tiles onto the selected pal · Lock seams keeps that · Apply to commit');
+          }
+        }
         if (hintAdd) hintAdd.hidden = true;
       }
     }
@@ -1387,6 +1810,56 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       ? state.float.warnings.join(' ')
       : '';
     renderCompare();
+    revealImportChrome();
+  }
+  let mapSplitBeforePopup = null;
+  function revealImportChrome() {
+    const view = $('jim-view');
+    const chrome = $('jim-chrome');
+    const scroll = $('jim-scroll');
+    if (!view || !chrome || !scroll) return;
+    const popping = !!(state.float ||
+      ($('jim-compare') && !$('jim-compare').hidden) ||
+      ($('jim-hash') && !$('jim-hash').hidden) ||
+      ($('jim-portrait') && !$('jim-portrait').hidden));
+    if (!popping) {
+      if (mapSplitBeforePopup) {
+        if (mapSplitBeforePopup.active) {
+          view.style.setProperty('--jim-map-h', mapSplitBeforePopup.h + 'px');
+          view.classList.add('is-split');
+        } else {
+          view.style.removeProperty('--jim-map-h');
+          view.classList.remove('is-split');
+        }
+        mapSplitBeforePopup = null;
+      }
+      return;
+    }
+    const fit = () => {
+      if (chrome.scrollHeight <= chrome.clientHeight + 2) {
+        const bar = $('jim-float-bar');
+        if (bar && !bar.hidden) bar.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      if (mapSplitBeforePopup == null) {
+        mapSplitBeforePopup = {
+          active: view.classList.contains('is-split'),
+          h: Math.round(scroll.getBoundingClientRect().height)
+        };
+      }
+      const col = view.getBoundingClientRect().height;
+      const split = $('jim-split');
+      const note = $('jim-note');
+      const splitH = split ? split.getBoundingClientRect().height : 0;
+      const noteH = note ? note.getBoundingClientRect().height : 0;
+      const mapH = Math.max(80, Math.round(col - chrome.scrollHeight - splitH - noteH));
+      view.style.setProperty('--jim-map-h', mapH + 'px');
+      view.classList.add('is-split');
+      chrome.scrollTop = 0;
+      const bar = $('jim-float-bar');
+      if (bar && !bar.hidden) bar.scrollIntoView({ block: 'nearest' });
+    };
+    requestAnimationFrame(fit);
   }
   function blitRgba(canvas, rgba, w, h) {
     const max = 160;
@@ -1409,11 +1882,19 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     if (!f || !f.original) { box.hidden = true; return; }
     box.hidden = false;
     blitRgba($('jim-compare-src'), f.original.rgba, f.original.w, f.original.h);
-    const bit = isSnes() ? '5-bit' : '3-bit';
+    const bit = bitLabel();
     const aCap = $('jim-compare-a-cap');
     const bCap = $('jim-compare-b-cap');
-    if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
-    if (bCap) bCap.textContent = $('jim-q-order').value === 'countFirst' ? bit : 'Count';
+    if (f.mode === 'bitonly') {
+      if (aCap) aCap.textContent = bit;
+      if (bCap) bCap.textContent = bit;
+    } else if (f.mode === 'countonly') {
+      if (aCap) aCap.textContent = 'Count';
+      if (bCap) bCap.textContent = 'Count';
+    } else {
+      if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
+      if (bCap) bCap.textContent = $('jim-q-order').value === 'countFirst' ? bit : 'Count';
+    }
     if (f.stepA && $('jim-compare-a')) blitRgba($('jim-compare-a'), f.stepA, f.original.w, f.original.h);
     if (f.quantRgba) blitRgba($('jim-compare-q'), f.quantRgba, f.original.w, f.original.h);
     else {
@@ -1484,8 +1965,9 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   function cellAt(event) {
     const canvas = $('jim-map');
     const rect = canvas.getBoundingClientRect();
-    const W = doc.mapW * 8;
-    const H = doc.mapH * 8;
+    const size = viewMap();
+    const W = size.w * 8;
+    const H = size.h * 8;
     if (rect.width < 1 || rect.height < 1) return null;
     const px = Math.floor((event.clientX - rect.left) * W / rect.width);
     const py = Math.floor((event.clientY - rect.top) * H / rect.height);
@@ -1739,6 +2221,14 @@ remember();
     if (!doc) return;
     const p = cellAt(event);
     if (!p) return;
+    if (state.tool === 'pal') {
+      state.focus = { x: p.x, y: p.y };
+      state.drag = { pal: true, from: p, pick: event.button === 2, rect: { x: p.x, y: p.y, w: 1, h: 1 } };
+      $('jim-map').setPointerCapture(event.pointerId);
+      state.down = true;
+      renderMap();
+      return;
+    }
     if (floatPlaceable() && state.tool !== 'pan' && event.button === 0) {
       state.drag = { float: true, x: p.x, y: p.y };
       $('jim-map').setPointerCapture(event.pointerId);
@@ -1791,7 +2281,7 @@ remember();
     renderNote();
   }
   function onMove(event) {
-    if (!state.down || !state.drag && state.tool !== 'paint' && state.tool !== 'place' && state.tool !== 'erase') return;
+    if (!state.down || !state.drag && state.tool !== 'paint' && state.tool !== 'place' && state.tool !== 'erase' && state.tool !== 'pal') return;
     const p = cellAt(event);
     if (!p) return;
     if (state.drag && state.drag.pan) {
@@ -1808,6 +2298,15 @@ remember();
       state.drag.y = p.y;
       renderMap();
       renderChrome();
+      return;
+    }
+    if (state.drag && state.drag.pal) {
+      const a = state.drag.from;
+      state.drag.rect = {
+        x: Math.min(a.x, p.x), y: Math.min(a.y, p.y),
+        w: Math.abs(a.x - p.x) + 1, h: Math.abs(a.y - p.y) + 1
+      };
+      renderMap();
       return;
     }
     if (state.tool === 'paint') { paintAt(p); renderMap(); renderTileEdit(); return; }
@@ -1845,10 +2344,122 @@ remember();
   function onUp() {
     if (!state.down) return;
     state.down = false;
+    if (state.drag && state.drag.pal) {
+      const r = state.drag.rect || { x: state.drag.from.x, y: state.drag.from.y, w: 1, h: 1 };
+      const pick = !!state.drag.pick;
+      state.drag = null;
+      assignFloatPalRect(r, pick);
+      return;
+    }
     if (state.drag && state.drag.block && state.drag.moved && state.sel && state.sel.x === state.drag.sx && state.sel.y === state.drag.sy) {
       state.undo.pop();
     }
     state.drag = null;
+    renderAll();
+  }
+  function assignFloatPalRect(rect, pick) {
+    if (!floatHasSeams()) {
+      status('Palette rebuild works on a floating import. Import an image, then click tiles.', true);
+      renderAll();
+      return;
+    }
+    const f = state.float;
+    const x0 = Math.max(0, rect.x - f.x);
+    const y0 = Math.max(0, rect.y - f.y);
+    const x1 = Math.min(f.w, rect.x + rect.w - f.x);
+    const y1 = Math.min(f.h, rect.y + rect.h - f.y);
+    if (x0 >= x1 || y0 >= y1) {
+      status('Click a tile on the floating import.', true);
+      renderAll();
+      return;
+    }
+    if (pick) {
+      const cell = f.cells[y0 * f.w + x0];
+      if (!cell) { renderAll(); return; }
+      state.color = { pal: cell.pal | 0, index: state.color.index };
+      status('Picked palette ' + (cell.pal | 0) + ' from the floating tile.');
+      renderSwatches();
+      renderAll();
+      return;
+    }
+    const dest = state.color.pal & (isSnes() ? 7 : 3);
+    const selected = [];
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        if (f.cells[ty * f.w + tx]) selected.push({ x: tx, y: ty });
+      }
+    }
+    if (!selected.length) {
+      status('Click a tile on the floating import.', true);
+      renderAll();
+      return;
+    }
+    if (!Quant || typeof Quant.quantizeTilesToPalette !== 'function') {
+      status('Palette quantize did not load.', true);
+      renderAll();
+      return;
+    }
+    const src = floatRgba(f);
+    const qopts = quantizeOpts(openPalList());
+    const hit = Quant.quantizeTilesToPalette(
+      src.rgba, src.w, src.h, f.cells, f.w, f.h, selected, dest,
+      f.palettes || doc.palettes, {
+        bits: colorBits(),
+        opaquePal0: $('jim-opaque0').checked,
+        lockedLines: lockedPalList(),
+        stepA: qopts.stepA,
+        stepB: qopts.stepB,
+        alphaThreshold: qopts.alphaThreshold
+      });
+    if (!hit.ok) {
+      status(hit.reason || 'Could not rebuild that palette.', true);
+      renderAll();
+      return;
+    }
+    f.cells = hit.cells;
+    if (f.palettes) f.palettes = hit.palettes;
+    else doc.palettes = hit.palettes;
+    if (hit.locked) {
+      status('Matched ' + hit.assigned + ' tile' + (hit.assigned === 1 ? '' : 's') +
+        ' onto locked pal ' + dest + '.');
+    } else if (hit.remapped) {
+      status('Moved ' + hit.assigned + ' tile' + (hit.assigned === 1 ? '' : 's') +
+        ' onto pal ' + dest + ' (rebuilt that pal from all ' +
+        (hit.assigned + hit.remapped) + ' tiles on it).');
+    } else {
+      status('Rebuilt pal ' + dest + ' from ' + hit.assigned + ' tile' +
+        (hit.assigned === 1 ? '' : 's') + '.');
+    }
+    setSeamsLocked(true);
+    renderAll();
+  }
+  function optimizeFloatSeams() {
+    if (!floatHasSeams() || !canEdit()) return;
+    const f = state.float;
+    if (!Quant || typeof Quant.optimizeSeams !== 'function') {
+      status('Seam optimizer did not load.', true);
+      return;
+    }
+    const pals = f.palettes || doc.palettes;
+    const use = openPalList();
+    const result = Quant.optimizeSeams(f.cells, pals, f.w, f.h, {
+      bits: colorBits(),
+      opaquePal0: $('jim-opaque0').checked,
+      lockedLines: lockedPalList(),
+      availablePals: use.length ? use : pals.map((_, i) => i)
+    });
+    f.cells = result.cells;
+    if (f.palettes) f.palettes = result.palettes;
+    else doc.palettes = result.palettes;
+    const extra = result.warnings && result.warnings.length ? ' ' + result.warnings.join(' ') : '';
+    if (result.moved) {
+      status('Seams: moved ' + result.moved + ' tile' + (result.moved === 1 ? '' : 's') +
+        ' onto shared palettes. Free ink slots ' + result.freeBefore + ' → ' + result.freeAfter + '.' + extra);
+    } else {
+      status('Seams: tiles already share palettes where they can. Free ink slots ' +
+        result.freeAfter + '.' + extra);
+    }
+    setSeamsLocked(true);
     renderAll();
   }
   function pickAt(p) {
@@ -1883,19 +2494,65 @@ remember();
     if ($('jim-lock-' + p) && $('jim-lock-' + p).checked) return;
     const max = isSnes() ? 31 : 7;
     const v = Math.max(0, Math.min(max, value | 0));
-    const color = doc.palettes[p][i];
+    const pals = viewPalettes();
+    if (!pals[p]) return;
+    if (!pals[p][i]) {
+      pals[p][i] = isSnes()
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    const color = pals[p][i];
+    const editDoc = pals === doc.palettes;
     if (isSnes()) {
       const key = ch === 'r3' ? 'r5' : ch === 'g3' ? 'g5' : 'b5';
       if ((color[key] & 31) === v) return;
-      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
       color[key] = v;
       color[ch] = v >> 2;
     } else {
       if ((color[ch] & 7) === v) return;
-      if (!state.colorStroke) { remember(); state.colorStroke = true; }
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
       color[ch] = v;
     }
-    doc.dirtyPal = true;
+    if (editDoc) doc.dirtyPal = true;
+    renderSwatches();
+    renderMap();
+    renderTileEdit();
+    renderNote();
+  }
+  function setFromHex(text) {
+    const el = $('jim-hex');
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(text || '').trim());
+    if (el) el.classList.toggle('bad', !m);
+    if (!m || !canEdit() || !doc) return;
+    const p = state.color.pal;
+    const i = state.color.index;
+    if ($('jim-lock-' + p) && $('jim-lock-' + p).checked) return;
+    const pals = viewPalettes();
+    if (!pals[p]) return;
+    if (!pals[p][i]) {
+      pals[p][i] = isSnes()
+        ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 }
+        : { r3: 0, g3: 0, b3: 0 };
+    }
+    const r = parseInt(m[1].slice(0, 2), 16);
+    const g = parseInt(m[1].slice(2, 4), 16);
+    const b = parseInt(m[1].slice(4, 6), 16);
+    const color = pals[p][i];
+    const editDoc = pals === doc.palettes;
+    if (isSnes()) {
+      const r5 = encode5(r), g5 = encode5(g), b5 = encode5(b);
+      if ((color.r5 & 31) === r5 && (color.g5 & 31) === g5 && (color.b5 & 31) === b5) return;
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
+      color.r5 = r5; color.g5 = g5; color.b5 = b5;
+      color.r3 = r5 >> 2; color.g3 = g5 >> 2; color.b3 = b5 >> 2;
+    } else {
+      const r3 = encodeChannel(r), g3 = encodeChannel(g), b3 = encodeChannel(b);
+      if ((color.r3 & 7) === r3 && (color.g3 & 7) === g3 && (color.b3 & 7) === b3) return;
+      if (editDoc && !state.colorStroke) { remember(); state.colorStroke = true; }
+      color.r3 = r3; color.g3 = g3; color.b3 = b3;
+    }
+    if (editDoc) doc.dirtyPal = true;
     renderSwatches();
     renderMap();
     renderTileEdit();
@@ -1986,7 +2643,7 @@ remember();
       stepB: { method: $('jim-b-method').value, dither: $('jim-b-dither').value, strength: Number($('jim-b-strength').value) },
       pals: pals,
       palCount: n,
-      bits: isSnes() ? 5 : 3,
+      bits: colorBits(),
       lockedLines: locked,
       act: locked.some(Boolean) ? actFromDoc() : null,
       opaquePal0: $('jim-opaque0').checked,
@@ -2041,11 +2698,14 @@ remember();
     const found = [];
     const keys = new Map();
     let overflow = false;
+    const snes = colorBits() === 5;
     function slot(r, g, b) {
-      const key = (r << 6) | (g << 3) | b;
+      const key = snes ? ((r << 10) | (g << 5) | b) : ((r << 6) | (g << 3) | b);
       if (keys.has(key)) return keys.get(key);
       if (found.length < 15) {
-        found.push({ r3: r, g3: g, b3: b });
+        found.push(snes
+          ? { r3: r >> 2, g3: g >> 2, b3: b >> 2, r5: r, g5: g, b5: b }
+          : { r3: r, g3: g, b3: b });
         const idx = found.length;
         keys.set(key, idx);
         return idx;
@@ -2054,7 +2714,9 @@ remember();
       let best = 1;
       let dist = 1e9;
       found.forEach((c, i) => {
-        const d = (c.r3 - r) * (c.r3 - r) + (c.g3 - g) * (c.g3 - g) + (c.b3 - b) * (c.b3 - b);
+        const d = snes
+          ? (c.r5 - r) * (c.r5 - r) + (c.g5 - g) * (c.g5 - g) + (c.b5 - b) * (c.b5 - b)
+          : (c.r3 - r) * (c.r3 - r) + (c.g3 - g) * (c.g3 - g) + (c.b3 - b) * (c.b3 - b);
         if (d < dist) { dist = d; best = i + 1; }
       });
       return best;
@@ -2071,20 +2733,106 @@ remember();
             const py = ty * 8 + y;
             const at = (py * padded.w + px) * 4;
             if (padded.rgba[at + 3] < alpha) continue;
-            nibbles[y * 8 + x] = slot(encodeChannel(padded.rgba[at]), encodeChannel(padded.rgba[at + 1]), encodeChannel(padded.rgba[at + 2]));
+            nibbles[y * 8 + x] = slot(
+              snes ? encode5(padded.rgba[at]) : encodeChannel(padded.rgba[at]),
+              snes ? encode5(padded.rgba[at + 1]) : encodeChannel(padded.rgba[at + 1]),
+              snes ? encode5(padded.rgba[at + 2]) : encodeChannel(padded.rgba[at + 2])
+            );
           }
         }
         tiles.push({ x: tx, y: ty, pal: 0, nibbles: nibbles });
       }
     }
-    const line = defaultLine(0);
-    line[0] = { r3: 0, g3: 0, b3: 0 };
+    const line = defaultLine(0, snes);
+    line[0] = snes ? { r3: 0, g3: 0, b3: 0, r5: 0, g5: 0, b5: 0 } : { r3: 0, g3: 0, b3: 0 };
     found.forEach((c, i) => { line[i + 1] = c; });
+    const pals = defaultPalettes(snes ? 8 : 4, snes);
+    pals[0] = line;
     return {
       tiles: tiles,
-      palettes: defaultPalettes(),
+      palettes: pals,
       warnings: overflow ? ['More than 15 ink colors; extras were snapped to the nearest.'] : []
     };
+  }
+  function reduceBitsToFloat(image) {
+    const bits = colorBits();
+    const alpha = Number($('jim-alpha').value);
+    const stepA = {
+      method: $('jim-a-method').value,
+      dither: $('jim-a-dither').value,
+      strength: Number($('jim-a-strength').value)
+    };
+    const warnings = [];
+    let rgbaOut;
+    if (Quant && typeof Quant.reduceBits === 'function') {
+      const result = Quant.reduceBits(image.rgba, image.w, image.h, {
+        bits: bits, stepA: stepA, step: stepA, alphaThreshold: alpha
+      });
+      rgbaOut = result.rgbaOut;
+      if (result.warnings && result.warnings.length) warnings.push.apply(warnings, result.warnings);
+    } else {
+      rgbaOut = Uint8Array.from(image.rgba);
+      for (let i = 0; i < rgbaOut.length; i += 4) {
+        if (rgbaOut[i + 3] < alpha) continue;
+        if (bits === 5) {
+          rgbaOut[i] = expand5(encode5(rgbaOut[i]));
+          rgbaOut[i + 1] = expand5(encode5(rgbaOut[i + 1]));
+          rgbaOut[i + 2] = expand5(encode5(rgbaOut[i + 2]));
+        } else {
+          rgbaOut[i] = expandChannel(encodeChannel(rgbaOut[i]));
+          rgbaOut[i + 1] = expandChannel(encodeChannel(rgbaOut[i + 1]));
+          rgbaOut[i + 2] = expandChannel(encodeChannel(rgbaOut[i + 2]));
+        }
+      }
+    }
+    warnings.unshift(bitLabel() + ' lattice only. Palettes are off. Export PNG.');
+    return pngReduceFloat(image, rgbaOut, 'bitonly', warnings, { stepA: rgbaOut });
+  }
+  function reduceCountToFloat(image) {
+    const count = colorCount();
+    const alpha = Number($('jim-alpha').value);
+    const stepB = {
+      method: $('jim-b-method').value,
+      dither: $('jim-b-dither').value,
+      strength: Number($('jim-b-strength').value)
+    };
+    const warnings = [];
+    let rgbaOut;
+    if (Quant && typeof Quant.reduceCountOnly === 'function') {
+      const result = Quant.reduceCountOnly(image.rgba, image.w, image.h, {
+        count: count, stepB: stepB, step: stepB, alphaThreshold: alpha
+      });
+      rgbaOut = result.rgbaOut;
+      if (result.warnings && result.warnings.length) warnings.push.apply(warnings, result.warnings);
+    } else {
+      rgbaOut = Uint8Array.from(image.rgba);
+    }
+    warnings.unshift('Count-only (' + count + ' colors). Palettes are off. Export PNG.');
+    return pngReduceFloat(image, rgbaOut, 'countonly', warnings, { stepB: rgbaOut });
+  }
+  function pngReduceFloat(image, rgbaOut, mode, warnings, extra) {
+    extra = extra || {};
+    const tw = Math.max(1, Math.ceil(image.w / 8));
+    const th = Math.max(1, Math.ceil(image.h / 8));
+    return placeFloat({
+      name: image.name,
+      mode: mode,
+      w: tw,
+      h: th,
+      x: 0,
+      y: 0,
+      cells: [],
+      palettes: null,
+      bitmap: { w: image.w, h: image.h, rgba: rgbaOut },
+      original: { rgba: image.rgba, w: image.w, h: image.h },
+      quantRgba: rgbaOut,
+      stepA: extra.stepA,
+      stepB: extra.stepB || extra.stepA,
+      source: { name: image.name, w: image.w, h: image.h, rgba: Uint8Array.from(image.rgba) },
+      warnings: warnings || [],
+      pending: false,
+      onlyEmpty: false
+    });
   }
   function floatFrom(name, padded, tiles, palettes, warnings, pending, onlyEmpty) {
     const alpha = Number($('jim-alpha').value);
@@ -2112,16 +2860,24 @@ remember();
       mode: importMode()
     });
   }
-  function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
+  function quantizeToFloat(image, pals, onlyEmpty, lockAct, extra) {
+    extra = extra || {};
+    if (isBitonlyMode()) return reduceBitsToFloat(image);
+    if (isCountonlyMode()) return reduceCountToFloat(image);
     const padded = padImage(image);
     const use = pals == null ? openPalList() : pals.slice();
     if (!use.length) throw new Error('Pick at least one palette line (Use) for ' + image.name + '.');
     let result;
     if (Quant && typeof Quant.quantize === 'function') {
-      result = Quant.quantize(padded.rgba, padded.w, padded.h, quantizeOpts(use, lockAct));
+      const opts = quantizeOpts(use, lockAct);
+      if (extra.assignment) opts.assignment = extra.assignment;
+      if (extra.actPalettes && extra.actPalettes.length && Quant.writeAct) {
+        opts.act = Quant.writeAct(extra.actPalettes);
+      }
+      result = Quant.quantize(padded.rgba, padded.w, padded.h, opts);
       const order = $('jim-q-order').value === 'countFirst'
-        ? ('count, then ' + (isSnes() ? '5-bit' : '3-bit'))
-        : ((isSnes() ? '5-bit' : '3-bit') + ', then count');
+        ? ('count, then ' + bitLabel())
+        : (bitLabel() + ', then count');
       const warnings = (result.warnings || []).slice();
       warnings.unshift('Change color options before Apply. Previews: original, ' + order.replace(', then ', ', then ') + '.');
       const fl = floatFrom(image.name, padded, result.tiles, result.palettes, warnings, false, onlyEmpty);
@@ -2144,11 +2900,19 @@ remember();
     const f = state.float;
     if (!f || !f.source || !canEdit()) return;
     try {
-      const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
+      const extra = {};
+      const keepSeams = seamsLocked() && floatHasSeams();
+      if (keepSeams) extra.assignment = assignmentFromFloat(f);
+      if (f.palettes) extra.actPalettes = f.palettes;
+      const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked, true, extra);
       next.mode = importMode();
-      if (next.mode === 'replace') placeFloat(next);
+      if (next.mode === 'replace' || isPngReduce(next.mode)) placeFloat(next);
       else { next.x = f.x; next.y = f.y; }
+      if (keepSeams) {
+        next.warnings = ['Seams locked: tiles stayed on their palettes.'].concat(next.warnings || []);
+      }
       state.float = next;
+      if (keepSeams) setSeamsLocked(true);
       renderAll();
     } catch (err) { status(err.message || String(err), true); }
   }
@@ -2234,6 +2998,30 @@ remember();
     const f = state.float;
     if (!f || !canEdit()) return;
     const mode = f.mode || importMode();
+    if (isPngReduce(mode)) {
+      if (!f.bitmap) return;
+      remember();
+      doc.variant = mode;
+      doc.platform = colorMode() === 'snes' ? 'snes' : 'genesis';
+      doc.bitmap = { w: f.bitmap.w, h: f.bitmap.h, rgba: Uint8Array.from(f.bitmap.rgba) };
+      doc.bitmapSource = copyBitmap(f.source);
+      doc.name = (f.name || 'image').replace(/\.[^.]+$/, '') + '.png';
+      doc.dirtyMap = true;
+      doc.tiles = [new Uint8Array(64)];
+      doc.cells = [zeroCell()];
+      doc.mapW = 1;
+      doc.mapH = 1;
+      state.float = null;
+      state.sel = null;
+      state.focus = { x: 0, y: 0 };
+      status(mode === 'countonly'
+        ? ('Reduced ' + f.name + ' to ' + colorCount() + ' colors (' + doc.bitmap.w + '×' + doc.bitmap.h +
+          '). Palettes are off. Export PNG.')
+        : ('Reduced ' + f.name + ' to ' + bitLabel() + ' (' + doc.bitmap.w + '×' + doc.bitmap.h +
+          '). Palettes are off. Export PNG.'));
+      renderAll();
+      return;
+    }
     if (mode === 'replace') {
       const w = f.w, h = f.h;
       if (w < 1 || h < 1 || w > 1024 || h > 1024) {
@@ -2253,6 +3041,9 @@ remember();
       doc.cells = built.cells;
       doc.dirtyTiles = true;
       doc.dirtyMap = true;
+      if (isPngReduce(doc.variant)) doc.variant = 'map';
+      doc.bitmap = null;
+      doc.bitmapSource = null;
       applyFloatPalettes(f);
       state.float = null;
       state.focus = { x: 0, y: 0 };
@@ -2349,11 +3140,15 @@ remember();
     state.float = quantizeToFloat(image, openPalList(), $('jim-only-empty').checked);
     const pending = state.float.pending ? ' quantize pending.' : '';
     const mode = importMode();
-    const hint = mode === 'replace'
-      ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
-      : (mode === 'add'
-        ? ' Apply appends new tiles and leaves this map picture.'
-        : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).');
+    const hint = mode === 'bitonly'
+      ? ' ' + bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+      : (mode === 'countonly'
+        ? ' Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
+      : (mode === 'replace'
+        ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
+        : (mode === 'add'
+          ? ' Apply appends new tiles and leaves this map picture.'
+          : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).')));
     status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
   }
@@ -2554,6 +3349,11 @@ remember();
     }
     if (state.tile >= doc.tiles.length) state.tile = 0;
     setImportMode((next.via === 'new' || !next.source) ? 'replace' : 'place');
+    if (!next.bitmap) {
+      doc.bitmap = null;
+      doc.bitmapSource = null;
+    }
+    if ($('jim-color-mode')) $('jim-color-mode').value = isSnes() ? 'snes' : 'genesis';
     $('jim-packed').checked = isSnes() || !!doc.packedOnDisk;
     if (!Array.isArray(doc.palettes)) doc.palettes = [];
     while (doc.palettes.length < palCount()) doc.palettes.push(defaultLine(doc.palettes.length));
@@ -2562,6 +3362,7 @@ remember();
     syncRgbRange();
     fillDobitmapSelect();
     $('jim-dobitmap').value = 'auto';
+    syncImportUi();
     status(note || ('Opened ' + doc.name + ' (' + variantLabel() + ', ' + doc.tiles.length + ' tiles).'));
     renderAll();
   }
@@ -2637,6 +3438,11 @@ remember();
   function exportBlocker(kind) {
     kind = kind || exportKind();
     if (!doc) return 'Open a picture first.';
+    if (isPngReduce(doc.variant)) {
+      if (kind === 'png') return '';
+      return (doc.variant === 'countonly' ? 'Count reduction only' : 'Color reduction only') +
+        ' is a PNG. Map and tile formats need palettes.';
+    }
     if (kind === 'png' || kind === 'tiles' || kind === 'native') return '';
     if (kind === 'jim') {
       if (isSnes()) {
@@ -2765,12 +3571,40 @@ remember();
     const zipEl = $('jim-export-zip-files');
     if (zipEl) zipEl.textContent = zipExportHint();
   }
+  function openFloatExportPrompt() {
+    const dlg = $('jim-float-export-dlg');
+    if (!dlg) return;
+    const help = $('jim-float-export-help');
+    const name = state.float && state.float.name ? state.float.name : 'the floating image';
+    if (help) {
+      help.textContent = name + ' is not committed. Apply it before export, or cancel and leave Export closed.';
+    }
+    dlg.hidden = false;
+  }
+  function closeFloatExportPrompt() {
+    if ($('jim-float-export-dlg')) $('jim-float-export-dlg').hidden = true;
+  }
+  function requestExport() {
+    if (state.float) {
+      openFloatExportPrompt();
+      return;
+    }
+    openExportModal();
+  }
+  function applyThenExport() {
+    closeFloatExportPrompt();
+    try { applyFloat(); }
+    catch (err) { status(err.message, true); return; }
+    if (state.float) return;
+    openExportModal();
+  }
   function openExportModal() {
     if (!doc) return;
     const nameEl = $('jim-export-native-name');
     if (nameEl) nameEl.textContent = '(' + (doc.name || 'untitled.map.jim') + ')';
-    const native = document.querySelector('input[name="jim-export-kind"][value="native"]');
-    if (native) native.checked = true;
+    const pick = isPngReduce(doc.variant) ? 'png' : 'native';
+    const radio = document.querySelector('input[name="jim-export-kind"][value="' + pick + '"]');
+    if (radio) radio.checked = true;
     $('jim-export-dlg').hidden = false;
     syncExportModal();
   }
@@ -2791,7 +3625,7 @@ remember();
     closeExportModal();
     try {
       if (kind === 'png') {
-        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(jim|sjim)$/i, '') + '.png');
+        downloadCanvas(mapPngPixels(), (doc.name || 'map').replace(/\.(map\.)?(sjim|jim|png)$/i, '') + '.png');
         status('Exported the composed map as PNG.');
         return;
       }
@@ -2820,6 +3654,17 @@ remember();
     }
   }
   function mapPngPixels() {
+    const bm = (isPngReduce(doc.variant) && doc.bitmap) ? doc.bitmap : null;
+    if (bm) {
+      const canvas = document.createElement('canvas');
+      canvas.width = bm.w;
+      canvas.height = bm.h;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(bm.w, bm.h);
+      img.data.set(bm.rgba.subarray(0, bm.w * bm.h * 4));
+      ctx.putImageData(img, 0, 0);
+      return canvas;
+    }
     const W = doc.mapW * 8;
     const H = doc.mapH * 8;
     const canvas = document.createElement('canvas');
@@ -2918,7 +3763,8 @@ remember();
         order: $('jim-q-order').value,
         aMethod: $('jim-a-method').value, aDither: $('jim-a-dither').value, aStrength: $('jim-a-strength').value,
         bMethod: $('jim-b-method').value, bDither: $('jim-b-dither').value, bStrength: $('jim-b-strength').value,
-        opaque0: $('jim-opaque0').checked, alpha: $('jim-alpha').value
+        opaque0: $('jim-opaque0').checked, alpha: $('jim-alpha').value,
+        colorCount: $('jim-color-count') ? $('jim-color-count').value : 16
       }));
     } catch (err) { /* quota */ }
   }
@@ -2936,6 +3782,7 @@ remember();
       if (q.bStrength != null) $('jim-b-strength').value = q.bStrength;
       if (q.opaque0 != null) $('jim-opaque0').checked = !!q.opaque0;
       if (q.alpha != null) $('jim-alpha').value = q.alpha;
+      if (q.colorCount != null && $('jim-color-count')) $('jim-color-count').value = q.colorCount;
     } catch (err) { /* ignore */ }
   }
 
@@ -2988,10 +3835,9 @@ remember();
       const lock = document.createElement('input');
       lock.type = 'checkbox';
       lock.id = 'jim-lock-' + p;
-      lock.title = 'Quantize will not rewrite this line. ACT colors 1–16 are pal 0, 17–32 pal 1, and so on.';
+      lock.title = 'Quantize will not rewrite this line. Checking Lock does not rebuild a floating import. ACT colors 1–16 are pal 0, 17–32 pal 1, and so on.';
       lock.addEventListener('change', () => {
         renderSwatches();
-        if (state.float && state.float.source) requantizeFloat();
       });
       const onMap = document.createElement('span');
       onMap.id = 'jim-onmap-' + p;
@@ -3108,9 +3954,10 @@ remember();
   function wire() {
     document.querySelectorAll('[data-tool]').forEach((btn) => btn.addEventListener('click', () => {
       if (doc.readOnly && btn.classList.contains('jim-edit')) return;
-      state.tool = btn.dataset.tool;
-      document.querySelectorAll('[data-tool]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
+      if (btn.dataset.tool === 'pal' && state.tool === 'pal') setTool('pan');
+      else setTool(btn.dataset.tool);
       renderMap();
+      renderChrome();
       if (doc) renderTileEdit();
     }));
     const canvas = $('jim-map');
@@ -3176,6 +4023,7 @@ remember();
         bar.addEventListener('pointermove', move);
         bar.addEventListener('pointerup', up);
       });
+      window.addEventListener('resize', () => { if (state.float) revealImportChrome(); });
     })();
     (function wireTilesSplit() {
       const KEY = 'nhl9x-jim-tiles-h';
@@ -3268,6 +4116,11 @@ remember();
     channelInput('r3', 'jim-r', 'jim-rn');
     channelInput('g3', 'jim-g', 'jim-gn');
     channelInput('b3', 'jim-b', 'jim-bn');
+    if ($('jim-hex')) {
+      $('jim-hex').addEventListener('input', () => setFromHex($('jim-hex').value));
+      $('jim-hex').addEventListener('change', () => { state.colorStroke = false; });
+      $('jim-hex').addEventListener('blur', () => { if (doc) renderSwatches(); });
+    }
     $('jim-new-tile').addEventListener('click', () => {
       if (!canEdit()) return;
       remember();
@@ -3391,15 +4244,38 @@ remember();
       palMapPending = null;
       $('jim-palmap').hidden = true;
     });
+    if ($('jim-color-mode')) $('jim-color-mode').addEventListener('change', () => {
+      setColorMode($('jim-color-mode').value);
+      if (state.float && state.float.source) requantizeFloat();
+      else {
+        status('Color mode is ' + bitLabel() + '.');
+        renderAll();
+      }
+    });
     if ($('jim-import-mode')) $('jim-import-mode').addEventListener('change', () => {
+      if (state.float && state.float.source) {
+        requantizeFloat();
+        status(importMode() === 'bitonly'
+          ? bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+          : (importMode() === 'countonly'
+            ? 'Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
+            : (importMode() === 'replace'
+              ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
+              : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'))));
+        return;
+      }
       if (state.float) {
         state.float.mode = importMode();
         placeFloat(state.float);
-        status(importMode() === 'replace'
-          ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
-          : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'));
-        renderAll();
+        status(importMode() === 'bitonly'
+          ? bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+          : (importMode() === 'countonly'
+            ? 'Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
+            : (importMode() === 'replace'
+              ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
+              : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'))));
       }
+      renderAll();
     });
     ['jim-map-w', 'jim-map-h'].forEach((id) => {
       if ($(id)) $(id).addEventListener('input', () => {
@@ -3411,7 +4287,12 @@ remember();
     });
     $('jim-float-apply').addEventListener('click', () => { try { applyFloat(); } catch (err) { status(err.message, true); } });
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
-    $('jim-export').addEventListener('click', openExportModal);
+    if ($('jim-float-opt')) $('jim-float-opt').addEventListener('click', () => {
+      try { optimizeFloatSeams(); } catch (err) { status(err.message, true); }
+    });
+    $('jim-export').addEventListener('click', requestExport);
+    if ($('jim-float-export-apply')) $('jim-float-export-apply').addEventListener('click', applyThenExport);
+    if ($('jim-float-export-cancel')) $('jim-float-export-cancel').addEventListener('click', closeFloatExportPrompt);
     if ($('jim-export-ok')) $('jim-export-ok').addEventListener('click', runChosenExport);
     if ($('jim-export-cancel')) $('jim-export-cancel').addEventListener('click', closeExportModal);
     document.querySelectorAll('input[name="jim-export-kind"]').forEach((el) => {
@@ -3456,6 +4337,11 @@ remember();
       else if ((event.ctrlKey || event.metaKey) && key === 'v') { paste(); event.preventDefault(); }
       else if (event.key === 'Delete' || event.key === 'Backspace') { clearSel(); event.preventDefault(); }
       else if (event.key === 'Escape') {
+        if ($('jim-float-export-dlg') && !$('jim-float-export-dlg').hidden) {
+          closeFloatExportPrompt();
+          event.preventDefault();
+          return;
+        }
         if ($('jim-export-dlg') && !$('jim-export-dlg').hidden) {
           closeExportModal();
           event.preventDefault();
