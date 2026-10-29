@@ -123,7 +123,7 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 - Zoom 1–32× sits next to **270°** on the block bar, with a vertical separator. Large maps keep a 4096-pixel bitmap cap and CSS-scale the rest so the slider zoom is what you see
 - Every tool, edit action, and tile action has an **icon with a short label underneath** (the editor is new; labels teach the icons)
 - The map cursor matches the active tool (pencil, stamp, eraser, marquee, eyedropper, hand)
-- Paint copy-on-write: if that 8×8 is used on another cell (same tile index, H/V-flipped copies, or the same pixel buffer), painting makes a **unique unflipped tile** for this cell so other squares do not change. If the name table is already full, paint stops instead of rewriting the shared tile
+- Paint writes the selected **color index** onto that pixel and **leaves the cell’s palette**. If that 8×8 is used on another cell (same tile index, H/V-flipped copies, or the same pixel buffer), painting makes a **unique unflipped tile** for this cell so other squares do not change. If the name table is already full, paint stops instead of rewriting the shared tile. Change a cell’s palette with Pal or the inspector, not Paint
 - The zoomed tile preview on the right **does not paint**. Clicks do nothing unless **Pick** is on, then they sample that pixel’s color
 - Undo / redo
 - Select a rectangle of cells; copy, cut, paste, clear, mirror, flip, 90/180/270
@@ -264,7 +264,7 @@ Suggested overall order after today’s shell: graphics gaps → maps editor (in
 
 | Date | Change |
 |------|--------|
-| 2026-10-29 | Image Editor paint copy-on-write: a shared 8×8 (including H/V-flipped copies) becomes a unique unflipped tile so painting one square does not draw into the others. |
+| 2026-10-29 | Image Editor paint copy-on-write: a shared 8×8 (including H/V-flipped copies) becomes a unique unflipped tile so painting one square does not draw into the others. Paint writes the color index and does not change the cell palette. |
 | 2026-10-29 | Image Editor import Color mode: Genesis 3-bit (GEN) vs SNES 5-bit (SNES). Lattice-only import is Step A only (no palettes, PNG export). Count-only import reduces unique colors without snapping. Export asks to apply a floating image first. Centre pane expands for Apply and import previews. Floating Pal moves tiles onto the selected palette and rebuilds that pal from all tiles on it; unused pals go black. Optimize seams groups matching tiles. Lock on a palette does not rebuild a float; Lock seams keeps Pal assignments when color options change. New Image Editor palettes start at 0,0,0; Hex is #RRGGBB snapped to 3-bit × 36. 5-bit quantization wherever 3-bit exists. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (chr+map+pal, not a different picture). |

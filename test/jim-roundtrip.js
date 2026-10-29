@@ -425,16 +425,19 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   const doc = {
     tiles: [Uint8Array.from(fill)],
     cells: [
-      { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 0 },
-      { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 0 }
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 2, priority: 0 },
+      { tile: 0, hFlip: 1, vFlip: 0, pal: 0, priority: 0 }
     ]
   };
-  const hit = paintMapNibble(doc, 0, 0, 0, 2, { pal: 0 });
-  assert.strictEqual(hit.copied, false);
-  assert.strictEqual(doc.cells[0].tile, 0);
-  assert.strictEqual(doc.cells[0].pal, 0);
-  assert.strictEqual(doc.cells[1].pal, 1);
-  assert.strictEqual(doc.tiles.length, 1);
+  const hit = paintMapNibble(doc, 0, 3, 4, 7, { pal: 0 });
+  assert.strictEqual(hit.copied, true);
+  assert.strictEqual(doc.cells[0].pal, 2, 'paint does not retarget the cell palette');
+  assert.strictEqual(doc.cells[0].hFlip, 0);
+  assert.strictEqual(doc.cells[1].tile, 0);
+  assert.strictEqual(doc.cells[1].pal, 0);
+  assert.strictEqual(doc.cells[1].hFlip, 1);
+  assert.strictEqual(doc.tiles[0][4 * 8 + 3], 2);
+  assert.strictEqual(doc.tiles[1][4 * 8 + 3], 7);
 }
 
 {
