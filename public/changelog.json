@@ -5,7 +5,9 @@
       "date": "2026-10-29",
       "changes": [
         "Image Editor Import has a Color mode: Genesis 3-bit (GEN) or SNES 5-bit (SNES)",
-        "3-bit (GEN) / 5-bit (SNES) color reduction only: palettes off, export PNG",
+        "3-bit (GEN) / 5-bit (SNES) color reduction only: Step A only, palettes off, export PNG",
+        "Reduce count only (for export): keeps 8-bit color, palettes off, export PNG",
+        "Export asks to apply a floating image first, or cancel and leave Export closed",
         "5-bit quantization is available everywhere 3-bit is"
       ]
     },

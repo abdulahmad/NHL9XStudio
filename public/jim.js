@@ -115,17 +115,31 @@
   }
   function colorBits() { return colorMode() === 'snes' ? 5 : 3; }
   function bitLabel() { return colorBits() === 5 ? '5-bit (SNES)' : '3-bit (GEN)'; }
+  function isPngReduce(mode) { return mode === 'bitonly' || mode === 'countonly'; }
   function isBitonlyMode() { return importMode() === 'bitonly'; }
-  function showingBitonly() {
-    return isBitonlyMode() || !!(state.float && state.float.mode === 'bitonly') ||
-      !!(doc && doc.variant === 'bitonly' && (!state.float || state.float.mode === 'bitonly'));
+  function isCountonlyMode() { return importMode() === 'countonly'; }
+  function isPngonlyMode() { return isPngReduce(importMode()); }
+  function pngReduceKind() {
+    if (state.float && isPngReduce(state.float.mode)) return state.float.mode;
+    if (isPngReduce(importMode())) return importMode();
+    if (doc && isPngReduce(doc.variant) && (!state.float || isPngReduce(state.float.mode))) return doc.variant;
+    return '';
   }
+  function showingBitonly() { return pngReduceKind() === 'bitonly'; }
+  function showingCountonly() { return pngReduceKind() === 'countonly'; }
+  function showingPngonly() { return !!pngReduceKind(); }
   function viewBitmap() {
     if (state.float && state.float.bitmap) return state.float.bitmap;
-    if (doc && doc.bitmap && doc.variant === 'bitonly' && (!state.float || state.float.mode === 'bitonly')) {
+    if (doc && doc.bitmap && isPngReduce(doc.variant) && (!state.float || isPngReduce(state.float.mode))) {
       return doc.bitmap;
     }
     return null;
+  }
+  function colorCount() {
+    const el = $('jim-color-count');
+    const n = el ? Number(el.value) : 16;
+    if (!Number.isFinite(n)) return 16;
+    return Math.max(2, Math.min(256, Math.round(n)));
   }
   function viewPixels() {
     const bm = viewBitmap();
@@ -170,7 +184,7 @@
     const snes = platform === 'snes';
     const was = doc.platform === 'snes';
     if (snes === was) {
-      if (doc.variant === 'bitonly' && doc.bitmapSource) reReduceCommittedBitmap();
+      if (isPngReduce(doc.variant) && doc.bitmapSource) reReduceCommittedBitmap();
       return;
     }
     remember();
@@ -187,7 +201,7 @@
     if (doc.via === 'new' && /^untitled\.map\.(s)?jim$/i.test(doc.name || '')) {
       doc.name = snes ? 'untitled.map.sjim' : 'untitled.map.jim';
     }
-    if (doc.variant === 'bitonly' && doc.bitmapSource) reReduceCommittedBitmap();
+    if (isPngReduce(doc.variant) && doc.bitmapSource) reReduceCommittedBitmap();
     buildPaletteChrome();
     fillPalSelect();
     syncRgbRange();
@@ -196,14 +210,24 @@
   function reReduceCommittedBitmap() {
     if (!doc || !doc.bitmapSource) return;
     const src = doc.bitmapSource;
-    const bits = colorBits();
     const alpha = Number($('jim-alpha') ? $('jim-alpha').value : 128);
-    const stepA = {
-      method: $('jim-a-method') ? $('jim-a-method').value : 'uniform',
-      dither: $('jim-a-dither') ? $('jim-a-dither').value : 'none',
-      strength: $('jim-a-strength') ? Number($('jim-a-strength').value) : 100
-    };
-    if (Quant && typeof Quant.reduceBits === 'function') {
+    if (doc.variant === 'countonly' && Quant && typeof Quant.reduceCountOnly === 'function') {
+      const stepB = {
+        method: $('jim-b-method') ? $('jim-b-method').value : 'adaptive',
+        dither: $('jim-b-dither') ? $('jim-b-dither').value : 'none',
+        strength: $('jim-b-strength') ? Number($('jim-b-strength').value) : 100
+      };
+      const result = Quant.reduceCountOnly(src.rgba, src.w, src.h, {
+        count: colorCount(), stepB: stepB, step: stepB, alphaThreshold: alpha
+      });
+      doc.bitmap = { w: src.w, h: src.h, rgba: result.rgbaOut };
+    } else if (Quant && typeof Quant.reduceBits === 'function') {
+      const bits = colorBits();
+      const stepA = {
+        method: $('jim-a-method') ? $('jim-a-method').value : 'uniform',
+        dither: $('jim-a-dither') ? $('jim-a-dither').value : 'none',
+        strength: $('jim-a-strength') ? Number($('jim-a-strength').value) : 100
+      };
       const result = Quant.reduceBits(src.rgba, src.w, src.h, {
         bits: bits, stepA: stepA, step: stepA, alphaThreshold: alpha
       });
@@ -214,6 +238,9 @@
   function syncImportUi() {
     const label = bitLabel();
     const bits = colorBits();
+    const png = showingPngonly();
+    const bit = showingBitonly();
+    const count = showingCountonly();
     const bitOpt = $('jim-import-bitonly');
     if (bitOpt) bitOpt.textContent = label + ' color reduction only (for export)';
     const order = $('jim-q-order');
@@ -222,21 +249,31 @@
       order.options[1].textContent = 'Reduce count, then ' + label;
     }
     const legend = $('jim-q-legend');
-    if (legend) legend.textContent = showingBitonly() ? (label + ' lattice') : 'Two-step color';
+    if (legend) {
+      legend.textContent = bit ? (label + ' lattice') : (count ? 'Reduce count' : 'Two-step color');
+    }
     const palHead = $('jim-pal-sub');
     if (palHead) palHead.textContent = isSnes()
       ? '8 × 16 BGR555 · 5-bit (SNES)'
       : '4 × 16 CRAM · 3-bit (GEN)';
     const help = $('jim-color-mode-help');
     if (help) {
-      help.textContent = bits === 5
-        ? 'SNES import snaps each channel to 32 levels (5-bit) and does not do the 3-bit crush.'
-        : 'Genesis import snaps each channel to 8 levels (3-bit).';
+      help.textContent = count
+        ? 'Count-only keeps 8-bit color and does not snap to 3-bit (GEN) or 5-bit (SNES).'
+        : (bits === 5
+          ? 'SNES import snaps each channel to 32 levels (5-bit) and does not do the 3-bit crush.'
+          : 'Genesis import snaps each channel to 8 levels (3-bit).');
     }
     const pngLabel = $('jim-png-label');
-    if (pngLabel) pngLabel.textContent = showingBitonly() ? (label + ' PNG') : 'Map PNG';
+    if (pngLabel) {
+      pngLabel.textContent = bit ? (label + ' PNG') : (count ? 'Count PNG' : 'Map PNG');
+    }
     const app = document.querySelector('.jim-app');
-    if (app) app.classList.toggle('is-bitonly', showingBitonly());
+    if (app) {
+      app.classList.toggle('is-pngonly', png);
+      app.classList.toggle('is-bitonly', bit);
+      app.classList.toggle('is-countonly', count);
+    }
   }
   function copyBitmap(src) {
     if (!src) return null;
@@ -382,7 +419,7 @@
   }
   function floatReplace() {
     const mode = state.float && (state.float.mode || importMode());
-    return !!(state.float && (mode === 'replace' || mode === 'bitonly'));
+    return !!(state.float && (mode === 'replace' || isPngReduce(mode)));
   }
   function floatAdd() {
     return !!(state.float && (state.float.mode || importMode()) === 'add');
@@ -397,7 +434,7 @@
   function placeFloat(fl) {
     if (!fl) return fl;
     const mode = fl.mode || importMode();
-    if (mode === 'replace' || mode === 'bitonly') {
+    if (mode === 'replace' || isPngReduce(mode)) {
       fl.x = 0;
       fl.y = 0;
     } else {
@@ -1034,6 +1071,7 @@ function buildExport(packed) {
 
   function headerMode() {
 if (doc.variant === 'bitonly') return 'Color reduction only. Palettes and tiles are off. Export is a ' + bitLabel() + ' PNG.';
+if (doc.variant === 'countonly') return 'Count reduction only. Palettes and tiles are off. Export is a PNG.';
 if (doc.variant === 'snes94') return 'Export writes a ZIP of the NHL 94 SNES files: tiles (.chr.huf/.lz/.rle), map (6-byte header then words), and BGR555 palettes. Packed uses Decompress $FB10/$FB30/$FB7A. Nothing is written into a ROM.';
 if (doc.platform === 'snes') return 'Export writes one DecompressBytecode stream: map words, BGR555 palettes, then planar tiles. Offsets are not in the file.';
 if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows (3 bits + 5). Shared faces keep a zero header.';
@@ -1066,6 +1104,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
   function variantLabel() {
     if (doc.variant === 'bitonly') return bitLabel() + ' lattice PNG';
+    if (doc.variant === 'countonly') return 'count-only PNG';
     if (doc.variant === 'nopal') return 'no palette ($FFFFFFFF)';
     if (doc.variant === 'snes94') return 'SNES 94 screen (huf/lz/rle)';
     if (doc.platform === 'snes') return 'SNES .map.sjim';
@@ -1076,8 +1115,11 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   }
 
   function renderNote() {
-    if (doc.variant === 'bitonly' && doc.bitmap) {
-      $('jim-note').textContent = bitLabel() + ' lattice · ' + doc.bitmap.w + '×' + doc.bitmap.h + ' pixels · PNG only';
+    if (isPngReduce(doc.variant) && doc.bitmap) {
+      $('jim-note').textContent = (doc.variant === 'countonly'
+        ? ('Count-only · ' + colorCount() + ' colors')
+        : (bitLabel() + ' lattice')) +
+        ' · ' + doc.bitmap.w + '×' + doc.bitmap.h + ' pixels · PNG only';
       $('jim-count').textContent = '';
       $('jim-count').classList.remove('error');
       return;
@@ -1563,7 +1605,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
   }
   function renderInspector() {
-    if (showingBitonly()) return;
+    if (showingPngonly()) return;
     const cell = doc.cells[state.focus.y * doc.mapW + state.focus.x];
     if (!cell) return;
     $('jim-cellpos').textContent = state.focus.x + ', ' + state.focus.y;
@@ -1644,8 +1686,16 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const bit = bitLabel();
     const aCap = $('jim-compare-a-cap');
     const bCap = $('jim-compare-b-cap');
-    if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
-    if (bCap) bCap.textContent = $('jim-q-order').value === 'countFirst' ? bit : 'Count';
+    if (f.mode === 'bitonly') {
+      if (aCap) aCap.textContent = bit;
+      if (bCap) bCap.textContent = bit;
+    } else if (f.mode === 'countonly') {
+      if (aCap) aCap.textContent = 'Count';
+      if (bCap) bCap.textContent = 'Count';
+    } else {
+      if (aCap) aCap.textContent = $('jim-q-order').value === 'countFirst' ? 'Count' : bit;
+      if (bCap) bCap.textContent = $('jim-q-order').value === 'countFirst' ? bit : 'Count';
+    }
     if (f.stepA && $('jim-compare-a')) blitRgba($('jim-compare-a'), f.stepA, f.original.w, f.original.h);
     if (f.quantRgba) blitRgba($('jim-compare-q'), f.quantRgba, f.original.w, f.original.h);
     else {
@@ -2361,11 +2411,37 @@ remember();
       }
     }
     warnings.unshift(bitLabel() + ' lattice only. Palettes are off. Export PNG.');
+    return pngReduceFloat(image, rgbaOut, 'bitonly', warnings, { stepA: rgbaOut });
+  }
+  function reduceCountToFloat(image) {
+    const count = colorCount();
+    const alpha = Number($('jim-alpha').value);
+    const stepB = {
+      method: $('jim-b-method').value,
+      dither: $('jim-b-dither').value,
+      strength: Number($('jim-b-strength').value)
+    };
+    const warnings = [];
+    let rgbaOut;
+    if (Quant && typeof Quant.reduceCountOnly === 'function') {
+      const result = Quant.reduceCountOnly(image.rgba, image.w, image.h, {
+        count: count, stepB: stepB, step: stepB, alphaThreshold: alpha
+      });
+      rgbaOut = result.rgbaOut;
+      if (result.warnings && result.warnings.length) warnings.push.apply(warnings, result.warnings);
+    } else {
+      rgbaOut = Uint8Array.from(image.rgba);
+    }
+    warnings.unshift('Count-only (' + count + ' colors). Palettes are off. Export PNG.');
+    return pngReduceFloat(image, rgbaOut, 'countonly', warnings, { stepB: rgbaOut });
+  }
+  function pngReduceFloat(image, rgbaOut, mode, warnings, extra) {
+    extra = extra || {};
     const tw = Math.max(1, Math.ceil(image.w / 8));
     const th = Math.max(1, Math.ceil(image.h / 8));
     return placeFloat({
       name: image.name,
-      mode: 'bitonly',
+      mode: mode,
       w: tw,
       h: th,
       x: 0,
@@ -2375,9 +2451,10 @@ remember();
       bitmap: { w: image.w, h: image.h, rgba: rgbaOut },
       original: { rgba: image.rgba, w: image.w, h: image.h },
       quantRgba: rgbaOut,
-      stepA: rgbaOut,
+      stepA: extra.stepA,
+      stepB: extra.stepB || extra.stepA,
       source: { name: image.name, w: image.w, h: image.h, rgba: Uint8Array.from(image.rgba) },
-      warnings: warnings,
+      warnings: warnings || [],
       pending: false,
       onlyEmpty: false
     });
@@ -2410,6 +2487,7 @@ remember();
   }
   function quantizeToFloat(image, pals, onlyEmpty, lockAct) {
     if (isBitonlyMode()) return reduceBitsToFloat(image);
+    if (isCountonlyMode()) return reduceCountToFloat(image);
     const padded = padImage(image);
     const use = pals == null ? openPalList() : pals.slice();
     if (!use.length) throw new Error('Pick at least one palette line (Use) for ' + image.name + '.');
@@ -2443,7 +2521,7 @@ remember();
     try {
       const next = quantizeToFloat(f.source, openPalList(), $('jim-only-empty').checked);
       next.mode = importMode();
-      if (next.mode === 'replace' || next.mode === 'bitonly') placeFloat(next);
+      if (next.mode === 'replace' || isPngReduce(next.mode)) placeFloat(next);
       else { next.x = f.x; next.y = f.y; }
       state.float = next;
       renderAll();
@@ -2531,10 +2609,10 @@ remember();
     const f = state.float;
     if (!f || !canEdit()) return;
     const mode = f.mode || importMode();
-    if (mode === 'bitonly') {
+    if (isPngReduce(mode)) {
       if (!f.bitmap) return;
       remember();
-      doc.variant = 'bitonly';
+      doc.variant = mode;
       doc.platform = colorMode() === 'snes' ? 'snes' : 'genesis';
       doc.bitmap = { w: f.bitmap.w, h: f.bitmap.h, rgba: Uint8Array.from(f.bitmap.rgba) };
       doc.bitmapSource = copyBitmap(f.source);
@@ -2547,8 +2625,11 @@ remember();
       state.float = null;
       state.sel = null;
       state.focus = { x: 0, y: 0 };
-      status('Reduced ' + f.name + ' to ' + bitLabel() + ' (' + doc.bitmap.w + '×' + doc.bitmap.h +
-        '). Palettes are off. Export PNG.');
+      status(mode === 'countonly'
+        ? ('Reduced ' + f.name + ' to ' + colorCount() + ' colors (' + doc.bitmap.w + '×' + doc.bitmap.h +
+          '). Palettes are off. Export PNG.')
+        : ('Reduced ' + f.name + ' to ' + bitLabel() + ' (' + doc.bitmap.w + '×' + doc.bitmap.h +
+          '). Palettes are off. Export PNG.'));
       renderAll();
       return;
     }
@@ -2571,7 +2652,7 @@ remember();
       doc.cells = built.cells;
       doc.dirtyTiles = true;
       doc.dirtyMap = true;
-      if (doc.variant === 'bitonly') doc.variant = 'map';
+      if (isPngReduce(doc.variant)) doc.variant = 'map';
       doc.bitmap = null;
       doc.bitmapSource = null;
       applyFloatPalettes(f);
@@ -2672,11 +2753,13 @@ remember();
     const mode = importMode();
     const hint = mode === 'bitonly'
       ? ' ' + bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+      : (mode === 'countonly'
+        ? ' Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
       : (mode === 'replace'
         ? ' Map is previewed at ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size and drops duplicate tiles (including H/V flips).'
         : (mode === 'add'
           ? ' Apply appends new tiles and leaves this map picture.'
-          : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).'));
+          : ' Floating layer on this map. Apply adds unique tiles and drops duplicates (including H/V flips).')));
     status('Floating ' + file.name + ' (' + image.w + '×' + image.h + '). Change color options, then Apply or Cancel.' + hint + pending);
     renderAll();
   }
@@ -2966,9 +3049,10 @@ remember();
   function exportBlocker(kind) {
     kind = kind || exportKind();
     if (!doc) return 'Open a picture first.';
-    if (doc.variant === 'bitonly') {
+    if (isPngReduce(doc.variant)) {
       if (kind === 'png') return '';
-      return 'Color reduction only is a PNG. Map and tile formats need palettes.';
+      return (doc.variant === 'countonly' ? 'Count reduction only' : 'Color reduction only') +
+        ' is a PNG. Map and tile formats need palettes.';
     }
     if (kind === 'png' || kind === 'tiles' || kind === 'native') return '';
     if (kind === 'jim') {
@@ -3098,11 +3182,38 @@ remember();
     const zipEl = $('jim-export-zip-files');
     if (zipEl) zipEl.textContent = zipExportHint();
   }
+  function openFloatExportPrompt() {
+    const dlg = $('jim-float-export-dlg');
+    if (!dlg) return;
+    const help = $('jim-float-export-help');
+    const name = state.float && state.float.name ? state.float.name : 'the floating image';
+    if (help) {
+      help.textContent = name + ' is not committed. Apply it before export, or cancel and leave Export closed.';
+    }
+    dlg.hidden = false;
+  }
+  function closeFloatExportPrompt() {
+    if ($('jim-float-export-dlg')) $('jim-float-export-dlg').hidden = true;
+  }
+  function requestExport() {
+    if (state.float) {
+      openFloatExportPrompt();
+      return;
+    }
+    openExportModal();
+  }
+  function applyThenExport() {
+    closeFloatExportPrompt();
+    try { applyFloat(); }
+    catch (err) { status(err.message, true); return; }
+    if (state.float) return;
+    openExportModal();
+  }
   function openExportModal() {
     if (!doc) return;
     const nameEl = $('jim-export-native-name');
     if (nameEl) nameEl.textContent = '(' + (doc.name || 'untitled.map.jim') + ')';
-    const pick = doc.variant === 'bitonly' ? 'png' : 'native';
+    const pick = isPngReduce(doc.variant) ? 'png' : 'native';
     const radio = document.querySelector('input[name="jim-export-kind"][value="' + pick + '"]');
     if (radio) radio.checked = true;
     $('jim-export-dlg').hidden = false;
@@ -3154,7 +3265,7 @@ remember();
     }
   }
   function mapPngPixels() {
-    const bm = (doc.variant === 'bitonly' && doc.bitmap) ? doc.bitmap : null;
+    const bm = (isPngReduce(doc.variant) && doc.bitmap) ? doc.bitmap : null;
     if (bm) {
       const canvas = document.createElement('canvas');
       canvas.width = bm.w;
@@ -3263,7 +3374,8 @@ remember();
         order: $('jim-q-order').value,
         aMethod: $('jim-a-method').value, aDither: $('jim-a-dither').value, aStrength: $('jim-a-strength').value,
         bMethod: $('jim-b-method').value, bDither: $('jim-b-dither').value, bStrength: $('jim-b-strength').value,
-        opaque0: $('jim-opaque0').checked, alpha: $('jim-alpha').value
+        opaque0: $('jim-opaque0').checked, alpha: $('jim-alpha').value,
+        colorCount: $('jim-color-count') ? $('jim-color-count').value : 16
       }));
     } catch (err) { /* quota */ }
   }
@@ -3281,6 +3393,7 @@ remember();
       if (q.bStrength != null) $('jim-b-strength').value = q.bStrength;
       if (q.opaque0 != null) $('jim-opaque0').checked = !!q.opaque0;
       if (q.alpha != null) $('jim-alpha').value = q.alpha;
+      if (q.colorCount != null && $('jim-color-count')) $('jim-color-count').value = q.colorCount;
     } catch (err) { /* ignore */ }
   }
 
@@ -3749,17 +3862,23 @@ remember();
         requantizeFloat();
         status(importMode() === 'bitonly'
           ? bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
-          : (importMode() === 'replace'
-            ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
-            : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.')));
+          : (importMode() === 'countonly'
+            ? 'Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
+            : (importMode() === 'replace'
+              ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
+              : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'))));
         return;
       }
       if (state.float) {
         state.float.mode = importMode();
         placeFloat(state.float);
-        status(importMode() === 'replace'
-          ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
-          : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'));
+        status(importMode() === 'bitonly'
+          ? bitLabel() + ' lattice. Palettes are off. Apply then export PNG.'
+          : (importMode() === 'countonly'
+            ? 'Count-only (' + colorCount() + ' colors). Palettes are off. Apply then export PNG.'
+            : (importMode() === 'replace'
+              ? 'Map preview is ' + state.float.w + '×' + state.float.h + ' cells (' + mapPixelText(state.float.w, state.float.h) + '). Apply keeps that size.'
+              : (importMode() === 'add' ? 'Apply will append new tiles and leave this map picture.' : 'Apply will float this layer onto the current map and add unique tiles.'))));
       }
       renderAll();
     });
@@ -3773,7 +3892,9 @@ remember();
     });
     $('jim-float-apply').addEventListener('click', () => { try { applyFloat(); } catch (err) { status(err.message, true); } });
     $('jim-float-cancel').addEventListener('click', () => { state.float = null; status('Cancelled the floating import.'); renderAll(); });
-    $('jim-export').addEventListener('click', openExportModal);
+    $('jim-export').addEventListener('click', requestExport);
+    if ($('jim-float-export-apply')) $('jim-float-export-apply').addEventListener('click', applyThenExport);
+    if ($('jim-float-export-cancel')) $('jim-float-export-cancel').addEventListener('click', closeFloatExportPrompt);
     if ($('jim-export-ok')) $('jim-export-ok').addEventListener('click', runChosenExport);
     if ($('jim-export-cancel')) $('jim-export-cancel').addEventListener('click', closeExportModal);
     document.querySelectorAll('input[name="jim-export-kind"]').forEach((el) => {
@@ -3818,6 +3939,11 @@ remember();
       else if ((event.ctrlKey || event.metaKey) && key === 'v') { paste(); event.preventDefault(); }
       else if (event.key === 'Delete' || event.key === 'Backspace') { clearSel(); event.preventDefault(); }
       else if (event.key === 'Escape') {
+        if ($('jim-float-export-dlg') && !$('jim-float-export-dlg').hidden) {
+          closeFloatExportPrompt();
+          event.preventDefault();
+          return;
+        }
         if ($('jim-export-dlg') && !$('jim-export-dlg').hidden) {
           closeExportModal();
           event.preventDefault();

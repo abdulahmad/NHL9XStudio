@@ -309,4 +309,40 @@ function uniqueRgb(rgba) {
   assert.strictEqual(result.rgbaOut[7], 200);
 }
 
+{
+  assert.strictEqual(typeof Q.reduceCountOnly, 'function');
+  const off = [40, 90, 200, 255];
+  const kept = Q.reduceCountOnly(image(4, 4, () => off), 4, 4, {
+    count: 16,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(kept.count, 16);
+  assert.deepStrictEqual(outputPixel(kept, 4, 1, 1), off,
+    'count-only keeps 8-bit color when already under the cap');
+
+  const source = image(8, 8, (x, y) => {
+    const i = (x + y * 8) % 32;
+    return [(i * 7) & 255, 40 + (i * 3), 200 - i, 255];
+  });
+  const reduced = Q.reduceCountOnly(source, 8, 8, {
+    count: 4,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(reduced.count, 4);
+  assert.ok(uniqueRgb(reduced.rgbaOut) <= 4,
+    'count-only caps unique opaque colors, got ' + uniqueRgb(reduced.rgbaOut));
+
+  const holes = Uint8Array.from([
+    40, 90, 200, 40,
+    10, 20, 30, 200
+  ]);
+  const alpha = Q.reduceCountOnly(holes, 2, 1, {
+    count: 8,
+    alphaThreshold: 128,
+    stepB: { method: 'adaptive', dither: 'none' }
+  });
+  assert.strictEqual(alpha.rgbaOut[3], 40, 'count-only preserves transparent alpha');
+  assert.strictEqual(alpha.rgbaOut[7], 200);
+}
+
 console.log('genesis-quantize: ok');

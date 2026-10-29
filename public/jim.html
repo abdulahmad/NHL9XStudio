@@ -98,27 +98,29 @@
         <option value="snes">SNES — 5-bit (SNES), 32,768 colors</option>
       </select></label>
       <p class="muted" id="jim-color-mode-help">Genesis import snaps each channel to 8 levels (3-bit). SNES import snaps to 32 levels (5-bit) and does not do the 3-bit crush.</p>
-      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture. Color reduction only snaps to the 3-bit (GEN) or 5-bit (SNES) lattice and exports PNG.">
+      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture. Lattice-only and count-only skip palettes and export PNG.">
         <option value="replace">Import New Image &amp; Overwrite Tiles (Resize Map)</option>
         <option value="place">Import into current Image &amp; Add Tiles</option>
         <option value="add">Import Tiles (keep existing image &amp; tiles)</option>
         <option value="bitonly" id="jim-import-bitonly">3-bit (GEN) color reduction only (for export)</option>
+        <option value="countonly" id="jim-import-countonly">Reduce count only (for export)</option>
       </select></label>
       <fieldset class="ice-popts" id="jim-q-opts">
         <legend id="jim-q-legend">Two-step color</legend>
-        <label class="jim-q-count">Order <select id="jim-q-order">
+        <label class="jim-q-two-step">Order <select id="jim-q-order">
           <option value="bitFirst">3-bit (GEN), then reduce count</option>
           <option value="countFirst">Reduce count, then 3-bit (GEN)</option>
         </select></label>
-        <label>Step A <select id="jim-a-method"></select></label>
-        <label>Dither <select id="jim-a-dither"></select></label>
-        <label>Strength <input type="number" id="jim-a-strength" min="0" max="100" value="100"></label>
-        <label class="jim-q-count">Step B <select id="jim-b-method"></select></label>
-        <label class="jim-q-count">Dither <select id="jim-b-dither"></select></label>
-        <label class="jim-q-count">Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
-        <label class="check jim-q-count" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
+        <label class="jim-q-step-a">Step A <select id="jim-a-method"></select></label>
+        <label class="jim-q-step-a">Dither <select id="jim-a-dither"></select></label>
+        <label class="jim-q-step-a">Strength <input type="number" id="jim-a-strength" min="0" max="100" value="100"></label>
+        <label class="jim-q-step-b">Step B <select id="jim-b-method"></select></label>
+        <label class="jim-q-step-b">Dither <select id="jim-b-dither"></select></label>
+        <label class="jim-q-step-b">Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
+        <label class="jim-q-count-n" title="How many unique opaque colors to keep. Not snapped to 3-bit (GEN) or 5-bit (SNES).">Colors <input type="number" id="jim-color-count" min="2" max="256" value="16"></label>
+        <label class="check jim-q-two-step" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
         <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
-        <label class="check jim-q-count" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
+        <label class="check jim-q-two-step" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
       </fieldset>
       <div class="jed-io">
         <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image. Change color options before Apply. Mode chooses overwrite, add tiles, or resize as a new image.">Import image…</button>
@@ -242,11 +244,11 @@
           <canvas id="jim-compare-src" width="64" height="64"></canvas>
           <figcaption>Original</figcaption>
         </figure>
-        <figure>
+        <figure class="jim-q-step-a">
           <canvas id="jim-compare-a" width="64" height="64"></canvas>
           <figcaption id="jim-compare-a-cap">Step A</figcaption>
         </figure>
-        <figure class="jim-q-count">
+        <figure class="jim-q-step-b">
           <canvas id="jim-compare-q" width="64" height="64"></canvas>
           <figcaption id="jim-compare-b-cap">Step B</figcaption>
         </figure>
@@ -312,6 +314,16 @@
       <div class="jed-io">
         <button type="button" id="jim-palmap-ok" class="ghost-btn">Apply</button>
         <button type="button" id="jim-palmap-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="jim-float-export-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-float-export-title">
+      <h2 id="jim-float-export-title">Apply image first</h2>
+      <p class="muted" id="jim-float-export-help">A floating image is not committed. Apply it before export, or cancel and leave Export closed.</p>
+      <div class="jed-io">
+        <button type="button" id="jim-float-export-apply" class="ghost-btn">Apply, then export</button>
+        <button type="button" id="jim-float-export-cancel" class="ghost-btn">Cancel</button>
       </div>
     </div>
   </div>

@@ -212,6 +212,8 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.match(await page.locator('#jim-import-mode option[value="place"]').textContent(), /Import into current Image/);
   assert.match(await page.locator('#jim-import-mode option[value="add"]').textContent(), /Import Tiles/);
   assert.match(await page.locator('#jim-import-mode option[value="bitonly"]').textContent(), /3-bit \(GEN\) color reduction only/);
+  assert.match(await page.locator('#jim-import-mode option[value="countonly"]').textContent(), /Reduce count only \(for export\)/);
+  assert.ok(await page.locator('#jim-float-export-dlg').count());
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
   assert.ok(await page.locator('#jim-color-mode').count());
   assert.strictEqual(await page.locator('#jim-color-mode').inputValue(), 'genesis');
@@ -359,6 +361,15 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.click('#jim-paste');
   assert.ok(await page.locator('#jim-float-bar').isVisible());
   assert.match(await page.textContent('#jim-float-name'), /Paste/);
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-float-export-dlg:not([hidden])', { timeout: 5000 });
+  assert.ok(await page.locator('#jim-export-dlg').evaluate((el) => el.hidden),
+    'Export stays closed while a float is pending');
+  await page.click('#jim-float-export-cancel');
+  await page.waitForFunction(() => document.getElementById('jim-float-export-dlg').hidden, null, { timeout: 5000 });
+  assert.ok(await page.locator('#jim-export-dlg').evaluate((el) => el.hidden),
+    'Cancel leaves Export closed');
+  assert.ok(await page.locator('#jim-float-bar').isVisible(), 'Cancel keeps the floating image');
   await page.click('#jim-float-cancel');
   await page.click('[data-tool="erase"]');
   await page.mouse.click(box.x + 4, box.y + 4);
@@ -407,6 +418,17 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.selectOption('#jim-import-mode', 'bitonly');
   assert.ok(await page.locator('.jim-app').evaluate((el) => el.classList.contains('is-bitonly')));
   assert.ok(!(await page.locator('#jim-pal-block').isVisible()));
+  assert.ok(await page.locator('#jim-a-method').isVisible(), 'lattice-only shows Step A');
+  assert.ok(!(await page.locator('#jim-b-method').isVisible()), 'lattice-only hides Step B');
+  assert.ok(!(await page.locator('#jim-q-order').isVisible()), 'lattice-only hides two-step order');
+  assert.ok(!(await page.locator('#jim-color-count').isVisible()), 'lattice-only hides Colors');
+  await page.selectOption('#jim-import-mode', 'countonly');
+  assert.ok(await page.locator('.jim-app').evaluate((el) => el.classList.contains('is-countonly')));
+  assert.ok(!(await page.locator('#jim-a-method').isVisible()), 'count-only hides Step A');
+  assert.ok(await page.locator('#jim-b-method').isVisible(), 'count-only shows Step B');
+  assert.ok(await page.locator('#jim-color-count').isVisible(), 'count-only shows Colors');
+  assert.ok(!(await page.locator('#jim-q-order').isVisible()));
+  await page.selectOption('#jim-import-mode', 'bitonly');
   await page.setInputFiles('#jim-image', [{
     name: 'lattice.png',
     mimeType: 'image/png',
@@ -414,8 +436,15 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Floating lattice\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-status'), /3-bit \(GEN\)/);
-  await page.click('#jim-float-apply');
+  assert.ok(await page.locator('#jim-compare-a').isVisible(), 'lattice-only compare shows Step A');
+  assert.ok(!(await page.locator('#jim-compare-q').isVisible()), 'lattice-only compare hides Step B');
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-float-export-dlg:not([hidden])', { timeout: 5000 });
+  await page.click('#jim-float-export-apply');
   await page.waitForFunction(() => /Reduced lattice\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(await page.locator('#jim-float-export-dlg').evaluate((el) => el.hidden));
+  await page.click('#jim-export-cancel');
   const genPix = await sampleCanvas(page, '#jim-map');
   await page.selectOption('#jim-color-mode', 'snes');
   await page.waitForFunction(() => /5-bit \(SNES\)/.test(document.getElementById('jim-import-bitonly').textContent), null, { timeout: 5000 });
@@ -436,6 +465,25 @@ withBrowser('jim', async ({ url, newPage }) => {
   ]);
   assert.match(pngDl.suggestedFilename(), /\.png$/);
   await page.selectOption('#jim-color-mode', 'genesis');
+
+  await page.selectOption('#jim-import-mode', 'countonly');
+  await page.setInputFiles('#jim-image', [{
+    name: 'count.png',
+    mimeType: 'image/png',
+    buffer: pngRgb(12, 8, [40, 90, 200])
+  }]);
+  await page.waitForFunction(() => /Floating count\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  assert.match(await page.textContent('#jim-status'), /Count-only/);
+  assert.ok(!(await page.locator('#jim-compare-a').isVisible()), 'count-only compare hides Step A');
+  assert.ok(await page.locator('#jim-compare-q').isVisible(), 'count-only compare shows Step B');
+  await page.click('#jim-float-apply');
+  await page.waitForFunction(() => /Reduced count\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(await page.isChecked('#jim-png'));
+  await page.check('input[name="jim-export-kind"][value="native"]');
+  assert.ok(await page.locator('#jim-export-ok').isDisabled(), 'count-only cannot export a map file');
+  await page.click('#jim-export-cancel');
 
   await page.setInputFiles('#jim-open', [{
     name: 'ice.map.jim',
