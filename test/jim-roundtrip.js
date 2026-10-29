@@ -5,7 +5,7 @@ const {
   decodeJim, parseJim, encodeJim, unpackMapWord, packMapWord, unpackTile, packTile,
   compressBytecode, decompressBytecode, transformBlock, grabBlock, stampBlock, cloneJim,
   encodeCramWord, decodeCramWord, encodePaletteLine, packPortrait, unpackPortrait,
-  matchTile, applyDonorPalette, flippedTile, rasterize
+  matchTile, collapseDuplicateTiles, parsePaletteFile, applyDonorPalette, flippedTile, rasterize
 } = require('../lib/jim');
 const { classify } = require('../lib/open-asset');
 
@@ -295,6 +295,65 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   assert.strictEqual(turned.cells[0].pal, 2);
   assert.strictEqual(turned.cells[0].priority, 1);
   assert.ok(doc.dirty);
+}
+
+{
+  const a = new Uint8Array(64);
+  a[0] = 3;
+  const mirror = flippedTile(a, true, false);
+  const unique = new Uint8Array(64);
+  unique[1] = 7;
+  const r = collapseDuplicateTiles([a, mirror, unique], [
+    { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 1 },
+    { tile: 1, hFlip: 0, vFlip: 0, pal: 2, priority: 0 },
+    { tile: 2, hFlip: 1, vFlip: 0, pal: 0, priority: 0 }
+  ]);
+  assert.strictEqual(r.removed, 1);
+  assert.strictEqual(r.tiles.length, 2);
+  assert.strictEqual(r.cells[0].tile, 0);
+  assert.strictEqual(r.cells[0].hFlip, 0);
+  assert.strictEqual(r.cells[0].priority, 1);
+  assert.strictEqual(r.cells[1].tile, 0);
+  assert.strictEqual(r.cells[1].hFlip, 1);
+  assert.strictEqual(r.cells[1].pal, 2);
+  assert.strictEqual(r.cells[2].tile, 1);
+  assert.strictEqual(r.cells[2].hFlip, 1);
+}
+
+{
+  const genesisPal = fs.readFileSync(path.join(__dirname, '..', 'data', 'pals', 'genesis', 'Bruinsh.pal'));
+  const g = parsePaletteFile(genesisPal, 'Bruinsh.pal');
+  assert.strictEqual(g.format, 'cram');
+  assert.strictEqual(g.lines.length, 1);
+  assert.strictEqual(g.lines[0][0].r3, 4);
+  assert.strictEqual(g.lines[0][0].g3, 7);
+  assert.strictEqual(g.lines[0][0].b3, 7);
+
+  const teamSnes = fs.readFileSync(path.join(__dirname, '..', 'data', 'pals', 'snes', 'BOSh.snespal'));
+  const t = parsePaletteFile(teamSnes, 'BOSh.snespal');
+  assert.strictEqual(t.format, 'snes-team');
+  assert.strictEqual(t.lines.length, 1);
+  assert.ok(t.lines[0][0].r5 > 0 && t.lines[0][0].g5 > 20);
+
+  const rink = fs.readFileSync(path.join(__dirname, '..', 'data', 'pals', 'snes', 'Rink.snespal'));
+  const rnk = parsePaletteFile(rink, 'Rink.snespal');
+  assert.strictEqual(rnk.format, 'snes-bgr555');
+  assert.strictEqual(rnk.lines.length, 8);
+
+  const act = Buffer.alloc(768);
+  for (let i = 0; i < 16; i++) { act[i * 3] = 240; act[i * 3 + 1] = 32; act[i * 3 + 2] = 32; }
+  for (let i = 16; i < 32; i++) { act[i * 3] = 32; act[i * 3 + 1] = 32; act[i * 3 + 2] = 240; }
+  const a = parsePaletteFile(act, 'two.act');
+  assert.strictEqual(a.format, 'act');
+  assert.strictEqual(a.lines.length, 2, 'trailing empty ACT lines are dropped');
+  assert.ok(a.lines[0][0].r3 >= 6);
+  assert.ok(a.lines[1][0].b3 >= 6);
+
+  const jasc = Buffer.from('JASC-PAL\n0100\n16\n255 0 0\n0 255 0\n0 0 255\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n0 0 0\n');
+  const j = parsePaletteFile(jasc, 'paint.pal');
+  assert.strictEqual(j.format, 'jasc');
+  assert.strictEqual(j.lines.length, 1);
+  assert.ok(j.lines[0][0].r3 >= 6);
 }
 
 console.log('jim-roundtrip: ok');

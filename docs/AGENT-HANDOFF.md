@@ -14,7 +14,7 @@ Everything below is merged to `main` and live on GitHub Pages (a deploy can fail
 
 **Last updated:** 2026-10-15 (NHL '92 sound steps 6–7 on main; see sound handoff below)  
 **Repository:** [NHL9XStudio](https://github.com/abdulahmad/NHL9XStudio) (`main`) — app at repo root  
-**Design / roadmap:** `docs/DESIGN.md`. **Maps editor spec:** `docs/nhl9x-studio-requirements.md`.  
+**Product requirements:** `docs/DESIGN.md`. **Implementation notes:** `docs/IMPLEMENTATION.md`. **Maps editor spec:** `docs/nhl9x-studio-requirements.md`.  
 **Upstream sync runbook:** `docs/sync.md` — use when aligning with disasm / EA-NHL-Tools (“sync per sync.md”).
 
 ---
@@ -110,7 +110,7 @@ node server.js    # http://localhost:8732
 ## Prompt for the next agent
 
 ```
-Continue NHL9X Studio in NHL9XStudio (main). Read docs/AGENT-HANDOFF.md and docs/DESIGN.md.
+Continue NHL9X Studio in NHL9XStudio (main). Read docs/AGENT-HANDOFF.md, docs/DESIGN.md, and docs/IMPLEMENTATION.md.
 To refresh catalogs from disasm or EA-NHL-Tools, follow docs/sync.md.
 Graphics priority: 92G → 93G → 94G → 95G → 93S → 94S → 95PC → 94PC.
 After catalog changes: node test.js && node tools/build-manifest.js

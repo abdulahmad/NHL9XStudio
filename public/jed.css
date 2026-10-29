@@ -1,7 +1,6 @@
 .jed { overflow: hidden; height: 100vh; display: flex; flex-direction: column; margin: 0; }
-.jed-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.jed-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .jed-head h1 { margin: 0; font-size: 18px; }
-.jed-head h1 a { color: inherit; text-decoration: none; }
 .jed-status { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 .jed-status.error { color: var(--red); }
 .jed-actions, .jed-io { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }

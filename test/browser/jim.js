@@ -2,7 +2,7 @@
  * Browser smoke: public/jim.html loads, opens a synthetic raw JIM, undoes a
  * paint, and exports an uncompressed file whose map word still has priority.
  * Also opens a packed SNES .map.sjim and a portrait, edits the portrait, and
- * checks the v1.1 chrome (PNG/ACT, dobitmap, kind, note).
+ * checks v1.2 chrome (icons, export modal, back arrow, floating paste).
  *
  *   node test/browser/jim.js
  */
@@ -79,6 +79,17 @@ function iceHoleJim() {
   return out;
 }
 
+async function exportNative(page) {
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  await page.check('input[name="jim-export-kind"][value="native"]');
+  const [dl] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  return dl;
+}
+
 function sampleCanvas(page, sel) {
   return page.locator(sel).evaluate((c) => {
     const ctx = c.getContext('2d');
@@ -116,12 +127,22 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(page.problems.filter((p) => !/Failed to load resource/.test(p)).length, 0, page.problems.join('\n'));
   assert.match(await page.title(), /Image Editor/);
   assert.ok(await page.locator('#jim-map').count());
-  assert.ok(await page.locator('#jim-exit').count());
+  assert.ok(await page.locator('#jim-exit.studio-back').count());
+  assert.match(await page.locator('#jim-exit').textContent(), /←\s*NHL9X Studio/);
+  assert.ok(!(await page.locator('#jim-exit').textContent() || '').includes('Close'));
+  assert.match(await page.locator('h1.studio-title').textContent(), /←\s*NHL9X Studio\s*\|\s*Image Editor/);
+  const backBox = await page.locator('#jim-exit').boundingBox();
+  const titleBox = await page.locator('h1.studio-title').boundingBox();
+  const openBox = await page.locator('#jim-open-btn').boundingBox();
+  assert.ok(backBox && openBox && backBox.x < openBox.x - 80, 'back link is in the top left');
+  assert.ok(backBox && titleBox && Math.abs(backBox.y - titleBox.y) < 6, 'back link sits on the title line');
   assert.ok(await page.locator('#jim-pri').count());
   assert.ok(await page.locator('#jim-png').count());
   assert.ok(await page.locator('#jim-act-export').count());
   assert.ok(await page.locator('#jim-kind').count());
   assert.ok(await page.locator('#jim-dobitmap').count());
+  assert.ok(await page.locator('#jim-dedupe').count());
+  assert.ok(await page.locator('#jim-export-dlg').count());
   assert.strictEqual(await page.locator('#jim-dobitmap').evaluate((el) => el.tagName), 'SELECT');
   const dobitmap = await page.locator('#jim-dobitmap option').evaluateAll((opts) => opts.map((o) => o.value));
   assert.strictEqual(dobitmap.length, 17, 'Genesis dobitmap lists Auto plus every 4-bit mask');
@@ -131,8 +152,29 @@ withBrowser('jim', async ({ url, newPage }) => {
   const chromeFit = await page.locator('#jim-chrome').evaluate((el) => ({ h: el.clientHeight, sh: el.scrollHeight }));
   assert.ok(chromeFit.sh <= chromeFit.h + 2, 'middle-pane tools fit without scrolling ' + JSON.stringify(chromeFit));
   assert.ok(await page.locator('[data-tool="paint"]').isVisible());
+  assert.match(await page.locator('[data-tool="paint"]').textContent(), /Paint/);
+  assert.match(await page.locator('[data-tool="erase"]').textContent(), /Erase/);
+  const toolOrder = await page.locator('.jim-tools [data-tool]').evaluateAll((els) => els.map((el) => el.dataset.tool));
+  assert.deepStrictEqual(toolOrder, ['pan', 'select', 'pick', 'place', 'paint', 'erase']);
+  assert.strictEqual(await page.locator('[data-tool="select"]').getAttribute('aria-pressed'), 'true', 'Select is the default tool');
+  assert.strictEqual(await page.locator('[data-tool="paint"]').getAttribute('aria-pressed'), 'false');
+  const undoY = await page.locator('#jim-undo').evaluate((el) => el.getBoundingClientRect().y);
+  const redoY = await page.locator('#jim-redo').evaluate((el) => el.getBoundingClientRect().y);
+  const gridY = await page.locator('[data-flag="jim-grid"]').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(undoY - redoY) < 8, 'Undo and Redo stay on one row');
+  assert.ok(Math.abs(undoY - gridY) < 12, 'Grid sits on the Undo/Redo row');
+  const rot270 = await page.locator('[data-xf="270"]').boundingBox();
+  const zoomBox = await page.locator('.jim-toolbar-zoom').boundingBox();
+  assert.ok(rot270 && zoomBox && zoomBox.x > rot270.x && Math.abs(rot270.y - zoomBox.y) < 14, 'zoom sits next to 270°');
+  const resizeH = await page.locator('#jim-resize').evaluate((el) => el.getBoundingClientRect().height);
+  const kindH = await page.locator('#jim-kind').evaluate((el) => el.getBoundingClientRect().height);
+  assert.ok(resizeH <= 32, 'Resize button compact, got ' + resizeH);
+  assert.ok(kindH <= 32, 'Kind dropdown compact, got ' + kindH);
+  assert.strictEqual(await page.locator('input[name="jim-export-kind"][value="act"]').count(), 0, 'ACT is not on the export format list');
+  assert.ok(await page.locator('#jim-act-dlg').count());
+  assert.ok(await page.locator('#jim-export-zip-files').count());
   assert.ok(await page.locator('#jim-sel-all').isVisible());
-  assert.ok(await page.locator('.jim-preview-set').isVisible());
+  assert.ok(await page.locator('.jim-preview-set').isHidden());
   assert.ok(await page.locator('#jim-tiles-more').count());
   const tilesH0 = await page.locator('#jim-tiles').evaluate((e) => e.getBoundingClientRect().height);
   await page.click('#jim-tiles-more');
@@ -147,6 +189,16 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.mouse.up();
   const mapH1 = await page.locator('#jim-scroll').evaluate((e) => e.getBoundingClientRect().height);
   assert.ok(mapH1 > mapH0 + 20, 'map splitter shows more of the map ' + mapH0 + ' -> ' + mapH1);
+  assert.strictEqual(await page.locator('#jim-zoom').getAttribute('max'), '32');
+  await page.locator('#jim-zoom').evaluate((el) => {
+    el.value = '32';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  assert.strictEqual(await page.locator('#jim-zoom').inputValue(), '32');
+  assert.strictEqual((await page.locator('#jim-zoom-val').textContent()).trim(), '32×');
+  const zoom32 = await page.locator('#jim-map').evaluate((c) => ({ css: parseFloat(c.style.width), bitmap: c.width }));
+  assert.strictEqual(zoom32.css, 8 * 8 * 32, '32× CSS size, got ' + zoom32.css);
+  assert.ok(!(await page.locator('#jim-zoom-val').textContent() || '').includes('drawn'));
   await page.locator('#jim-zoom').evaluate((el) => {
     el.value = '2';
     el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -156,12 +208,17 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('#jim-show-unused').count());
   assert.ok(await page.locator('#jim-import-mode').count());
   assert.match(await page.locator('label:has(#jim-import-mode)').textContent(), /Import mode/);
+  assert.match(await page.locator('#jim-import-mode option[value="replace"]').textContent(), /Import New Image/);
+  assert.match(await page.locator('#jim-import-mode option[value="place"]').textContent(), /Import into current Image/);
+  assert.match(await page.locator('#jim-import-mode option[value="add"]').textContent(), /Import Tiles/);
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
+  assert.ok(await page.locator('#jim-act').evaluate((el) => /\.snespal/.test(el.getAttribute('accept') || '')));
   assert.match(await page.textContent('#jim-map-px'), /pixels/);
   assert.strictEqual(await page.isChecked('#jim-trans'), false, 'editor Transparency defaults off');
-  assert.match(await page.locator('label:has(#jim-trans)').getAttribute('title'), /VDP-transparent/i);
+  assert.strictEqual(await page.locator('[data-flag="jim-trans"]').getAttribute('aria-pressed'), 'false');
+  assert.match(await page.locator('[data-flag="jim-trans"]').getAttribute('title'), /VDP-transparent/i);
 
   await page.setInputFiles('#jim-image', [{
     name: 'wide.png',
@@ -191,20 +248,146 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'place');
   assert.match(await page.textContent('#jim-map-px'), /8×8 pixels/);
   assert.ok(await page.isChecked('#jim-pri'));
+  const palH = await page.locator('#jim-pal').evaluate((el) => el.getBoundingClientRect().height);
+  assert.ok(palH <= 28, 'palette dropdown compact, got ' + palH);
+  const tileY = await page.locator('label:has(#jim-tile)').evaluate((el) => el.getBoundingClientRect().y);
+  const palY = await page.locator('label:has(#jim-pal)').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(tileY - palY) < 6, 'tile index and palette sit on one row');
+  const hy = await page.locator('label:has(#jim-h)').evaluate((el) => el.getBoundingClientRect().y);
+  const vy = await page.locator('label:has(#jim-v)').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(hy - vy) < 6, 'H-flip and V-flip sit on one row');
+  const wordBox = await page.locator('#jim-word').boundingBox();
+  const cellHead = await page.locator('.jim-cell-head').boundingBox();
+  assert.ok(wordBox && cellHead && wordBox.y + 2 >= cellHead.y && wordBox.y < cellHead.y + cellHead.height,
+    'Word sits on the Cell heading');
+  const priBottom = await page.locator('label:has(#jim-pri)').evaluate((el) => el.getBoundingClientRect().bottom);
+  const viewTop = await page.locator('.jim-view-head').evaluate((el) => el.getBoundingClientRect().top);
+  assert.ok(viewTop - priBottom < 28, 'View sits under Priority, gap ' + (viewTop - priBottom));
+  const pixBefore = await page.evaluate(() => {
+    const c = document.getElementById('jim-tile-edit');
+    return Array.from(c.getContext('2d').getImageData(20, 4, 1, 1).data);
+  });
+  await page.locator('#jim-tile-edit').click({ position: { x: 24, y: 8 } });
+  const pixAfter = await page.evaluate(() => {
+    const c = document.getElementById('jim-tile-edit');
+    return Array.from(c.getContext('2d').getImageData(20, 4, 1, 1).data);
+  });
+  assert.deepStrictEqual(pixAfter, pixBefore, 'tile preview does not paint unless Pick is on');
+  await page.click('[data-tool="pick"]');
+  await page.locator('#jim-tile-edit').click({ position: { x: 8, y: 8 } });
+  assert.match(await page.textContent('#jim-status'), /Picked palette/);
+  await page.click('[data-tool="select"]');
+  const countBefore = await page.locator('#jim-count').textContent();
+  const mapBefore = await sampleCanvas(page, '#jim-map');
+  const wordBefore = await page.locator('#jim-word').textContent();
+  await page.selectOption('#jim-import-mode', 'add');
+  await page.setInputFiles('#jim-image', [{
+    name: 'addtiles.png',
+    mimeType: 'image/png',
+    buffer: pngRgb(16, 8, [32, 240, 32])
+  }]);
+  await page.waitForFunction(() => /Floating addtiles\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  const mapDuring = await sampleCanvas(page, '#jim-map');
+  assert.deepStrictEqual(mapDuring, mapBefore, 'Import Tiles does not overlay the map');
+  await page.click('#jim-float-apply');
+  await page.waitForFunction(() => /Added \d+ tile/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  const mapAfterAdd = await sampleCanvas(page, '#jim-map');
+  assert.deepStrictEqual(mapAfterAdd, mapBefore, 'Import Tiles leaves the map picture');
+  assert.strictEqual(await page.locator('#jim-word').textContent(), wordBefore);
+  const countAfter = await page.locator('#jim-count').textContent();
+  assert.ok(parseInt(countAfter, 10) > parseInt(countBefore, 10),
+    'Import Tiles appends tiles ' + countBefore + ' -> ' + countAfter);
+  await page.keyboard.press('Control+z');
+  await page.selectOption('#jim-import-mode', 'place');
   await page.click('#jim-sel-all');
   await page.selectOption('#jim-pal', '1');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '1');
   await page.click('[data-tool="select"]');
   await page.keyboard.press('Control+z');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '0');
+  const bruinsPal = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'pals', 'genesis', 'Bruinsh.pal'));
+  await page.setInputFiles('#jim-act', [{
+    name: 'Bruinsh.pal',
+    mimeType: 'application/octet-stream',
+    buffer: bruinsPal
+  }]);
+  await page.waitForSelector('#jim-palmap:not([hidden])', { timeout: 5000 });
+  assert.match(await page.textContent('#jim-palmap-help'), /Bruinsh\.pal/);
+  assert.match(await page.textContent('#jim-palmap-rows'), /File pal 0/);
+  await page.selectOption('#jim-palmap-rows select[data-src="0"]', '1');
+  await page.click('#jim-palmap-ok');
+  await page.waitForFunction(() => /Assigned palettes from Bruinsh\.pal/.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 5000 });
+  const mapped = await page.locator('#jim-sw-1-0').evaluate((el) => el.style.backgroundColor);
+  assert.ok(mapped && mapped !== 'rgb(0, 0, 0)', 'mapped pal 1 color 0 has a fill ' + mapped);
+
+  const rinkPal = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'pals', 'snes', 'Rink.snespal'));
+  await page.setInputFiles('#jim-act', [{
+    name: 'Rink.snespal',
+    mimeType: 'application/octet-stream',
+    buffer: rinkPal
+  }]);
+  await page.waitForSelector('#jim-palmap:not([hidden])', { timeout: 5000 });
+  const srcCount = await page.locator('#jim-palmap-rows .jim-palmap-row').count();
+  assert.strictEqual(srcCount, 8, 'Rink.snespal lists eight source pals');
+  const destOpts = await page.locator('#jim-palmap-rows select[data-src="0"] option').evaluateAll((opts) => opts.map((o) => o.value));
+  assert.deepStrictEqual(destOpts, ['', '0', '1', '2', '3']);
+  await page.selectOption('#jim-palmap-rows select[data-src="3"]', '');
+  await page.selectOption('#jim-palmap-rows select[data-src="7"]', '3');
+  await page.click('#jim-palmap-ok');
+  await page.waitForFunction(() => /Assigned palettes from Rink\.snespal/.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 5000 });
+
   await page.click('[data-tool="place"]');
   const box = await page.locator('#jim-map').boundingBox();
   await page.mouse.click(box.x + 4, box.y + 4);
   await page.keyboard.press('Control+z');
-  const [dl] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#jim-export')
+  await page.click('#jim-sel-all');
+  await page.click('#jim-copy');
+  await page.click('#jim-paste');
+  assert.ok(await page.locator('#jim-float-bar').isVisible());
+  assert.match(await page.textContent('#jim-float-name'), /Paste/);
+  await page.click('#jim-float-cancel');
+  await page.click('[data-tool="erase"]');
+  await page.mouse.click(box.x + 4, box.y + 4);
+  assert.match(await page.textContent('#jim-count'), /^2 \//);
+  await page.keyboard.press('Control+z');
+  await page.click('#jim-act-export');
+  await page.waitForSelector('#jim-act-dlg:not([hidden])');
+  assert.match(await page.textContent('#jim-act-pals'), /All palettes combined/);
+  assert.match(await page.textContent('#jim-act-pals'), /Palette 0 only/);
+  await page.click('#jim-act-cancel');
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.match(await page.textContent('#jim-export-zip-files'), /Tiles\.chr/i);
+  await page.check('input[name="jim-export-kind"][value="sjim"]');
+  assert.ok(!(await page.locator('#jim-export-ok').isDisabled()), 'Genesis map can convert to sjim');
+  assert.ok(await page.locator('#jim-packed').isDisabled(), 'sjim has only packed');
+  assert.match(await page.textContent('#jim-export-why'), /planar tiles|5-bit/);
+  assert.ok(!(await page.locator('#jim-export-why').evaluate((el) => el.classList.contains('is-block'))));
+  const [sjimFromJim] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
   ]);
+  assert.match(sjimFromJim.suggestedFilename(), /\.map\.sjim$/);
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  await page.check('input[name="jim-export-kind"][value="snes94"]');
+  assert.ok(!(await page.locator('#jim-export-ok').isDisabled()), 'Genesis map can convert to 94S zip');
+  assert.ok(!(await page.locator('#jim-packed').isDisabled()), '94S zip has packed and unpacked');
+  assert.match(await page.textContent('#jim-export-why'), /three blobs|chr/i);
+  assert.ok(!(await page.locator('#jim-export-why').evaluate((el) => el.classList.contains('is-block'))));
+  const [zipFromJim] = await Promise.all([
+    page.waitForEvent('download', { timeout: 8000 }),
+    page.click('#jim-export-ok')
+  ]);
+  assert.match(zipFromJim.suggestedFilename(), /snes94\.zip$/);
+  const fromJim94 = parseScreen94Zip(fs.readFileSync(await zipFromJim.path()), { name: 'fromjim.snes94.zip' });
+  assert.strictEqual(fromJim94.cells[0].priority, 1);
+  assert.strictEqual(fromJim94.tiles.length, 1);
+  const dl = await exportNative(page);
   const name = dl.suggestedFilename();
   assert.match(name, /pri\.map\.jim/);
   const out = fs.readFileSync(await dl.path());
@@ -217,16 +400,16 @@ withBrowser('jim', async ({ url, newPage }) => {
     buffer: iceHoleJim()
   }]);
   await page.waitForFunction(() => /Opened ice\.map\.jim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
-  if (await page.isChecked('#jim-grid')) await page.uncheck('#jim-grid');
+  if (await page.isChecked('#jim-grid')) await page.click('[data-flag="jim-grid"]');
   assert.strictEqual(await page.isChecked('#jim-trans'), false);
   const iceRgb = await sampleCanvas(page, '#jim-map');
   assert.ok(iceRgb[1] > 200 && iceRgb[2] > 200 && iceRgb[0] > 100 && iceRgb[0] < 190,
     'pal 1 color 0 ice is drawn, not a hole ' + iceRgb);
-  await page.check('#jim-trans');
+  await page.click('[data-flag="jim-trans"]');
   const holeRgb = await sampleCanvas(page, '#jim-map');
   assert.ok(Math.abs(holeRgb[0] - holeRgb[1]) < 8 && holeRgb[0] < 170,
     'Transparency punches pal 1 color 0 as gray ' + holeRgb);
-  await page.uncheck('#jim-trans');
+  await page.click('[data-flag="jim-trans"]');
 
   const sjimBuf = packedSjim();
   await page.setInputFiles('#jim-open', [{
@@ -237,7 +420,10 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.waitForFunction(() => /Opened probe\.map\.sjim/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-status'), /Opened probe\.map\.sjim/);
   assert.match(await page.textContent('#jim-variant'), /SNES/);
-  assert.ok(await page.locator('#jim-packed').isDisabled());
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(await page.locator('#jim-packed').isDisabled(), 'native sjim has only packed');
+  await page.click('#jim-export-cancel');
   const palOptions = await page.locator('#jim-pal option').count();
   assert.strictEqual(palOptions, 8);
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
@@ -246,10 +432,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.isChecked('#jim-use-5'));
   let sjimDl;
   try {
-    [sjimDl] = await Promise.all([
-      page.waitForEvent('download', { timeout: 8000 }),
-      page.click('#jim-export')
-    ]);
+    sjimDl = await exportNative(page);
   } catch (err) {
     throw new Error('sjim export failed: status=' + (await page.textContent('#jim-status')) +
       ' note=' + (await page.textContent('#jim-note')) +
@@ -271,13 +454,14 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /portrait/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.ok(!(await page.locator('#jim-portrait').isHidden()));
+  await page.click('#jim-sw-0-1');
   await page.click('[data-tool="paint"]');
-  const tileBox = await page.locator('#jim-tile-edit').boundingBox();
-  await page.mouse.click(tileBox.x + 24, tileBox.y + 8);
-  const [portDl] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#jim-export')
-  ]);
+  const paintAt = await page.locator('#jim-map').evaluate((c) => {
+    const r = c.getBoundingClientRect();
+    return { x: r.left + (1.5 / 48) * r.width, y: r.top + (0.5 / 48) * r.height };
+  });
+  await page.mouse.click(paintAt.x, paintAt.y);
+  const portDl = await exportNative(page);
   const portOut = fs.readFileSync(await portDl.path());
   assert.strictEqual(portOut.readUInt16BE(8), 36);
   const back = unpackPortrait(portOut, 10, 36);
@@ -306,14 +490,15 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /Opened probe\.snes94\.zip/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.match(await page.textContent('#jim-variant'), /SNES 94/);
-  assert.ok(!(await page.locator('#jim-packed').isDisabled()));
+  await page.click('#jim-export');
+  await page.waitForSelector('#jim-export-dlg:not([hidden])');
+  assert.ok(!(await page.locator('#jim-packed').isDisabled()), '94S zip has packed and unpacked');
+  assert.match(await page.textContent('#jim-export-zip-files'), /ProbeTiles|Tiles|\.chr/i);
+  await page.click('#jim-export-cancel');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '5');
   let zipDl;
   try {
-    [zipDl] = await Promise.all([
-      page.waitForEvent('download', { timeout: 8000 }),
-      page.click('#jim-export')
-    ]);
+    zipDl = await exportNative(page);
   } catch (err) {
     throw new Error('94S export failed: status=' + (await page.textContent('#jim-status')) +
       ' note=' + (await page.textContent('#jim-note')) + ' orig=' + err.message);

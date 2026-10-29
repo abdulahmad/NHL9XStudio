@@ -191,7 +191,7 @@ Example user message:
 
 When instructed to sync per this file:
 
-1. Read `docs/AGENT-HANDOFF.md` and `docs/DESIGN.md` §1 (priority order) so you do not fight active GAP work.
+1. Read `docs/AGENT-HANDOFF.md` and `docs/DESIGN.md` (game priority) so you do not fight active GAP work.
 2. Resolve upstream paths (`EA_NHL_TOOLS_ROOT`, `SNES93`, `SNES94_ROM`, the retail ROMs in the disasm folders).
 3. Run the **scoped** steps in §3–4; produce a short summary of what changed upstream (commits or dates if visible).
 4. Update Studio artifacts in the table in §2; run `node test.js` and `node tools/build-manifest.js`.
@@ -227,7 +227,8 @@ When upstream and Studio **intentionally** diverge (e.g. interim `frames94pc.asm
 | Doc | Use |
 |-----|-----|
 | `docs/AGENT-HANDOFF.md` | Current backlog, branch naming, PR habits |
-| `docs/DESIGN.md` | GAP-* IDs, audio plan, 94 PC strategy |
+| `docs/DESIGN.md` | Product requirements and game priority |
+| `docs/IMPLEMENTATION.md` | GAP-* IDs, audio plan, 94 PC strategy |
 | `docs/MIGRATION.md` | Why Studio is not a mirror of Sprite-Viewer |
 | `lib/audio/README.md` | Audio catalog and preview |
 | EA-NHL-Tools `Docs/Sprites/Readme.md` | DOS/Genesis frame numbering |

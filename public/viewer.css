@@ -83,6 +83,34 @@ select:disabled, input:disabled { cursor: not-allowed; }
 }
 .brand { display: flex; gap: 12px; align-items: center; min-width: 0; }
 .brand h1.product-name { margin: 0; font-size: 18px; letter-spacing: 0.04em; font-weight: 700; text-transform: none; }
+h1.studio-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.4em;
+  margin: 0;
+  font-weight: 700;
+}
+.studio-back {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ice-2, var(--ice));
+  font-size: inherit;
+  font-weight: 500;
+  line-height: inherit;
+  letter-spacing: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.studio-back:hover { color: var(--ice); }
+.studio-title-sep {
+  color: var(--muted);
+  font-weight: 400;
+}
 .brand .game-title { margin: 2px 0 0; font-size: 14px; font-weight: 550; color: var(--ice-2); }
 .brand p#tagline { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .lamp {

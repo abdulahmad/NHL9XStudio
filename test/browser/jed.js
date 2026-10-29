@@ -31,6 +31,14 @@ async function upload(page, button, file) {
 withBrowser('jed', async ({ url, newPage }) => {
   const page = await newPage(1400);
   await page.goto(url + 'jed.html');
+  assert.ok(await page.locator('#jed-exit.studio-back').count());
+  assert.match(await page.locator('#jed-exit').textContent(), /←\s*NHL9X Studio/);
+  assert.match(await page.locator('h1.studio-title').textContent(), /←\s*NHL9X Studio\s*\|\s*Jersey/);
+  const jedBack = await page.locator('#jed-exit').boundingBox();
+  const jedTitle = await page.locator('h1.studio-title').boundingBox();
+  const jedOpen = await page.locator('#jed-open-files').boundingBox();
+  assert.ok(jedBack && jedOpen && jedBack.x < jedOpen.x - 80, 'jersey back link is in the top left');
+  assert.ok(jedBack && jedTitle && Math.abs(jedBack.y - jedTitle.y) < 6, 'jersey back link sits on the title line');
   await page.setInputFiles('#jed-files', [fix('HOMEPALS95.BIN', 'HOMEPALS.BIN'), fix('AWAYPALS95.BIN', 'AWAYPALS.BIN')]);
   await page.waitForSelector('#jed-team-list .item');
   assert.match(await page.textContent('#jed-status'), /NHL 95 PC/);

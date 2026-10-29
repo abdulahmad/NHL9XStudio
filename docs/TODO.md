@@ -38,15 +38,15 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 
 ### PC and long-term
 - **PC audio:** [x] `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). Retail `.kms`/`.viv` files not on the VM — ear match and VIV unpack still open.
-- Longer-term goals: a full FM patch editor, SPC disassembly upload, importing back to ROM, tracker editing, and MT-32/GUS parity. (`docs/DESIGN.md` §3)
-- `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/DESIGN.md`)
+- Longer-term goals: a full FM patch editor, SPC disassembly upload, importing back to ROM, tracker editing, and MT-32/GUS parity. (`docs/DESIGN.md` §6, `docs/IMPLEMENTATION.md` §3)
+- `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/IMPLEMENTATION.md`)
 
 ## Graphics / images
 - **MAPS:** [x] Hide Chip Lab header link; [x] Image Editor (`jim.html`) import/edit/export of Genesis `.map.jim` (raw and `DecompressBytecode` packed), portrait `UnpackPicture` encode, NHLPA 93 SNES `.map.sjim`, and NHL 94 SNES screens (huf/lz/rle ZIP). Spec: [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md).
 - GAP-2 (93G): JIM inventory polish (optional). (`docs/AGENT-HANDOFF.md`, Backlog)
 - GAP-4 (95G): [x] 27 `ArenaGfx*` in `genesis-images.js`, contiguous retail slices, decode test when ROM present (`docs/GAP-4-95G-ARENA.md`). Full dev `extractAssets95.js` bitwise audit still optional.
 - GAP-5/6 (93S/94S): [x] 94S framer, energy bar, playoff arrows, crowd sprite strip (658–720), scouting backdrop (`scout` = `MenuBackMap` / `LoadScoutingScreen.asm`), 93S NHLPA logo (`$8C8000` / `NHLPALogo.map.sjim`), 93S playoff bracket (`PlayoffBracketMap` `$8AF880`), and 93S scouting backdrop (`scout` = `EASNBG` per `ScoutingReport.asm`). No separate ROM for the full 93S scouting layout (composite of EASNBG, team blocks, framer, Ron Barr). Genesis JIM scouting maps stay on 93G/94G only.
-- GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. (`docs/DESIGN.md`)
+- GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. (`docs/IMPLEMENTATION.md`)
 - GAP-8 (94PC): extract the retail `HOCKEY.EXE` SPA pack to replace the interim data; tune 94PC hotspots and `frameIsDynamic`. (`docs/AGENT-HANDOFF.md`; PR #9)
 - Open visual issues (`docs/AGENT-HANDOFF.md`, Status 2026-10-20):
   - The 93S framer art is a two-shade ring, while 93G's is a four-shade bevel. Unresolved.
@@ -54,8 +54,8 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
   - [x] 94S crowd frames on the Images tab (sprite frames 658–720).
 
 ## Host / product
-- HOST-3: OPFS storage is not implemented. HOST-5: the 95 ISO shows a guidance message; mounting is not implemented. (`docs/AGENT-HANDOFF.md`; `docs/DESIGN.md:411`)
-- Teams, schedules, ROM build and patches are not implemented. (`docs/DESIGN.md:13`)
+- HOST-3: OPFS storage is not implemented. HOST-5: the 95 ISO shows a guidance message; mounting is not implemented. (`docs/AGENT-HANDOFF.md`; `docs/IMPLEMENTATION.md` §5)
+- Teams, schedules, ROM build and patches are not implemented. (`docs/DESIGN.md` §6)
 
 ## Stale docs
 - [x] `lib/audio/README.md` — SNES section added.
