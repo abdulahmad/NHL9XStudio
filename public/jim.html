@@ -35,7 +35,7 @@
     <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5l-7 7 7 7"/></symbol>
   </svg>
   <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
-      <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, or .act</p>
+      <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, .act, .pal, or .snespal</p>
   </div>
   <header class="jed-head">
     <div>
@@ -82,10 +82,10 @@
         <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
       </div>
       <div class="jed-io">
-        <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, .pal, .bin, .map.jim, or .map.sjim. A dialog maps source lines onto editor pals.">Import palettes…</button>
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, Genesis .pal, SNES .snespal, .bin, .map.jim, or .map.sjim. A dialog maps each file palette onto an editor pal.">Import palettes…</button>
         <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of the four (or eight) lines. Optional 772-byte trailer with color count.">Export .ACT</button>
         <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
-        <input type="file" id="jim-act" hidden accept=".act,.pal,.bin,.jim,.map.jim,.sjim,.map.sjim">
+        <input type="file" id="jim-act" hidden accept=".act,.pal,.snespal,.bin,.jim,.map.jim,.sjim,.map.sjim">
       </div>
 
       <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
@@ -284,7 +284,7 @@
   <div id="jim-palmap" class="jim-palmap" hidden>
     <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-palmap-title">
       <h2 id="jim-palmap-title">Assign palettes</h2>
-      <p class="muted">Map each source line onto an editor palette. Skip a line to leave it. Lock keeps the destination out of quantization.</p>
+      <p class="muted" id="jim-palmap-help">Each row is a palette in the file (.act, Genesis .pal, or SNES .snespal). Pick which editor pal it fills. Skip leaves that editor pal alone. Lock keeps the destination out of quantization.</p>
       <div id="jim-palmap-rows"></div>
       <div class="jed-io">
         <button type="button" id="jim-palmap-ok" class="ghost-btn">Apply</button>

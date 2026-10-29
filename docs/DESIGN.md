@@ -139,7 +139,8 @@ Three import modes, named in the UI as:
 | `place` | Import into current Image & Add Tiles | Floating layer on the current map; new unique tiles are added; duplicates (incl. H/V) are removed automatically |
 | `add` | Import Tiles (keep existing image & tiles) | Appends tiles; the map picture stays |
 
-- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines, ACT import
+- PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines
+- Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)
 - Change color options while the float is pending; Apply is what commits
 - Only-empty-cells skip map words that already have a tile
 
@@ -190,6 +191,8 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | `.map.sjim` | NHLPA 93 SNES packed screen (map + palettes + tiles in one stream) |
 | NHL 94 SNES screen ZIP | Tiles + map + palettes as LZ / Huffman / RLE, one download |
 | `.act` | Photoshop palette; optional 772-byte trailer |
+| Genesis `.pal` | ANIM-To-BMP CRAM, 32 bytes (one line) or 128 bytes (four lines) |
+| SNES `.snespal` | Team line (32 bytes) or rink CGRAM (256 bytes, eight BGR555 lines) |
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 

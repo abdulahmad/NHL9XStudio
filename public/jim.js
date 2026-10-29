@@ -2324,24 +2324,6 @@ remember();
   let palMapPending = null;
   function parsePaletteFile(bytes, name) {
     const lower = (name || '').toLowerCase();
-    if (bytes.length === 768 || bytes.length === 772 || /\.act$/i.test(lower)) {
-      if (bytes.length !== 768 && bytes.length !== 772) throw new Error('ACT must be 768 or 772 bytes');
-      if (!Quant || typeof Quant.parseAct !== 'function') throw new Error('ACT parser did not load.');
-      const colors = Quant.parseAct(bytes);
-      const n = palCount();
-      const lines = [];
-      for (let p = 0; p < n; p++) {
-        const line = [];
-        for (let i = 0; i < 16; i++) {
-          const c = colors[p * 16 + i];
-          const next = { r3: c.r3, g3: c.g3, b3: c.b3 };
-          if (isSnes()) { next.r5 = c.r5; next.g5 = c.g5; next.b5 = c.b5; }
-          line.push(next);
-        }
-        lines.push(line);
-      }
-      return lines;
-    }
     if (/\.sjim$/i.test(lower)) {
       if (!Sjim || typeof Sjim.parseSjim !== 'function') throw new Error('lib/sjim.js did not load.');
       return Sjim.parseSjim(bytes, null, { name: name }).palettes;
@@ -2351,25 +2333,9 @@ remember();
       if (!parsed || !parsed.palettes) throw new Error('That JIM has no palettes');
       return parsed.palettes;
     }
-    if (bytes.length === 32 || bytes.length === 128 || bytes.length === 256) {
-      if (isSnes() && Sjim && typeof Sjim.fromBgr555 === 'function') {
-        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        const n = Math.min(palCount(), Math.max(1, bytes.length >> 5));
-        const lines = [];
-        for (let p = 0; p < n; p++) {
-          const line = [];
-          for (let i = 0; i < 16; i++) {
-            const at = bytes.length === 32 ? i * 2 : p * 32 + i * 2;
-            line.push(at + 1 < bytes.length ? Sjim.fromBgr555(view.getUint16(at, true)) : Sjim.fromBgr555(0));
-          }
-          lines.push(line);
-        }
-        return lines;
-      }
-      const n = Math.min(4, Math.max(1, bytes.length >> 5));
-      const lines = [];
-      for (let p = 0; p < n; p++) lines.push(readCram(bytes, bytes.length === 32 ? 0 : p * 32));
-      return lines;
+    if (Jim && typeof Jim.parsePaletteFile === 'function') {
+      const parsed = Jim.parsePaletteFile(bytes, name);
+      return parsed.lines || parsed;
     }
     throw new Error('Not a palette, ACT, JIM, PAL, or PAL-sized BIN');
   }
@@ -2385,11 +2351,17 @@ remember();
     }
     host.innerHTML = '';
     const destN = palCount();
+    const help = $('jim-palmap-help');
+    if (help) {
+      help.textContent = 'Each row is a palette in ' + (name || 'the file') +
+        ' (' + lines.length + ' line' + (lines.length === 1 ? '' : 's') +
+        '). Pick which editor pal it fills. Skip leaves that editor pal alone. Lock keeps the destination out of quantization.';
+    }
     lines.forEach((line, src) => {
       const row = document.createElement('div');
       row.className = 'jim-palmap-row';
       const lab = document.createElement('span');
-      lab.textContent = 'Source ' + src;
+      lab.textContent = 'File pal ' + src;
       const sw = document.createElement('span');
       sw.className = 'jim-palmap-sw';
       (line || []).forEach((c) => {
@@ -2840,9 +2812,9 @@ remember();
         continue;
       }
       const bytes = new Uint8Array(await file.arrayBuffer());
-      if (/\.act$/i.test(lower) || /\.pal$/i.test(lower) ||
+      if (/\.act$/i.test(lower) || /\.pal$/i.test(lower) || /\.snespal$/i.test(lower) ||
           ((bytes.length === 32 || bytes.length === 128 || bytes.length === 256 ||
-            bytes.length === 768 || bytes.length === 772) && /\.(pal|bin|act)$/i.test(lower))) {
+            bytes.length === 768 || bytes.length === 772) && /\.(pal|snespal|bin|act)$/i.test(lower))) {
         try { openPaletteMapper(bytes, file.name); }
         catch (err) { status(err.message || String(err), true); }
         continue;

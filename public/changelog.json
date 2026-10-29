@@ -9,7 +9,8 @@
         "Erase cell writes a blank tile filled with palette color 0",
         "Paste and Import into current Image float with a dotted outline until you Apply",
         "Export is a format picker; formats this picture cannot be show an error",
-        "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically"
+        "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically",
+        "Import .pal and .snespal palettes and choose which file lines fill which editor pals"
       ]
     },
     {

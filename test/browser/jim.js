@@ -178,6 +178,7 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'replace');
   assert.ok(await page.locator('#jim-compare-a').count());
   assert.ok(await page.locator('#jim-palmap').count());
+  assert.ok(await page.locator('#jim-act').evaluate((el) => /\.snespal/.test(el.getAttribute('accept') || '')));
   assert.match(await page.textContent('#jim-map-px'), /pixels/);
   assert.strictEqual(await page.isChecked('#jim-trans'), false, 'editor Transparency defaults off');
   assert.match(await page.locator('label:has(#jim-trans)').getAttribute('title'), /VDP-transparent/i);
@@ -216,6 +217,41 @@ withBrowser('jim', async ({ url, newPage }) => {
   await page.click('[data-tool="select"]');
   await page.keyboard.press('Control+z');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '0');
+  const bruinsPal = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'pals', 'genesis', 'Bruinsh.pal'));
+  await page.setInputFiles('#jim-act', [{
+    name: 'Bruinsh.pal',
+    mimeType: 'application/octet-stream',
+    buffer: bruinsPal
+  }]);
+  await page.waitForSelector('#jim-palmap:not([hidden])', { timeout: 5000 });
+  assert.match(await page.textContent('#jim-palmap-help'), /Bruinsh\.pal/);
+  assert.match(await page.textContent('#jim-palmap-rows'), /File pal 0/);
+  await page.selectOption('#jim-palmap-rows select[data-src="0"]', '1');
+  await page.click('#jim-palmap-ok');
+  await page.waitForFunction(() => /Assigned palettes from Bruinsh\.pal/.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 5000 });
+  const mapped = await page.locator('#jim-sw-1-0').evaluate((el) => el.style.backgroundColor);
+  assert.ok(mapped && mapped !== 'rgb(0, 0, 0)', 'mapped pal 1 color 0 has a fill ' + mapped);
+
+  const rinkPal = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'pals', 'snes', 'Rink.snespal'));
+  await page.setInputFiles('#jim-act', [{
+    name: 'Rink.snespal',
+    mimeType: 'application/octet-stream',
+    buffer: rinkPal
+  }]);
+  await page.waitForSelector('#jim-palmap:not([hidden])', { timeout: 5000 });
+  const srcCount = await page.locator('#jim-palmap-rows .jim-palmap-row').count();
+  assert.strictEqual(srcCount, 8, 'Rink.snespal lists eight source pals');
+  const destOpts = await page.locator('#jim-palmap-rows select[data-src="0"] option').evaluateAll((opts) => opts.map((o) => o.value));
+  assert.deepStrictEqual(destOpts, ['', '0', '1', '2', '3']);
+  await page.selectOption('#jim-palmap-rows select[data-src="3"]', '');
+  await page.selectOption('#jim-palmap-rows select[data-src="7"]', '3');
+  await page.click('#jim-palmap-ok');
+  await page.waitForFunction(() => /Assigned palettes from Rink\.snespal/.test(
+    (document.getElementById('jim-status') || {}).textContent || ''
+  ), null, { timeout: 5000 });
+
   await page.click('[data-tool="place"]');
   const box = await page.locator('#jim-map').boundingBox();
   await page.mouse.click(box.x + 4, box.y + 4);
