@@ -12,6 +12,8 @@ This document has three parts:
 
 Genesis `.map.jim` editor (next graphics product) is specified in [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md), not here.
 
+**Version / About:** before merging user-visible work to `main`, bump `package.json` and prepend `public/changelog.json`. That is the About window. Agents must not skip it (see AGENTS.md).
+
 Long-term product buckets (teams, schedules, ROM build, patches) remain as in the original outline at the end; they are not implemented in NHL9X Studio yet.
 
 ### Implementation priority (canonical)

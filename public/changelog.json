@@ -1,6 +1,17 @@
 {
   "releases": [
     {
+      "version": "1.1.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor for Genesis .map.jim, SNES .map.sjim, and NHL 94 SNES screens",
+        "Import a picture onto the map (overwrite cells, add tiles, or new image) with ACT-locked palettes",
+        "Player portrait encode; packed export matches 93G/94G DecompressBytecode",
+        "Title screens show solid ice by default; Transparency still punches VDP holes if you check it",
+        "Chip Lab is hidden from the header (the page is still there)"
+      ]
+    },
+    {
       "version": "1.0.0",
       "date": "2026-10-20",
       "changes": [
