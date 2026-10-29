@@ -147,6 +147,11 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.ok(await page.locator('[data-tool="paint"]').isVisible());
   assert.match(await page.locator('[data-tool="paint"]').textContent(), /Paint/);
   assert.match(await page.locator('[data-tool="erase"]').textContent(), /Erase/);
+  assert.strictEqual(await page.locator('[data-tool="select"]').getAttribute('aria-pressed'), 'true', 'Select is the default tool');
+  assert.strictEqual(await page.locator('[data-tool="paint"]').getAttribute('aria-pressed'), 'false');
+  const undoY = await page.locator('#jim-undo').evaluate((el) => el.getBoundingClientRect().y);
+  const redoY = await page.locator('#jim-redo').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(undoY - redoY) < 8, 'Undo and Redo stay on one row');
   assert.ok(await page.locator('#jim-sel-all').isVisible());
   assert.ok(await page.locator('.jim-preview-set').isHidden());
   assert.ok(await page.locator('#jim-tiles-more').count());
@@ -211,6 +216,57 @@ withBrowser('jim', async ({ url, newPage }) => {
   assert.strictEqual(await page.locator('#jim-import-mode').inputValue(), 'place');
   assert.match(await page.textContent('#jim-map-px'), /8×8 pixels/);
   assert.ok(await page.isChecked('#jim-pri'));
+  const palH = await page.locator('#jim-pal').evaluate((el) => el.getBoundingClientRect().height);
+  assert.ok(palH <= 28, 'palette dropdown compact, got ' + palH);
+  const tileY = await page.locator('label:has(#jim-tile)').evaluate((el) => el.getBoundingClientRect().y);
+  const palY = await page.locator('label:has(#jim-pal)').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(tileY - palY) < 6, 'tile index and palette sit on one row');
+  const hy = await page.locator('label:has(#jim-h)').evaluate((el) => el.getBoundingClientRect().y);
+  const vy = await page.locator('label:has(#jim-v)').evaluate((el) => el.getBoundingClientRect().y);
+  assert.ok(Math.abs(hy - vy) < 6, 'H-flip and V-flip sit on one row');
+  const wordBox = await page.locator('#jim-word').boundingBox();
+  const cellHead = await page.locator('.jim-cell-head').boundingBox();
+  assert.ok(wordBox && cellHead && wordBox.y + 2 >= cellHead.y && wordBox.y < cellHead.y + cellHead.height,
+    'Word sits on the Cell heading');
+  const priBottom = await page.locator('label:has(#jim-pri)').evaluate((el) => el.getBoundingClientRect().bottom);
+  const viewTop = await page.locator('.jim-view-head').evaluate((el) => el.getBoundingClientRect().top);
+  assert.ok(viewTop - priBottom < 28, 'View sits under Priority, gap ' + (viewTop - priBottom));
+  const pixBefore = await page.evaluate(() => {
+    const c = document.getElementById('jim-tile-edit');
+    return Array.from(c.getContext('2d').getImageData(20, 4, 1, 1).data);
+  });
+  await page.locator('#jim-tile-edit').click({ position: { x: 24, y: 8 } });
+  const pixAfter = await page.evaluate(() => {
+    const c = document.getElementById('jim-tile-edit');
+    return Array.from(c.getContext('2d').getImageData(20, 4, 1, 1).data);
+  });
+  assert.deepStrictEqual(pixAfter, pixBefore, 'tile preview does not paint unless Pick is on');
+  await page.click('[data-tool="pick"]');
+  await page.locator('#jim-tile-edit').click({ position: { x: 8, y: 8 } });
+  assert.match(await page.textContent('#jim-status'), /Picked palette/);
+  await page.click('[data-tool="select"]');
+  const countBefore = await page.locator('#jim-count').textContent();
+  const mapBefore = await sampleCanvas(page, '#jim-map');
+  const wordBefore = await page.locator('#jim-word').textContent();
+  await page.selectOption('#jim-import-mode', 'add');
+  await page.setInputFiles('#jim-image', [{
+    name: 'addtiles.png',
+    mimeType: 'image/png',
+    buffer: pngRgb(16, 8, [32, 240, 32])
+  }]);
+  await page.waitForFunction(() => /Floating addtiles\.png/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  const mapDuring = await sampleCanvas(page, '#jim-map');
+  assert.deepStrictEqual(mapDuring, mapBefore, 'Import Tiles does not overlay the map');
+  await page.click('#jim-float-apply');
+  await page.waitForFunction(() => /Added \d+ tile/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
+  const mapAfterAdd = await sampleCanvas(page, '#jim-map');
+  assert.deepStrictEqual(mapAfterAdd, mapBefore, 'Import Tiles leaves the map picture');
+  assert.strictEqual(await page.locator('#jim-word').textContent(), wordBefore);
+  const countAfter = await page.locator('#jim-count').textContent();
+  assert.ok(parseInt(countAfter, 10) > parseInt(countBefore, 10),
+    'Import Tiles appends tiles ' + countBefore + ' -> ' + countAfter);
+  await page.keyboard.press('Control+z');
+  await page.selectOption('#jim-import-mode', 'place');
   await page.click('#jim-sel-all');
   await page.selectOption('#jim-pal', '1');
   assert.strictEqual(await page.locator('#jim-pal').inputValue(), '1');
@@ -337,9 +393,13 @@ withBrowser('jim', async ({ url, newPage }) => {
   }]);
   await page.waitForFunction(() => /portrait/.test(document.getElementById('jim-status').textContent), null, { timeout: 5000 });
   assert.ok(!(await page.locator('#jim-portrait').isHidden()));
+  await page.click('#jim-sw-0-1');
   await page.click('[data-tool="paint"]');
-  const tileBox = await page.locator('#jim-tile-edit').boundingBox();
-  await page.mouse.click(tileBox.x + 24, tileBox.y + 8);
+  const paintAt = await page.locator('#jim-map').evaluate((c) => {
+    const r = c.getBoundingClientRect();
+    return { x: r.left + (1.5 / 48) * r.width, y: r.top + (0.5 / 48) * r.height };
+  });
+  await page.mouse.click(paintAt.x, paintAt.y);
   const portDl = await exportNative(page);
   const portOut = fs.readFileSync(await portDl.path());
   assert.strictEqual(portOut.readUInt16BE(8), 36);

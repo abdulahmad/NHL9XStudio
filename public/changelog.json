@@ -10,7 +10,11 @@
         "Paste and Import into current Image float with a dotted outline until you Apply",
         "Export is a format picker; formats this picture cannot be show an error",
         "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically",
-        "Import .pal and .snespal palettes and choose which file lines fill which editor pals"
+        "Import .pal and .snespal palettes and choose which file lines fill which editor pals",
+        "Select is the default Image Editor tool; toolbar tools, history, and view options wrap as groups",
+        "The zoomed tile preview only picks a color (it no longer paints)",
+        "Cell inspector: tile index beside palette, H-flip beside V-flip, Word next to Cell, View under Priority",
+        "Import Tiles appends to the tile set and leaves the map picture alone"
       ]
     },
     {

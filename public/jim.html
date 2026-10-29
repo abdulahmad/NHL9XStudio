@@ -121,9 +121,9 @@
       <div class="jim-chrome" id="jim-chrome">
       <p id="jim-portrait" class="ice-warn" hidden>Portrait: each row is 3 bytes of 3-bit pixels plus 5 (indexes 5–12). Export writes UnpackPicture rows.</p>
       <p id="jim-hash" class="ice-warn" hidden></p>
-      <div class="ice-toolbar">
+      <div class="ice-toolbar jim-toolbar">
         <div class="pin-options jim-tools" role="group" aria-label="Tool">
-          <button type="button" data-tool="paint" aria-pressed="true" class="jim-icon-btn jim-edit" title="Paint pixel">
+          <button type="button" data-tool="paint" aria-pressed="false" class="jim-icon-btn jim-edit" title="Paint pixel">
             <svg><use href="#i-paint"/></svg><span>Paint</span>
           </button>
           <button type="button" data-tool="place" aria-pressed="false" class="jim-icon-btn jim-edit" title="Place tile">
@@ -132,7 +132,7 @@
           <button type="button" data-tool="erase" aria-pressed="false" class="jim-icon-btn jim-edit" title="Erase cell">
             <svg><use href="#i-erase"/></svg><span>Erase</span>
           </button>
-          <button type="button" data-tool="select" aria-pressed="false" class="jim-icon-btn jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">
+          <button type="button" data-tool="select" aria-pressed="true" class="jim-icon-btn jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">
             <svg><use href="#i-select"/></svg><span>Select</span>
           </button>
           <button type="button" data-tool="pick" aria-pressed="false" class="jim-icon-btn" title="Pick color">
@@ -142,16 +142,20 @@
             <svg><use href="#i-pan"/></svg><span>Pan</span>
           </button>
         </div>
-        <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
-        <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
-        <label class="check" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color, which is how a full screen looks over pal 0 color 0."><input type="checkbox" id="jim-trans"> Transparency</label>
-        <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
-        <button type="button" id="jim-undo" class="jim-icon-btn ghost-btn" title="Ctrl+Z" disabled>
-          <svg><use href="#i-undo"/></svg><span>Undo</span>
-        </button>
-        <button type="button" id="jim-redo" class="jim-icon-btn ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>
-          <svg><use href="#i-redo"/></svg><span>Redo</span>
-        </button>
+        <div class="jim-toolbar-hist" role="group" aria-label="History">
+          <button type="button" id="jim-undo" class="jim-icon-btn ghost-btn" title="Ctrl+Z" disabled>
+            <svg><use href="#i-undo"/></svg><span>Undo</span>
+          </button>
+          <button type="button" id="jim-redo" class="jim-icon-btn ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>
+            <svg><use href="#i-redo"/></svg><span>Redo</span>
+          </button>
+        </div>
+        <div class="jim-toolbar-view" role="group" aria-label="Map view">
+          <label class="ice-zoom" title="How many map cells fit on screen. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="16" value="4" title="Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
+          <label class="check"><input type="checkbox" id="jim-grid" checked> Grid</label>
+          <label class="check" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color, which is how a full screen looks over pal 0 color 0."><input type="checkbox" id="jim-trans"> Transparency</label>
+          <label class="check" title="Tile edges where the palette line changes"><input type="checkbox" id="jim-seam"> Seams</label>
+        </div>
       </div>
       <div class="ice-blockbar" id="jim-blockbar">
         <button type="button" id="jim-sel-all" class="jim-icon-btn ghost-btn jim-edit" title="Select every cell">
@@ -188,7 +192,8 @@
       </div>
       <div class="ice-float-bar" id="jim-float-bar" hidden>
         <b id="jim-float-name"></b>
-        <span class="muted">dotted outline · drag to place · Apply to commit · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
+        <span class="muted" id="jim-float-hint">dotted outline · drag to place · Apply to commit · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
+        <span class="muted" id="jim-float-hint-add" hidden>Apply appends tiles · the map picture stays</span>
         <button type="button" id="jim-float-apply" class="ghost-btn">Apply</button>
         <button type="button" id="jim-float-cancel" class="ghost-btn">Cancel</button>
       </div>
@@ -241,7 +246,7 @@
         <button type="button" id="jim-tiles-more" class="ghost-btn" title="Show more of the tile sheet at once">Show more tiles</button>
       </div>
       <div class="ice-tilebox">
-        <canvas id="jim-tile-edit" width="128" height="128" title="Tile pixels. Mirror and Flip here change the bitmap. Map Mirror and Flip change the cell bits."></canvas>
+        <canvas id="jim-tile-edit" width="128" height="128" title="Zoomed tile. Click does nothing unless Pick is on, then it samples that pixel's color."></canvas>
         <div class="ice-tilebtns">
           <button type="button" id="jim-new-tile" class="jim-icon-btn ghost-btn jim-edit" title="Add a blank tile filled with palette color 0">
             <svg><use href="#i-new"/></svg><span>New</span>
@@ -265,18 +270,17 @@
       </div>
       <p class="muted">Strip Mirror / Flip edit tile pixels. The block bar edits H-flip and V-flip on the cells. Duplicates also folds H/V mirrors into one tile.</p>
 
-      <h2>Cell <span class="muted" id="jim-cellpos"></span></h2>
+      <h2 class="jim-cell-head">Cell <span class="muted" id="jim-cellpos"></span> <span class="mono" id="jim-word"></span></h2>
       <div class="jim-inspector">
         <label>Tile index <input type="number" id="jim-tile" class="jim-edit" min="0" max="2047"></label>
-        <label>Palette <select id="jim-pal" class="jim-edit"></select></label>
+        <label>Palette <select id="jim-pal" class="jim-edit" size="1"></select></label>
         <label class="check"><input type="checkbox" id="jim-h" class="jim-edit"> H-flip <span id="jim-h-bit">(bit 11)</span></label>
         <label class="check"><input type="checkbox" id="jim-v" class="jim-edit"> V-flip <span id="jim-v-bit">(bit 12)</span></label>
-        <label class="check"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority <span id="jim-pri-bit">(bit 15)</span></label>
-        <p class="mono" id="jim-word"></p>
-        <p class="mono muted" id="jim-preview-word"></p>
+        <label class="check jim-insp-span"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority <span id="jim-pri-bit">(bit 15)</span></label>
+        <p class="mono muted jim-insp-span" id="jim-preview-word"></p>
       </div>
 
-      <h2>View</h2>
+      <h2 class="jim-view-head">View</h2>
       <label class="check" title="Outline every cell that uses the tile selected in the strip"><input type="checkbox" id="jim-show-users"> Highlight cells using this tile</label>
       <label class="check" title="Outline tiles no cell uses"><input type="checkbox" id="jim-show-unused"> Highlight unused tiles</label>
     </section>

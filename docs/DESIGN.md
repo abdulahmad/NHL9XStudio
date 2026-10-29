@@ -117,15 +117,17 @@ A Photoshop-like editor for **tilemaps the games already store as maps of 8×8 t
 
 **Must have — tools**
 
-- Tools: Paint pixel, Place tile, Erase cell, Select, Pick color, Pan
+- Tools: Paint pixel, Place tile, Erase cell, Select, Pick color, Pan. **Select is the default** when the editor opens
+- Tools, Undo/Redo, and map-view options sit in **separate toolbar groups** so they wrap as units
 - Every tool, edit action, and tile action has an **icon with a short label underneath** (the editor is new; labels teach the icons)
 - The map cursor matches the active tool (pencil, stamp, eraser, marquee, eyedropper, hand)
+- The zoomed tile preview on the right **does not paint**. Clicks do nothing unless **Pick** is on, then they sample that pixel’s color
 - Undo / redo
 - Select a rectangle of cells; copy, cut, paste, clear, mirror, flip, 90/180/270
 - **Paste** and **import into the current image** land as a **floating layer** with a dotted outline. Apply commits it; Cancel drops it. The person can drag it first.
 - Erase cell (and clear) writes a **blank tile filled with palette color 0**, not “tile 0” if tile 0 is a real graphic
 - New tile, delete tile, remove unused tiles, **remove duplicate tiles** (including tiles that only match after H-flip and/or V-flip; cells keep the flip bits)
-- Resize the map; edit a cell’s tile index, palette, H-flip, V-flip, priority
+- Resize the map; edit a cell’s tile index, palette, H-flip, V-flip, priority. The inspector keeps **tile index beside palette**, **H-flip beside V-flip**, the map **Word** on the Cell heading, and View directly under Priority
 - Grid, zoom, seams, highlight cells that use this tile, highlight unused tiles
 - Back arrow returns to the viewer (or the page that opened the editor), with a leave confirm if dirty
 
@@ -137,7 +139,7 @@ Three import modes, named in the UI as:
 |------|--------|-----------------|
 | `replace` | Import New Image & Overwrite Tiles (Resize Map) | Map becomes the picture’s size; tiles are replaced; duplicates (incl. H/V) are removed automatically |
 | `place` | Import into current Image & Add Tiles | Floating layer on the current map; new unique tiles are added; duplicates (incl. H/V) are removed automatically |
-| `add` | Import Tiles (keep existing image & tiles) | Appends tiles; the map picture stays |
+| `add` | Import Tiles (keep existing image & tiles) | Appends unique tiles to the set. The map picture is not overlaid and does not change |
 
 - PNG / BMP / GIF / JPEG, two-step quantization, Use/Lock palette lines
 - Import palettes from Adobe `.act`, Genesis `.pal` (32 or 128-byte CRAM), SNES `.snespal` (team 32-byte or rink BGR555), JASC/RIFF `.pal`, or another JIM/SJIM. A dialog maps **each palette in the file** onto an editor pal (or Skip)

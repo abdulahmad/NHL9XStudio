@@ -20,7 +20,7 @@
   const DITHERS = ['none', 'diffusion', 'pattern', 'noise'];
 
   const state = {
-    tool: 'paint',
+    tool: 'select',
     zoom: 4,
     color: { pal: 0, index: 1 },
     tile: 0,
@@ -247,6 +247,12 @@
   }
   function floatReplace() {
     return !!(state.float && (state.float.mode || importMode()) === 'replace');
+  }
+  function floatAdd() {
+    return !!(state.float && (state.float.mode || importMode()) === 'add');
+  }
+  function floatPlaceable() {
+    return !!(state.float && !floatReplace() && !floatAdd());
   }
   function viewMap() {
     if (floatReplace()) return { w: state.float.w, h: state.float.h };
@@ -1126,7 +1132,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
         }
       }
     }
-    if (state.float) blitFloat(data, W, H, size.w, size.h);
+    if (state.float && !floatAdd()) blitFloat(data, W, H, size.w, size.h);
     sctx.putImageData(img, 0, 0);
     const canvas = $('jim-map');
     canvas.width = W * z;
@@ -1176,7 +1182,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       ctx.strokeRect(state.sel.x * 8 * z + 1, state.sel.y * 8 * z + 1, state.sel.w * 8 * z - 2, state.sel.h * 8 * z - 2);
       ctx.lineWidth = 1;
     }
-    if (state.float) {
+    if (state.float && !floatAdd()) {
       const f = state.float;
       ctx.save();
       ctx.strokeStyle = '#f0b429';
@@ -1187,7 +1193,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     }
     ctx.strokeStyle = '#ffffff';
     ctx.strokeRect(state.focus.x * 8 * z + 0.5, state.focus.y * 8 * z + 0.5, 8 * z - 1, 8 * z - 1);
-    canvas.style.cursor = state.float && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
+    canvas.style.cursor = floatPlaceable() && state.tool !== 'pan' ? 'move' : toolCursor(state.tool);
     const label = state.zoom + '×';
     $('jim-zoom-val').textContent = z === state.zoom ? label : label + ' (drawn ' + z + '×)';
   }
@@ -1318,6 +1324,7 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#222';
     ctx.fillRect(0, 0, 128, 128);
+    canvas.style.cursor = state.tool === 'pick' ? toolCursor('pick') : 'default';
     if (!tile) return;
     const pal = palForTile(state.tile);
     for (let y = 0; y < 8; y++) {
@@ -1362,8 +1369,18 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     $('jim-float-bar').hidden = !state.float;
     if (state.float) {
       const extra = state.float.pending ? ' · quantize pending' : '';
-      $('jim-float-name').textContent = state.float.name + ' (' + state.float.w + '×' + state.float.h + ') at ' +
-        state.float.x + ', ' + state.float.y + extra;
+      const hint = $('jim-float-hint');
+      const hintAdd = $('jim-float-hint-add');
+      if (floatAdd()) {
+        $('jim-float-name').textContent = state.float.name + extra;
+        if (hint) hint.hidden = true;
+        if (hintAdd) hintAdd.hidden = false;
+      } else {
+        $('jim-float-name').textContent = state.float.name + ' (' + state.float.w + '×' + state.float.h + ') at ' +
+          state.float.x + ', ' + state.float.y + extra;
+        if (hint) hint.hidden = false;
+        if (hintAdd) hintAdd.hidden = true;
+      }
     }
     $('jim-q-warn').textContent = state.float && state.float.warnings && state.float.warnings.length
       ? state.float.warnings.join(' ')
@@ -1721,7 +1738,7 @@ remember();
     if (!doc) return;
     const p = cellAt(event);
     if (!p) return;
-    if (state.float && state.tool !== 'pan' && event.button === 0 && !floatReplace()) {
+    if (floatPlaceable() && state.tool !== 'pan' && event.button === 0) {
       state.drag = { float: true, x: p.x, y: p.y };
       $('jim-map').setPointerCapture(event.pointerId);
       state.down = true;
@@ -1840,23 +1857,23 @@ remember();
     status('Picked palette ' + state.color.pal + ' index ' + state.color.index + '.');
   }
 
-  function editTileAt(event) {
-    if (!canEdit()) return;
+  function tileEditPos(event) {
     const canvas = $('jim-tile-edit');
     const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return null;
     const x = Math.floor((event.clientX - rect.left) * 8 / rect.width);
     const y = Math.floor((event.clientY - rect.top) * 8 / rect.height);
-    if (x < 0 || y < 0 || x > 7 || y > 7) return;
+    if (x < 0 || y < 0 || x > 7 || y > 7) return null;
+    return { x: x, y: y };
+  }
+  function pickTileAt(event) {
+    const p = tileEditPos(event);
+    if (!p || !doc) return;
     const tile = doc.tiles[state.tile];
     if (!tile) return;
-    const nib = portraitNibble(event.button === 2 || event.altKey ? 0 : (state.color.index & 15));
-    if ((tile[y * 8 + x] & 15) === nib) return;
-    if (!state.tileStroke) { remember(); state.tileStroke = true; }
-    tile[y * 8 + x] = nib;
-    doc.dirtyTiles = true;
-    renderTileEdit();
-    renderMap();
-    renderNote();
+    state.color = { pal: palForTile(state.tile), index: tile[p.y * 8 + p.x] & 15 };
+    status('Picked palette ' + state.color.pal + ' index ' + state.color.index + '.');
+    renderSwatches();
   }
 
   function setChannel(ch, value) {
@@ -2171,10 +2188,6 @@ remember();
     tiles.push(Uint8Array.from(nibbles));
     return { tile: tiles.length - 1, hFlip: 0, vFlip: 0 };
   }
-  function appendTile(tiles, nibbles) {
-    tiles.push(Uint8Array.from(nibbles));
-    return { tile: tiles.length - 1, hFlip: 0, vFlip: 0 };
-  }
   function tilesFromFloat(f, start) {
     const tiles = start.map((t) => Uint8Array.from(t));
     const cells = [];
@@ -2249,9 +2262,31 @@ remember();
       renderAll();
       return;
     }
+    if (mode === 'add') {
+      let tiles = doc.tiles.map((t) => Uint8Array.from(t));
+      const before = tiles.length;
+      for (let i = 0; i < f.cells.length; i++) {
+        const src = f.cells[i];
+        if (!src) continue;
+        adoptFlip(tiles, src.nibbles);
+      }
+      if (tiles.length > tileCap()) {
+        status('That import needs ' + tiles.length + ' tiles. The name table holds ' + tileCap() + ', so it was not applied.', true);
+        return;
+      }
+      const added = tiles.length - before;
+      remember();
+      doc.tiles = tiles;
+      doc.dirtyTiles = true;
+      state.float = null;
+      state.tile = Math.min(state.tile, doc.tiles.length - 1);
+      status('Added ' + added + ' tile' + (added === 1 ? '' : 's') + ' from ' + f.name +
+        '. Map picture unchanged. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles.');
+      renderAll();
+      return;
+    }
     let tiles = doc.tiles.map((t) => Uint8Array.from(t));
     let cells = doc.cells.map(cloneCell);
-    const reuse = mode !== 'add';
     for (let y = 0; y < f.h; y++) {
       for (let x = 0; x < f.w; x++) {
         const src = f.cells[y * f.w + x];
@@ -2260,7 +2295,7 @@ remember();
         const Y = f.y + y;
         if (X < 0 || Y < 0 || X >= doc.mapW || Y >= doc.mapH) continue;
         if (f.onlyEmpty && !isZero(cells[Y * doc.mapW + X])) continue;
-        const hit = reuse ? adoptFlip(tiles, src.nibbles) : appendTile(tiles, src.nibbles);
+        const hit = adoptFlip(tiles, src.nibbles);
         cells[Y * doc.mapW + X] = {
           tile: hit.tile, hFlip: hit.hFlip, vFlip: hit.vFlip, pal: src.pal,
           priority: src.priority || 0
@@ -2281,7 +2316,7 @@ remember();
     doc.dirtyMap = true;
     applyFloatPalettes(f);
     const name = f.name;
-    const how = mode === 'add' ? 'Added tiles from ' : (name === 'Paste' ? 'Applied paste from ' : 'Imported into the map from ');
+    const how = name === 'Paste' ? 'Applied paste from ' : 'Imported into the map from ';
     state.float = null;
     state.tile = Math.min(state.tile, doc.tiles.length - 1);
     status(how + name + '. ' + doc.tiles.length + ' / ' + tileCap() + ' tiles' +
@@ -2896,6 +2931,7 @@ remember();
       state.tool = btn.dataset.tool;
       document.querySelectorAll('[data-tool]').forEach((el) => el.setAttribute('aria-pressed', String(el === btn)));
       renderMap();
+      if (doc) renderTileEdit();
     }));
     const canvas = $('jim-map');
     canvas.addEventListener('pointerdown', onDown);
@@ -2903,8 +2939,14 @@ remember();
     canvas.addEventListener('pointerup', onUp);
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('pointerup', onUp);
-    $('jim-tile-edit').addEventListener('pointerdown', (e) => { state.tileStroke = false; editTileAt(e); });
-    $('jim-tile-edit').addEventListener('pointermove', (e) => { if (state.tileStroke && (e.buttons & 1)) editTileAt(e); });
+    $('jim-tile-edit').addEventListener('pointerdown', (e) => {
+      if (state.tool !== 'pick') return;
+      pickTileAt(e);
+    });
+    $('jim-tile-edit').addEventListener('pointermove', (e) => {
+      if (state.tool !== 'pick' || !(e.buttons & 1)) return;
+      pickTileAt(e);
+    });
     window.addEventListener('pointerup', () => {
       if (state.tileStroke) renderTiles();
       state.tileStroke = false;
