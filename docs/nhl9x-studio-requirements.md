@@ -112,7 +112,7 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
 
   That is the user’s **15–61** (Genesis) / **15–121** (SNES) range. Show the live count.
 
-- **Dedup:** identical 8×8 pixel tiles (and H/V-flipped copies) collapse to one tile + flip bits, as `ice.js` / `lib/pc-rink.js` already do for PC. Copy-on-write when painting a shared tile.
+- **Dedup:** identical 8×8 pixel tiles (and H/V-flipped copies) collapse to one tile + flip bits, as `ice.js` / `lib/pc-rink.js` already do for PC. Copy-on-write when painting a shared tile: if the 8×8 is used on another cell (same index, H/V-flipped copies of that index, or the same pixel buffer under another index), painting bakes a **unique unflipped tile** for this cell so other squares do not change. Paint writes the selected color **index** and **does not change the cell palette** (retargeting the line recolors every pixel of that 8×8; Pal / the inspector change palette). If the name table is already at the 2048 (Genesis) / 1024 (SNES) cap, paint stops instead of rewriting the shared tile.
 - **Priority:** expose per cell (bit 15). Default 0. `dobitmap` **XORs** `printa` (`$F800` attribute bits) onto every map word, so in-game priority/palette can flip relative to the file. Show a “preview with `printa`” toggle; do not bake `printa` into export unless the user asks.
 - **Collision:** **not** in the JIM. Ice physics live in `hockey93.asm` (radii, walls, nets), not per-tile flags. Do not add a fake collision layer. 94G `Rinktilelist` / `RevRinkTilelist` are still JIM-shaped maps, not collision.
 - **Plane size:** `Title1` is 32×28; `Arrows` 12×23; `Framer` 3×3 (93G file-formats). `IceRinkMap` is a **scrolling** plane (`updatescroll` in `video93.asm` walks map rows). Editor must allow maps larger than 40×28 and scroll the canvas. Warn if width/height is 0 or &gt; 1024 (current `decodeJim` cap).
@@ -482,6 +482,7 @@ Credits for any extracted encoder comments: 93G/94G authors as in those READMEs;
 
 | Date | Change |
 |------|--------|
+| 2026-10-29 | Paint copy-on-write: a shared 8×8 (including H/V-flipped copies) becomes a unique unflipped tile so painting one square does not draw into the others. Paint writes the color index and does not change the cell palette. |
 | 2026-10-29 | Import Color mode Genesis 3-bit (GEN) / SNES 5-bit (SNES); lattice-only PNG path (Step A only); count-only PNG path; Apply-before-export when a float is pending; centre pane expands for Apply/previews; floating Pal moves tiles onto the selected palette and rebuilds that pal from all tiles on it (unused pals go black); Optimize seams; Lock seams; Lock on a pal does not rebuild a float; new palettes start at 0,0,0; Hex #RRGGBB is 3-bit × 36; 5-bit quantization in every 3-bit context. |
 | 2026-10-29 | Image Editor zoom 1–32× (large maps CSS-scale past the 4096-pixel bitmap cap). |
 | 2026-10-29 | Genesis / sjim → NHL 94 SNES zip is an explicit conversion when tiles ≤ 1024 (separate chr/map/pal blobs). |

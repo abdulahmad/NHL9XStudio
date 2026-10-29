@@ -5,7 +5,8 @@ const {
   decodeJim, parseJim, encodeJim, unpackMapWord, packMapWord, unpackTile, packTile,
   compressBytecode, decompressBytecode, transformBlock, grabBlock, stampBlock, cloneJim,
   encodeCramWord, decodeCramWord, encodePaletteLine, packPortrait, unpackPortrait,
-  matchTile, collapseDuplicateTiles, parsePaletteFile, applyDonorPalette, flippedTile, rasterize
+  matchTile, collapseDuplicateTiles, parsePaletteFile, applyDonorPalette, flippedTile, rasterize,
+  paintMapNibble
 } = require('../lib/jim');
 const { classify } = require('../lib/open-asset');
 
@@ -318,6 +319,125 @@ assert.strictEqual(line.readUInt16BE ? line.readUInt16BE(0) : (line[0] << 8) | l
   assert.strictEqual(r.cells[1].pal, 2);
   assert.strictEqual(r.cells[2].tile, 1);
   assert.strictEqual(r.cells[2].hFlip, 1);
+}
+
+{
+  const fill = new Uint8Array(64);
+  fill.fill(2);
+  const doc = {
+    tiles: [Uint8Array.from(fill)],
+    cells: [
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 0 },
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 1, priority: 0 }
+    ],
+    dirtyTiles: false,
+    dirtyMap: false
+  };
+  const hit = paintMapNibble(doc, 0, 3, 4, 7, { pal: 1 });
+  assert.strictEqual(hit.copied, true);
+  assert.strictEqual(doc.cells[0].tile, 1);
+  assert.strictEqual(doc.cells[0].hFlip, 0);
+  assert.strictEqual(doc.cells[1].tile, 0);
+  assert.strictEqual(doc.tiles[0][4 * 8 + 3], 2);
+  assert.strictEqual(doc.tiles[1][4 * 8 + 3], 7);
+  assert.strictEqual(doc.tiles.length, 2);
+}
+
+{
+  const t = new Uint8Array(64);
+  t[0] = 1;
+  t[7] = 4;
+  const doc = {
+    tiles: [Uint8Array.from(t)],
+    cells: [
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 0, priority: 0 },
+      { tile: 0, hFlip: 1, vFlip: 0, pal: 0, priority: 0 }
+    ],
+    dirtyTiles: false,
+    dirtyMap: false
+  };
+  const hit = paintMapNibble(doc, 1, 0, 0, 9);
+  assert.strictEqual(hit.copied, true);
+  assert.strictEqual(doc.cells[1].tile, 1);
+  assert.strictEqual(doc.cells[1].hFlip, 0);
+  assert.strictEqual(doc.cells[1].vFlip, 0);
+  assert.strictEqual(doc.tiles[1][0], 9);
+  assert.strictEqual(doc.tiles[0][0], 1);
+  assert.strictEqual(doc.tiles[0][7], 4);
+}
+
+{
+  const t = new Uint8Array(64);
+  t[5] = 3;
+  const doc = {
+    tiles: [Uint8Array.from(t)],
+    cells: [{ tile: 0, hFlip: 0, vFlip: 0, pal: 2, priority: 0 }],
+    dirtyTiles: false,
+    dirtyMap: false
+  };
+  const hit = paintMapNibble(doc, 0, 5, 0, 6);
+  assert.strictEqual(hit.copied, false);
+  assert.strictEqual(doc.cells[0].tile, 0);
+  assert.strictEqual(doc.tiles.length, 1);
+  assert.strictEqual(doc.tiles[0][5], 6);
+}
+
+{
+  const shared = new Uint8Array(64);
+  shared[0] = 3;
+  const doc = {
+    tiles: [shared, shared],
+    cells: [
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 0, priority: 0 },
+      { tile: 1, hFlip: 0, vFlip: 0, pal: 1, priority: 0 }
+    ],
+    dirtyTiles: false,
+    dirtyMap: false
+  };
+  const hit = paintMapNibble(doc, 0, 0, 0, 8);
+  assert.strictEqual(hit.copied, true);
+  assert.strictEqual(doc.cells[0].tile, 2);
+  assert.strictEqual(doc.tiles[2][0], 8);
+  assert.strictEqual(doc.tiles[1][0], 3);
+  assert.strictEqual(shared[0], 3);
+}
+
+{
+  const fill = new Uint8Array(64);
+  const doc = {
+    tiles: [fill, Uint8Array.from(fill)],
+    cells: [
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 0, priority: 0 },
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 0, priority: 0 }
+    ]
+  };
+  const hit = paintMapNibble(doc, 0, 1, 1, 4, { tileCap: 2 });
+  assert.ok(hit.error);
+  assert.strictEqual(hit.copied, false);
+  assert.strictEqual(doc.cells[0].tile, 0);
+  assert.strictEqual(doc.tiles[0][9], 0);
+  assert.strictEqual(doc.tiles.length, 2);
+}
+
+{
+  const fill = new Uint8Array(64);
+  fill.fill(2);
+  const doc = {
+    tiles: [Uint8Array.from(fill)],
+    cells: [
+      { tile: 0, hFlip: 0, vFlip: 0, pal: 2, priority: 0 },
+      { tile: 0, hFlip: 1, vFlip: 0, pal: 0, priority: 0 }
+    ]
+  };
+  const hit = paintMapNibble(doc, 0, 3, 4, 7, { pal: 0 });
+  assert.strictEqual(hit.copied, true);
+  assert.strictEqual(doc.cells[0].pal, 2, 'paint does not retarget the cell palette');
+  assert.strictEqual(doc.cells[0].hFlip, 0);
+  assert.strictEqual(doc.cells[1].tile, 0);
+  assert.strictEqual(doc.cells[1].pal, 0);
+  assert.strictEqual(doc.cells[1].hFlip, 1);
+  assert.strictEqual(doc.tiles[0][4 * 8 + 3], 2);
+  assert.strictEqual(doc.tiles[1][4 * 8 + 3], 7);
 }
 
 {

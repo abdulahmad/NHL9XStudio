@@ -1105,7 +1105,8 @@ function buildExport(packed) {
 
   function users(tile) {
     let n = 0;
-    doc.cells.forEach((c) => { if (c.tile === tile) n++; });
+    const id = tile | 0;
+    doc.cells.forEach((c) => { if ((c.tile | 0) === id) n++; });
     return n;
   }
   function nibbleAt(cell, px, py) {
@@ -1977,12 +1978,20 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
   function writeNibble(cell, px, py, nib) {
     const tiles = doc.tiles;
     let next = cell;
-    if (users(cell.tile) > 1) {
-      tiles.push(Uint8Array.from(tiles[cell.tile]));
+    const src = tiles[cell.tile];
+    const aliased = src && tiles.some((t, i) => i !== (cell.tile | 0) && t === src);
+    if (users(cell.tile) > 1 || aliased) {
+      if (tiles.length >= tileCap()) return { cell: cell, copied: false, error: 'That paint needs a new tile; the name table already has ' + tileCap() + '.' };
+      const baked = flipNibbles(src, cell.hFlip, cell.vFlip);
+      tiles.push(baked === src ? Uint8Array.from(src) : baked);
       next = cloneCell(cell);
       next.tile = tiles.length - 1;
+      next.hFlip = 0;
+      next.vFlip = 0;
       doc.dirtyTiles = true;
       doc.dirtyMap = true;
+      px = px & 7;
+      py = py & 7;
     }
     let x = px & 7;
     let y = py & 7;
@@ -1993,24 +2002,35 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
       tile[y * 8 + x] = nib & 15;
       doc.dirtyTiles = true;
     }
-    return next;
+    return { cell: next, copied: next.tile !== (cell.tile | 0) };
   }
   function paintAt(p) {
     const k = p.y * doc.mapW + p.x;
     let cell = doc.cells[k];
     if (!doc.tiles[cell.tile]) return;
     const nib = portraitNibble(state.strokeNib);
-    if (nib === nibbleAt(cell, p.px, p.py) && (state.strokeForcePal == null || cell.pal === state.strokeForcePal)) {
+    if (nib === nibbleAt(cell, p.px, p.py)) {
       state.tile = cell.tile;
       return;
     }
-    if (state.strokeForcePal != null && cell.pal !== state.strokeForcePal) {
-      cell = cloneCell(cell);
-      cell.pal = state.strokeForcePal;
-      doc.dirtyMap = true;
+    if (Jim && typeof Jim.paintMapNibble === 'function') {
+      const result = Jim.paintMapNibble(doc, k, p.px, p.py, nib, { tileCap: tileCap() });
+      if (result.error) {
+        status(result.error, true);
+        return;
+      }
+      cell = result.cell;
+      if (result.copied) state.tileStroke = true;
+    } else {
+      const result = writeNibble(cell, p.px, p.py, nib);
+      if (result.error) {
+        status(result.error, true);
+        return;
+      }
+      cell = result.cell;
+      if (result.copied) state.tileStroke = true;
+      doc.cells[k] = cell;
     }
-    cell = writeNibble(cell, p.px, p.py, nib);
-    doc.cells[k] = cell;
     state.tile = cell.tile;
     state.focus = { x: p.x, y: p.y };
   }
@@ -2269,7 +2289,6 @@ remember();
     }
     remember();
     state.strokeNib = event.button === 2 ? 0 : state.color.index;
-    state.strokeForcePal = event.button === 2 ? null : state.color.pal;
     if (state.tool === 'paint') paintAt(p);
     else if (state.tool === 'place') placeAt(p);
     else if (state.tool === 'erase') eraseAt(p);

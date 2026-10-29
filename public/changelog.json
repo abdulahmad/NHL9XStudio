@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.2.2",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor paint copies a unique tile when that 8×8 is shared (including H/V-flipped squares), so painting one cell does not draw into the others",
+        "Paint writes the selected color index and leaves the cell’s palette; it does not recolor the whole 8×8"
+      ]
+    },
+    {
       "version": "1.2.1",
       "date": "2026-10-29",
       "changes": [
