@@ -2814,6 +2814,55 @@ async function loadGame(id, keepSelection) {
   refreshAll();
 }
 
+// The detected ROM for a classified file, or null.
+function romOf(name, bytes, classified) {
+  if (classified.kind === 'rom') return classified;
+  return classified.kind === 'rom-candidate' ? NhlRomDetect.detect(name, bytes) : null;
+}
+
+// Keeps a detected ROM and its revision; returns the game id, or null when the page has no profile for it.
+function registerRom(rom, bytes) {
+  const id = rom.id || rom.gameId;
+  const body = rom.bytes || bytes;
+  const base = baseGames.find((game) => game.id === id);
+  if (!base) return null;
+  roms.set(id, body);
+  icePalettes.delete(id);
+  const revision = NhlRevisions.fromRom(id, body);
+  romRevisions.set(id, revision);
+  const entry = Object.assign({}, placeRevision(base, revision), { rom: true, pixels: true });
+  games = games.map((game) => (game.id === id ? entry : game));
+  return id;
+}
+
+// A folder with no PC game files: every ROM in it is detected and kept, and one is opened.
+async function ingestRomFolder(entries) {
+  const found = [];
+  const skipped = [];
+  for (const { file, bytes } of entries) {
+    if (bytes.length > 0x400000) continue;
+    const rom = romOf(file.name, bytes, NhlOpenAsset.classify(file.name, bytes));
+    if (!rom) continue;
+    const id = registerRom(rom, bytes);
+    if (id) found.push({ id, name: file.name });
+    else skipped.push(file.name);
+  }
+  if (!found.length) {
+    loadError = 'No supported ROMs found in that folder';
+    refreshAll();
+    return;
+  }
+  const open = found.find((rom) => rom.id === state.game) || found[0];
+  state.game = open.id;
+  el('game').value = open.id;
+  await loadGame(open.id);
+  gameInfo = games.find((game) => game.id === open.id) || gameInfo;
+  const titles = [...new Set(found.map((rom) => (games.find((game) => game.id === rom.id) || {}).title || rom.id))];
+  loadError = 'Loaded ' + found.length + ' ROM' + (found.length === 1 ? '' : 's') + ': ' + titles.join(', ')
+    + (skipped.length ? ' (no profile for ' + skipped.join(', ') + ')' : '');
+  refreshAll();
+}
+
 async function ingestDroppedFiles(fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
@@ -2842,8 +2891,12 @@ async function ingestDroppedFiles(fileList) {
     await loadClientPcPalettes();
     return;
   }
+  if (isFolder) {
+    await ingestRomFolder(entries);
+    return;
+  }
   if (files.length !== 1) {
-    loadError = 'Drop one ROM/asset file, or a PC game folder';
+    loadError = 'Drop one ROM/asset file, or a folder of ROMs or PC game files';
     refreshAll();
     return;
   }
@@ -2854,22 +2907,11 @@ async function ingestDroppedFiles(fileList) {
     refreshAll();
     return;
   }
-  const rom = classified.kind === 'rom'
-    ? classified
-    : (classified.kind === 'rom-candidate' ? NhlRomDetect.detect(file.name, bytes) : null);
+  const rom = romOf(file.name, bytes, classified);
   if (rom) {
-    const id = rom.id || rom.gameId;
-    const body = rom.bytes || bytes;
-    roms.set(id, body);
-    let entry = baseGames.find((game) => game.id === id);
-    icePalettes.delete(id);
-    if (entry) {
-      const revision = NhlRevisions.fromRom(id, body);
-      romRevisions.set(id, revision);
-      entry = Object.assign({}, placeRevision(entry, revision), { rom: true, pixels: true });
-      games = games.map((game) => (game.id === id ? entry : game));
-    } else {
-      loadError = 'Unknown game profile for this ROM (' + id + ').';
+    const id = registerRom(rom, bytes);
+    if (!id) {
+      loadError = 'Unknown game profile for this ROM (' + (rom.id || rom.gameId) + ').';
       refreshAll();
       return;
     }
