@@ -407,7 +407,7 @@ const server = http.createServer((req, res) => {
     serveFile(res, file, req);
     return;
   }
-  if (pathname === '/viewer.js' || pathname === '/about.js' || pathname === '/changelog.json' || pathname === '/viewer.css' || pathname === '/jed.html' || pathname === '/jed.js' || pathname === '/ice.js' || pathname === '/jed.css' || pathname === '/jim.html' || pathname === '/jim.js' || pathname === '/jim.css' || /^\/jed-pals\/[a-zA-Z]+\.act$/.test(pathname) || pathname === '/audio-engine.js' ||
+  if (pathname === '/viewer.js' || pathname === '/about.js' || pathname === '/button-icons.js' || pathname === '/changelog.json' || pathname === '/viewer.css' || pathname === '/jed.html' || pathname === '/jed.js' || pathname === '/ice.js' || pathname === '/jed.css' || pathname === '/jim.html' || pathname === '/jim.js' || pathname === '/jim.css' || /^\/jed-pals\/[a-zA-Z]+\.act$/.test(pathname) || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
       pathname === '/sound-test-view.js' || pathname === '/sound-instruments.js' || pathname === '/sound-roll-snes.js' || pathname === '/sound-test-snes.js' || pathname === '/sound-test-snes93.js' ||
       pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js' || pathname === '/sound-editor-extras.js' || pathname === '/sound-patch-editor.js' || pathname === '/sound-tools-snes.js' || pathname === '/sound-snes-inst-editor.js') {
