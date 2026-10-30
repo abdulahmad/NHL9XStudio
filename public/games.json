@@ -316,21 +316,24 @@
         "label": "Game Setup",
         "kind": "frames",
         "start": 192418,
-        "end": 192688
+        "end": 192688,
+        "paletteFrom": "GameSetUp.map.jim"
       },
       {
         "id": "Title3.anim",
         "label": "Title 3",
         "kind": "frames",
         "start": 204560,
-        "end": 205518
+        "end": 205518,
+        "paletteFrom": "Title2.map.jim"
       },
       {
         "id": "TitleLogo.anim",
         "label": "Title Logo",
         "kind": "frames",
         "start": 205518,
-        "end": 206944
+        "end": 206944,
+        "paletteFrom": "Title2.map.jim"
       },
       {
         "id": "Crowd.anim",
@@ -385,7 +388,8 @@
         "group": "Screens",
         "kind": "jim",
         "start": 201352,
-        "end": 204560
+        "end": 204560,
+        "paletteFrom": "Title1.map.jim"
       },
       {
         "id": "EASNBG.map.jim",
@@ -513,7 +517,8 @@
         "group": "Sprites",
         "kind": "frames",
         "start": 192418,
-        "end": 192688
+        "end": 192688,
+        "paletteFrom": "GameSetUp.map.jim"
       },
       {
         "id": "Title3.anim",
@@ -521,7 +526,8 @@
         "group": "Sprites",
         "kind": "frames",
         "start": 204560,
-        "end": 205518
+        "end": 205518,
+        "paletteFrom": "Title2.map.jim"
       },
       {
         "id": "TitleLogo.anim",
@@ -529,7 +535,8 @@
         "group": "Sprites",
         "kind": "frames",
         "start": 205518,
-        "end": 206944
+        "end": 206944,
+        "paletteFrom": "Title2.map.jim"
       },
       {
         "id": "Crowd.anim",
