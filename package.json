@@ -1,6 +1,6 @@
 {
   "name": "workspace",
-  "version": "1.3.1",
+  "version": "1.4.1",
   "description": "Browse sprite frames and the animations that play them for NHL 92, NHLPA 93, NHL 94, and NHL 95 on the Genesis, NHLPA 93 and NHL 94 on the SNES, and NHL 95 on PC. Product requirements: [`docs/DESIGN.md`](docs/DESIGN.md). Implementation notes: [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md). Agent handoff: [`docs/AGENT-HANDOFF.md`](docs/AGENT-HANDOFF.md).",
   "main": "server.js",
   "directories": {
