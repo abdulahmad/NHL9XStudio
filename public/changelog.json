@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.7.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Open folder now also loads a folder of ROMs: each supported game and revision in it is detected and kept, and the Game list switches between them"
+      ]
+    },
+    {
       "version": "1.6.2",
       "date": "2026-10-30",
       "changes": [
