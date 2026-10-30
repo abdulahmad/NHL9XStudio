@@ -208,13 +208,13 @@ select:focus, input:focus, button:focus-visible {
   font-size: 12px;
   color: var(--muted);
 }
-.modes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 12px 12px 0; }
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; padding: 12px 12px 0; }
 .modes button {
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 7px 0;
-  font-size: 13px;
+  border-radius: 8px;
+  padding: 5px 2px 4px;
+  font-size: 11px;
 }
 .modes button[aria-selected="true"] {
   background: var(--text);
@@ -510,7 +510,7 @@ select:focus, input:focus, button:focus-visible {
 /* Sound test: hide the sprite-only controls (bank, pin, scale, list order, sprite help). */
 .app.is-sound .sprite-only { display: none; }
 .order.is-hidden { display: none; }
-#mode-soundtest { grid-column: span 2; white-space: nowrap; }
+#mode-soundtest { white-space: nowrap; }
 
 /* Sound test tools: MIDI import and the sequencer */
 .se-bar { gap: 8px 14px; margin: 8px 0; }
@@ -590,3 +590,42 @@ select:focus, input:focus, button:focus-visible {
 .about-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .about-foot label { color: var(--muted); font-size: 12px; display: flex; gap: 6px; align-items: center; }
 .about-foot button { background: var(--amber); color: #1a1405; border: 0; border-radius: 6px; padding: 8px 18px; font-weight: 700; cursor: pointer; }
+
+/* Square icon-over-label buttons, matching the Image Editor toolbar. */
+.open-files > .ghost-btn,
+.modes button,
+.transport button,
+.transport label.check {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  min-height: 46px;
+  padding: 4px 8px 3px;
+  font-size: 11px;
+  line-height: 1.15;
+  text-align: center;
+}
+.open-files > .ghost-btn { color: var(--muted); }
+.open-files > .ghost-btn:hover { color: var(--ice); }
+.modes button { min-width: 0; }
+.open-files > .ghost-btn[data-ico]::before,
+.modes button[data-ico]::before,
+.transport button[data-ico]::before,
+.transport label.check[data-ico]::before {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  vertical-align: baseline;
+}
+.transport label.check { position: relative; background: var(--raise); }
+.transport label.check input { position: absolute; opacity: 0; pointer-events: none; }
+.transport label.check:has(input:checked) { background: var(--text); color: var(--bg); border-color: var(--text); }
+.transport label.check:has(input:focus-visible) { outline: 2px solid var(--amber); }
+.transport { align-items: stretch; }
+.transport .field.slim { min-width: 64px; justify-content: space-between; padding: 3px 0; }
+.transport .field.slim select { padding: 4px 6px; font-size: 12px; }
+.transport .field.grow { justify-content: center; }
+.modes button[hidden], .transport button[hidden], .transport label.check[hidden] { display: none; }

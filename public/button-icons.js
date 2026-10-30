@@ -62,6 +62,9 @@
     chip: P('M7 7h10v10H7zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4'),
     note: P('M9 18V6l11-2v12M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM17 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'),
     zip: P('M5 3h10l4 4v14H5zM12 3v10M12 8h2M10 10h2M12 12h2M10 14h4v3h-4z'),
+    loop: P('M17 3l3 3-3 3M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20M7 21l-3-3 3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4'),
+    clock: P('M12 7v5l3 2M3.5 12a8.5 8.5 0 1 0 17 0 8.5 8.5 0 1 0-17 0'),
+    checker: P('M4 4h16v16H4zM12 4v16M4 12h16M4 4h8v8H4zM12 12h8v8h-8z'),
     more: P('M5 12v.01M12 12v.01M19 12v.01'),
     refresh: P('M20 11A8 8 0 1 0 18 17M20 4v7h-7'),
   };
@@ -79,6 +82,9 @@
     [/^(export|save|download)\b|^logo png|^rink png|^.*\bexport\b/, 'download', 'Save to a file'],
     [/^import\b|^replace\b/, 'upload', 'Bring a file in'],
     [/^(play as gm)/, 'note', 'Play through the General MIDI reference synth'],
+    [/^loop$/, 'loop', 'Repeat the sequence when it ends'],
+    [/^game timing/, 'clock', 'Use the game\'s own timing'],
+    [/^transparency/, 'checker', 'Show transparent holes'],
     [/^(spin)/, 'spin', 'Spin through facings'],
     [/^(play)\b/, 'play', 'Play'],
     [/^(resume)/, 'play', 'Resume playback'],
@@ -147,6 +153,7 @@ button.jim-icon-btn[data-ico]::before,.pin-options button[data-ico]::before{marg
   function decorate(b) {
     if (b.querySelector('svg') || b.classList.contains('jim-icon-btn')) return;
     const raw = (b.textContent || '').trim();
+    if (b.matches('label') && /^\s*\S/.test(raw) === false) return;
     // Arrow keys and glyph-led labels ("▶ Play") already show a symbol.
     if (!raw && !b.getAttribute('aria-label')) return;
     if (/^[^\p{L}\p{N}]/u.test(raw) && !/^(←|⟳|⟲)/.test(raw)) return;
@@ -157,11 +164,12 @@ button.jim-icon-btn[data-ico]::before,.pin-options button[data-ico]::before{marg
     if (!b.title && !b.dataset.tip && !b.hasAttribute('data-btn-tip')) { b.title = rule[2]; b.setAttribute('data-btn-tip', '1'); }
   }
 
+  const TARGETS = 'button, a.ghost-btn, .transport label.check';
   function scan(root) {
     if (root.nodeType !== 1) return;
-    const own = root.closest && root.closest('button, a.ghost-btn');
+    const own = root.closest && root.closest(TARGETS);
     if (own) decorate(own);
-    if (root.querySelectorAll) root.querySelectorAll('button, a.ghost-btn').forEach(decorate);
+    if (root.querySelectorAll) root.querySelectorAll(TARGETS).forEach(decorate);
   }
 
   let pending = new Set();

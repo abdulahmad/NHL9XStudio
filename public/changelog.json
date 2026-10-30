@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.5.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: the top bar buttons, the Frame/SPF/SPA/Images/Audio tabs and the playback controls are now square icon-over-label buttons like the Image Editor, and Loop, Game timing and Transparency are toggle buttons"
+      ]
+    },
+    {
       "version": "1.4.2",
       "date": "2026-10-30",
       "changes": [
