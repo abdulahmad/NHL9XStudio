@@ -87,7 +87,7 @@ const state = {
   query: '',
   audioId: '',
   soundTestItem: 'song-0',
-  openGroups: new Set(), // Audio groups the listener flipped from their default: Songs / SFX start open, DAC samples / Instruments start closed
+  openGroups: new Set(), // list groups the listener flipped from their default (Audio: Songs / SFX open, DAC samples / Instruments closed; Player cards closed)
   groupsInit: false,
   acc: 0,
   holdKey: '',
@@ -852,7 +852,7 @@ function bindSpfEnd() {
   }
 }
 
-const IMAGE_ORDER = ['Screens', 'Logos', 'Players', 'Sprites', 'Ice', 'Jumbotron', 'Fonts', 'Other'];
+const IMAGE_ORDER = ['Screens', 'Logos', 'Players', 'Player cards', 'Sprites', 'Ice', 'Jumbotron', 'Fonts', 'Other'];
 const IMAGE_SEARCH_EXTRA = {
   'crowd.anim': 'crowd audience stands reaction',
   'faceoff.anim': 'faceoff face off referee',
@@ -866,6 +866,37 @@ const IMAGE_SEARCH_EXTRA = {
   logos: 'team logo centre ice center'
 };
 const imageMemory = new Map();
+
+// Collapsible list headings for SPF, SPA, Images and the older Audio catalog. Groups start open except the ones in
+// CLOSED_GROUPS; openGroups holds the groups flipped from that default, keyed "mode:group". A search shows every match.
+const CLOSED_GROUPS = new Set(['Player cards']);
+const foldInit = new Set();
+function foldKey(group) { return state.mode + ':' + group; }
+function groupOpen(group, q) {
+  return !!q || (!CLOSED_GROUPS.has(group) !== state.openGroups.has(foldKey(group)));
+}
+// A selection inside a closed group opens that group once per view, so the selection is visible.
+function openSelectedGroup(sections, isSelected) {
+  if (foldInit.has(state.mode)) return;
+  foldInit.add(state.mode);
+  for (const section of sections) {
+    if (section.label && CLOSED_GROUPS.has(section.label) && section.items.some(isSelected)) state.openGroups.add(foldKey(section.label));
+  }
+}
+function groupToggle(box, group, count, open) {
+  const label = document.createElement('button');
+  label.type = 'button';
+  label.className = 'group-label is-toggle';
+  label.setAttribute('aria-expanded', open ? 'true' : 'false');
+  label.textContent = (open ? '▾ ' : '▸ ') + group + ' (' + count + ')';
+  label.addEventListener('click', () => {
+    const key = foldKey(group);
+    if (state.openGroups.has(key)) state.openGroups.delete(key); else state.openGroups.add(key);
+    renderList();
+  });
+  box.appendChild(label);
+}
+const isPlayerCard = (image) => /^Card/.test(image.id) || image.id === 'cards' || /^NoPic|^NoPlayerPicture/.test(image.id);
 
 function renderImageList(box, q) {
   const images = (gameInfo && gameInfo.images) || [];
@@ -885,7 +916,7 @@ function renderImageList(box, q) {
     const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + extra).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(image);
-    const group = image.group || 'Other';
+    const group = isPlayerCard(image) ? 'Player cards' : image.group || 'Other';
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(image);
   }
@@ -900,12 +931,12 @@ function renderImageList(box, q) {
   const sections = state.sort === 'file'
     ? [{ label: '', items: visible }]
     : IMAGE_ORDER.concat(extra).filter((group) => groups.has(group)).map((group) => ({ label: group, items: groups.get(group) }));
+  openSelectedGroup(sections, (image) => image.id === state.image);
   for (const section of sections) {
     if (section.label) {
-      const label = document.createElement('div');
-      label.className = 'group-label';
-      label.textContent = section.label;
-      box.appendChild(label);
+      const open = groupOpen(section.label, q);
+      groupToggle(box, section.label, section.items.length, open);
+      if (!open) continue;
     }
     for (const image of section.items) {
       const button = document.createElement('button');
@@ -1081,10 +1112,9 @@ function renderList() {
       return;
     }
     for (const section of sections) {
-      const label = document.createElement('div');
-      label.className = 'group-label';
-      label.textContent = section.label;
-      box.appendChild(label);
+      const open = groupOpen(section.label, q);
+      groupToggle(box, section.label, section.items.length, open);
+      if (!open) continue;
       for (const entry of section.items) {
         const button = document.createElement('button');
         button.type = 'button';
@@ -1150,10 +1180,9 @@ function renderList() {
     : order.concat(extraGroups).filter((group) => groups.has(group)).map((group) => ({ label: group, items: groups.get(group) }));
   for (const section of sections) {
     if (section.label) {
-      const label = document.createElement('div');
-      label.className = 'group-label';
-      label.textContent = section.label;
-      box.appendChild(label);
+      const open = groupOpen(section.label, q);
+      groupToggle(box, section.label, section.items.length, open);
+      if (!open) continue;
     }
     for (const entry of section.items) {
       const button = document.createElement('button');

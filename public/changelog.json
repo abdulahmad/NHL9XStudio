@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.6.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: every group heading in the SPF, SPA, Images and Audio lists can now be collapsed and expanded",
+        "Images: player cards are split into their own Player cards group, which starts collapsed in every game"
+      ]
+    },
+    {
       "version": "1.5.3",
       "date": "2026-10-30",
       "changes": [
