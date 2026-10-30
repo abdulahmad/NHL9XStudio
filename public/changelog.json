@@ -1,10 +1,17 @@
 {
   "releases": [
     {
-      "version": "1.5.1",
+      "version": "1.5.2",
       "date": "2026-10-30",
       "changes": [
         "Images: sprite banks (such as NHL 94 Face Off sprites) now list all four palette lines and which ones their frames use, like the pictures do"
+      ]
+    },
+    {
+      "version": "1.5.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: asset names in the Images list no longer get an icon in front of them"
       ]
     },
     {
