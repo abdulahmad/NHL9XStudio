@@ -151,7 +151,8 @@ button.jim-icon-btn[data-ico]::before,.pin-options button[data-ico]::before{marg
   document.head.appendChild(style);
 
   function decorate(b) {
-    if (b.querySelector('svg') || b.classList.contains('jim-icon-btn')) return;
+    // List rows (.item) are named assets, not commands: a name like "Pause Bg Bit" must not pick up an icon.
+    if (b.querySelector('svg') || b.classList.contains('jim-icon-btn') || b.closest('.item, [role="option"], .catalog')) return;
     const raw = (b.textContent || '').trim();
     if (b.matches('label') && /^\s*\S/.test(raw) === false) return;
     // Arrow keys and glyph-led labels ("▶ Play") already show a symbol.
