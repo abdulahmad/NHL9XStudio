@@ -144,7 +144,7 @@ There is **no** `SPFbench`, `SPFbetween`, or bench-cheer sequence on **94G** or 
 | “Bench” in the name | **SPA** → usually **Falls** or **Other** → `SPAbenchcheckl` / `SPAbenchcheckr` | Board check at center ice — easy to confuse with bench celebration |
 | Penalty box door | **SPA** → `SPAwallleft` / `SPAwallright` | Uses `SPFPen` frames |
 | `Crowd.anim`, `FaceOff.anim`, `Zam.anim` | **Images** tab → group **Sprites** | Decoded as multi-frame `kind: 'frames'`; **not** on Frame / SPF / SPA tabs |
-| `PlayoffSprite.bin` | **Images** → **Sprites** | Easy to miss; not in `frames94.asm` |
+| `StanleyCup.anim` | **Images** → **Sprites** | Easy to miss; not in `frames94.asm` |
 | Extra ANIM bank on Frame tab | **Not exposed** | **92G** lists `Crowd.anim`, `Puck.anim`, `Zam.anim` as separate **banks**; **94G** only has `{ id: 'sprites', label: 'Sprites' }` |
 
 So: **on-ice goal celebrations are supported** via SPA/SPF on the main sheet. **Bench-sit celebration is not in the Genesis data** and therefore cannot be browsed as a named animation on 94G. Auxiliary sprite banks are only partially surfaced (Images only).
@@ -157,7 +157,7 @@ Work **92G → … → 94PC** (see **Implementation priority** above). PC DOS ti
 |-------|----------|--------|------|
 | **GAP-1** | **92G** | Reference quality | Treat as gold standard: bank list, Images catalog, palette/transparency rules; document anything still missing from `ANIM-To-BMP` / ROM slices. |
 | **GAP-2** | **93G** | Banks + images | Frame tab lists `GameSetup.anim` / title frame banks; `genesis-images` offsets match `extractAssets93.js` with a 4-byte trim per end (`test.js`); optional `nhlpa93.bin` decode tests. |
-| **GAP-3** | **94G** | Banks + discoverability | Multi-bank Frame tab like 92G (`Crowd.anim`, `FaceOff.anim`, `Zam.anim`, `PlayoffSprite.bin`); SPA blurbs (`SPAbenchcheck*` vs PC `SPFbench`); search aliases for celebrate vs bench. |
+| **GAP-3** | **94G** | Banks + discoverability | Multi-bank Frame tab like 92G (`Crowd.anim`, `FaceOff.anim`, `Zam.anim`, `StanleyCup.anim`); SPA blurbs (`SPAbenchcheck*` vs PC `SPFbench`); search aliases for celebrate vs bench. |
 | **GAP-4** | **95G** | Banks + images | Crowd + FaceOff on Frame tab (retail `0x18B628`, `0x14A490`; not `segmap95` `0xA4B54`); no Genesis Zam; `openFrames` `record: '95'`. Remaining: arena gfx / full `genesis-images` audit vs `extractAssets95.js`. |
 | **GAP-5** | **93S** | SNES catalog | Pictures catalog (15 images); crowd/zamboni/faceoff on main sprite sheet (`SPFcrowd` 659, etc.). Still open: dedicated crowd picture banks if ROM offsets are pinned. |
 | **GAP-6** | **94S** | SNES parity | `SPAcelebrate` / `SPApump` named in `frames94snes.asm`; Images tab still missing several Genesis-parity screens (refs, scouting, framer, faceoff map) pending LoROM offsets. |
@@ -410,7 +410,7 @@ NHL9X Studio should run in **two complementary setups**. Both use the same decod
 | Input | Examples | Expected handling |
 |-------|-----------|-------------------|
 | Genesis / SNES ROM | `nhl94.bin`, `.md`, `.gen`, `.sfc` | Detect size/CRC/header → game profile → full catalog (frames, images, banks) |
-| Extracted graphic | `.anim`, `.jim`, crowd/faceoff `.anim` slice, `PlayoffSprite.bin` | Sniff header → `parseAnim` / `openFrames` / `decodeJim` → Frame or Images view |
+| Extracted graphic | `.anim`, `.jim`, crowd/faceoff `.anim` slice, `StanleyCup.anim` | Sniff header → `parseAnim` / `openFrames` / `decodeJim` → Frame or Images view |
 | NHL 95 PC file | `.PPV`, `.QFS`, `HOMEPALS.BIN`, `HOCKEY.EXE` (for SPA table) | Route to `pc95.js`; multi-shape PPV/QFS as today |
 | NHL 94 PC file | `.PPV`, `.QPP`, palette BINs | Route to planned `pc94.js` |
 | NHL 95 PC **ISO** | `.iso` / `.bin rip | **Future:** client-side ISO9660 (or pre-extracted folder); mount and read paths like local `pc95/` |
