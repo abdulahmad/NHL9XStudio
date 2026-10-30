@@ -130,7 +130,7 @@ Defaults: Adaptive + None for step B; Uniform + None for step A. Remember last c
 | Logo, palOff === mapOff | team CRAM from ROM (`TeamLogoPalettes`) | Edit map/tiles; palette from donor / lock-ACT |
 | Arena gfx sheet | no map, sequential tiles | Tile-sheet kind (95G `ArenaGfx*`) |
 
-File names: keep **`.map.jim`** even when packed. 94/95 extractors also use `.bin` for JIM-shaped blobs (`EASportsMap.bin`, `Card*.bin`). Open those if `decodeJim` accepts them; export using the **opened name**.
+File names: keep **`.map.jim`** even when packed. 94/95 extractors use `.bin` for the player cards (`Card*.bin`) and `.map.jim` for the other JIM-shaped blobs. Open those if `decodeJim` accepts them; export using the **opened name**.
 
 #### File features the editor must round-trip (nothing else is in the JIM)
 

@@ -6,7 +6,7 @@ const { parseFrames } = require('../lib/parse-frames');
 const { parseAnim, renderFrame } = require('../lib/anim');
 const { holdVblanks } = require('../lib/playback');
 const { parseSheet, openFrames } = require('../lib/sheet');
-const { paletteLabel, defaultPaletteFile, matchPaletteFile } = require('../lib/labels');
+const { paletteParts, paletteLabel, defaultPaletteFile, matchPaletteFile } = require('../lib/labels');
 const { decodeJim, decompressBytecode, picturePixelHidden } = require('../lib/jim');
 const { unpack93 } = require('../lib/snespak');
 const { parse93, parse94, openImage } = require('../lib/snes');
@@ -260,6 +260,9 @@ assert.strictEqual(paletteLabel('BUFh.snespal'), 'Buffalo · home');
 assert.strictEqual(paletteLabel('rangersv.pal'), 'New York · away');
 assert.strictEqual(paletteLabel('NYv.snespal'), 'New York · away');
 assert.strictEqual(paletteLabel('islandersh.pal'), 'Long Island · home');
+assert.strictEqual(paletteParts('rangersv.pal', 'nhl94').label, 'New York R · away');
+assert.strictEqual(paletteParts('islandersh.pal', 'nhl94').label, 'New York I · home');
+assert.strictEqual(paletteParts('islandersh.pal', 'nhl95').label, 'Long Island · home');
 assert.strictEqual(paletteLabel('ASEh.snespal'), 'All-Star East · home');
 assert.strictEqual(defaultPaletteFile(['bruinsv.pal', 'sabresv.pal', 'sabresh.pal']), 'sabresh.pal');
 assert.strictEqual(defaultPaletteFile(['BUFv.snespal', 'BUFh.snespal']), 'BUFh.snespal');
@@ -465,7 +468,7 @@ for (const slice of EXTRACT95_RETAIL) {
   assert.strictEqual(img.end, slice.end, slice.id + ' end');
 }
 assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
-assert.ok(g94.banks.some((bank) => bank.id === 'PlayoffSprite.bin'));
+assert.ok(g94.banks.some((bank) => bank.id === 'StanleyCup.anim'));
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
 assert.ok(g94.images.some((image) => image.id === 'logoBOS.map.jim' && image.paletteAt === 0xFF482));
 assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.bin' && image.paletteAt === 0xC6762));
@@ -652,7 +655,7 @@ if (revB93) {
   const sheet = parseSheet(revB93, adjusted.sheet);
   assert.ok(sheet.numFrames > 600);
   assert.ok(renderFrame(sheet, 1).pixels.some((pixel) => pixel));
-  for (const id of ['EASportsBG.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASports2.map.jim']) {
+  for (const id of ['EASportsBG.map.jim', 'IceRink.map.jim', 'EASports.map.jim', 'EASportsSplash.map.jim']) {
     const spec = adjusted.images.find((image) => image.id === id);
     const pic = decodeJim(revB93.subarray(spec.start, spec.end));
     assert.ok(pic.renderFrame(1).width > 32, id);

@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.5.3",
+      "date": "2026-10-30",
+      "changes": [
+        "NHLPA 93 and NHL 94 Genesis: pictures renamed to match what they show (EASportsBG, EASportsSplash, IceRinkHor, NHLLogo, NHLPALogo, MarkLesser, Hot, Cold, StanleyCup)",
+        "NHL 94 Genesis: the two New York teams are now New York I and New York R"
+      ]
+    },
+    {
       "version": "1.5.2",
       "date": "2026-10-30",
       "changes": [

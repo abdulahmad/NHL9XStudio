@@ -857,7 +857,7 @@ const IMAGE_SEARCH_EXTRA = {
   'crowd.anim': 'crowd audience stands reaction',
   'faceoff.anim': 'faceoff face off referee',
   'zam.anim': 'zamboni zam ice',
-  'playoffsprite.bin': 'playoff arrows stanley',
+  'stanleycup.anim': 'playoff arrows stanley',
   'easn.anim': 'stanley cup easn spin',
   easports: 'ea sports intro logo',
   ronbarr: 'ron barr interview',
@@ -2672,7 +2672,7 @@ async function loadGame(id, keepSelection) {
   state.bank = el('bank').value || info.banks[0].id;
   const jerseys = pals.filter((file) => !/^rink\./i.test(file));
   const labeled = jerseys.map((file) => {
-    const parts = Nhl92Labels.paletteParts(file);
+    const parts = Nhl92Labels.paletteParts(file, state.game);
     return { file, label: parts.label, city: parts.city, side: parts.side };
   });
   labeled.sort((a, b) => {

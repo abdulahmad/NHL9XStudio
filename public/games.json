@@ -328,8 +328,8 @@
         "paletteFrom": "Title2.map.jim"
       },
       {
-        "id": "TitleLogo.anim",
-        "label": "Title Logo",
+        "id": "NHLPALogo.anim",
+        "label": "NHLPA Logo",
         "kind": "frames",
         "start": 205518,
         "end": 206944,
@@ -530,8 +530,8 @@
         "paletteFrom": "Title2.map.jim"
       },
       {
-        "id": "TitleLogo.anim",
-        "label": "Title Logo",
+        "id": "NHLPALogo.anim",
+        "label": "NHLPA Logo",
         "group": "Sprites",
         "kind": "frames",
         "start": 205518,
@@ -696,8 +696,8 @@
         "end": 694800
       },
       {
-        "id": "PlayoffSprite.bin",
-        "label": "Playoff Sprite",
+        "id": "StanleyCup.anim",
+        "label": "Stanley Cup",
         "kind": "frames",
         "start": 995480,
         "end": 1004344
@@ -753,8 +753,8 @@
         "end": 347684
       },
       {
-        "id": "Scouting94.map.jim",
-        "label": "Scouting",
+        "id": "EASportsBG.map.jim",
+        "label": "EASportsBG",
         "group": "Screens",
         "kind": "jim",
         "start": 347684,
@@ -833,8 +833,8 @@
         "end": 737882
       },
       {
-        "id": "EASportsMap.bin",
-        "label": "EASports",
+        "id": "EASportsSplash.map.jim",
+        "label": "EASportsSplash",
         "group": "Screens",
         "kind": "jim",
         "start": 737882,
@@ -849,8 +849,8 @@
         "end": 770140
       },
       {
-        "id": "PauseScreen.map.jim",
-        "label": "Pause Screen",
+        "id": "IceRinkHor.map.jim",
+        "label": "Ice Rink Hor",
         "group": "Screens",
         "kind": "jim",
         "start": 770140,
@@ -881,7 +881,7 @@
         "end": 784592
       },
       {
-        "id": "PlayerCardsScreenPic.bin",
+        "id": "PlayerCardsScreenPic.map.jim",
         "label": "Player Cards Screen Pic",
         "group": "Screens",
         "kind": "jim",
@@ -889,40 +889,40 @@
         "end": 957056
       },
       {
-        "id": "CornerLogoMap.bin",
-        "label": "Corner Logo",
+        "id": "NHLLogo.map.jim",
+        "label": "NHL Logo",
         "group": "Screens",
         "kind": "jim",
         "start": 957056,
         "end": 958166
       },
       {
-        "id": "ArenaGfxBank.bin",
-        "label": "Arena Gfx Bank",
+        "id": "NHLPALogo.map.jim",
+        "label": "NHLPA Logo",
         "group": "Screens",
         "kind": "jim",
         "start": 958166,
         "end": 995480
       },
       {
-        "id": "HiScoreImg.bin",
-        "label": "Hi Score Img",
+        "id": "MarkLesser.map.jim",
+        "label": "Mark Lesser",
         "group": "Screens",
         "kind": "jim",
         "start": 1004344,
         "end": 1006326
       },
       {
-        "id": "HotIconMap.bin",
-        "label": "Hot Icon",
+        "id": "Hot.map.jim",
+        "label": "Hot",
         "group": "Screens",
         "kind": "jim",
         "start": 1006326,
         "end": 1006876
       },
       {
-        "id": "ColdIconMap.bin",
-        "label": "Cold Icon",
+        "id": "Cold.map.jim",
+        "label": "Cold",
         "group": "Screens",
         "kind": "jim",
         "start": 1006876,
@@ -1009,8 +1009,8 @@
         "end": 694800
       },
       {
-        "id": "PlayoffSprite.bin",
-        "label": "Playoff Sprite",
+        "id": "StanleyCup.anim",
+        "label": "Stanley Cup",
         "group": "Sprites",
         "kind": "frames",
         "start": 995480,
@@ -1099,7 +1099,7 @@
       },
       {
         "id": "logoNYI.map.jim",
-        "label": "Long Island",
+        "label": "New York I",
         "group": "Logos",
         "kind": "jim",
         "start": 793494,
@@ -1144,7 +1144,7 @@
       },
       {
         "id": "logoNYR.map.jim",
-        "label": "New York",
+        "label": "New York R",
         "group": "Logos",
         "kind": "jim",
         "start": 798308,
