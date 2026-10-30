@@ -1400,10 +1400,60 @@ function renderMeta() {
   table.appendChild(html);
 }
 
+/** Pictures in the Images view: every palette line stored with the picture, and how many pixels draw from each line. */
+function pictureLines() {
+  if (state.mode !== 'image' || (gameInfo && gameInfo.paletteKind === 'pc')) return null;
+  const anim = currentAnim();
+  if (!anim || !anim.picture || !anim.combined || anim.combined.length < 16) return null;
+  const frame = renderedFrame(1);
+  const colors = (frame && frame.colors) || anim.combined;
+  const lines = Math.min(Math.floor(colors.length / 16), 16);
+  const used = new Array(lines).fill(0);
+  if (frame && frame.pixels) {
+    for (let i = 0; i < frame.pixels.length; i++) {
+      const line = frame.pixels[i] >> 4;
+      if (line < lines) used[line]++;
+    }
+  }
+  return { colors, lines, used, total: frame && frame.pixels ? frame.pixels.length : 0 };
+}
+
+function renderPictureLines(box, info) {
+  const hex = (n) => (n < 16 ? '0' : '') + n.toString(16);
+  for (let line = 0; line < info.lines; line++) {
+    const row = document.createElement('div');
+    row.className = 'pal-line' + (info.used[line] ? ' is-used' : '');
+    const label = document.createElement('span');
+    label.textContent = 'Line ' + line;
+    const note = document.createElement('small');
+    note.textContent = info.used[line]
+      ? 'used · ' + Math.round(info.used[line] * 100 / Math.max(1, info.total)) + '% of pixels'
+      : 'not used by this picture';
+    const chips = document.createElement('div');
+    chips.className = 'swatches';
+    for (let i = 0; i < 16; i++) {
+      const rgb = info.colors[line * 16 + i];
+      if (!rgb) continue;
+      const chip = document.createElement('i');
+      chip.style.background = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
+      chip.title = 'Line ' + line + ' color ' + i + ' · #' + hex(rgb[0]) + hex(rgb[1]) + hex(rgb[2]);
+      chips.appendChild(chip);
+    }
+    row.append(label, note, chips);
+    box.appendChild(row);
+  }
+}
+
 function renderSwatches() {
-  const colors = activeColors();
   const box = el('swatches');
   box.replaceChildren();
+  const pictured = pictureLines();
+  box.classList.toggle('pal-lines', Boolean(pictured));
+  if (pictured) {
+    renderPictureLines(box, pictured);
+    return;
+  }
+  const colors = activeColors();
   if (!colors || !colors.length) return;
   const row = ((gameInfo && gameInfo.jerseyRow) || 2) * 16;
   const base = row + 15 < colors.length ? row : 0;

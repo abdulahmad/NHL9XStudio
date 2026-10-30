@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.4.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Images: the palette panel now shows all four palette lines stored with the picture, and marks which lines its tiles actually use (the old swatch showed line 2, which is often an unused placeholder, so it looked all magenta)"
+      ]
+    },
+    {
       "version": "1.4.0",
       "date": "2026-10-30",
       "changes": [
