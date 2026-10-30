@@ -1,10 +1,18 @@
 {
   "releases": [
     {
-      "version": "1.6.1",
+      "version": "1.6.2",
       "date": "2026-10-30",
       "changes": [
         "NHL 94 Genesis: EASN is now named EASports in the Images list"
+      ]
+    },
+    {
+      "version": "1.6.1",
+      "date": "2026-10-30",
+      "changes": [
+        "The Revision picker is now really hidden on games with one retail layout (it stayed on screen after leaving NHLPA 93 or NHL 92)",
+        "Games and revisions with a ROM open are marked [loaded] in the Game and Revision lists"
       ]
     },
     {
