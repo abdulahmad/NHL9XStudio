@@ -1400,22 +1400,34 @@ function renderMeta() {
   table.appendChild(html);
 }
 
-/** Pictures in the Images view: every palette line stored with the picture, and how many pixels draw from each line. */
+/** Pictures and sprite banks in the Images view: every palette line stored with them, and how many pixels draw from each line. */
+const pictureLinesCache = new WeakMap();
 function pictureLines() {
   if (state.mode !== 'image' || (gameInfo && gameInfo.paletteKind === 'pc')) return null;
   const anim = currentAnim();
-  if (!anim || !anim.picture || !anim.combined || anim.combined.length < 16) return null;
-  const frame = renderedFrame(1);
-  const colors = (frame && frame.colors) || anim.combined;
+  if (!anim || !anim.combined || anim.combined.length < 16) return null;
+  if (pictureLinesCache.has(anim)) return pictureLinesCache.get(anim);
+  const first = renderedFrame(1);
+  const colors = (first && first.colors) || anim.combined;
   const lines = Math.min(Math.floor(colors.length / 16), 16);
   const used = new Array(lines).fill(0);
-  if (frame && frame.pixels) {
+  let total = 0;
+  // Sprite banks hold many frames; color 0 of every line is transparent there, so it does not count as use.
+  const frames = Math.min(anim.numFrames || 1, 200);
+  for (let n = 1; n <= frames; n++) {
+    const frame = n === 1 ? first : renderedFrame(n);
+    if (!frame || !frame.pixels) continue;
     for (let i = 0; i < frame.pixels.length; i++) {
-      const line = frame.pixels[i] >> 4;
+      const index = frame.pixels[i];
+      if (!anim.picture && (index & 15) === 0) continue;
+      total++;
+      const line = index >> 4;
       if (line < lines) used[line]++;
     }
   }
-  return { colors, lines, used, total: frame && frame.pixels ? frame.pixels.length : 0 };
+  const info = { colors, lines, used, total };
+  pictureLinesCache.set(anim, info);
+  return info;
 }
 
 function renderPictureLines(box, info) {
