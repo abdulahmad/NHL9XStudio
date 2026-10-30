@@ -205,7 +205,7 @@ function romRevision(game, romFile) {
   if (!romFile || !Revisions.list(game.id).length) return '';
   try {
     const buf = readRom(romFile, game);
-    return Revisions.fromDate(game.id, buf.length >= 0x120 ? buf.slice(0x118, 0x120).toString('ascii') : '');
+    return Revisions.fromRom(game.id, buf);
   } catch (err) {
     return Revisions.list(game.id)[0].id;
   }

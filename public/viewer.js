@@ -2771,7 +2771,7 @@ async function ingestDroppedFiles(fileList) {
     let entry = baseGames.find((game) => game.id === id);
     icePalettes.delete(id);
     if (entry) {
-      const revision = NhlRevisions.fromDate(id, rom.revADate || '');
+      const revision = NhlRevisions.fromRom(id, body);
       romRevisions.set(id, revision);
       entry = Object.assign({}, placeRevision(entry, revision), { rom: true, pixels: true });
       games = games.map((game) => (game.id === id ? entry : game));

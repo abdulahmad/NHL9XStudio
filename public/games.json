@@ -223,8 +223,19 @@
     ],
     "pixels": true,
     "rom": false,
-    "revisions": [],
-    "revision": "",
+    "revisions": [
+      {
+        "id": "0",
+        "label": "Retail",
+        "date": "1991.MAY"
+      },
+      {
+        "id": "a",
+        "label": "Rev A",
+        "date": "1991.MAY"
+      }
+    ],
+    "revision": "0",
     "sheet": null,
     "snes": null,
     "romHint": "Drop ROM or use roms/",

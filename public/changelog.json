@@ -4,7 +4,8 @@
       "version": "1.3.0",
       "date": "2026-10-30",
       "changes": [
-        "A Revision picker next to Game lists the retail revisions of a game. NHLPA 93 offers Rev 0, Rev A and Rev B; picking one re-places the pictures and sprite sheet at that revision's offsets, and the revision of an open ROM is marked loaded",
+        "A Revision picker next to Game lists the retail revisions of a game. NHLPA 93 offers Rev 0, Rev A and Rev B (offsets move); picking one re-places the pictures and sprite sheet at that revision's offsets, and the revision of an open ROM is marked loaded",
+        "NHL 92 offers Retail and Rev A (the pictures sit at the same offsets; an open ROM is told apart by the credit line)",
         "Games with a single retail layout hide the picker"
       ]
     },

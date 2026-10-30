@@ -1273,3 +1273,14 @@ if (genesis94Rom) {
   assert.ok(schedule94 && schedule94.events.length > 0, '94G team song preview should emit notes');
 }
 
+
+// Revision detection for the picker: NHLPA 93 by header date, NHL 92 by the credit line only Rev A spells 'Henson'.
+{
+  const Revisions = require('../lib/revisions');
+  const body = (name) => { const b = Buffer.alloc(0x80000); b.write('Mark Hughes and Scooter ' + name + 'son', 0x1000); return b; };
+  assert.strictEqual(Revisions.fromRom('nhl92', body('Han')), '0');
+  assert.strictEqual(Revisions.fromRom('nhl92', body('Hen')), 'a');
+  const pa = Buffer.alloc(0x80000); pa.write('1993.FEB', 0x118);
+  assert.strictEqual(Revisions.fromRom('nhlpa93', pa), 'b');
+  assert.strictEqual(Revisions.fromRom('nhl94', pa), '');
+}
