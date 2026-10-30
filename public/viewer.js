@@ -1,4 +1,5 @@
 let games = [];
+const romRevisions = new Map(); // game id to the revision of the ROM that is open for it
 let baseGames = []; // the games as the list gave them, before any ROM adjusted them (a second ROM adjusts these, not the first one's result)
 let gameInfo = null;
 let spritePalette = '';
@@ -1883,6 +1884,17 @@ function wire() {
       el('caption').textContent = err.message;
     });
   });
+  el('revision').addEventListener('change', () => {
+    const id = state.game;
+    const base = baseGames.find((game) => game.id === id);
+    if (!base) return;
+    const current = games.find((game) => game.id === id) || base;
+    const placed = Object.assign({}, placeRevision(base, el('revision').value), { rom: current.rom, pixels: current.pixels });
+    games = games.map((game) => (game.id === id ? placed : game));
+    loadGame(id, true).catch((err) => {
+      el('caption').textContent = err.message;
+    });
+  });
   el('dwell').addEventListener('input', () => { state.spinMs = Number(el('dwell').value); });
   el('spin').addEventListener('click', () => {
     if (!sequence().spin) return;
@@ -2661,6 +2673,7 @@ async function loadGame(id, keepSelection) {
   }
   el('palette').parentElement.querySelector('span').textContent = info.paletteLabel || ('Palette slot ' + (info.jerseyRow || 2));
   el('game-title').textContent = info.title;
+  renderRevision(info);
   el('tagline').textContent = info.tagline || (info.pixels
     ? 'Frame index, SPF groups, SPA sequences, and other pictures'
     : 'SPF and SPA names from ' + info.source + '. Pictures need the ROM.');
@@ -2757,10 +2770,10 @@ async function ingestDroppedFiles(fileList) {
     roms.set(id, body);
     let entry = baseGames.find((game) => game.id === id);
     icePalettes.delete(id);
-    if (entry && typeof NhlRevA !== 'undefined') entry = NhlRevA.adjustGameStatus(entry, rom.revADate || '');
-    if (entry && typeof NhlRevB !== 'undefined') entry = NhlRevB.adjustGameStatus(entry, rom.revADate || '');
     if (entry) {
-      entry = Object.assign({}, entry, { rom: true, pixels: true });
+      const revision = NhlRevisions.fromRom(id, body);
+      romRevisions.set(id, revision);
+      entry = Object.assign({}, placeRevision(entry, revision), { rom: true, pixels: true });
       games = games.map((game) => (game.id === id ? entry : game));
     } else {
       loadError = 'Unknown game profile for this ROM (' + id + ').';
@@ -2863,9 +2876,38 @@ function wireDropTarget() {
   });
 }
 
+// The games as the page keeps them: `baseGames` holds each one at its retail layout, `games` placed for a revision.
+function retailGame(game) {
+  if (!game.retail) return game;
+  return Object.assign({}, game, { images: game.retail.images, sheet: game.retail.sheet, banks: game.retail.banks });
+}
+
+function placeRevision(base, revision) {
+  if (!revision || !NhlRevisions.byId(base.id, revision)) return base;
+  return Object.assign({}, NhlRevisions.adjust(base, revision), { revision });
+}
+
+function renderRevision(info) {
+  const revs = (info && info.revisions) || [];
+  const field = el('revision-field');
+  field.hidden = revs.length < 2;
+  if (revs.length < 2) return;
+  const loaded = romRevisions.get(info.id);
+  fillSelect(el('revision'), revs.map((rev) => ({
+    value: rev.id,
+    label: rev.label + (rev.date ? ' · ' + rev.date : '') + (rev.id === loaded ? ' (loaded)' : '')
+  })), info.revision || revs[0].id);
+}
+
 async function boot() {
-  games = await loadGamesList();
-  baseGames = games.slice();
+  const listed = await loadGamesList();
+  baseGames = listed.map(retailGame);
+  // A game with revisions comes placed for the ROM on disk (or Rev 0 with none).
+  games = listed.map((game, i) => {
+    if (!game.revision || !(game.revisions && game.revisions.length)) return game;
+    if (game.rom) romRevisions.set(game.id, game.revision);
+    return Object.assign({}, placeRevision(baseGames[i], game.revision), { rom: game.rom, pixels: game.pixels });
+  });
   fillSelect(el('game'), games.map((game) => ({ value: game.id, label: game.title })), 'nhl92');
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) {

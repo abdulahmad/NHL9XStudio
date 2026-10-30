@@ -34,6 +34,10 @@
           <span>Game</span>
           <select id="game"></select>
         </label>
+        <label class="field" id="revision-field" hidden>
+          <span>Revision</span>
+          <select id="revision" title="Retail revision of this game. Pictures and the sprite sheet are read at that revision's offsets, so open a ROM of the same revision. The one marked loaded is the revision of the ROM that is open."></select>
+        </label>
         <label class="field sprite-only">
           <span>Bank</span>
           <select id="bank"></select>
@@ -161,6 +165,7 @@
   <script src="lib/rom-detect.js"></script>
   <script src="lib/rev-a.js"></script>
   <script src="lib/rev-b.js"></script>
+  <script src="lib/revisions.js"></script>
   <script src="lib/open-asset.js"></script>
   <script src="lib/parse-frames.js"></script>
   <script src="lib/anim.js"></script>
