@@ -2145,6 +2145,7 @@ async function framesDonor(image) {
     const view = bytes && bytes.length >= 12 ? new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength) : null;
     const palOff = view ? view.getUint32(0) : 0;
     if (view && palOff && palOff !== 0xffffffff && palOff + 128 <= bytes.length) return bytes.slice(palOff, palOff + 128);
+    if (from.paletteFrom && from.paletteFrom !== image.paletteFrom) return framesDonor(from);
   }
   return icePaletteBytes();
 }
@@ -2455,7 +2456,7 @@ async function ensureImage(id) {
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       const palOff = view.getUint32(0);
       const mapOff = view.getUint32(4);
-      if (palOff === 0xffffffff || (palOff === 0 && mapOff === 0)) donor = await icePaletteBytes();
+      if (palOff === 0xffffffff || (palOff === 0 && mapOff === 0)) donor = image.paletteFrom ? await framesDonor(image) : await icePaletteBytes();
     }
     if (image.forceIce) donor = await icePaletteBytes();
     parsed = Nhl92Jim.decodeJim(bytes, donor, image.remap ? { remap: image.remap, forceDonor: Boolean(image.forceIce) } : null);
