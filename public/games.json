@@ -5365,27 +5365,6 @@
         ]
       },
       {
-        "id": "scout",
-        "label": "Scouting report",
-        "group": "Screens",
-        "kind": "snes93-screen",
-        "start": 246688,
-        "end": 247476,
-        "mapW": 32,
-        "mapH": 16,
-        "mapSize": 1024,
-        "tiles": 1024,
-        "palFrom": {
-          "start": 27960,
-          "end": 29550,
-          "offset": 144,
-          "count": 64
-        },
-        "fileNames": [
-          "EASNBG.map.sjim (ScoutingReport.asm backdrop)"
-        ]
-      },
-      {
         "id": "framer",
         "label": "Framer",
         "group": "Screens",
