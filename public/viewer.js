@@ -2765,6 +2765,7 @@ async function loadGame(id, keepSelection) {
   }
   el('palette').parentElement.querySelector('span').textContent = info.paletteLabel || ('Palette slot ' + (info.jerseyRow || 2));
   el('game-title').textContent = info.title;
+  renderGameList();
   renderRevision(info);
   el('tagline').textContent = info.tagline || (info.pixels
     ? 'Frame index, SPF groups, SPA sequences, and other pictures'
@@ -2979,6 +2980,13 @@ function placeRevision(base, revision) {
   return Object.assign({}, NhlRevisions.adjust(base, revision), { revision });
 }
 
+// The Game list marks every game that has a ROM open (dropped, or found on the server).
+function renderGameList() {
+  const select = el('game');
+  const selected = state.game || select.value;
+  fillSelect(select, games.map((game) => ({ value: game.id, label: game.title + (game.rom ? ' [loaded]' : '') })), selected);
+}
+
 function renderRevision(info) {
   const revs = (info && info.revisions) || [];
   const field = el('revision-field');
@@ -2987,7 +2995,7 @@ function renderRevision(info) {
   const loaded = romRevisions.get(info.id);
   fillSelect(el('revision'), revs.map((rev) => ({
     value: rev.id,
-    label: rev.label + (rev.date ? ' · ' + rev.date : '') + (rev.id === loaded ? ' (loaded)' : '')
+    label: rev.label + (rev.date ? ' · ' + rev.date : '') + (rev.id === loaded ? ' [loaded]' : '')
   })), info.revision || revs[0].id);
 }
 
@@ -3001,6 +3009,7 @@ async function boot() {
     return Object.assign({}, placeRevision(baseGames[i], game.revision), { rom: game.rom, pixels: game.pixels });
   });
   fillSelect(el('game'), games.map((game) => ({ value: game.id, label: game.title })), 'nhl92');
+  renderGameList();
   const params = new URLSearchParams(location.hash.replace(/^#/, ''));
   if (params.get('game') && games.some((game) => game.id === params.get('game'))) {
     state.game = params.get('game');

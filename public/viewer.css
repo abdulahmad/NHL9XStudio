@@ -157,6 +157,7 @@ a.ghost-btn[hidden], button.ghost-btn[hidden] { display: none !important; }
 .pin-options button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 
 .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.field[hidden] { display: none; }
 .field b { color: var(--text); font-weight: 650; }
 .field.block { width: 100%; }
 .field.slim { min-width: 88px; }
