@@ -1420,10 +1420,41 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     canvas.style.cursor = toolCursor('pan');
     $('jim-zoom-val').textContent = state.zoom + '×';
   }
+  // The lattice lives on its own canvas sized in device pixels, so every line is one crisp
+  // device pixel at any zoom or display scaling (lines baked into the map bitmap get
+  // resampled with it and drop out or double up).
+  function drawGrid() {
+    const g = $('jim-grid-lines');
+    if (!g) return;
+    const cells = state.gridCells;
+    if (!cells || !$('jim-grid').checked || viewBitmap()) {
+      g.style.display = 'none';
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = cells.w * 8 * state.zoom;
+    const cssH = cells.h * 8 * state.zoom;
+    const pw = Math.round(cssW * dpr);
+    const ph = Math.round(cssH * dpr);
+    g.style.display = 'block';
+    g.style.width = cssW + 'px';
+    g.style.height = cssH + 'px';
+    g.width = pw;
+    g.height = ph;
+    const ctx = g.getContext('2d');
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    for (let x = 0; x <= cells.w; x++) {
+      ctx.fillRect(Math.min(pw - 1, Math.round(x * 8 * state.zoom * dpr)), 0, 1, ph);
+    }
+    for (let y = 0; y <= cells.h; y++) {
+      ctx.fillRect(0, Math.min(ph - 1, Math.round(y * 8 * state.zoom * dpr)), pw, 1);
+    }
+  }
   function renderMap() {
     const bm = viewBitmap();
     if (bm) {
       renderBitmapMap(bm);
+      drawGrid();
       return;
     }
     const z = drawZoom();
@@ -1472,13 +1503,8 @@ if (doc.variant === 'portrait') return 'Export writes UnpackPicture 3-byte rows 
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(state.scratch, 0, 0, canvas.width, canvas.height);
-    if ($('jim-grid').checked) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-      ctx.beginPath();
-      for (let x = 0; x <= size.w; x++) { ctx.moveTo(x * 8 * z + 0.5, 0); ctx.lineTo(x * 8 * z + 0.5, canvas.height); }
-      for (let y = 0; y <= size.h; y++) { ctx.moveTo(0, y * 8 * z + 0.5); ctx.lineTo(canvas.width, y * 8 * z + 0.5); }
-      ctx.stroke();
-    }
+    state.gridCells = { w: size.w, h: size.h };
+    drawGrid();
     if ($('jim-seam').checked && !replacing) {
       ctx.strokeStyle = 'rgba(255, 70, 70, 0.9)';
       ctx.beginPath();
@@ -4049,6 +4075,7 @@ remember();
         bar.addEventListener('pointerup', up);
       });
       window.addEventListener('resize', () => { if (state.float) revealImportChrome(); });
+      window.addEventListener('resize', drawGrid);
     })();
     (function wireTilesSplit() {
       const KEY = 'nhl9x-jim-tiles-h';
