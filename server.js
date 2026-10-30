@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { GAMES, gameById, revAdjust, sheetGameBanks } = require('./lib/games');
+const Revisions = require('./lib/revisions');
 const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
@@ -199,6 +200,17 @@ function placedAssets(game, romFile) {
   }
 }
 
+// The revision of the ROM on disk, from its header date ('' for a game with a single retail layout).
+function romRevision(game, romFile) {
+  if (!romFile || !Revisions.list(game.id).length) return '';
+  try {
+    const buf = readRom(romFile, game);
+    return Revisions.fromDate(game.id, buf.length >= 0x120 ? buf.slice(0x118, 0x120).toString('ascii') : '');
+  } catch (err) {
+    return Revisions.list(game.id)[0].id;
+  }
+}
+
 function gameStatus(game) {
   const rom = findRom(game);
   const hasRom = Boolean(rom);
@@ -233,6 +245,12 @@ function gameStatus(game) {
     pixels,
     rom: hasRom,
     sheet: placed.sheet,
+    // images and sheet above are placed for `revision` (the ROM on disk); the retail layout lets the page re-place them.
+    revisions: Revisions.list(game.id),
+    revision: romRevision(game, rom) || (Revisions.list(game.id)[0] || {}).id || '',
+    retail: Revisions.list(game.id).length
+      ? { images: game.images || [], sheet: game.sheet || null, banks: game.kind === 'sheet' ? sheetGameBanks(game.images || []) : game.banks }
+      : null,
     snes: game.snes || null,
     romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))
   };

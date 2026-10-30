@@ -223,6 +223,8 @@
     ],
     "pixels": true,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": null,
     "snes": null,
     "romHint": "Drop ROM or use roms/",
@@ -555,6 +557,24 @@
     ],
     "pixels": false,
     "rom": false,
+    "revisions": [
+      {
+        "id": "0",
+        "label": "Rev 0",
+        "date": "1992.JUL"
+      },
+      {
+        "id": "a",
+        "label": "Rev A",
+        "date": "1992.OCT"
+      },
+      {
+        "id": "b",
+        "label": "Rev B",
+        "date": "1993.FEB"
+      }
+    ],
+    "revision": "0",
     "sheet": {
       "record": "94",
       "boundsAt": 2,
@@ -2565,6 +2585,8 @@
     ],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": {
       "record": "94",
       "boundsAt": 2,
@@ -5270,6 +5292,8 @@
     ],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": {
       "record": "95",
       "boundsAt": 0,
@@ -5693,6 +5717,8 @@
     ],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": null,
     "snes": {
       "format": "93",
@@ -6271,6 +6297,8 @@
     ],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": null,
     "snes": {
       "format": "94",
@@ -6363,6 +6391,8 @@
     "images": [],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": null,
     "snes": null,
     "romHint": "Drop PC95 folder or files",
@@ -6394,6 +6424,8 @@
     "images": [],
     "pixels": false,
     "rom": false,
+    "revisions": [],
+    "revision": "",
     "sheet": null,
     "snes": null,
     "romHint": "Drop PC94 folder or files",
