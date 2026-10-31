@@ -14,6 +14,8 @@ if (quiet) {
     else process.stdout.write('all tests passed (' + quietLog.length + ' log lines hidden)\n');
   });
 }
+const assert = require('assert');
+const fs = require('fs');
 const path = require('path');
 const { SUITES, BROWSER, changedFiles, selectTests } = require('./test/select');
 const say = (s) => process.stdout.write(s + '\n'); // the selection is printed even with -q

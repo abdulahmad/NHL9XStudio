@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.8.1",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis: the animation and frame lists follow the disassembly's renamed tables and the new sprite animation commentary",
+        "NHLPA 93 Genesis and both SNES games: animation names and comments match the latest disassembly (goalie save list names, the hold-frame label)"
+      ]
+    },
+    {
       "version": "1.8.0",
       "date": "2026-10-31",
       "changes": [
