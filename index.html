@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-asset-versions>(function(){var V={"anim/Crowd.anim":"be0ef785a3","anim/Puck.anim":"56df9f431a","anim/Sprites.anim":"41c2b8392f","anim/Zam.anim":"6dd540000c","changelog.json":"aeee35ea51","data/audio/nhl92-68k-driver.json":"8cca4d9eb5","data/audio/nhl92-chip-tests.json":"bb71a44f19","data/audio/nhl92-gm-map.json":"fcce3b2ed4","data/audio/nhl92-patch-analysis.json":"0390b0fb71","data/audio/nhl92-sound-chain.json":"cd8dd816b7","data/audio/nhl92.json":"124c0a1004","data/audio/nhl93s-gm-map.json":"25ba0d721c","data/audio/nhl93s-instrument-analysis.json":"7c5b677131","data/audio/nhl93s-sound.json":"020b1f9441","data/audio/nhl94.json":"aa66f88434","data/audio/nhl94s-gm-map.json":"4b129c4c92","data/audio/nhl94s-sound-analysis.json":"6884defe08","data/audio/nhl94s-sound.json":"056f1f6c1c","data/audio/nhl95-gm-map.json":"17683f2409","data/audio/nhl95-sound-chain.json":"171eb1263b","data/audio/nhl95.json":"d859139cd2","data/audio/nhl9x-dac-analysis.json":"a5789c09fb","data/audio/nhl9x-gm-map.json":"85b50c7b90","data/audio/nhl9x-patch-analysis.json":"60ffbfb058","data/audio/nhl9x-sound-chain.json":"a5855ca283","data/audio/nhlpa93.json":"4e8292c8e0","data/fixtures/README.md":"311d0aeaf7","data/fixtures/nhl92-sound-fixture.json":"e1b8a0714c","data/fixtures/nhl92-sound-slice.bin":"d0ed9bc79b","data/fixtures/nhl92-z80-program.bin":"781163eeb0","data/fixtures/nhl93-sound-fixture.json":"668dac7c2e","data/fixtures/nhl93-sound-slice.bin":"d2bf0412cc","data/fixtures/nhl94-sound-fixture.json":"7b17bdabd8","data/fixtures/nhl94-sound-slice.bin":"2c5043f83a","data/fixtures/nhl95-sound-fixture.json":"e33a3f8d2f","data/fixtures/nhl95-sound-slice.bin":"dc5b637c43","data/frames.asm":"ef7420738a","data/frames93.asm":"87644459c4","data/frames93snes.asm":"a504a7c6d4","data/frames94.asm":"9308a82f2c","data/frames94pc.asm":"2879436815","data/frames94snes.asm":"f63e0ef674","data/frames95.asm":"4be44cf9f8","data/frames95pc.asm":"09e254abde","data/pals/genesis/ALLSTARH.pal":"9794c5d2dd","data/pals/genesis/ALLSTARV.pal":"7e804ada01","data/pals/genesis/Bruinsh.pal":"63f9d53404","data/pals/genesis/Bruinsv.pal":"6a5d10bde0","data/pals/genesis/Campbellh.pal":"7e804ada01","data/pals/genesis/Campbellv.pal":"9794c5d2dd","data/pals/genesis/Kingsh.pal":"9a32c8a410","data/pals/genesis/Kingsv.pal":"b6085d4000","data/pals/genesis/Redwingsh.pal":"d15792d377","data/pals/genesis/Redwingsv.pal":"ccd237202d","data/pals/genesis/Sharksh.pal":"b427f51fc6","data/pals/genesis/Sharksv.pal":"1033ecb093","data/pals/genesis/Walesh.pal":"7e804ada01","data/pals/genesis/Walesv.pal":"9794c5d2dd","data/pals/genesis/blackhawksh.pal":"96db84f48c","data/pals/genesis/blackhawksv.pal":"dcbb952b1f","data/pals/genesis/bluesh.pal":"d33710b025","data/pals/genesis/bluesv.pal":"77b7424bb1","data/pals/genesis/canadiensh.pal":"2ea85bfcc8","data/pals/genesis/canadiensv.pal":"70463c45ce","data/pals/genesis/canucksh.pal":"2959275f60","data/pals/genesis/canucksv.pal":"e42a083cf0","data/pals/genesis/capitalsh.pal":"987cfcc3ad","data/pals/genesis/capitalsv.pal":"5984d4092d","data/pals/genesis/devilsh.pal":"4e4cd60803","data/pals/genesis/devilsv.pal":"44097f7192","data/pals/genesis/flamesh.pal":"b8d2e4f9a6","data/pals/genesis/flamesv.pal":"5400cb4324","data/pals/genesis/flyersh.pal":"6db66ee9c1","data/pals/genesis/flyersv.pal":"dc14f5e5c9","data/pals/genesis/islandersh.pal":"5c041da397","data/pals/genesis/islandersv.pal":"6057b3933e","data/pals/genesis/jetsh.pal":"860f0a92fb","data/pals/genesis/jetsv.pal":"1f6d6b5c10","data/pals/genesis/mapleleafsh.pal":"0053a546ed","data/pals/genesis/mapleleafsv.pal":"bfb778acc3","data/pals/genesis/nordiquesh.pal":"794ce345af","data/pals/genesis/nordiquesv.pal":"819ff9c9dc","data/pals/genesis/northstarsh.pal":"21bda3ad49","data/pals/genesis/northstarsv.pal":"01cd8ecf12","data/pals/genesis/oilersh.pal":"733591f1b8","data/pals/genesis/oilersv.pal":"f4401cc356","data/pals/genesis/penguinsh.pal":"6135251ffd","data/pals/genesis/penguinsv.pal":"78b9c813b7","data/pals/genesis/rangersh.pal":"b7ead56656","data/pals/genesis/rangersv.pal":"8ea9e3e65f","data/pals/genesis/sabresh.pal":"f36b792441","data/pals/genesis/sabresv.pal":"54673d086e","data/pals/genesis/whalersh.pal":"41c395c547","data/pals/genesis/whalersv.pal":"af9ddd3835","data/pals/genesis95/Bruinsh.pal":"122ebf5903","data/pals/genesis95/Bruinsv.pal":"5b47de1d2c","data/pals/genesis95/anah.pal":"55d42712d4","data/pals/genesis95/anav.pal":"03408a2f89","data/pals/genesis95/flamesh.pal":"77d0ea5ec0","data/pals/genesis95/flamesv.pal":"6b43ae25ed","data/pals/genesis95/sabresh.pal":"31c86c498a","data/pals/genesis95/sabresv.pal":"c9a7f5aebd","data/pals/snes/ASEh.snespal":"7e804ada01","data/pals/snes/ASEv.snespal":"9794c5d2dd","data/pals/snes/ASWh.snespal":"7e804ada01","data/pals/snes/ASWv.snespal":"9794c5d2dd","data/pals/snes/BOSh.snespal":"63f9d53404","data/pals/snes/BOSv.snespal":"6a5d10bde0","data/pals/snes/BUFh.snespal":"f36b792441","data/pals/snes/BUFv.snespal":"54673d086e","data/pals/snes/CGYh.snespal":"b8d2e4f9a6","data/pals/snes/CGYv.snespal":"5400cb4324","data/pals/snes/CHIh.snespal":"96db84f48c","data/pals/snes/CHIv.snespal":"dcbb952b1f","data/pals/snes/DETh.snespal":"d15792d377","data/pals/snes/DETv.snespal":"ccd237202d","data/pals/snes/EDMh.snespal":"733591f1b8","data/pals/snes/EDMv.snespal":"f4401cc356","data/pals/snes/HFDh.snespal":"41c395c547","data/pals/snes/HFDv.snespal":"af9ddd3835","data/pals/snes/LAh.snespal":"9a32c8a410","data/pals/snes/LAv.snespal":"b6085d4000","data/pals/snes/LIh.snespal":"5c041da397","data/pals/snes/LIv.snespal":"6057b3933e","data/pals/snes/MINh.snespal":"8e5ce1653b","data/pals/snes/MINv.snespal":"a6551b366e","data/pals/snes/MTLh.snespal":"2ea85bfcc8","data/pals/snes/MTLv.snespal":"70463c45ce","data/pals/snes/NJh.snespal":"10a56c9229","data/pals/snes/NJv.snespal":"79ea0475e0","data/pals/snes/NYh.snespal":"b7ead56656","data/pals/snes/NYv.snespal":"8ea9e3e65f","data/pals/snes/OTWh.snespal":"6db66ee9c1","data/pals/snes/OTWv.snespal":"dc14f5e5c9","data/pals/snes/PHIh.snespal":"6db66ee9c1","data/pals/snes/PHIv.snespal":"dc14f5e5c9","data/pals/snes/PITh.snespal":"6135251ffd","data/pals/snes/PITv.snespal":"78b9c813b7","data/pals/snes/QUEh.snespal":"794ce345af","data/pals/snes/QUEv.snespal":"819ff9c9dc","data/pals/snes/Rink.snespal":"f31d514c7d","data/pals/snes/SJh.snespal":"b427f51fc6","data/pals/snes/SJv.snespal":"1033ecb093","data/pals/snes/STLh.snespal":"d33710b025","data/pals/snes/STLv.snespal":"77b7424bb1","data/pals/snes/TBYh.snespal":"39a62b3d33","data/pals/snes/TBYv.snespal":"24afe2bdfa","data/pals/snes/TORh.snespal":"0053a546ed","data/pals/snes/TORv.snespal":"bfb778acc3","data/pals/snes/VANh.snespal":"2959275f60","data/pals/snes/VANv.snespal":"e42a083cf0","data/pals/snes/WPGh.snespal":"860f0a92fb","data/pals/snes/WPGv.snespal":"1f6d6b5c10","data/pals/snes/WSHh.snespal":"987cfcc3ad","data/pals/snes/WSHv.snespal":"5984d4092d","games.json":"37f6727ef8","jed-pals/createjerseyShadowfixed.act":"e72f7af63d","jed-pals/rinkpal.act":"c0ce7ee1f2","jed-pals/rinkpalShadowfixed.act":"155fafeb97","lib/audio/README.md":"d52c3cd982","lib/audio/data/nhl94-music.json":"84a5bd8903","lib/audio/data/nhl94-streams.json":"2016f81f74","lib/audio/data/nhlpa93-streams.json":"d55a9377ae","lib/audio/generated/ym2612_wasm.wasm":"694282ba9d","lib/audio/licenses-ymfm.txt":"2281404259"};var M={"lib/audio/generated/ym2612-runtime.js":"d3157c772a","lib/audio/generated/ym2612_wasm.js":"cd7cb8d43c"};var R=new URL("./",location.href).href;var f=window.fetch;window.fetch=function(u,o){try{var a=new URL((u&&u.url)||String(u),document.baseURI);if(a.href.indexOf(R)===0&&!a.search){var h=V[a.pathname.slice(new URL(R).pathname.length)];if(h){a.search="?v="+h;if(typeof u==="string"||u instanceof URL)u=a.href;}}}catch(e){}return f.call(this,u,o);};window.assetUrl=function(p){var a=new URL(p,R);if(M[p])a.search="?v="+M[p];return a.href;};})();</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NHL9X Studio</title>
+  <link rel="stylesheet" href="viewer.css?v=9e7e6ec60c">
+</head>
+<body>
+  <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
+    <p>Drop a ROM, PC game folder, or asset file (PPV, QFS, ANIM, JIM, …)</p>
+  </div>
+  <div class="app">
+    <header class="head">
+      <div class="brand">
+        <span class="lamp" id="lamp" aria-hidden="true"></span>
+        <div>
+          <h1 class="product-name">NHL9X Studio</h1>
+          <p id="game-title" class="game-title">NHL 92</p>
+          <p id="tagline">Frame index, SPF groups, and SPA sequences</p>
+        </div>
+      </div>
+      <div class="head-controls">
+        <div class="open-files" role="group" aria-label="Load files">
+          <button type="button" id="about-open" class="ghost-btn" title="Version, what is changed, and how to send feedback">About</button>
+          <a href="jim.html" class="ghost-btn" title="Genesis .map.jim and SNES .map.sjim editor">Image Editor</a>
+          <a href="jed.html" class="ghost-btn" title="JED-style jersey palette editor for NHL 94 PC and NHL 95 PC (HOMEPALS / AWAYPALS)">Jerseys</a>
+          <button type="button" id="open-rom" class="ghost-btn" title="Load a Genesis or SNES ROM, or a single ANIM/JIM/PPV file">Open file…</button>
+          <button type="button" id="open-folder" class="ghost-btn" title="Load a folder of ROMs, or an NHL 95/94 PC install folder (PPV, QFS, QPP)">Open folder…</button>
+          <input type="file" id="file-open" class="sr" hidden accept=".bin,.md,.gen,.sfc,.smc,.anim,.jim,.map.jim,.sjim,.map.sjim,.ppv,.qfs,.qpp,.iso,.img">
+          <input type="file" id="folder-open" class="sr" hidden multiple webkitdirectory>
+        </div>
+        <label class="field">
+          <span>Game</span>
+          <select id="game"></select>
+        </label>
+        <label class="field" id="revision-field" hidden>
+          <span>Revision</span>
+          <select id="revision" title="Retail revision of this game. Pictures and the sprite sheet are read at that revision's offsets, so open a ROM of the same revision. The one marked loaded is the revision of the ROM that is open."></select>
+        </label>
+        <label class="field sprite-only">
+          <span>Bank</span>
+          <select id="bank"></select>
+        </label>
+        <div class="pin sprite-only">
+          <span>Pin</span>
+          <div class="pin-options" role="group" aria-label="Pin point">
+            <button type="button" id="pin-origin" aria-pressed="true" title="Player position. On skaters this is at the skates.">0, 0</button>
+            <button type="button" id="pin-hotspot" aria-pressed="false" title="Where the puck sits when the player has possession.">Hotspot</button>
+          </div>
+        </div>
+        <label class="field sprite-only">
+          <span>Scale <b id="scale-readout">6×</b></span>
+          <input id="scale" type="range" min="1" max="30" value="8">
+        </label>
+      </div>
+    </header>
+
+    <aside class="list-panel">
+      <div class="modes" role="tablist" aria-label="Browse by">
+        <button type="button" id="mode-frame" role="tab" aria-selected="false">Frame</button>
+        <button type="button" id="mode-spf" role="tab" aria-selected="false">SPF</button>
+        <button type="button" id="mode-spa" role="tab" aria-selected="true">SPA</button>
+        <button type="button" id="mode-image" role="tab" aria-selected="false">Images</button>
+        <button type="button" id="mode-audio" role="tab" aria-selected="false" hidden>Audio</button>
+        <button type="button" id="mode-soundtest" role="tab" aria-selected="false" hidden>Audio</button>
+      </div>
+      <div class="order sprite-only">
+        <span>Order</span>
+        <div class="pin-options" role="group" aria-label="List order">
+          <button type="button" id="sort-group" aria-pressed="true">Groups</button>
+          <button type="button" id="sort-file" aria-pressed="false" title="The order of the SPF and SPA symbols in frames.asm">File</button>
+        </div>
+      </div>
+      <label class="search">
+        <span class="sr">Search</span>
+        <input id="search" type="search" placeholder="Search names" autocomplete="off">
+      </label>
+      <div id="catalog" class="catalog" role="listbox" aria-label="Catalog"></div>
+      <p class="keys" id="keys-hint">← → step · Shift or PgUp/PgDn jump · Q E face · Space play · S spin</p>
+    </aside>
+
+    <main class="stage-panel">
+      <div class="pane-toggles">
+        <button type="button" id="toggle-list" aria-expanded="false">List</button>
+        <button type="button" id="toggle-meta" aria-expanded="false">Details</button>
+      </div>
+      <div class="stage-wrap">
+        <canvas id="stage" aria-label="Sprite stage"></canvas>
+        <div id="sound-panel" class="sound-panel" hidden></div>
+        <div class="compass" id="compass" aria-label="Facing">
+          <button type="button" data-dir="7" title="Northwest">↖</button>
+          <button type="button" data-dir="0" title="North">↑</button>
+          <button type="button" data-dir="1" title="Northeast">↗</button>
+          <button type="button" data-dir="6" title="West">←</button>
+          <button type="button" id="spin" class="spin" title="Spin through facings">Spin</button>
+          <button type="button" data-dir="2" title="East">→</button>
+          <button type="button" data-dir="5" title="Southwest">↙</button>
+          <button type="button" data-dir="4" title="South">↓</button>
+          <button type="button" data-dir="3" title="Southeast">↘</button>
+        </div>
+        <p id="caption" class="caption"></p>
+      </div>
+      <div class="transport">
+        <button type="button" id="prev" title="Previous step. Shift-click or Page Up jumps farther.">Prev</button>
+        <button type="button" id="play" class="play" title="Play or pause">Play</button>
+        <button type="button" id="next" title="Next step. Shift-click or Page Down jumps farther.">Next</button>
+        <label class="check"><input id="loop" type="checkbox"> Loop</label>
+        <label class="field slim">
+          <span>Speed</span>
+          <select id="speed">
+            <option value="0.5">½×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
+        <label class="check" title="Matches updateanim: the expiring vblank still shows this picture, and a new picture cannot appear until 4 vblanks after the last change."><input id="min-gap" type="checkbox" checked> Game timing</label>
+        <label class="check" id="transparent-field" title="Screens start solid: pal 1+ color 0 is often the same ice as the VDP backdrop. Check this to punch those VDP holes (the studio stage shows through). Sprites still skip color 0 on export."><input id="transparent" type="checkbox"> Transparency</label>
+        <button type="button" id="edit-image" title="Open this picture in the Image Editor">Edit image</button>
+        <button type="button" id="export-frame" title="Save the shown frame as a PNG at 1:1 size in the selected palette, with no marks. Sprites skip color 0. Pictures follow the Transparency checkbox.">Export frame (PNG)</button>
+        <button type="button" id="export-all" title="Save every frame in this file as PNGs (1:1, selected palette, no marks) in one ZIP. Sprites skip color 0. Pictures follow the Transparency checkbox.">Export all frames (ZIP)</button>
+        <label class="field grow" id="frame-field">
+          <span>Step <b id="frame-readout">1</b></span>
+          <input id="frame" type="range" min="1" max="1" value="1" title="Scrub through every step in the current sequence">
+        </label>
+        <label class="field slim" id="dwell-field">
+          <span>Spin dwell</span>
+          <input id="dwell" type="range" min="250" max="1800" step="50" value="700">
+        </label>
+      </div>
+      <div id="filmstrip" class="filmstrip" aria-label="Frames in this sequence"></div>
+    </main>
+
+    <aside class="meta-panel">
+      <section>
+        <h2>Jersey</h2>
+        <label class="field block">
+          <span>Palette slot 2</span>
+          <select id="palette"></select>
+        </label>
+        <div id="swatches" class="swatches"></div>
+      </section>
+      <section>
+        <h2 id="detail-title">Frame</h2>
+        <dl id="detail" class="detail"></dl>
+      </section>
+      <section>
+        <h2>Sprites in frame</h2>
+        <div id="sprites" class="sprite-table"></div>
+      </section>
+      <section class="about sprite-only">
+        <h2>How the numbers work</h2>
+        <p><b>Frame</b> is the picture number: 1-based in the Genesis and SNES ANIM files, 0-based on PC like the game's own index. The index is always 0-based.</p>
+        <p><b>SPF</b> names a run of those pictures in <span class="mono">frames.asm</span>. When the run is eight facings side by side, the compass steps through them.</p>
+        <p><b>SPA</b> is an animation. Each of the eight facings has its own list of frame and vblank pairs. A negative time is the last step. The picture stays up for one extra vblank, the one that expires the counter, and never changes faster than every 4 vblanks. Bit 0 of the flags word loops it. <b>Groups</b> follows the sidebar categories. <b>File</b> is the order in frames.asm. Switching games stays on an SPA or SPF of the same name when the new game has one.</p>
+        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code> or <code>pc95/</code>.</p>
+        <p>Facing 0 is north on a vertical rink, then clockwise. A horizontal rink subtracts 2 from the facing before this lookup.</p>
+        <p>The dashed box is the frame's canvas. <b>Pin</b> chooses the point held in the middle of the stage. <b>0, 0</b> is the player's position, at the skates, and <b>Hotspot</b> is where the puck sits. The amber mark is 0, 0. The red cross is the hotspot.</p>
+      </section>
+    </aside>
+    <button type="button" id="scrim" class="scrim" aria-label="Close panels"></button>
+  </div>
+  <script src="button-icons.js?v=60d25890ac"></script>
+  <script src="lib/rom-detect.js?v=cf54305af6"></script>
+  <script src="lib/rev-a.js?v=66f421ab8f"></script>
+  <script src="lib/rev-b.js?v=dd10eee82f"></script>
+  <script src="lib/revisions.js?v=b4a8c583b2"></script>
+  <script src="lib/open-asset.js?v=796385a7eb"></script>
+  <script src="lib/parse-frames.js?v=e30fb0ad74"></script>
+  <script src="lib/anim.js?v=02ab5bc959"></script>
+  <script src="lib/playback.js?v=6ab2c947ff"></script>
+  <script src="lib/sheet.js?v=e87530d698"></script>
+  <script src="lib/labels.js?v=ed33aafbaf"></script>
+  <script src="lib/jim-compress.js?v=b0b7744c15"></script>
+  <script src="lib/jim.js?v=bc0fd92de3"></script>
+  <script src="lib/sjim.js?v=ae46fd0c13"></script>
+  <script src="lib/snespak.js?v=3e7aab94d0"></script>
+  <script src="lib/snes.js?v=95d6ccf89e"></script>
+  <script src="lib/pc95.js?v=3440089fea"></script>
+  <script src="lib/zip-store.js?v=fed55de4ed"></script>
+  <script src="lib/sscr.js?v=7dbef81de7"></script>
+  <script src="lib/audio/genesis-constants.js?v=3ddca2e459"></script>
+  <script src="lib/audio/genesis-92-sequence.js?v=ce46e1e791"></script>
+  <script src="lib/audio/genesis-events.js?v=a29b0a3b62"></script>
+  <script src="lib/audio/genesis.js?v=26c83290d8"></script>
+  <script src="lib/audio/z80-cpu-core.js?v=91b2987265"></script>
+  <script src="lib/audio/ym2612.js?v=ac5eb83a40"></script>
+  <script src="lib/audio/nhl92-z80.js?v=894771f7bd"></script>
+  <script src="lib/audio/nhl92-sound-fixture.js?v=4b0fc3a05d"></script>
+  <script src="lib/audio/nhl92-sound-data.js?v=e76ca130f8"></script>
+  <script src="lib/audio/categories.js?v=418cbf3f62"></script>
+  <script src="lib/audio/nhl92-sfx-names.js?v=974a5cb53d"></script>
+  <script src="lib/audio/m68k-cpu.js?v=0b49daf493"></script>
+  <script src="lib/audio/nhl92-68k-harness.js?v=9cccc79cb2"></script>
+  <script src="lib/audio/nhl9x-68k-harness.js?v=9967baae39"></script>
+  <script src="lib/audio/nhl93-68k-harness.js?v=c06bce172a"></script>
+  <script src="lib/audio/nhl94-68k-harness.js?v=2fe25eaa30"></script>
+  <script src="lib/audio/nhl95-68k-harness.js?v=bff2216cda"></script>
+  <script src="lib/audio/nhl9x-song.js?v=b4d8c5c05f"></script>
+  <script src="lib/audio/nhl92-68k-run.js?v=5b74d48b7d"></script>
+  <script src="lib/audio/nhl92-z80-harness.js?v=0a5f7c99be"></script>
+  <script src="lib/audio/nhl92-z80-audio.js?v=2e0e509d76"></script>
+  <script src="lib/audio/nhl92-pcm.js?v=97447d2f64"></script>
+  <script src="lib/audio/nhl93-names.js?v=5d9a7fc6ca"></script>
+  <script src="lib/audio/nhl93-crowd.js?v=3a50b244c0"></script>
+  <script src="lib/audio/nhl92-sound-chain.js?v=888ecf5217"></script>
+  <script src="lib/audio/sn76489.js?v=254d796fbe"></script>
+  <script src="lib/audio/spc700-cpu.js?v=9180df92e6"></script>
+  <script src="lib/audio/snes-dsp.js?v=5750ff2586"></script>
+  <script src="lib/audio/snes-spc.js?v=575f1b5ff7"></script>
+  <script src="lib/audio/nhl94s-sound-data.js?v=1e5b775d41"></script>
+  <script src="lib/audio/nhl94s-player.js?v=16d6c2b75d"></script>
+  <script src="lib/audio/nhl93s-sound-data.js?v=65d3a0187c"></script>
+  <script src="lib/audio/nhl93s-player.js?v=0fe29331a3"></script>
+  <script src="lib/audio/chip-resampler.js?v=35e6bcc45b"></script>
+  <script src="lib/audio/ym-note-tracker.js?v=5c48052974"></script>
+  <script src="lib/audio/nhl92-gm-map.js?v=2f6d24c190"></script>
+  <script src="lib/audio/gm-reference.js?v=1e440ea0bc"></script>
+  <script src="lib/audio/wav.js?v=9d21594a3d"></script>
+  <script src="lib/audio/smf.js?v=b684bbde8f"></script>
+  <script src="lib/audio/snes-gm-map.js?v=934ff4e0ef"></script>
+  <script src="lib/audio/nhl94s-midi.js?v=f7d96b0b01"></script>
+  <script src="lib/audio/nhl93s-midi.js?v=b97cc57cc5"></script>
+  <script src="lib/audio/snes-sfx-midi.js?v=a208632a53"></script>
+  <script src="lib/audio/patch-edits.js?v=d48c8136d8"></script>
+  <script src="lib/audio/snes-sound-edits.js?v=77f99033d3"></script>
+  <script src="lib/audio/nhl92-song.js?v=1cb5512f89"></script>
+  <script src="lib/audio/nhl92-song-gm.js?v=b580747111"></script>
+  <script src="lib/audio/nhl95-seq.js?v=e472a03d4f"></script>
+  <script src="lib/audio/nhl95-stream.js?v=ee00c0dff6"></script>
+  <script src="lib/audio/nhl9x-stream.js?v=307c482304"></script>
+  <script src="lib/audio/nhl9x-gm-audition.js?v=b273110b08"></script>
+  <script src="sound-roll.js?v=673ba2f2f0"></script>
+  <script src="sound-roll-snes.js?v=c8841a0724"></script>
+  <script src="sound-test-snes.js?v=f5e5edc0b0"></script>
+  <script src="sound-test-snes93.js?v=b36ab5ee64"></script>
+  <script src="sound-tools.js?v=36528adf53"></script>
+  <script src="sound-editor-extras.js?v=b9dfc9bb6c"></script>
+  <script src="sound-patch-editor.js?v=44c0845315"></script>
+  <script src="sound-snes-inst-editor.js?v=f3896ce841"></script>
+  <script src="sound-tools-nx.js?v=245c4b2efc"></script>
+  <script src="sound-tools-snes.js?v=8bb5030117"></script>
+  <script src="sound-instruments.js?v=2f15faebf4"></script>
+  <script src="sound-test-view.js?v=4e4daf60bc"></script>
+  <script src="audio-engine.js?v=a31909ccda"></script>
+  <script src="viewer.js?v=c9a1de062a"></script>
+  <script src="about.js?v=f2e0d3a489"></script>
+</body>
+</html>

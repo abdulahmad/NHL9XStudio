@@ -1,0 +1,180 @@
+{
+  "releases": [
+    {
+      "version": "1.8.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis Audio: songs $30-$77 now use the NHL94.com forum's Music # names (NHL94_music_001 to _072) with each track's description, such as Go Team Go [E-flat] (BOS)"
+      ]
+    },
+    {
+      "version": "1.7.1",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis: the player card pictures are named .map.jim, which is the format they are in"
+      ]
+    },
+    {
+      "version": "1.7.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Open folder now also loads a folder of ROMs: each supported game and revision in it is detected and kept, and the Game list switches between them"
+      ]
+    },
+    {
+      "version": "1.6.2",
+      "date": "2026-10-30",
+      "changes": [
+        "NHL 94 Genesis: EASN is now named EASports in the Images list"
+      ]
+    },
+    {
+      "version": "1.6.1",
+      "date": "2026-10-30",
+      "changes": [
+        "The Revision picker is now really hidden on games with one retail layout (it stayed on screen after leaving NHLPA 93 or NHL 92)",
+        "Games and revisions with a ROM open are marked [loaded] in the Game and Revision lists"
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: every group heading in the SPF, SPA, Images and Audio lists can now be collapsed and expanded",
+        "Images: player cards are split into their own Player cards group, which starts collapsed in every game"
+      ]
+    },
+    {
+      "version": "1.5.3",
+      "date": "2026-10-30",
+      "changes": [
+        "NHLPA 93 and NHL 94 Genesis: pictures renamed to match what they show (EASportsBG, EASportsSplash, IceRinkHor, NHLLogo, NHLPALogo, MarkLesser, Hot, Cold, StanleyCup)",
+        "NHL 94 Genesis: the two New York teams are now New York I and New York R"
+      ]
+    },
+    {
+      "version": "1.5.2",
+      "date": "2026-10-30",
+      "changes": [
+        "Images: sprite banks (such as NHL 94 Face Off sprites) now list all four palette lines and which ones their frames use, like the pictures do"
+      ]
+    },
+    {
+      "version": "1.5.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: asset names in the Images list no longer get an icon in front of them"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: the top bar buttons, the Frame/SPF/SPA/Images/Audio tabs and the playback controls are now square icon-over-label buttons like the Image Editor, and Loop, Game timing and Transparency are toggle buttons"
+      ]
+    },
+    {
+      "version": "1.4.2",
+      "date": "2026-10-30",
+      "changes": [
+        "NHLPA 93 Genesis: Title 2, Title 3, Title Logo and Game Setup now take their colors from the title and setup pictures they load with, instead of the ice palette"
+      ]
+    },
+    {
+      "version": "1.4.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Images: the palette panel now shows all four palette lines stored with the picture, and marks which lines its tiles actually use (the old swatch showed line 2, which is often an unused placeholder, so it looked all magenta)"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-10-30",
+      "changes": [
+        "A Revision picker next to Game lists the retail revisions of a game. NHLPA 93 offers Rev 0, Rev A and Rev B (offsets move); picking one re-places the pictures and sprite sheet at that revision's offsets, and the revision of an open ROM is marked loaded",
+        "NHL 92 offers Retail and Rev A (the pictures sit at the same offsets; an open ROM is told apart by the credit line)",
+        "Games with a single retail layout hide the picker"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Every button across Studio, the Image Editor, Jerseys and the chip lab now has an icon in the Image Editor style, plus a tooltip on any button that did not have one"
+      ]
+    },
+    {
+      "version": "1.2.3",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor: a color swatch sits left of the R/G/B sliders, 8-bit RGB sits next to Hex, and the Pal/index/CRAM header line is gone"
+      ]
+    },
+    {
+      "version": "1.2.2",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor paint copies a unique tile when that 8×8 is shared (including H/V-flipped squares), so painting one cell does not draw into the others",
+        "Paint writes the selected color index and leaves the cell’s palette; it does not recolor the whole 8×8"
+      ]
+    },
+    {
+      "version": "1.2.1",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor Import has a Color mode: Genesis 3-bit (GEN) or SNES 5-bit (SNES)",
+        "3-bit (GEN) / 5-bit (SNES) color reduction only: Step A only, palettes off, export PNG",
+        "Reduce count only (for export): keeps 8-bit color, palettes off, export PNG",
+        "Export asks to apply a floating image first, or cancel and leave Export closed",
+        "The centre pane grows so Apply and import previews stay on screen",
+        "Floating import: Pal moves clicked or dragged tiles onto the selected palette and rebuilds that pal from all tiles on it; Optimize (next to Pal) groups matching tiles to free ink slots",
+        "Lock on a palette does not rebuild a floating import; Lock seams keeps Pal assignments when color options change",
+        "Image Editor starts with palettes at 0,0,0; type #RRGGBB (Genesis snaps to 3-bit × 36); pals with no tiles go back to black",
+        "5-bit quantization is available everywhere 3-bit is"
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor tools have icons, labels, and a mouse cursor that matches the selected tool",
+        "Erase cell writes a blank tile filled with palette color 0",
+        "Paste and Import into current Image float with a dotted outline until you Apply",
+        "Export is a format picker",
+        "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically",
+        "Import .pal and .snespal palettes and choose which file lines fill which editor pals",
+        "Select is the default Image Editor tool; toolbar order is Pan, Select, Pick, Place, Paint, Erase, then Undo/Redo, then Grid/Trans/Seams icons that highlight when on",
+        "Zoom sits next to 270° and goes to 32×; Resize and Kind stay compact",
+        "The zoomed tile preview only picks a color (it no longer paints)",
+        "Cell inspector: tile index beside palette, H-flip beside V-flip, Word next to Cell, View under Priority",
+        "Import Tiles appends to the tile set and leaves the map picture alone",
+        "Export greys out with a reason next to the buttons instead of an error popup; picking SNES .map.sjim or NHL 94 SNES .zip from a Genesis map converts when tiles fit (1024)",
+        "Packed is only offered when the format has both packed and unpacked; the 94S zip line lists the files inside",
+        "Export .ACT is a dialog (one palette or all combined), not a radio on the format picker",
+        "← NHL9X Studio | page title sits on one line in the Image Editor, Jerseys, and Chip lab headers"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor for Genesis .map.jim, SNES .map.sjim, and NHL 94 SNES screens",
+        "Import a picture onto the map (overwrite cells, add tiles, or new image) with ACT-locked palettes",
+        "Player portrait encode; packed export matches 93G/94G DecompressBytecode",
+        "Title screens show solid ice by default; Transparency still punches VDP holes if you check it",
+        "Chip Lab is hidden from the header (the page is still there)"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-10-20",
+      "changes": [
+        "NHL 94 SNES pictures: face-off, team blocks, EASN, refs, fonts, sprites",
+        "93S songs by cue, named sound effects, play button",
+        "Audio and image lists aligned across 92, 93G and 93S",
+        "NHLPA 93 SNES rinks open on a team palette",
+        "Jersey editor: scoreboard crest import/export"
+      ]
+    }
+  ]
+}
