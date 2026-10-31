@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.8.2",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis Audio: team song titles are shorter, such as $30 · NHL94_music_001, with the song name and usage (Go Team Go [E-flat] (BOS)) on the line below"
+      ]
+    },
+    {
       "version": "1.8.1",
       "date": "2026-10-31",
       "changes": [

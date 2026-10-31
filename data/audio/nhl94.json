@@ -602,7 +602,7 @@
     },
     {
       "id": "snd-30",
-      "label": "NHL94_music_001 · Go Team Go [E-flat] (BOS)",
+      "label": "NHL94_music_001",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 48,
@@ -611,11 +611,12 @@
       "playable": true,
       "blurb": "song $30 NHL94_music_001: Go Team Go [E-flat] (BOS)",
       "symbol": "fmtune_id_30_cmdstream",
-      "musicName": "NHL94_music_001"
+      "musicName": "NHL94_music_001",
+      "musicDesc": "Go Team Go [E-flat] (BOS)"
     },
     {
       "id": "snd-31",
-      "label": "NHL94_music_002 · Here We Go [E-flat] (BOS)",
+      "label": "NHL94_music_002",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 49,
@@ -624,11 +625,12 @@
       "playable": true,
       "blurb": "song $31 NHL94_music_002: Here We Go [E-flat] (BOS)",
       "symbol": "fmtune_id_31_cmdstream",
-      "musicName": "NHL94_music_002"
+      "musicName": "NHL94_music_002",
+      "musicDesc": "Here We Go [E-flat] (BOS)"
     },
     {
       "id": "snd-32",
-      "label": "NHL94_music_003 · Charge [E-flat] (BOS)",
+      "label": "NHL94_music_003",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 50,
@@ -637,11 +639,12 @@
       "playable": true,
       "blurb": "song $32 NHL94_music_003: Charge [E-flat] (BOS)",
       "symbol": "fmtune_id_32_cmdstream",
-      "musicName": "NHL94_music_003"
+      "musicName": "NHL94_music_003",
+      "musicDesc": "Charge [E-flat] (BOS)"
     },
     {
       "id": "snd-33",
-      "label": "NHL94_music_004 · Rally Time [F] (BUF)",
+      "label": "NHL94_music_004",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 51,
@@ -650,11 +653,12 @@
       "playable": true,
       "blurb": "song $33 NHL94_music_004: Rally Time [F] (BUF)",
       "symbol": "fmtune_id_33_cmdstream",
-      "musicName": "NHL94_music_004"
+      "musicName": "NHL94_music_004",
+      "musicDesc": "Rally Time [F] (BUF)"
     },
     {
       "id": "snd-34",
-      "label": "NHL94_music_005 · Sabre Dance (BUF)",
+      "label": "NHL94_music_005",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 52,
@@ -663,11 +667,12 @@
       "playable": true,
       "blurb": "song $34 NHL94_music_005: Sabre Dance (BUF)",
       "symbol": "fmtune_id_34_cmdstream",
-      "musicName": "NHL94_music_005"
+      "musicName": "NHL94_music_005",
+      "musicDesc": "Sabre Dance (BUF)"
     },
     {
       "id": "snd-35",
-      "label": "NHL94_music_006 · O'Malley's Steps [G] (CGY)",
+      "label": "NHL94_music_006",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 53,
@@ -676,11 +681,12 @@
       "playable": true,
       "blurb": "song $35 NHL94_music_006: O'Malley's Steps [G] (CGY)",
       "symbol": "fmtune_id_35_cmdstream",
-      "musicName": "NHL94_music_006"
+      "musicName": "NHL94_music_006",
+      "musicDesc": "O'Malley's Steps [G] (CGY)"
     },
     {
       "id": "snd-36",
-      "label": "NHL94_music_007 · Kalinka [Em] (CGY)",
+      "label": "NHL94_music_007",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 54,
@@ -689,11 +695,12 @@
       "playable": true,
       "blurb": "song $36 NHL94_music_007: Kalinka [Em] (CGY)",
       "symbol": "fmtune_id_36_cmdstream",
-      "musicName": "NHL94_music_007"
+      "musicName": "NHL94_music_007",
+      "musicDesc": "Kalinka [Em] (CGY)"
     },
     {
       "id": "snd-37",
-      "label": "NHL94_music_008 · You Say It's Your Birthday {Claps} (CGY)",
+      "label": "NHL94_music_008",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 55,
@@ -702,11 +709,12 @@
       "playable": true,
       "blurb": "song $37 NHL94_music_008: You Say It's Your Birthday {Claps} (CGY)",
       "symbol": "fmtune_id_37_cmdstream",
-      "musicName": "NHL94_music_008"
+      "musicName": "NHL94_music_008",
+      "musicDesc": "You Say It's Your Birthday {Claps} (CGY)"
     },
     {
       "id": "snd-38",
-      "label": "NHL94_music_009 · Here Come the Hawks (CHI)",
+      "label": "NHL94_music_009",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 56,
@@ -715,11 +723,12 @@
       "playable": true,
       "blurb": "song $38 NHL94_music_009: Here Come the Hawks (CHI)",
       "symbol": "fmtune_id_38_cmdstream",
-      "musicName": "NHL94_music_009"
+      "musicName": "NHL94_music_009",
+      "musicDesc": "Here Come the Hawks (CHI)"
     },
     {
       "id": "snd-39",
-      "label": "NHL94_music_010 · Gypsy Spain [G, rising] (CHI)",
+      "label": "NHL94_music_010",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 57,
@@ -728,11 +737,12 @@
       "playable": true,
       "blurb": "song $39 NHL94_music_010: Gypsy Spain [G, rising] (CHI)",
       "symbol": "fmtune_id_39_cmdstream",
-      "musicName": "NHL94_music_010"
+      "musicName": "NHL94_music_010",
+      "musicDesc": "Gypsy Spain [G, rising] (CHI)"
     },
     {
       "id": "snd-3a",
-      "label": "NHL94_music_011 · Las Chiapanecas {Mexican Hat Dance} [C] (CHI)",
+      "label": "NHL94_music_011",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 58,
@@ -741,11 +751,12 @@
       "playable": true,
       "blurb": "song $3A NHL94_music_011: Las Chiapanecas {Mexican Hat Dance} [C] (CHI)",
       "symbol": "fmtune_id_3A_cmdstream",
-      "musicName": "NHL94_music_011"
+      "musicName": "NHL94_music_011",
+      "musicDesc": "Las Chiapanecas {Mexican Hat Dance} [C] (CHI)"
     },
     {
       "id": "snd-3b",
-      "label": "NHL94_music_012 · La Raspa [C] (DET)",
+      "label": "NHL94_music_012",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 59,
@@ -754,11 +765,12 @@
       "playable": true,
       "blurb": "song $3B NHL94_music_012: La Raspa [C] (DET)",
       "symbol": "fmtune_id_3B_cmdstream",
-      "musicName": "NHL94_music_012"
+      "musicName": "NHL94_music_012",
+      "musicDesc": "La Raspa [C] (DET)"
     },
     {
       "id": "snd-3c",
-      "label": "NHL94_music_013 · O'Malleys Steps / Charge [C] (DET)",
+      "label": "NHL94_music_013",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 60,
@@ -767,11 +779,12 @@
       "playable": true,
       "blurb": "song $3C NHL94_music_013: O'Malleys Steps / Charge [C] (DET)",
       "symbol": "fmtune_id_3C_cmdstream",
-      "musicName": "NHL94_music_013"
+      "musicName": "NHL94_music_013",
+      "musicDesc": "O'Malleys Steps / Charge [C] (DET)"
     },
     {
       "id": "snd-3d",
-      "label": "NHL94_music_014 · Las Chiapanecas {Mexican Hat Dance} [F] (DET)",
+      "label": "NHL94_music_014",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 61,
@@ -780,11 +793,12 @@
       "playable": true,
       "blurb": "song $3D NHL94_music_014: Las Chiapanecas {Mexican Hat Dance} [F] (DET)",
       "symbol": "fmtune_id_3D_cmdstream",
-      "musicName": "NHL94_music_014"
+      "musicName": "NHL94_music_014",
+      "musicDesc": "Las Chiapanecas {Mexican Hat Dance} [F] (DET)"
     },
     {
       "id": "snd-3e",
-      "label": "NHL94_music_015 · O'Malleys Steps [F] (EDM)",
+      "label": "NHL94_music_015",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 62,
@@ -793,11 +807,12 @@
       "playable": true,
       "blurb": "song $3E NHL94_music_015: O'Malleys Steps [F] (EDM)",
       "symbol": "fmtune_id_3E_cmdstream",
-      "musicName": "NHL94_music_015"
+      "musicName": "NHL94_music_015",
+      "musicDesc": "O'Malleys Steps [F] (EDM)"
     },
     {
       "id": "snd-3f",
-      "label": "NHL94_music_016 · Here We Go [C] (EDM)",
+      "label": "NHL94_music_016",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 63,
@@ -806,11 +821,12 @@
       "playable": true,
       "blurb": "song $3F NHL94_music_016: Here We Go [C] (EDM)",
       "symbol": "fmtune_id_3F_cmdstream",
-      "musicName": "NHL94_music_016"
+      "musicName": "NHL94_music_016",
+      "musicDesc": "Here We Go [C] (EDM)"
     },
     {
       "id": "snd-40",
-      "label": "NHL94_music_017 · Brass Bonanza (HFD)",
+      "label": "NHL94_music_017",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 64,
@@ -819,11 +835,12 @@
       "playable": true,
       "blurb": "song $40 NHL94_music_017: Brass Bonanza (HFD)",
       "symbol": "fmtune_id_40_cmdstream",
-      "musicName": "NHL94_music_017"
+      "musicName": "NHL94_music_017",
+      "musicDesc": "Brass Bonanza (HFD)"
     },
     {
       "id": "snd-41",
-      "label": "NHL94_music_018 · Let's Go [C] (HFD)",
+      "label": "NHL94_music_018",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 65,
@@ -832,11 +849,12 @@
       "playable": true,
       "blurb": "song $41 NHL94_music_018: Let's Go [C] (HFD)",
       "symbol": "fmtune_id_41_cmdstream",
-      "musicName": "NHL94_music_018"
+      "musicName": "NHL94_music_018",
+      "musicDesc": "Let's Go [C] (HFD)"
     },
     {
       "id": "snd-42",
-      "label": "NHL94_music_019 · William Tell Overture (HFD)",
+      "label": "NHL94_music_019",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 66,
@@ -845,11 +863,12 @@
       "playable": true,
       "blurb": "song $42 NHL94_music_019: William Tell Overture (HFD)",
       "symbol": "fmtune_id_42_cmdstream",
-      "musicName": "NHL94_music_019"
+      "musicName": "NHL94_music_019",
+      "musicDesc": "William Tell Overture (HFD)"
     },
     {
       "id": "snd-43",
-      "label": "NHL94_music_020 · O'Malley's Steps [C] (LA)",
+      "label": "NHL94_music_020",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 67,
@@ -858,11 +877,12 @@
       "playable": true,
       "blurb": "song $43 NHL94_music_020: O'Malley's Steps [C] (LA)",
       "symbol": "fmtune_id_43_cmdstream",
-      "musicName": "NHL94_music_020"
+      "musicName": "NHL94_music_020",
+      "musicDesc": "O'Malley's Steps [C] (LA)"
     },
     {
       "id": "snd-44",
-      "label": "NHL94_music_021 · You Say It's Your Birthday (LA)",
+      "label": "NHL94_music_021",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 68,
@@ -871,11 +891,12 @@
       "playable": true,
       "blurb": "song $44 NHL94_music_021: You Say It's Your Birthday (LA)",
       "symbol": "fmtune_id_44_cmdstream",
-      "musicName": "NHL94_music_021"
+      "musicName": "NHL94_music_021",
+      "musicDesc": "You Say It's Your Birthday (LA)"
     },
     {
       "id": "snd-45",
-      "label": "NHL94_music_022 · Las Chiapanecas {Mexican Hat Dance} [G] (LA)",
+      "label": "NHL94_music_022",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 69,
@@ -884,11 +905,12 @@
       "playable": true,
       "blurb": "song $45 NHL94_music_022: Las Chiapanecas {Mexican Hat Dance} [G] (LA)",
       "symbol": "fmtune_id_45_cmdstream",
-      "musicName": "NHL94_music_022"
+      "musicName": "NHL94_music_022",
+      "musicDesc": "Las Chiapanecas {Mexican Hat Dance} [G] (LA)"
     },
     {
       "id": "snd-46",
-      "label": "NHL94_music_023 · Go Team Go [C] (LA)",
+      "label": "NHL94_music_023",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 70,
@@ -897,11 +919,12 @@
       "playable": true,
       "blurb": "song $46 NHL94_music_023: Go Team Go [C] (LA)",
       "symbol": "fmtune_id_46_cmdstream",
-      "musicName": "NHL94_music_023"
+      "musicName": "NHL94_music_023",
+      "musicDesc": "Go Team Go [C] (LA)"
     },
     {
       "id": "snd-47",
-      "label": "NHL94_music_024 · Rally Time [C] (NYI)",
+      "label": "NHL94_music_024",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 71,
@@ -910,11 +933,12 @@
       "playable": true,
       "blurb": "song $47 NHL94_music_024: Rally Time [C] (NYI)",
       "symbol": "fmtune_id_47_cmdstream",
-      "musicName": "NHL94_music_024"
+      "musicName": "NHL94_music_024",
+      "musicDesc": "Rally Time [C] (NYI)"
     },
     {
       "id": "snd-48",
-      "label": "NHL94_music_025 · Charge [B-flat only] (NYI)",
+      "label": "NHL94_music_025",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 72,
@@ -923,11 +947,12 @@
       "playable": true,
       "blurb": "song $48 NHL94_music_025: Charge [B-flat only] (NYI)",
       "symbol": "fmtune_id_48_cmdstream",
-      "musicName": "NHL94_music_025"
+      "musicName": "NHL94_music_025",
+      "musicDesc": "Charge [B-flat only] (NYI)"
     },
     {
       "id": "snd-49",
-      "label": "NHL94_music_026 · ?Islanders? / Charge [B-flat] (NYI)",
+      "label": "NHL94_music_026",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 73,
@@ -936,11 +961,12 @@
       "playable": true,
       "blurb": "song $49 NHL94_music_026: ?Islanders? / Charge [B-flat] (NYI)",
       "symbol": "fmtune_id_49_cmdstream",
-      "musicName": "NHL94_music_026"
+      "musicName": "NHL94_music_026",
+      "musicDesc": "?Islanders? / Charge [B-flat] (NYI)"
     },
     {
       "id": "snd-4a",
-      "label": "NHL94_music_027 · Here We Go [G] (DAL)",
+      "label": "NHL94_music_027",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 74,
@@ -949,11 +975,12 @@
       "playable": true,
       "blurb": "song $4A NHL94_music_027: Here We Go [G] (DAL)",
       "symbol": "fmtune_id_4A_cmdstream",
-      "musicName": "NHL94_music_027"
+      "musicName": "NHL94_music_027",
+      "musicDesc": "Here We Go [G] (DAL)"
     },
     {
       "id": "snd-4b",
-      "label": "NHL94_music_028 · Charge [C] (DAL)",
+      "label": "NHL94_music_028",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 75,
@@ -962,11 +989,12 @@
       "playable": true,
       "blurb": "song $4B NHL94_music_028: Charge [C] (DAL)",
       "symbol": "fmtune_id_4B_cmdstream",
-      "musicName": "NHL94_music_028"
+      "musicName": "NHL94_music_028",
+      "musicDesc": "Charge [C] (DAL)"
     },
     {
       "id": "snd-4c",
-      "label": "NHL94_music_029 · Let's Go Claps [C only] (MTL)",
+      "label": "NHL94_music_029",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 76,
@@ -975,11 +1003,12 @@
       "playable": true,
       "blurb": "song $4C NHL94_music_029: Let's Go Claps [C only] (MTL)",
       "symbol": "fmtune_id_4C_cmdstream",
-      "musicName": "NHL94_music_029"
+      "musicName": "NHL94_music_029",
+      "musicDesc": "Let's Go Claps [C only] (MTL)"
     },
     {
       "id": "snd-4d",
-      "label": "NHL94_music_030 · Halte la Les Canadiens sont la (MTL)",
+      "label": "NHL94_music_030",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 77,
@@ -988,11 +1017,12 @@
       "playable": true,
       "blurb": "song $4D NHL94_music_030: Halte la Les Canadiens sont la (MTL)",
       "symbol": "fmtune_id_4D_cmdstream",
-      "musicName": "NHL94_music_030"
+      "musicName": "NHL94_music_030",
+      "musicDesc": "Halte la Les Canadiens sont la (MTL)"
     },
     {
       "id": "snd-4e",
-      "label": "NHL94_music_031 · Gypsy Spain [E] (MTL)",
+      "label": "NHL94_music_031",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 78,
@@ -1001,11 +1031,12 @@
       "playable": true,
       "blurb": "song $4E NHL94_music_031: Gypsy Spain [E] (MTL)",
       "symbol": "fmtune_id_4E_cmdstream",
-      "musicName": "NHL94_music_031"
+      "musicName": "NHL94_music_031",
+      "musicDesc": "Gypsy Spain [E] (MTL)"
     },
     {
       "id": "snd-4f",
-      "label": "NHL94_music_032 · O'Malley's Steps [F] (MTL)",
+      "label": "NHL94_music_032",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 79,
@@ -1014,11 +1045,12 @@
       "playable": true,
       "blurb": "song $4F NHL94_music_032: O'Malley's Steps [F] (MTL)",
       "symbol": "fmtune_id_4F_cmdstream",
-      "musicName": "NHL94_music_032"
+      "musicName": "NHL94_music_032",
+      "musicDesc": "O'Malley's Steps [F] (MTL)"
     },
     {
       "id": "snd-50",
-      "label": "NHL94_music_033 · Let's Go [F] (NJ)",
+      "label": "NHL94_music_033",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 80,
@@ -1027,11 +1059,12 @@
       "playable": true,
       "blurb": "song $50 NHL94_music_033: Let's Go [F] (NJ)",
       "symbol": "fmtune_id_50_cmdstream",
-      "musicName": "NHL94_music_033"
+      "musicName": "NHL94_music_033",
+      "musicDesc": "Let's Go [F] (NJ)"
     },
     {
       "id": "snd-51",
-      "label": "NHL94_music_034 · Buildup [C] (NJ)",
+      "label": "NHL94_music_034",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 81,
@@ -1040,11 +1073,12 @@
       "playable": true,
       "blurb": "song $51 NHL94_music_034: Buildup [C] (NJ)",
       "symbol": "fmtune_id_51_cmdstream",
-      "musicName": "NHL94_music_034"
+      "musicName": "NHL94_music_034",
+      "musicDesc": "Buildup [C] (NJ)"
     },
     {
       "id": "snd-52",
-      "label": "NHL94_music_035 · La Raspa [F] (NJ)",
+      "label": "NHL94_music_035",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 82,
@@ -1053,11 +1087,12 @@
       "playable": true,
       "blurb": "song $52 NHL94_music_035: La Raspa [F] (NJ)",
       "symbol": "fmtune_id_52_cmdstream",
-      "musicName": "NHL94_music_035"
+      "musicName": "NHL94_music_035",
+      "musicDesc": "La Raspa [F] (NJ)"
     },
     {
       "id": "snd-53",
-      "label": "NHL94_music_036 · Let's Go [F] {Shorter} (NYR, ASE, ASW)",
+      "label": "NHL94_music_036",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 83,
@@ -1066,11 +1101,12 @@
       "playable": true,
       "blurb": "song $53 NHL94_music_036: Let's Go [F] {Shorter} (NYR, ASE, ASW)",
       "symbol": "fmtune_id_53_cmdstream",
-      "musicName": "NHL94_music_036"
+      "musicName": "NHL94_music_036",
+      "musicDesc": "Let's Go [F] {Shorter} (NYR, ASE, ASW)"
     },
     {
       "id": "snd-54",
-      "label": "NHL94_music_037 · Here We Go [C] {Slower} (NYR, ASE, ASW)",
+      "label": "NHL94_music_037",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 84,
@@ -1079,11 +1115,12 @@
       "playable": true,
       "blurb": "song $54 NHL94_music_037: Here We Go [C] {Slower} (NYR, ASE, ASW)",
       "symbol": "fmtune_id_54_cmdstream",
-      "musicName": "NHL94_music_037"
+      "musicName": "NHL94_music_037",
+      "musicDesc": "Here We Go [C] {Slower} (NYR, ASE, ASW)"
     },
     {
       "id": "snd-55",
-      "label": "NHL94_music_038 · Charge [C] {Slower} (NYR)",
+      "label": "NHL94_music_038",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 85,
@@ -1092,11 +1129,12 @@
       "playable": true,
       "blurb": "song $55 NHL94_music_038: Charge [C] {Slower} (NYR)",
       "symbol": "fmtune_id_55_cmdstream",
-      "musicName": "NHL94_music_038"
+      "musicName": "NHL94_music_038",
+      "musicDesc": "Charge [C] {Slower} (NYR)"
     },
     {
       "id": "snd-56",
-      "label": "NHL94_music_039 · Let's Go [C] {Alternate} (PHI)",
+      "label": "NHL94_music_039",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 86,
@@ -1105,11 +1143,12 @@
       "playable": true,
       "blurb": "song $56 NHL94_music_039: Let's Go [C] {Alternate} (PHI)",
       "symbol": "fmtune_id_56_cmdstream",
-      "musicName": "NHL94_music_039"
+      "musicName": "NHL94_music_039",
+      "musicDesc": "Let's Go [C] {Alternate} (PHI)"
     },
     {
       "id": "snd-57",
-      "label": "NHL94_music_040 · Buildup [F] (PHI)",
+      "label": "NHL94_music_040",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 87,
@@ -1118,11 +1157,12 @@
       "playable": true,
       "blurb": "song $57 NHL94_music_040: Buildup [F] (PHI)",
       "symbol": "fmtune_id_57_cmdstream",
-      "musicName": "NHL94_music_040"
+      "musicName": "NHL94_music_040",
+      "musicDesc": "Buildup [F] (PHI)"
     },
     {
       "id": "snd-58",
-      "label": "NHL94_music_041 · Zorba the Greek / Charge [C] (PHI)",
+      "label": "NHL94_music_041",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 88,
@@ -1131,11 +1171,12 @@
       "playable": true,
       "blurb": "song $58 NHL94_music_041: Zorba the Greek / Charge [C] (PHI)",
       "symbol": "fmtune_id_58_cmdstream",
-      "musicName": "NHL94_music_041"
+      "musicName": "NHL94_music_041",
+      "musicDesc": "Zorba the Greek / Charge [C] (PHI)"
     },
     {
       "id": "snd-59",
-      "label": "NHL94_music_042 · O'Malley's Steps [G] {Faster} (PIT)",
+      "label": "NHL94_music_042",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 89,
@@ -1144,11 +1185,12 @@
       "playable": true,
       "blurb": "song $59 NHL94_music_042: O'Malley's Steps [G] {Faster} (PIT)",
       "symbol": "fmtune_id_59_cmdstream",
-      "musicName": "NHL94_music_042"
+      "musicName": "NHL94_music_042",
+      "musicDesc": "O'Malley's Steps [G] {Faster} (PIT)"
     },
     {
       "id": "snd-5a",
-      "label": "NHL94_music_043 · Defense [C] (all but CGY, PHI and SJ)",
+      "label": "NHL94_music_043",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 90,
@@ -1157,11 +1199,12 @@
       "playable": true,
       "blurb": "song $5A NHL94_music_043: Defense [C] (all but CGY, PHI and SJ)",
       "symbol": "fmtune_id_5A_cmdstream",
-      "musicName": "NHL94_music_043"
+      "musicName": "NHL94_music_043",
+      "musicDesc": "Defense [C] (all but CGY, PHI and SJ)"
     },
     {
       "id": "snd-5b",
-      "label": "NHL94_music_044 · Let's Go / Rally Time [G] (PIT)",
+      "label": "NHL94_music_044",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 91,
@@ -1170,11 +1213,12 @@
       "playable": true,
       "blurb": "song $5B NHL94_music_044: Let's Go / Rally Time [G] (PIT)",
       "symbol": "fmtune_id_5B_cmdstream",
-      "musicName": "NHL94_music_044"
+      "musicName": "NHL94_music_044",
+      "musicDesc": "Let's Go / Rally Time [G] (PIT)"
     },
     {
       "id": "snd-5c",
-      "label": "NHL94_music_045 · What Do You Do With A Drunken Sailor? (PIT)",
+      "label": "NHL94_music_045",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 92,
@@ -1183,11 +1227,12 @@
       "playable": true,
       "blurb": "song $5C NHL94_music_045: What Do You Do With A Drunken Sailor? (PIT)",
       "symbol": "fmtune_id_5C_cmdstream",
-      "musicName": "NHL94_music_045"
+      "musicName": "NHL94_music_045",
+      "musicDesc": "What Do You Do With A Drunken Sailor? (PIT)"
     },
     {
       "id": "snd-5d",
-      "label": "NHL94_music_046 · Let's Go Claps [C] (QUE)",
+      "label": "NHL94_music_046",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 93,
@@ -1196,11 +1241,12 @@
       "playable": true,
       "blurb": "song $5D NHL94_music_046: Let's Go Claps [C] (QUE)",
       "symbol": "fmtune_id_5D_cmdstream",
-      "musicName": "NHL94_music_046"
+      "musicName": "NHL94_music_046",
+      "musicDesc": "Let's Go Claps [C] (QUE)"
     },
     {
       "id": "snd-5e",
-      "label": "NHL94_music_047 · Kalinka [Em] {Alternate} (QUE)",
+      "label": "NHL94_music_047",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 94,
@@ -1209,11 +1255,12 @@
       "playable": true,
       "blurb": "song $5E NHL94_music_047: Kalinka [Em] {Alternate} (QUE)",
       "symbol": "fmtune_id_5E_cmdstream",
-      "musicName": "NHL94_music_047"
+      "musicName": "NHL94_music_047",
+      "musicDesc": "Kalinka [Em] {Alternate} (QUE)"
     },
     {
       "id": "snd-5f",
-      "label": "NHL94_music_048 · Charge [C] (SJ)",
+      "label": "NHL94_music_048",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 95,
@@ -1222,11 +1269,12 @@
       "playable": true,
       "blurb": "song $5F NHL94_music_048: Charge [C] (SJ)",
       "symbol": "fmtune_id_5F_cmdstream",
-      "musicName": "NHL94_music_048"
+      "musicName": "NHL94_music_048",
+      "musicDesc": "Charge [C] (SJ)"
     },
     {
       "id": "snd-60",
-      "label": "NHL94_music_049 · Jaws Theme (SJ)",
+      "label": "NHL94_music_049",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 96,
@@ -1235,11 +1283,12 @@
       "playable": true,
       "blurb": "song $60 NHL94_music_049: Jaws Theme (SJ)",
       "symbol": "fmtune_id_60_cmdstream",
-      "musicName": "NHL94_music_049"
+      "musicName": "NHL94_music_049",
+      "musicDesc": "Jaws Theme (SJ)"
     },
     {
       "id": "snd-61",
-      "label": "NHL94_music_050 · Let's Go Claps [F] (SJ)",
+      "label": "NHL94_music_050",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 97,
@@ -1248,11 +1297,12 @@
       "playable": true,
       "blurb": "song $61 NHL94_music_050: Let's Go Claps [F] (SJ)",
       "symbol": "fmtune_id_61_cmdstream",
-      "musicName": "NHL94_music_050"
+      "musicName": "NHL94_music_050",
+      "musicDesc": "Let's Go Claps [F] (SJ)"
     },
     {
       "id": "snd-62",
-      "label": "NHL94_music_051 · Go Team Go [C] (Longer)",
+      "label": "NHL94_music_051",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 98,
@@ -1261,11 +1311,12 @@
       "playable": true,
       "blurb": "song $62 NHL94_music_051: Go Team Go [C] (Longer)",
       "symbol": "fmtune_id_62_cmdstream",
-      "musicName": "NHL94_music_051"
+      "musicName": "NHL94_music_051",
+      "musicDesc": "Go Team Go [C] (Longer)"
     },
     {
       "id": "snd-63",
-      "label": "NHL94_music_052 · Blue Danube Waltz [C] (SJ)",
+      "label": "NHL94_music_052",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 99,
@@ -1274,11 +1325,12 @@
       "playable": true,
       "blurb": "song $63 NHL94_music_052: Blue Danube Waltz [C] (SJ)",
       "symbol": "fmtune_id_63_cmdstream",
-      "musicName": "NHL94_music_052"
+      "musicName": "NHL94_music_052",
+      "musicDesc": "Blue Danube Waltz [C] (SJ)"
     },
     {
       "id": "snd-64",
-      "label": "NHL94_music_053 · Buildup / Charge [F only] (SJ)",
+      "label": "NHL94_music_053",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 100,
@@ -1287,11 +1339,12 @@
       "playable": true,
       "blurb": "song $64 NHL94_music_053: Buildup / Charge [F only] (SJ)",
       "symbol": "fmtune_id_64_cmdstream",
-      "musicName": "NHL94_music_053"
+      "musicName": "NHL94_music_053",
+      "musicDesc": "Buildup / Charge [F only] (SJ)"
     },
     {
       "id": "snd-65",
-      "label": "NHL94_music_054 · Hava Nagila (CHI, SJ)",
+      "label": "NHL94_music_054",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 101,
@@ -1300,11 +1353,12 @@
       "playable": true,
       "blurb": "song $65 NHL94_music_054: Hava Nagila (CHI, SJ)",
       "symbol": "fmtune_id_65_cmdstream",
-      "musicName": "NHL94_music_054"
+      "musicName": "NHL94_music_054",
+      "musicDesc": "Hava Nagila (CHI, SJ)"
     },
     {
       "id": "snd-66",
-      "label": "NHL94_music_055 · Tarantella Napoletana [Cm] / O'Malley's Steps [F]",
+      "label": "NHL94_music_055",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 102,
@@ -1313,11 +1367,12 @@
       "playable": true,
       "blurb": "song $66 NHL94_music_055: Tarantella Napoletana [Cm] / O'Malley's Steps [F]",
       "symbol": "fmtune_id_66_cmdstream",
-      "musicName": "NHL94_music_055"
+      "musicName": "NHL94_music_055",
+      "musicDesc": "Tarantella Napoletana [Cm] / O'Malley's Steps [F]"
     },
     {
       "id": "snd-67",
-      "label": "NHL94_music_056 · When the Saints Go Marching In [C] (STL)",
+      "label": "NHL94_music_056",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 103,
@@ -1326,11 +1381,12 @@
       "playable": true,
       "blurb": "song $67 NHL94_music_056: When the Saints Go Marching In [C] (STL)",
       "symbol": "fmtune_id_67_cmdstream",
-      "musicName": "NHL94_music_056"
+      "musicName": "NHL94_music_056",
+      "musicDesc": "When the Saints Go Marching In [C] (STL)"
     },
     {
       "id": "snd-68",
-      "label": "NHL94_music_057 · Buildup / O'Malley's Steps [F] (STL)",
+      "label": "NHL94_music_057",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 104,
@@ -1339,11 +1395,12 @@
       "playable": true,
       "blurb": "song $68 NHL94_music_057: Buildup / O'Malley's Steps [F] (STL)",
       "symbol": "fmtune_id_68_cmdstream",
-      "musicName": "NHL94_music_057"
+      "musicName": "NHL94_music_057",
+      "musicDesc": "Buildup / O'Malley's Steps [F] (STL)"
     },
     {
       "id": "snd-69",
-      "label": "NHL94_music_058 · Let's Go Claps [C] {Alternate} (STL)",
+      "label": "NHL94_music_058",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 105,
@@ -1352,11 +1409,12 @@
       "playable": true,
       "blurb": "song $69 NHL94_music_058: Let's Go Claps [C] {Alternate} (STL)",
       "symbol": "fmtune_id_69_cmdstream",
-      "musicName": "NHL94_music_058"
+      "musicName": "NHL94_music_058",
+      "musicDesc": "Let's Go Claps [C] {Alternate} (STL)"
     },
     {
       "id": "snd-6a",
-      "label": "NHL94_music_059 · Here We Go [F] (TB)",
+      "label": "NHL94_music_059",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 106,
@@ -1365,11 +1423,12 @@
       "playable": true,
       "blurb": "song $6A NHL94_music_059: Here We Go [F] (TB)",
       "symbol": "fmtune_id_6A_cmdstream",
-      "musicName": "NHL94_music_059"
+      "musicName": "NHL94_music_059",
+      "musicDesc": "Here We Go [F] (TB)"
     },
     {
       "id": "snd-6b",
-      "label": "NHL94_music_060 · Cavalry Charge [C] (TB)",
+      "label": "NHL94_music_060",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 107,
@@ -1378,11 +1437,12 @@
       "playable": true,
       "blurb": "song $6B NHL94_music_060: Cavalry Charge [C] (TB)",
       "symbol": "fmtune_id_6B_cmdstream",
-      "musicName": "NHL94_music_060"
+      "musicName": "NHL94_music_060",
+      "musicDesc": "Cavalry Charge [C] (TB)"
     },
     {
       "id": "snd-6c",
-      "label": "NHL94_music_061 · O'Malley's Steps [C] {Slower} (TOR)",
+      "label": "NHL94_music_061",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 108,
@@ -1391,11 +1451,12 @@
       "playable": true,
       "blurb": "song $6C NHL94_music_061: O'Malley's Steps [C] {Slower} (TOR)",
       "symbol": "fmtune_id_6C_cmdstream",
-      "musicName": "NHL94_music_061"
+      "musicName": "NHL94_music_061",
+      "musicDesc": "O'Malley's Steps [C] {Slower} (TOR)"
     },
     {
       "id": "snd-6d",
-      "label": "NHL94_music_062 · ?Quick Buildup? [F] (TOR)",
+      "label": "NHL94_music_062",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 109,
@@ -1404,11 +1465,12 @@
       "playable": true,
       "blurb": "song $6D NHL94_music_062: ?Quick Buildup? [F] (TOR)",
       "symbol": "fmtune_id_6D_cmdstream",
-      "musicName": "NHL94_music_062"
+      "musicName": "NHL94_music_062",
+      "musicDesc": "?Quick Buildup? [F] (TOR)"
     },
     {
       "id": "snd-6e",
-      "label": "NHL94_music_063 · Let's Go Claps [C] {Shorter} (VAN)",
+      "label": "NHL94_music_063",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 110,
@@ -1417,11 +1479,12 @@
       "playable": true,
       "blurb": "song $6E NHL94_music_063: Let's Go Claps [C] {Shorter} (VAN)",
       "symbol": "fmtune_id_6E_cmdstream",
-      "musicName": "NHL94_music_063"
+      "musicName": "NHL94_music_063",
+      "musicDesc": "Let's Go Claps [C] {Shorter} (VAN)"
     },
     {
       "id": "snd-6f",
-      "label": "NHL94_music_064 · Buildup [D-flat] (VAN)",
+      "label": "NHL94_music_064",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 111,
@@ -1430,11 +1493,12 @@
       "playable": true,
       "blurb": "song $6F NHL94_music_064: Buildup [D-flat] (VAN)",
       "symbol": "fmtune_id_6F_cmdstream",
-      "musicName": "NHL94_music_064"
+      "musicName": "NHL94_music_064",
+      "musicDesc": "Buildup [D-flat] (VAN)"
     },
     {
       "id": "snd-70",
-      "label": "NHL94_music_065 · Charge Fanfare [C] (VAN)",
+      "label": "NHL94_music_065",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 112,
@@ -1443,11 +1507,12 @@
       "playable": true,
       "blurb": "song $70 NHL94_music_065: Charge Fanfare [C] (VAN)",
       "symbol": "fmtune_id_70_cmdstream",
-      "musicName": "NHL94_music_065"
+      "musicName": "NHL94_music_065",
+      "musicDesc": "Charge Fanfare [C] (VAN)"
     },
     {
       "id": "snd-71",
-      "label": "NHL94_music_066 · O'Malley's Steps [F] {Alternate} (WSH)",
+      "label": "NHL94_music_066",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 113,
@@ -1456,11 +1521,12 @@
       "playable": true,
       "blurb": "song $71 NHL94_music_066: O'Malley's Steps [F] {Alternate} (WSH)",
       "symbol": "fmtune_id_71_cmdstream",
-      "musicName": "NHL94_music_066"
+      "musicName": "NHL94_music_066",
+      "musicDesc": "O'Malley's Steps [F] {Alternate} (WSH)"
     },
     {
       "id": "snd-72",
-      "label": "NHL94_music_067 · Go Team Go [C] {Alternate}",
+      "label": "NHL94_music_067",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 114,
@@ -1469,11 +1535,12 @@
       "playable": true,
       "blurb": "song $72 NHL94_music_067: Go Team Go [C] {Alternate}",
       "symbol": "fmtune_id_72_cmdstream",
-      "musicName": "NHL94_music_067"
+      "musicName": "NHL94_music_067",
+      "musicDesc": "Go Team Go [C] {Alternate}"
     },
     {
       "id": "snd-73",
-      "label": "NHL94_music_068 · Rally Time [F] {Alternate} (WSH)",
+      "label": "NHL94_music_068",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 115,
@@ -1482,11 +1549,12 @@
       "playable": true,
       "blurb": "song $73 NHL94_music_068: Rally Time [F] {Alternate} (WSH)",
       "symbol": "fmtune_id_73_cmdstream",
-      "musicName": "NHL94_music_068"
+      "musicName": "NHL94_music_068",
+      "musicDesc": "Rally Time [F] {Alternate} (WSH)"
     },
     {
       "id": "snd-74",
-      "label": "NHL94_music_069 · Charge / O'Malley's Steps [F] (WSH)",
+      "label": "NHL94_music_069",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 116,
@@ -1495,11 +1563,12 @@
       "playable": true,
       "blurb": "song $74 NHL94_music_069: Charge / O'Malley's Steps [F] (WSH)",
       "symbol": "fmtune_id_74_cmdstream",
-      "musicName": "NHL94_music_069"
+      "musicName": "NHL94_music_069",
+      "musicDesc": "Charge / O'Malley's Steps [F] (WSH)"
     },
     {
       "id": "snd-75",
-      "label": "NHL94_music_070 · O'Malley's Steps [G] {Alternate} (ANA, FLA, OTT, WPG)",
+      "label": "NHL94_music_070",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 117,
@@ -1508,11 +1577,12 @@
       "playable": true,
       "blurb": "song $75 NHL94_music_070: O'Malley's Steps [G] {Alternate} (ANA, FLA, OTT, WPG)",
       "symbol": "fmtune_id_75_cmdstream",
-      "musicName": "NHL94_music_070"
+      "musicName": "NHL94_music_070",
+      "musicDesc": "O'Malley's Steps [G] {Alternate} (ANA, FLA, OTT, WPG)"
     },
     {
       "id": "snd-76",
-      "label": "NHL94_music_071 · Gypsy Spain [E] / Charge [F-sharp] (ANA, FLA, OTT, WPG)",
+      "label": "NHL94_music_071",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 118,
@@ -1521,11 +1591,12 @@
       "playable": true,
       "blurb": "song $76 NHL94_music_071: Gypsy Spain [E] / Charge [F-sharp] (ANA, FLA, OTT, WPG)",
       "symbol": "fmtune_id_76_cmdstream",
-      "musicName": "NHL94_music_071"
+      "musicName": "NHL94_music_071",
+      "musicDesc": "Gypsy Spain [E] / Charge [F-sharp] (ANA, FLA, OTT, WPG)"
     },
     {
       "id": "snd-77",
-      "label": "NHL94_music_072 · Rally Time [F] {Longer} (ANA, FLA, OTT, WPG)",
+      "label": "NHL94_music_072",
       "group": "Music — Team",
       "type": "fm-stream",
       "soundId": 119,
@@ -1534,7 +1605,8 @@
       "playable": true,
       "blurb": "song $77 NHL94_music_072: Rally Time [F] {Longer} (ANA, FLA, OTT, WPG)",
       "symbol": "fmtune_id_77_cmdstream",
-      "musicName": "NHL94_music_072"
+      "musicName": "NHL94_music_072",
+      "musicDesc": "Rally Time [F] {Longer} (ANA, FLA, OTT, WPG)"
     },
     {
       "id": "snd-78",

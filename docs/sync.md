@@ -168,6 +168,12 @@ Fix regressions in Studio (parser, viewer, or pinned expectations in `test.js`) 
 
 ---
 
+### Audio song naming (94G team songs, and any future named song set)
+
+Named songs show as a two-line row in the Audio view's Team songs list. The **title** is `<song id> · <constant name>`, such as `$30 · NHL94_music_001`. The **description line** is `<song name> (<usage>)`, such as `Go Team Go [E-flat] (BOS)`. Do not join them into one title. Names come from `lib/audio/data/<game>-music.json` (`name` and `desc` per hex song id).
+
+When the catalog is regenerated or a game is added, keep this shape: `lib/audio/genesis.js` (`decorateStreamEntry`) sets the entry `label` to the constant name only, and puts the description in `musicDesc` (the full text also stays in `blurb`). `public/sound-test-view.js` (`songRec`) passes `musicDesc` through as the description. After a sync, check that no catalog `label` contains ` · ` plus a description, and that every named song has `musicDesc`. This applies to 94G now and to 94 Genesis updates later.
+
 ## 4. Scoped sync (tell the agent which slice)
 
 | Scope | Steps from §3 |
@@ -243,3 +249,4 @@ When upstream and Studio **intentionally** diverge (e.g. interim `frames94pc.asm
 |------|--------|
 | 2026-10-15 | Initial sync runbook for agents and maintainers |
 | 2026-10-28 | The disassembly repos keep the ROM in the repo folder under any file name (no `lst/`); Studio finds it by SHA-1 (`lib/upstream-rom.js`). The repos' `src/` has placeholders for the licensed names and generates them from the ROM, so SNES sound labels with team nicknames changed (`SongNYICharge`). |
+| 2026-10-31 | Documented the two-line song format (title `id · constant name`, description `song name (usage)`) for named 94G songs. |
