@@ -1,0 +1,293 @@
+{
+  "_source": "forum.nhl94.com topic 11307, comment 197067 (Jkline3, with Tony Ouradnik): Music # is the 94G constant name, Hex its value",
+  "songs": {
+    "30": {
+      "name": "NHL94_music_001",
+      "desc": "Go Team Go [E-flat] (BOS)"
+    },
+    "31": {
+      "name": "NHL94_music_002",
+      "desc": "Here We Go [E-flat] (BOS)"
+    },
+    "32": {
+      "name": "NHL94_music_003",
+      "desc": "Charge [E-flat] (BOS)"
+    },
+    "33": {
+      "name": "NHL94_music_004",
+      "desc": "Rally Time [F] (BUF)"
+    },
+    "34": {
+      "name": "NHL94_music_005",
+      "desc": "Sabre Dance (BUF)"
+    },
+    "35": {
+      "name": "NHL94_music_006",
+      "desc": "O'Malley's Steps [G] (CGY)"
+    },
+    "36": {
+      "name": "NHL94_music_007",
+      "desc": "Kalinka [Em] (CGY)"
+    },
+    "37": {
+      "name": "NHL94_music_008",
+      "desc": "You Say It's Your Birthday {Claps} (CGY)"
+    },
+    "38": {
+      "name": "NHL94_music_009",
+      "desc": "Here Come the Hawks (CHI)"
+    },
+    "39": {
+      "name": "NHL94_music_010",
+      "desc": "Gypsy Spain [G, rising] (CHI)"
+    },
+    "3A": {
+      "name": "NHL94_music_011",
+      "desc": "Las Chiapanecas {Mexican Hat Dance} [C] (CHI)"
+    },
+    "3B": {
+      "name": "NHL94_music_012",
+      "desc": "La Raspa [C] (DET)"
+    },
+    "3C": {
+      "name": "NHL94_music_013",
+      "desc": "O'Malleys Steps / Charge [C] (DET)"
+    },
+    "3D": {
+      "name": "NHL94_music_014",
+      "desc": "Las Chiapanecas {Mexican Hat Dance} [F] (DET)"
+    },
+    "3E": {
+      "name": "NHL94_music_015",
+      "desc": "O'Malleys Steps [F] (EDM)"
+    },
+    "3F": {
+      "name": "NHL94_music_016",
+      "desc": "Here We Go [C] (EDM)"
+    },
+    "40": {
+      "name": "NHL94_music_017",
+      "desc": "Brass Bonanza (HFD)"
+    },
+    "41": {
+      "name": "NHL94_music_018",
+      "desc": "Let's Go [C] (HFD)"
+    },
+    "42": {
+      "name": "NHL94_music_019",
+      "desc": "William Tell Overture (HFD)"
+    },
+    "43": {
+      "name": "NHL94_music_020",
+      "desc": "O'Malley's Steps [C] (LA)"
+    },
+    "44": {
+      "name": "NHL94_music_021",
+      "desc": "You Say It's Your Birthday (LA)"
+    },
+    "45": {
+      "name": "NHL94_music_022",
+      "desc": "Las Chiapanecas {Mexican Hat Dance} [G] (LA)"
+    },
+    "46": {
+      "name": "NHL94_music_023",
+      "desc": "Go Team Go [C] (LA)"
+    },
+    "47": {
+      "name": "NHL94_music_024",
+      "desc": "Rally Time [C] (NYI)"
+    },
+    "48": {
+      "name": "NHL94_music_025",
+      "desc": "Charge [B-flat only] (NYI)"
+    },
+    "49": {
+      "name": "NHL94_music_026",
+      "desc": "?Islanders? / Charge [B-flat] (NYI)"
+    },
+    "4A": {
+      "name": "NHL94_music_027",
+      "desc": "Here We Go [G] (DAL)"
+    },
+    "4B": {
+      "name": "NHL94_music_028",
+      "desc": "Charge [C] (DAL)"
+    },
+    "4C": {
+      "name": "NHL94_music_029",
+      "desc": "Let's Go Claps [C only] (MTL)"
+    },
+    "4D": {
+      "name": "NHL94_music_030",
+      "desc": "Halte la Les Canadiens sont la (MTL)"
+    },
+    "4E": {
+      "name": "NHL94_music_031",
+      "desc": "Gypsy Spain [E] (MTL)"
+    },
+    "4F": {
+      "name": "NHL94_music_032",
+      "desc": "O'Malley's Steps [F] (MTL)"
+    },
+    "50": {
+      "name": "NHL94_music_033",
+      "desc": "Let's Go [F] (NJ)"
+    },
+    "51": {
+      "name": "NHL94_music_034",
+      "desc": "Buildup [C] (NJ)"
+    },
+    "52": {
+      "name": "NHL94_music_035",
+      "desc": "La Raspa [F] (NJ)"
+    },
+    "53": {
+      "name": "NHL94_music_036",
+      "desc": "Let's Go [F] {Shorter} (NYR, ASE, ASW)"
+    },
+    "54": {
+      "name": "NHL94_music_037",
+      "desc": "Here We Go [C] {Slower} (NYR, ASE, ASW)"
+    },
+    "55": {
+      "name": "NHL94_music_038",
+      "desc": "Charge [C] {Slower} (NYR)"
+    },
+    "56": {
+      "name": "NHL94_music_039",
+      "desc": "Let's Go [C] {Alternate} (PHI)"
+    },
+    "57": {
+      "name": "NHL94_music_040",
+      "desc": "Buildup [F] (PHI)"
+    },
+    "58": {
+      "name": "NHL94_music_041",
+      "desc": "Zorba the Greek / Charge [C] (PHI)"
+    },
+    "59": {
+      "name": "NHL94_music_042",
+      "desc": "O'Malley's Steps [G] {Faster} (PIT)"
+    },
+    "5A": {
+      "name": "NHL94_music_043",
+      "desc": "Defense [C] (all but CGY, PHI and SJ)"
+    },
+    "5B": {
+      "name": "NHL94_music_044",
+      "desc": "Let's Go / Rally Time [G] (PIT)"
+    },
+    "5C": {
+      "name": "NHL94_music_045",
+      "desc": "What Do You Do With A Drunken Sailor? (PIT)"
+    },
+    "5D": {
+      "name": "NHL94_music_046",
+      "desc": "Let's Go Claps [C] (QUE)"
+    },
+    "5E": {
+      "name": "NHL94_music_047",
+      "desc": "Kalinka [Em] {Alternate} (QUE)"
+    },
+    "5F": {
+      "name": "NHL94_music_048",
+      "desc": "Charge [C] (SJ)"
+    },
+    "60": {
+      "name": "NHL94_music_049",
+      "desc": "Jaws Theme (SJ)"
+    },
+    "61": {
+      "name": "NHL94_music_050",
+      "desc": "Let's Go Claps [F] (SJ)"
+    },
+    "62": {
+      "name": "NHL94_music_051",
+      "desc": "Go Team Go [C] (Longer)"
+    },
+    "63": {
+      "name": "NHL94_music_052",
+      "desc": "Blue Danube Waltz [C] (SJ)"
+    },
+    "64": {
+      "name": "NHL94_music_053",
+      "desc": "Buildup / Charge [F only] (SJ)"
+    },
+    "65": {
+      "name": "NHL94_music_054",
+      "desc": "Hava Nagila (CHI, SJ)"
+    },
+    "66": {
+      "name": "NHL94_music_055",
+      "desc": "Tarantella Napoletana [Cm] / O'Malley's Steps [F]"
+    },
+    "67": {
+      "name": "NHL94_music_056",
+      "desc": "When the Saints Go Marching In [C] (STL)"
+    },
+    "68": {
+      "name": "NHL94_music_057",
+      "desc": "Buildup / O'Malley's Steps [F] (STL)"
+    },
+    "69": {
+      "name": "NHL94_music_058",
+      "desc": "Let's Go Claps [C] {Alternate} (STL)"
+    },
+    "6A": {
+      "name": "NHL94_music_059",
+      "desc": "Here We Go [F] (TB)"
+    },
+    "6B": {
+      "name": "NHL94_music_060",
+      "desc": "Cavalry Charge [C] (TB)"
+    },
+    "6C": {
+      "name": "NHL94_music_061",
+      "desc": "O'Malley's Steps [C] {Slower} (TOR)"
+    },
+    "6D": {
+      "name": "NHL94_music_062",
+      "desc": "?Quick Buildup? [F] (TOR)"
+    },
+    "6E": {
+      "name": "NHL94_music_063",
+      "desc": "Let's Go Claps [C] {Shorter} (VAN)"
+    },
+    "6F": {
+      "name": "NHL94_music_064",
+      "desc": "Buildup [D-flat] (VAN)"
+    },
+    "70": {
+      "name": "NHL94_music_065",
+      "desc": "Charge Fanfare [C] (VAN)"
+    },
+    "71": {
+      "name": "NHL94_music_066",
+      "desc": "O'Malley's Steps [F] {Alternate} (WSH)"
+    },
+    "72": {
+      "name": "NHL94_music_067",
+      "desc": "Go Team Go [C] {Alternate}"
+    },
+    "73": {
+      "name": "NHL94_music_068",
+      "desc": "Rally Time [F] {Alternate} (WSH)"
+    },
+    "74": {
+      "name": "NHL94_music_069",
+      "desc": "Charge / O'Malley's Steps [F] (WSH)"
+    },
+    "75": {
+      "name": "NHL94_music_070",
+      "desc": "O'Malley's Steps [G] {Alternate} (ANA, FLA, OTT, WPG)"
+    },
+    "76": {
+      "name": "NHL94_music_071",
+      "desc": "Gypsy Spain [E] / Charge [F-sharp] (ANA, FLA, OTT, WPG)"
+    },
+    "77": {
+      "name": "NHL94_music_072",
+      "desc": "Rally Time [F] {Longer} (ANA, FLA, OTT, WPG)"
+    }
+  }
+}
