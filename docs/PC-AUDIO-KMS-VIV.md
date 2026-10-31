@@ -27,9 +27,18 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. NHL
 
 ## `.VIV` — announcer / menu speech
 
+### NHL 94 PC (`XBRUCE2.VIV`, `XRBARR2.VIV`)
+
+C0 FB named directory (`name\\0` + u24be offset + u24be size from byte 12). Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab (`NhlSoundTestPc94` Speech group).
+
+- **Parser / playback:** `lib/audio/viv.js` (`isViv`, `parseArchive`, `unpackClip`, `listClips`, `toFloat32`)
+- Tests: synthetic C0 FB + BTree + 72 FB clip in `test/pc94-audio.js`; retail files when `pc94/` (or `NHL_PC94_DIR`) is present
+
+### NHL 95 PC / older sniffers
+
 - EA archive; may embed **`BNKl`** sound banks, ASF music, or loose samples.
 - **BNK** headers: `lib/audio/viv.js` (`findBnk`, `parseBnkHeader`) following [EA-MUS / MultimediaWiki](https://wiki.multimedia.cx/index.php/Electronic_Arts_Formats_(2)).
-- Forum reports (`XBRUCE.VIV`): extracted clips are often **IFF `8SVX` bodies without the `FORM` header** (~5.5–6 kHz mono). `findIffSpeech` locates `8SVX` / `FORM` markers only; no full VIV unpack yet.
+- Forum reports (`XBRUCE.VIV`): extracted clips are often **IFF `8SVX` bodies without the `FORM` header** (~5.5–6 kHz mono). `findIffSpeech` locates `8SVX` / `FORM` markers only; 95 PC has no full VIV unpack yet.
 
 ### Reference tools (out of tree)
 
@@ -37,4 +46,4 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. NHL
 
 ## Tests
 
-`node test/pc-audio-kms.js` (also run via `node test.js`): synthetic KMS round-trip + OPL peak; minimal BNK header inside a buffer.
+`node test/pc-audio-kms.js` (also run via `node test.js`): synthetic KMS round-trip + OPL peak; minimal BNK header inside a buffer. `node test/pc94-audio.js` covers EXE-format KMS, PCFF SFX, and 94 PC VIV.

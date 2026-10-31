@@ -44,9 +44,8 @@ Retail ROMs and PC installs **must not** be committed. Use `roms/`, `pc95/`, `pc
 | `data/frames94.asm` | NHL94Genesis | Same |
 | `data/frames95.asm` | NHL95Genesis | Same |
 | `data/frames95pc.asm` | EA-NHL-Tools `Docs/Sprites/Readme.md` | Manual edit when DOS index changes |
-| `data/frames94pc.asm` | 94 PC `HOCKEY.EXE` + Readme | `tools/extract-pc94-spa.js` / `tools/build-pc94-spa.js` when offsets known |
+| `data/frames94pc.asm` | 94 PC `HOCKEY.EXE` @ `0x358A4` + Readme SPF | `node tools/extract-pc94-spa.js --write path/to/HOCKEY.EXE`. `build-pc94-spa.js` is superseded. |
 | `data/frames93snes.asm`, `data/frames94snes.asm` | SNES disasm + ROM | `node tools/build-snes-frames.js` |
-| `data/frames94pc.asm` | 94 PC research | Interim subset from 95 PC until retail table extracted |
 | `lib/genesis-images.js` | Retail ROM offsets from **Asset-Extractor** + disasm names | **Manual** sync: compare `extractAssets93.js` / `94` / `95.js` asset lists with `module.exports` slices; prefer **retail** offsets (see `test.js` `EXTRACT93_SLICES`, `EXTRACT95_RETAIL`) |
 | `data/audio/*.json` | `lib/audio/genesis-constants.js` + optional ROM scan | `node tools/build-audio-catalog.js` and/or `--rom path --game id` |
 | `data/pals/snes/*.snespal` | NHLPA93SNES (and 94 SNES where shared) | Copy palette files when disasm updates |
@@ -135,7 +134,7 @@ rsync -a --delete "$SNES93/src/data/pals/" "$STUDIO/data/pals/snes/"   # adjust 
 
 **95 PC / 94 PC sprite index:**
 
-- When `Docs/Sprites/Readme.md` changes, update `data/frames95pc.asm` and regenerate 94 interim SPA if needed: `node tools/build-pc94-spa.js`.
+- When `Docs/Sprites/Readme.md` changes, update `data/frames95pc.asm`. 94 PC SPA comes from `HOCKEY.EXE` (`node tools/extract-pc94-spa.js --write`), not from the 95 PC subset.
 
 **Test fixtures (optional but keeps CI honest):**
 
@@ -224,7 +223,7 @@ Sync NHL9X Studio per docs/sync.md (full). EA-NHL-Tools at <path>. Disasm ROMs u
 | Audio preview empty | Wrong FMTune table for title | Update `genesis-constants.js`; validate with `--rom` scan |
 | `games.json` out of date | Forgot manifest | Always run `build-manifest.js` before push |
 
-When upstream and Studio **intentionally** diverge (e.g. interim `frames94pc.asm`), document the reason in `data/*.asm` header comments and `docs/AGENT-HANDOFF.md` backlog — do not “fix” by reverting to 95 PC without a GAP-8 plan.
+When upstream and Studio **intentionally** diverge, document the reason in `data/*.asm` header comments and `docs/AGENT-HANDOFF.md` backlog — do not “fix” 94 PC SPA by reverting to 95 PC; re-run `tools/extract-pc94-spa.js`.
 
 ---
 

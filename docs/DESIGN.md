@@ -14,7 +14,7 @@ This is the product document. It describes what the studio is, who it is for, an
 
 NHL9X Studio is a **modding studio for EA’s 16-bit and DOS NHL games**. One app, one chrome, a **game profile** per title. People open a ROM or a PC install on their machine, browse what the game actually draws and plays, and edit the assets they are allowed to export. Nothing is uploaded. Nothing is written back into a ROM.
 
-**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 PC frames, QPP pictures, and AdLib/SFX audio are in the product. **Next** it fills remaining picture catalogs and audio parity (VIV speech, 95 PC ear-match). **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
+**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 PC frames, QPP pictures, AdLib/SFX, and announcer VIV speech are in the product. **Next** it fills remaining picture catalogs and audio parity (95 PC ear-match). **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
 
 ### 1.1 Who it is for
 
@@ -59,7 +59,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 5 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
 | 6 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
 | 7 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor; audio parser exists, ear-match still open |
-| 8 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs and digital SFX; SPA from interim `frames94pc.asm` |
+| 8 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
 
 **Not in the game list:** NHL 96 Genesis, Sega CD, later EA NHL. Extract scripts or folders may exist; they are not a studio profile.
 

@@ -51,6 +51,8 @@ const RULES = [
   { re: /^lib\/audio\/(spc700-cpu|snes-dsp|snes-spc)\.js$/, tests: SPC, why: 'SPC700 / S-DSP' },
   { re: /^tools\/fingerprint-site\.js$/, tests: ['fingerprint-site'], why: 'fingerprint tool' },
   { re: /^tools\/build-manifest\.js$/, tests: ['core'], why: 'manifest tool' },
+  { re: /^tools\/(extract|build)-pc94-spa\.js$/, tests: ['core'], why: '94 PC SPA catalog' },
+  { re: /^lib\/audio\/viv\.js$/, tests: ['core', 'pc94-audio', 'pc-audio-kms'], why: 'PC VIV speech' },
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.

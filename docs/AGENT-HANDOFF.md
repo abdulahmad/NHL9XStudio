@@ -62,7 +62,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
-| **GAP-8** | 94PC | Planar PPV/QPP + AdLib/SFX in; interim SPA (from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
+| **GAP-8** | 94PC | Planar PPV/QPP + AdLib/SFX + VIV speech; retail SPA from `HOCKEY.EXE` @ `0x358A4`. Remaining: MT-32 / YM30 ear-match |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
 | **AUD-1** | 92G audio | Catalog + preview API; 93–95 placeholders |
@@ -81,6 +81,8 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 | `lib/audio/` | Genesis catalogs + FM preview (`genesis.js`, `data/audio/`) |
 | `test.js` | Regression tests |
 | `tools/build-manifest.js` | Regenerate `public/games.json` |
+| `tools/extract-pc94-spa.js` | Retail 94 PC SPA from `HOCKEY.EXE` @ `0x358A4` → `data/frames94pc.asm` |
+| `lib/audio/viv.js` | 94 PC VIV speech (C0 FB directory); 95 PC BNK/IFF sniffers |
 | `docs/nhl9x-studio-requirements.md` | Genesis `.map.jim` editor + Chip Lab hide |
 
 ### Optional ROMs (local)

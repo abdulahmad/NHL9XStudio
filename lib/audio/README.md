@@ -28,7 +28,7 @@ Genesis (AUD-0 / AUD-1):
 - `nhl92-z80-audio.js` — step 4: the same harness with every YM2612 write forwarded at its T-state to the real ymfm core (and PSG writes to `sn76489.js`), PCM at 53267 Hz (write at T-state `t` lands before sample `floor(t*15/1008)`). Also the 68k vblank input builders, the game's note tables, the 22 patches at Z80 `$02A5` and the DAC SFX list read from the retail handler bytes. UMD, used by Node and `public/chip-lab.js`.
 - `nhl92-chip-renders.js` + `tools/render-nhl92-chip-tests.js` — one WAV per patch scale (`patch-00.wav`…`patch-21.wav`) and per DAC SFX, with YM logs, to `out/nhl92-chip-tests/`; `--update` rewrites the pinned hashes in `data/audio/nhl92-chip-tests.json`. Checked by `test/nhl92-z80-audio.js`.
 - `wav.js` — deterministic 16-bit PCM WAV writer.
-- `kms.js`, `kms-player.js`, `viv.js` — PC `.KMS` (parser + MIT `opl3` feasibility player) and `.VIV` BNK/IFF sniffers; see `docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`.
+- `kms.js`, `kms-player.js`, `viv.js` — PC `.KMS` (parser + MIT `opl3` feasibility player) and `.VIV` (94 PC C0 FB speech unpack; 95 PC BNK/IFF sniffers); see `docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`, `test/pc94-audio.js`.
 - ymfm `reset()` does not rewind every internal counter, so a reused chip drifts from a fresh one; restore `chip.saveState()` taken at creation (`loadState`) for reproducible renders, or use `ym2612-wasm.createChip()`.
 - `nhl92-z80-golden.js` — replay recorded vblank inputs (`data/captures/nhl92/*.json`) and compare to a retail YM log or VGM.
 - `nhl92-z80.js` — extract/load `Z80_Program_Code` (`0x116A6`, `0x598` bytes).

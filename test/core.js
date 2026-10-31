@@ -1069,9 +1069,18 @@ for (const spf of pc94Catalog.spfs) {
   pc94cursor = spf.end + 1;
 }
 assert.strictEqual(pc94cursor, 877);
-assert.ok(pc94Catalog.anims.length >= 90, 'pc94 SPA interim catalog');
+assert.strictEqual(pc94Catalog.anims.length, 95);
+assert.strictEqual(new Set(pc94Catalog.anims.map((a) => a.name)).size, 95);
+assert.strictEqual(pc94Catalog.anims[0].name, 'SPAgready');
+assert.ok(pc94Catalog.anims.find((a) => a.name === 'SPAgready').loop);
+assert.strictEqual(pc94Catalog.anims.find((a) => a.name === 'SPAgready').directions[0].steps[0].frame, 407);
 assert.strictEqual(pc94Catalog.anims.find((a) => a.name === 'SPAskate').directions[0].steps[0].frame, 42);
 assert.ok(!pc94Catalog.anims.some((a) => a.name === 'SPAgoalie95'));
+assert.strictEqual(pc95.frameIsDynamic(1, 'nhl94pc'), true);
+assert.strictEqual(pc95.frameIsDynamic(394, 'nhl94pc'), false);
+assert.strictEqual(pc95.frameIsDynamic(407, 'nhl94pc'), true);
+assert.strictEqual(pc95.frameIsDynamic(650, 'nhl94pc'), false);
+assert.strictEqual(pc95.frameIsDynamic(873, 'nhl94pc'), true);
 const pc94empty = pc95.openSpriteBundle(Buffer.alloc(0), 'nhl94pc');
 assert.strictEqual(pc94empty.numFrames, 876);
 assert.strictEqual(pc95.playerFrameCount('nhl94pc'), 876);

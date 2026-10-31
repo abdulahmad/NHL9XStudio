@@ -5,6 +5,8 @@ const path = require('path');
 const Kms = require('../lib/audio/pc94-kms');
 const Sfx = require('../lib/audio/pc94-sfx');
 const Player = require('../lib/audio/pc94-player');
+const Pack = require('../lib/pc94-pack');
+const Viv = require('../lib/audio/viv');
 
 const tiny = Kms.encodeTiny({ tempo: 120, note: 0x3c, vel: 0x64, dur: 24 });
 assert.ok(Kms.isKms(tiny.kms));
@@ -78,6 +80,32 @@ function retail94Dir() {
   return cands.find((dir) => fs.existsSync(path.join(dir, 'ADTITLE.KMS'))) || null;
 }
 
+function be24(n) { return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+const pcmClip = Uint8Array.from([0, 20, 40, 60, 40, 20, 0, 236]);
+const raw = new Uint8Array(5 + pcmClip.length);
+raw[0] = 0x72;
+raw[1] = 0xfb;
+raw.set(be24(pcmClip.length), 2);
+raw.set(pcmClip, 5);
+const packed = Pack.wrapBtree(raw);
+const name = Buffer.from('HI.BRU\0');
+const payloadOff = 12 + name.length + 6;
+const vivBuf = new Uint8Array(payloadOff + packed.length);
+vivBuf[0] = 0xc0;
+vivBuf[1] = 0xfb;
+vivBuf.set(name, 12);
+vivBuf.set(be24(payloadOff), 12 + name.length);
+vivBuf.set(be24(packed.length), 12 + name.length + 3);
+vivBuf.set(packed, payloadOff);
+assert.ok(Viv.isViv(vivBuf));
+const clips = Viv.listClips(vivBuf);
+assert.strictEqual(clips.length, 1);
+assert.strictEqual(clips[0].name, 'HI.BRU');
+assert.strictEqual(clips[0].pcm.length, pcmClip.length);
+assert.deepStrictEqual(Array.from(clips[0].pcm), Array.from(pcmClip));
+const speech = Viv.toFloat32(clips[0].pcm);
+assert.ok(speech.some((v) => v !== 0));
+
 const retail = retail94Dir();
 if (retail) {
   const kms = fs.readFileSync(path.join(retail, 'ADTITLE.KMS'));
@@ -94,6 +122,14 @@ if (retail) {
   const samples = Sfx.listDigital(timBuf, digBuf, null);
   assert.ok(samples.length >= 1, 'PCFF001 digital timbres');
   assert.ok(samples[0].pcm.length > 0);
+  const vivPath = ['XBRUCE2.VIV', 'XRBARR2.VIV'].map((n) => path.join(retail, n)).find((p) => fs.existsSync(p));
+  if (vivPath) {
+    const retailViv = Viv.listClips(fs.readFileSync(vivPath));
+    assert.ok(retailViv.length >= 20, path.basename(vivPath) + ' clips');
+    assert.ok(retailViv[0].pcm.length > 100);
+    const peak = Viv.toFloat32(retailViv[0].pcm).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+    assert.ok(peak > 0.01, 'retail VIV clip is not silence');
+  }
 }
 
 console.log('pc94-audio: ok');

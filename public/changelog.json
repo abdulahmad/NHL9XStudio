@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.10.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: SPA scripts now come from retail HOCKEY.EXE (file offset 0x358A4, 95 sequences) instead of an interim 95 PC subset",
+        "NHL 94 PC Audio: XBRUCE2.VIV and XRBARR2.VIV announcer clips unpack and play in the Audio tab",
+        "NHL 94 PC: player-frame hotspots use the planar bank header; arrows, puck, siren, glass, and referee keep the game palette"
+      ]
+    },
+    {
       "version": "1.9.0",
       "date": "2026-10-31",
       "changes": [
