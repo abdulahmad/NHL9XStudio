@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.8.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis Audio: songs $30-$77 now use the NHL94.com forum's Music # names (NHL94_music_001 to _072) with each track's description, such as Go Team Go [E-flat] (BOS)"
+      ]
+    },
+    {
       "version": "1.7.1",
       "date": "2026-10-31",
       "changes": [
