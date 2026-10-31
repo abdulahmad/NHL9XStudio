@@ -9,7 +9,7 @@ This is the technical companion to the product requirements in [`docs/DESIGN.md`
 This document has three parts:
 
 1. **What NHL9X Studio does today** (accurate as of the multi-game shell on `main`).
-2. **Implementation plan: NHL 94 PC graphics** (`94PC`) — detailed later; **lowest** platform priority (after **95PC**).
+2. **Implementation plan: NHL 94 PC graphics** (`94PC`) — planar PPV/QPP decode is in; remaining work is SPA extract and hotspot polish.
 3. **Implementation plan: audio** for all eight retail profiles below.
 
 Genesis `.map.jim` editor (next graphics product) is specified in [`docs/nhl9x-studio-requirements.md`](nhl9x-studio-requirements.md), not here.
@@ -31,7 +31,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | 5 | **93S** | `nhlpa93snes` | SNES sprites + pictures |
 | 6 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
 | 7 | **95PC** | `nhl95pc` | DOS graphics/audio already partially wired — close catalog and palette edge cases **before** 94PC |
-| 8 | **94PC** | `nhl94pc` (planned) | New decode + `frames94pc.asm` (§2) |
+| 8 | **94PC** | `nhl94pc` | Planar PPV/QPP + AdLib/SFX; SPA still interim (`frames94pc.asm`) |
 
 ---
 
@@ -61,10 +61,11 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `nhlpa93snes` | **93S** | NHLPA 93 | SNES | `snes93` | `roms/nhlpa93snes.sfc` |
 | `nhl94snes` | **94S** | NHL 94 | SNES | `snes94` | `roms/nhl94snes.sfc` |
 | `nhl95pc` | **95PC** | NHL 95 | DOS | `pc95` | `Sprite-Viewer/pc95/` (PPV, QFS, palette BINs); not in git |
+| `nhl94pc` | **94PC** | NHL 94 | DOS | `pc94` | `pc94/` (PPV, QPP, palette BINs, KMS/CFG, PCFF); not in git |
 
 *(Table follows **implementation priority** § above; not chronological release order.)*
 
-**Not in viewer:** NHL 96 Genesis (extract script only), Sega CD branches, **94PC** (assets exist under `Sprite-Viewer/pc94/` on `main` but no profile).
+**Not in viewer:** NHL 96 Genesis (extract script only), Sega CD branches.
 
 ### 1.3 UI modes (all games except PC use the same four tabs)
 
@@ -117,7 +118,7 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 ### 1.7 Known graphics gaps
 
 - **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
-- **94PC:** Full install under `pc94/`; **no** `nhl94pc` game profile or decoders in `pc95.js`.
+- **94PC:** Profile `nhl94pc` decodes planar PPV/QPP (`lib/pc94-shape.js`, `lib/pc94-pack.js`). Remaining: retail `HOCKEY.EXE` SPA extract, hotspot/`frameIsDynamic` polish, VIV speech.
 - **96G:** Out of scope for viewer game list.
 - **Editing / export / build:** View-only today; no write path to ROM or extracted bins. Planned: Genesis `.map.jim` editor (`docs/nhl9x-studio-requirements.md`).
 
@@ -162,7 +163,7 @@ Work **92G → … → 94PC** (see **Implementation priority** above). PC DOS ti
 | **GAP-5** | **93S** | SNES catalog | Pictures catalog (15 images); crowd/zamboni/faceoff on main sprite sheet (`SPFcrowd` 659, etc.). Still open: dedicated crowd picture banks if ROM offsets are pinned. |
 | **GAP-6** | **94S** | SNES parity | `SPAcelebrate` / `SPApump` named in `frames94snes.asm`; Images tab still missing several Genesis-parity screens (refs, scouting, framer, faceoff map) pending LoROM offsets. |
 | **GAP-7** | **95PC** | DOS polish | Remaining QFS/PPV catalog holes, goalie palette edge cases, hotspot/dynamic rules — viewer already has core `pc95` path. |
-| **GAP-8** | **94PC** | New profile | §2: PPV/QPP decode, `frames94pc.asm`, `nhl94pc` — bench/crowd `F000+` SPFs live here, not on Genesis. |
+| **GAP-8** | **94PC** | Planar PPV/QPP + AdLib/SFX | Remaining: retail SPA extract, hotspot polish. Bench/crowd `F000+` SPFs live here, not on Genesis. |
 
 **Tests:** extend `test.js` with bank count smoke test per game profile; optional frame-count check for `Crowd.anim` slice when ROM present.
 
@@ -178,15 +179,16 @@ Parity with **95PC** in the viewer: Frame / SPF / SPA / Images, team jerseys, ho
 
 ### 2.2 What differs from 95PC
 
-| Topic | NHL 95 PC (`pc95.js`) | NHL 94 PC (to build) |
+| Topic | NHL 95 PC (`pc95.js`) | NHL 94 PC (`pc94-pack.js` / `pc94-shape.js`) |
 |--------|------------------------|----------------------|
-| Picture container | `.QFS` (RefPack `10 FB` → SHPI) | `.QPP` (RefPack variant **`30 FB`** — not accepted by current `isRefPack`) |
-| Sprite banks | `.PPV` = SHPI in file | `.PPV` = **older pack** (size/count header, ASCII hex directory; not raw SHPI). Extraction today uses **gfxpak** in `PPV-To-BMP/`, not pure JS. |
-| Frame count | 1134 (per `frames95pc.asm`) | **876** player sprites `000–875`, crowd `F000–F149` (`Docs/Sprites/Readme.md`) |
-| SPA/SPF | `HOCKEY.EXE` @ `0x110471`, names @ `0x109030` | **`HOCKEY.EXE` in `pc94/`** — offsets must be **extracted**, not copied from 95 |
-| Palette files | Same HOMEPALS/AWAYPALS layout | Present in `pc94/`; same family as 95 |
+| Picture container | `.QFS` (RefPack `10 FB` → SHPI) | `.QPP` (Huffman **`30 FB`** or BTree **`46 FB`**, then the same planar bank as PPV — not RefPack, not SHPI) |
+| Sprite banks | `.PPV` = SHPI in file | `.PPV` = Mode X planar PackBits bank (u32 size, u16 count, 4-char names, flags `0x0010`). Not gfxpak SPIT. |
+| Frame count | 1134 (per `frames95pc.asm`) | **876** player sprites `000–875`, crowd `F000–F149` |
+| SPA/SPF | `HOCKEY.EXE` @ `0x110471`, names @ `0x109030` | Interim SPA from a 95 PC subset (`frames94pc.asm`); retail `HOCKEY.EXE` extract still open |
+| Palette files | Same HOMEPALS/AWAYPALS layout | Present in `pc94/`; same family as 95. 94 QPP donors differ (`PAL_DONOR_94`, e.g. PLAYOFFS → EMBPAL). |
+| Audio | Parser-only wiki KMS | EXE-format `.KMS`/`.CFG` + PCFF TIM/DIG/PAT in the Audio tab (`lib/audio/pc94-*.js`) |
 
-**Effort:** **Moderate** — mostly **container decode** + **one-time** `data/frames94pc.asm` + wiring; rendering reuse is high once bytes decode to SPIT/SHPI.
+**In tree:** decode + catalog + Audio tab. Remaining: SPA extract, hotspot/`frameIsDynamic` polish, VIV speech, ear-match.
 
 ### 2.3 Technical workstreams
 
@@ -221,10 +223,10 @@ Parity with **95PC** in the viewer: Frame / SPF / SPA / Images, team jerseys, ho
 
 | Phase | Deliverable | Verify |
 |-------|-------------|--------|
-| **PC94-1** | Inventory script: list PPV/QPP, ROM offsets from EXE | Manual |
-| **PC94-2** | PPV + QPP decode in JS + unit tests | `node test.js` |
-| **PC94-3** | `frames94pc.asm` + `nhl94pc` profile + server | Browser: frames, SPF, SPA, images |
-| **PC94-4** | Jersey/hotspot/dynamic rules tuned vs DOS | Spot-check teams + goalie frames |
+| **PC94-1** | Inventory script: list PPV/QPP, ROM offsets from EXE | Done (retail trees) |
+| **PC94-2** | PPV + QPP decode in JS + unit tests | Done (`test/pc94-shape.js`) |
+| **PC94-3** | `frames94pc.asm` + `nhl94pc` profile + server | Done; SPA still interim |
+| **PC94-4** | Jersey/hotspot/dynamic rules tuned vs DOS | Partial (hotX/hotY from the bank; GetHot polish open) |
 
 ---
 
@@ -339,7 +341,7 @@ Follow **implementation priority**: **92G → 93G → 94G → 95G → 93S → 94
 | **AUD-0** | — | `lib/audio/README.md`, catalog schema, `/api/games/:id/audio` listing endpoint |
 | **AUD-1** | **92G → 95G** (one title at a time) | Per-title Genesis audio: `Hockey.snd` sample browser + cmdstream/SFX where documented (`sound*.asm`, `Docs/SND`). **94G** is the richest cmdstream set (`$30–$7A`) but lands **third** in the queue after 92G and 93G. Player is **new** `lib/audio/genesis.js` (not `MID94-Tools`). |
 | **AUD-2** | **93S → 94S** | SNES sample decode + music once format confirmed |
-| **AUD-3** | **95PC → 94PC** | KMS playback (OPL WASM); catalogs from `pc95/` then `pc94/` |
+| **AUD-3** | **94PC** | AdLib `.KMS`/`.CFG` + PCFF SFX via MIT OPL3 (`NhlSoundTestPc94`). 95 PC still uses the wiki KMS parser only |
 | **AUD-4** | **95PC → 94PC** | VIV/speech extract + play |
 | **AUD-5** | All eight | Patch viewer (FM/OPL regs), trigger xref from SPA/SPF, export WAV |
 
@@ -412,7 +414,7 @@ NHL9X Studio should run in **two complementary setups**. Both use the same decod
 | Genesis / SNES ROM | `nhl94.bin`, `.md`, `.gen`, `.sfc` | Detect size/CRC/header → game profile → full catalog (frames, images, banks) |
 | Extracted graphic | `.anim`, `.jim`, crowd/faceoff `.anim` slice, `StanleyCup.anim` | Sniff header → `parseAnim` / `openFrames` / `decodeJim` → Frame or Images view |
 | NHL 95 PC file | `.PPV`, `.QFS`, `HOMEPALS.BIN`, `HOCKEY.EXE` (for SPA table) | Route to `pc95.js`; multi-shape PPV/QFS as today |
-| NHL 94 PC file | `.PPV`, `.QPP`, palette BINs | Route to planned `pc94.js` |
+| NHL 94 PC file | `.PPV`, `.QPP`, palette BINs, `.KMS` | `pc94-pack` / `pc94-shape` / `pc94-kms` via `pc95.js` `openBytes` |
 | NHL 95 PC **ISO** | `.iso` / `.bin rip | **Future:** client-side ISO9660 (or pre-extracted folder); mount and read paths like local `pc95/` |
 | Folder drop | Whole `pc95` or `pc94` install, or `NHL94/Graphics` extract | File System Access API or zip unpack → virtual catalog |
 

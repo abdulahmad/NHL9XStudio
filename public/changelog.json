@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.9.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: player sheets, rink and crowd PPV, and QPP pictures decode as Mode X planar banks (Huffman 30 FB or BTree 46 FB), not NHL 95 PC SHPI/RefPack",
+        "NHL 94 PC Audio: AdLib .KMS/.CFG songs and PCFF digital SFX play in the Audio tab"
+      ]
+    },
+    {
       "version": "1.8.2",
       "date": "2026-10-31",
       "changes": [

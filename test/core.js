@@ -1085,11 +1085,17 @@ assert.deepStrictEqual(Array.from(gfx94opened.shapes[0].pixels), [1, 2, 3, 4]);
 const gfx94sheet = pc95.openSpriteBundle(gfxPakBank(0, 2, rawSpit), 'nhl94pc');
 assert.deepStrictEqual(Array.from(gfx94sheet.renderFrame(1).pixels), [1, 2, 3, 4]);
 assert.deepStrictEqual(Array.from(gfx94sheet.renderFrame(2).pixels), [1, 2, 3, 4]);
-const retail94Ppv = path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94', '000_049.PPV');
-if (fs.existsSync(retail94Ppv)) {
-  const retailOpened = pc95.openBytes(fs.readFileSync(retail94Ppv));
+const retail94Dirs = [
+  process.env.NHL_PC94_DIR,
+  path.join(root, 'pc94'),
+  path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94'),
+  '/tmp/nhl94pc-src/lst/game'
+].filter((dir) => dir && fs.existsSync(path.join(dir, '000_049.PPV')));
+if (retail94Dirs.length) {
+  const retailOpened = pc95.openBytes(fs.readFileSync(path.join(retail94Dirs[0], '000_049.PPV')));
   assert.strictEqual(retailOpened.shapes.length, 50);
-  assert.strictEqual(retailOpened.shapes[0].width, 8);
+  assert.strictEqual(retailOpened.shapes[0].width, 16);
+  assert.strictEqual(retailOpened.shapes[0].height, 32);
 }
 assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');

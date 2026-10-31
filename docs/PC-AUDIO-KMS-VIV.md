@@ -1,8 +1,18 @@
 # PC audio: `.KMS` and `.VIV` (94PC / 95PC)
 
-Retail install trees (`pc94/`, `pc95/`) are **not** bundled in this repo. Parsers and a minimal OPL player are tested on fixtures in `test/pc-audio-kms.js`.
+Retail install trees (`pc94/`, `pc95/`) are **not** bundled in this repo. The wiki Kris parser is tested in `test/pc-audio-kms.js`. NHL 94 PC’s EXE-format songs and digital SFX are tested in `test/pc94-audio.js`.
 
-## `.KMS` — Kris' Music System
+## NHL 94 PC EXE songs (`.KMS` + `.CFG`)
+
+This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. NHL 94 PC writes a short header (version, tempo, track count, offsets at `0x28`) and a matching 264-byte `.CFG`. Layout: NHL94PC `docs/MUSIC_FORMAT.md` (PR #52) / `HOCKEY.EXE` `1630:0A90`.
+
+- **Parser:** `lib/audio/pc94-kms.js`
+- **SFX:** `lib/audio/pc94-sfx.js` — PCFF `.TIM` / `.DIG` / `.PAT`. Digital samples are signed 8-bit PCM; the Sound Blaster DAC XOR-flips with `0x80`.
+- **Playback:** `lib/audio/pc94-player.js` sequences those events into the MIT `opl3` core (browser copy: `lib/audio/opl3-chip.js`). The Audio tab is `public/sound-test-pc94.js`.
+- **Not a YM30.BGP unicorn capture** — envelopes after timbre `+0x0F` are unknown, so this is not an ear match yet.
+- MT-32 `.KMS` files (`MT*.KMS`) still take the AdLib path and will not sound like Roland.
+
+## `.KMS` — Kris' Music System (wiki / 95 PC experiments)
 
 - Distinctive Software format; external **`.vce`** instrument banks per output device (AdLib, MT-32, …).
 - Documented partially on [Modding Wiki](https://www.shikadi.net/moddingwiki/Kris%27_Music_System_Format) and [VGMPF](https://vgmpf.com/Wiki/index.php?title=KMS).

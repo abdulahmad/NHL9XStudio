@@ -47,7 +47,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 - SNES **94S** `SPAcelebrate` / `SPApump` named in `frames94snes.asm` (was SPAextra42/43)
 - Self-contained `test/fixtures/` for CI
 - SPA/SPF/image search aliases (celebrate vs bench-check); Pages deploy to `gh-pages` branch
-- GAP-4 retail Crowd/FaceOff slice checks vs `genesis-images.js`; GAP-8 `nhl94pc` stub + QPP RefPack (`30 FB`) + `pc94/` server routes
+- GAP-4 retail Crowd/FaceOff slice checks vs `genesis-images.js`; GAP-8 `nhl94pc` planar PPV/QPP + AdLib/SFX Audio tab (`pc94/` server routes)
 - GitHub Pages: ROM drop overlay fix, `pixels` unlock after ingest, **Open file / Open folder** in header (PR #5+)
 
 ---
@@ -62,7 +62,7 @@ Audio: **NHL '92 retail chain (steps 6–8)** — full 68k→Z80→ymfm path, te
 | **GAP-4** | 95G | 27 `ArenaGfx*`; retail Crowd/FaceOff offsets locked in `test.js`; full extract audit vs `extractAssets95.js` dev ROM still optional |
 | **GAP-5–6** | 93S / 94S | More Images-tab pictures (scouting, refs, framer on 94S) when LoROM offsets pinned |
 | **GAP-7** | 95PC | DOS polish (goalie palette, catalog holes) |
-| **GAP-8** | 94PC | gfxpak PPV decode; interim SPA (98×, from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
+| **GAP-8** | 94PC | Planar PPV/QPP + AdLib/SFX in; interim SPA (from 95 PC subset); retail `HOCKEY.EXE` SPA pack extract still open |
 | **HOST-3** | OPFS | Not implemented |
 | **HOST-5** | 95 ISO | Stub only |
 | **AUD-1** | 92G audio | Catalog + preview API; 93–95 placeholders |
