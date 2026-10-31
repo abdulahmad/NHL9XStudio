@@ -1269,7 +1269,7 @@
         "paletteAt": 1046466
       },
       {
-        "id": "NoPicSkater1.bin",
+        "id": "NoPicSkater1.map.jim",
         "label": "No picture Skater 1",
         "group": "Players",
         "kind": "jim",
@@ -1278,7 +1278,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "NoPicSkater2.bin",
+        "id": "NoPicSkater2.map.jim",
         "label": "No picture Skater 2",
         "group": "Players",
         "kind": "jim",
@@ -1287,7 +1287,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "NoPicGoalie1.bin",
+        "id": "NoPicGoalie1.map.jim",
         "label": "No picture Goalie 1",
         "group": "Players",
         "kind": "jim",
@@ -1296,7 +1296,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "NoPicGoalie2.bin",
+        "id": "NoPicGoalie2.map.jim",
         "label": "No picture Goalie 2",
         "group": "Players",
         "kind": "jim",
@@ -1305,7 +1305,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAndyMoog.bin",
+        "id": "CardAndyMoog.map.jim",
         "label": "Andy Moog",
         "group": "Players",
         "kind": "jim",
@@ -1314,7 +1314,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRayBourque.bin",
+        "id": "CardRayBourque.map.jim",
         "label": "Ray Bourque",
         "group": "Players",
         "kind": "jim",
@@ -1323,7 +1323,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAdamOates.bin",
+        "id": "CardAdamOates.map.jim",
         "label": "Adam Oates",
         "group": "Players",
         "kind": "jim",
@@ -1332,7 +1332,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDonSweeney.bin",
+        "id": "CardDonSweeney.map.jim",
         "label": "Don Sweeney",
         "group": "Players",
         "kind": "jim",
@@ -1341,7 +1341,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJoeJuneau.bin",
+        "id": "CardJoeJuneau.map.jim",
         "label": "Joe Juneau",
         "group": "Players",
         "kind": "jim",
@@ -1350,7 +1350,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardCamNeely.bin",
+        "id": "CardCamNeely.map.jim",
         "label": "Cam Neely",
         "group": "Players",
         "kind": "jim",
@@ -1359,7 +1359,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAlexanderMogilny.bin",
+        "id": "CardAlexanderMogilny.map.jim",
         "label": "Alexander Mogilny",
         "group": "Players",
         "kind": "jim",
@@ -1368,7 +1368,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPatLaFontaine.bin",
+        "id": "CardPatLaFontaine.map.jim",
         "label": "Pat La Fontaine",
         "group": "Players",
         "kind": "jim",
@@ -1377,7 +1377,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDaleHawerchuk.bin",
+        "id": "CardDaleHawerchuk.map.jim",
         "label": "Dale Hawerchuk",
         "group": "Players",
         "kind": "jim",
@@ -1386,7 +1386,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDougBodger.bin",
+        "id": "CardDougBodger.map.jim",
         "label": "Doug Bodger",
         "group": "Players",
         "kind": "jim",
@@ -1395,7 +1395,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGrantFuhr.bin",
+        "id": "CardGrantFuhr.map.jim",
         "label": "Grant Fuhr",
         "group": "Players",
         "kind": "jim",
@@ -1404,7 +1404,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPetrSvoboda.bin",
+        "id": "CardPetrSvoboda.map.jim",
         "label": "Petr Svoboda",
         "group": "Players",
         "kind": "jim",
@@ -1413,7 +1413,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMikeVernon.bin",
+        "id": "CardMikeVernon.map.jim",
         "label": "Mike Vernon",
         "group": "Players",
         "kind": "jim",
@@ -1422,7 +1422,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGaryRoberts.bin",
+        "id": "CardGaryRoberts.map.jim",
         "label": "Gary Roberts",
         "group": "Players",
         "kind": "jim",
@@ -1431,7 +1431,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTheorenFleury.bin",
+        "id": "CardTheorenFleury.map.jim",
         "label": "Theoren Fleury",
         "group": "Players",
         "kind": "jim",
@@ -1440,7 +1440,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGarySuter.bin",
+        "id": "CardGarySuter.map.jim",
         "label": "Gary Suter",
         "group": "Players",
         "kind": "jim",
@@ -1449,7 +1449,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAlMacInnis.bin",
+        "id": "CardAlMacInnis.map.jim",
         "label": "Al Mac Innis",
         "group": "Players",
         "kind": "jim",
@@ -1458,7 +1458,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJoeNieuwendyk.bin",
+        "id": "CardJoeNieuwendyk.map.jim",
         "label": "Joe Nieuwendyk",
         "group": "Players",
         "kind": "jim",
@@ -1467,7 +1467,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardEdBelfour.bin",
+        "id": "CardEdBelfour.map.jim",
         "label": "Ed Belfour",
         "group": "Players",
         "kind": "jim",
@@ -1476,7 +1476,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJeremyRoenick.bin",
+        "id": "CardJeremyRoenick.map.jim",
         "label": "Jeremy Roenick",
         "group": "Players",
         "kind": "jim",
@@ -1485,7 +1485,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveLarmer.bin",
+        "id": "CardSteveLarmer.map.jim",
         "label": "Steve Larmer",
         "group": "Players",
         "kind": "jim",
@@ -1494,7 +1494,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardChrisChelios.bin",
+        "id": "CardChrisChelios.map.jim",
         "label": "Chris Chelios",
         "group": "Players",
         "kind": "jim",
@@ -1503,7 +1503,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveSmith.bin",
+        "id": "CardSteveSmith.map.jim",
         "label": "Steve Smith",
         "group": "Players",
         "kind": "jim",
@@ -1512,7 +1512,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMichelGoulet.bin",
+        "id": "CardMichelGoulet.map.jim",
         "label": "Michel Goulet",
         "group": "Players",
         "kind": "jim",
@@ -1521,7 +1521,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTimCheveldae.bin",
+        "id": "CardTimCheveldae.map.jim",
         "label": "Tim Cheveldae",
         "group": "Players",
         "kind": "jim",
@@ -1530,7 +1530,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveYzerman.bin",
+        "id": "CardSteveYzerman.map.jim",
         "label": "Steve Yzerman",
         "group": "Players",
         "kind": "jim",
@@ -1539,7 +1539,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSergeiFedorov.bin",
+        "id": "CardSergeiFedorov.map.jim",
         "label": "Sergei Fedorov",
         "group": "Players",
         "kind": "jim",
@@ -1548,7 +1548,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPaulCoffey.bin",
+        "id": "CardPaulCoffey.map.jim",
         "label": "Paul Coffey",
         "group": "Players",
         "kind": "jim",
@@ -1557,7 +1557,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveChiasson.bin",
+        "id": "CardSteveChiasson.map.jim",
         "label": "Steve Chiasson",
         "group": "Players",
         "kind": "jim",
@@ -1566,7 +1566,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDinoCiccarelli.bin",
+        "id": "CardDinoCiccarelli.map.jim",
         "label": "Dino Ciccarelli",
         "group": "Players",
         "kind": "jim",
@@ -1575,7 +1575,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBillRanford.bin",
+        "id": "CardBillRanford.map.jim",
         "label": "Bill Ranford",
         "group": "Players",
         "kind": "jim",
@@ -1584,7 +1584,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDaveManson.bin",
+        "id": "CardDaveManson.map.jim",
         "label": "Dave Manson",
         "group": "Players",
         "kind": "jim",
@@ -1593,7 +1593,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardIgorKravchuk.bin",
+        "id": "CardIgorKravchuk.map.jim",
         "label": "Igor Kravchuk",
         "group": "Players",
         "kind": "jim",
@@ -1602,7 +1602,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardShayneCorson.bin",
+        "id": "CardShayneCorson.map.jim",
         "label": "Shayne Corson",
         "group": "Players",
         "kind": "jim",
@@ -1611,7 +1611,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDougWeight.bin",
+        "id": "CardDougWeight.map.jim",
         "label": "Doug Weight",
         "group": "Players",
         "kind": "jim",
@@ -1620,7 +1620,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPetrKlima.bin",
+        "id": "CardPetrKlima.map.jim",
         "label": "Petr Klima",
         "group": "Players",
         "kind": "jim",
@@ -1629,7 +1629,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSeanBurke.bin",
+        "id": "CardSeanBurke.map.jim",
         "label": "Sean Burke",
         "group": "Players",
         "kind": "jim",
@@ -1638,7 +1638,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAndrewCassels.bin",
+        "id": "CardAndrewCassels.map.jim",
         "label": "Andrew Cassels",
         "group": "Players",
         "kind": "jim",
@@ -1647,7 +1647,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGeoffSanderson.bin",
+        "id": "CardGeoffSanderson.map.jim",
         "label": "Geoff Sanderson",
         "group": "Players",
         "kind": "jim",
@@ -1656,7 +1656,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPatVerbeek.bin",
+        "id": "CardPatVerbeek.map.jim",
         "label": "Pat Verbeek",
         "group": "Players",
         "kind": "jim",
@@ -1665,7 +1665,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardZarleyZalapski.bin",
+        "id": "CardZarleyZalapski.map.jim",
         "label": "Zarley Zalapski",
         "group": "Players",
         "kind": "jim",
@@ -1674,7 +1674,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardEricWeinrich.bin",
+        "id": "CardEricWeinrich.map.jim",
         "label": "Eric Weinrich",
         "group": "Players",
         "kind": "jim",
@@ -1683,7 +1683,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBenoitHogue.bin",
+        "id": "CardBenoitHogue.map.jim",
         "label": "Benoit Hogue",
         "group": "Players",
         "kind": "jim",
@@ -1692,7 +1692,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveThomas.bin",
+        "id": "CardSteveThomas.map.jim",
         "label": "Steve Thomas",
         "group": "Players",
         "kind": "jim",
@@ -1701,7 +1701,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPierreTurgeon.bin",
+        "id": "CardPierreTurgeon.map.jim",
         "label": "Pierre Turgeon",
         "group": "Players",
         "kind": "jim",
@@ -1710,7 +1710,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGlennHealy.bin",
+        "id": "CardGlennHealy.map.jim",
         "label": "Glenn Healy",
         "group": "Players",
         "kind": "jim",
@@ -1719,7 +1719,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDariusKasparitis.bin",
+        "id": "CardDariusKasparitis.map.jim",
         "label": "Darius Kasparitis",
         "group": "Players",
         "kind": "jim",
@@ -1728,7 +1728,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardVladimirMalakhov.bin",
+        "id": "CardVladimirMalakhov.map.jim",
         "label": "Vladimir Malakhov",
         "group": "Players",
         "kind": "jim",
@@ -1737,7 +1737,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKellyHrudey.bin",
+        "id": "CardKellyHrudey.map.jim",
         "label": "Kelly Hrudey",
         "group": "Players",
         "kind": "jim",
@@ -1746,7 +1746,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardWayneGretzky.bin",
+        "id": "CardWayneGretzky.map.jim",
         "label": "Wayne Gretzky",
         "group": "Players",
         "kind": "jim",
@@ -1755,7 +1755,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardLucRobitaille.bin",
+        "id": "CardLucRobitaille.map.jim",
         "label": "Luc Robitaille",
         "group": "Players",
         "kind": "jim",
@@ -1764,7 +1764,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTomasSandstrom.bin",
+        "id": "CardTomasSandstrom.map.jim",
         "label": "Tomas Sandstrom",
         "group": "Players",
         "kind": "jim",
@@ -1773,7 +1773,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRobBlake.bin",
+        "id": "CardRobBlake.map.jim",
         "label": "Rob Blake",
         "group": "Players",
         "kind": "jim",
@@ -1782,7 +1782,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMartyMcSorley.bin",
+        "id": "CardMartyMcSorley.map.jim",
         "label": "Marty Mc Sorley",
         "group": "Players",
         "kind": "jim",
@@ -1791,7 +1791,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJonCasey.bin",
+        "id": "CardJonCasey.map.jim",
         "label": "Jon Casey",
         "group": "Players",
         "kind": "jim",
@@ -1800,7 +1800,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMikeModano.bin",
+        "id": "CardMikeModano.map.jim",
         "label": "Mike Modano",
         "group": "Players",
         "kind": "jim",
@@ -1809,7 +1809,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMarkTinordi.bin",
+        "id": "CardMarkTinordi.map.jim",
         "label": "Mark Tinordi",
         "group": "Players",
         "kind": "jim",
@@ -1818,7 +1818,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTommySjodin.bin",
+        "id": "CardTommySjodin.map.jim",
         "label": "Tommy Sjodin",
         "group": "Players",
         "kind": "jim",
@@ -1827,7 +1827,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDaveGagner.bin",
+        "id": "CardDaveGagner.map.jim",
         "label": "Dave Gagner",
         "group": "Players",
         "kind": "jim",
@@ -1836,7 +1836,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRussCourtnall.bin",
+        "id": "CardRussCourtnall.map.jim",
         "label": "Russ Courtnall",
         "group": "Players",
         "kind": "jim",
@@ -1845,7 +1845,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPatrickRoy.bin",
+        "id": "CardPatrickRoy.map.jim",
         "label": "Patrick Roy",
         "group": "Players",
         "kind": "jim",
@@ -1854,7 +1854,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardEricDesjardins.bin",
+        "id": "CardEricDesjardins.map.jim",
         "label": "Eric Desjardins",
         "group": "Players",
         "kind": "jim",
@@ -1863,7 +1863,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMattSchneider.bin",
+        "id": "CardMattSchneider.map.jim",
         "label": "Matt Schneider",
         "group": "Players",
         "kind": "jim",
@@ -1872,7 +1872,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKirkMuller.bin",
+        "id": "CardKirkMuller.map.jim",
         "label": "Kirk Muller",
         "group": "Players",
         "kind": "jim",
@@ -1881,7 +1881,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardVincentDamphousse.bin",
+        "id": "CardVincentDamphousse.map.jim",
         "label": "Vincent Damphousse",
         "group": "Players",
         "kind": "jim",
@@ -1890,7 +1890,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBrianBellows.bin",
+        "id": "CardBrianBellows.map.jim",
         "label": "Brian Bellows",
         "group": "Players",
         "kind": "jim",
@@ -1899,7 +1899,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardScottStevens.bin",
+        "id": "CardScottStevens.map.jim",
         "label": "Scott Stevens",
         "group": "Players",
         "kind": "jim",
@@ -1908,7 +1908,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardChrisTerreri.bin",
+        "id": "CardChrisTerreri.map.jim",
         "label": "Chris Terreri",
         "group": "Players",
         "kind": "jim",
@@ -1917,7 +1917,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardVachslavFetisov.bin",
+        "id": "CardVachslavFetisov.map.jim",
         "label": "Vachslav Fetisov",
         "group": "Players",
         "kind": "jim",
@@ -1926,7 +1926,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardStephaneRicher.bin",
+        "id": "CardStephaneRicher.map.jim",
         "label": "Stephane Richer",
         "group": "Players",
         "kind": "jim",
@@ -1935,7 +1935,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAlexanderSemak.bin",
+        "id": "CardAlexanderSemak.map.jim",
         "label": "Alexander Semak",
         "group": "Players",
         "kind": "jim",
@@ -1944,7 +1944,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardClaudeLemieux.bin",
+        "id": "CardClaudeLemieux.map.jim",
         "label": "Claude Lemieux",
         "group": "Players",
         "kind": "jim",
@@ -1953,7 +1953,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJohnVanbiesbrk.bin",
+        "id": "CardJohnVanbiesbrk.map.jim",
         "label": "John Vanbiesbrk",
         "group": "Players",
         "kind": "jim",
@@ -1962,7 +1962,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMarkMessier.bin",
+        "id": "CardMarkMessier.map.jim",
         "label": "Mark Messier",
         "group": "Players",
         "kind": "jim",
@@ -1971,7 +1971,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJamesPatrick.bin",
+        "id": "CardJamesPatrick.map.jim",
         "label": "James Patrick",
         "group": "Players",
         "kind": "jim",
@@ -1980,7 +1980,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMikeGartner.bin",
+        "id": "CardMikeGartner.map.jim",
         "label": "Mike Gartner",
         "group": "Players",
         "kind": "jim",
@@ -1989,7 +1989,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBrianLeetch.bin",
+        "id": "CardBrianLeetch.map.jim",
         "label": "Brian Leetch",
         "group": "Players",
         "kind": "jim",
@@ -1998,7 +1998,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardEsaTikkanen.bin",
+        "id": "CardEsaTikkanen.map.jim",
         "label": "Esa Tikkanen",
         "group": "Players",
         "kind": "jim",
@@ -2007,7 +2007,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPeterSidorkwicz.bin",
+        "id": "CardPeterSidorkwicz.map.jim",
         "label": "Peter Sidorkwicz",
         "group": "Players",
         "kind": "jim",
@@ -2016,7 +2016,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSylvainTurgeon.bin",
+        "id": "CardSylvainTurgeon.map.jim",
         "label": "Sylvain Turgeon",
         "group": "Players",
         "kind": "jim",
@@ -2025,7 +2025,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardNormMaciver.bin",
+        "id": "CardNormMaciver.map.jim",
         "label": "Norm Maciver",
         "group": "Players",
         "kind": "jim",
@@ -2034,7 +2034,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBradShaw.bin",
+        "id": "CardBradShaw.map.jim",
         "label": "Brad Shaw",
         "group": "Players",
         "kind": "jim",
@@ -2043,7 +2043,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJamieBaker.bin",
+        "id": "CardJamieBaker.map.jim",
         "label": "Jamie Baker",
         "group": "Players",
         "kind": "jim",
@@ -2052,7 +2052,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBobKudelski.bin",
+        "id": "CardBobKudelski.map.jim",
         "label": "Bob Kudelski",
         "group": "Players",
         "kind": "jim",
@@ -2061,7 +2061,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardEricLindros.bin",
+        "id": "CardEricLindros.map.jim",
         "label": "Eric Lindros",
         "group": "Players",
         "kind": "jim",
@@ -2070,7 +2070,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRodBrindAmour.bin",
+        "id": "CardRodBrindAmour.map.jim",
         "label": "Rod Brind Amour",
         "group": "Players",
         "kind": "jim",
@@ -2079,7 +2079,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGarryGalley.bin",
+        "id": "CardGarryGalley.map.jim",
         "label": "Garry Galley",
         "group": "Players",
         "kind": "jim",
@@ -2088,7 +2088,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMarkRecchi.bin",
+        "id": "CardMarkRecchi.map.jim",
         "label": "Mark Recchi",
         "group": "Players",
         "kind": "jim",
@@ -2097,7 +2097,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTommySoderstrom.bin",
+        "id": "CardTommySoderstrom.map.jim",
         "label": "Tommy Soderstrom",
         "group": "Players",
         "kind": "jim",
@@ -2106,7 +2106,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDimitriYushkevich.bin",
+        "id": "CardDimitriYushkevich.map.jim",
         "label": "Dimitri Yushkevich",
         "group": "Players",
         "kind": "jim",
@@ -2115,7 +2115,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTomBarrasso.bin",
+        "id": "CardTomBarrasso.map.jim",
         "label": "Tom Barrasso",
         "group": "Players",
         "kind": "jim",
@@ -2124,7 +2124,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMarioLemieux.bin",
+        "id": "CardMarioLemieux.map.jim",
         "label": "Mario Lemieux",
         "group": "Players",
         "kind": "jim",
@@ -2133,7 +2133,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKevinStevens.bin",
+        "id": "CardKevinStevens.map.jim",
         "label": "Kevin Stevens",
         "group": "Players",
         "kind": "jim",
@@ -2142,7 +2142,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJaromirJagr.bin",
+        "id": "CardJaromirJagr.map.jim",
         "label": "Jaromir Jagr",
         "group": "Players",
         "kind": "jim",
@@ -2151,7 +2151,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardLarryMurphy.bin",
+        "id": "CardLarryMurphy.map.jim",
         "label": "Larry Murphy",
         "group": "Players",
         "kind": "jim",
@@ -2160,7 +2160,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardUlfSamuelsson.bin",
+        "id": "CardUlfSamuelsson.map.jim",
         "label": "Ulf Samuelsson",
         "group": "Players",
         "kind": "jim",
@@ -2169,7 +2169,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRonHextall.bin",
+        "id": "CardRonHextall.map.jim",
         "label": "Ron Hextall",
         "group": "Players",
         "kind": "jim",
@@ -2178,7 +2178,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardOwenNolan.bin",
+        "id": "CardOwenNolan.map.jim",
         "label": "Owen Nolan",
         "group": "Players",
         "kind": "jim",
@@ -2187,7 +2187,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardSteveDuchesne.bin",
+        "id": "CardSteveDuchesne.map.jim",
         "label": "Steve Duchesne",
         "group": "Players",
         "kind": "jim",
@@ -2196,7 +2196,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJoeSakic.bin",
+        "id": "CardJoeSakic.map.jim",
         "label": "Joe Sakic",
         "group": "Players",
         "kind": "jim",
@@ -2205,7 +2205,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardCurtisLeschyshyn.bin",
+        "id": "CardCurtisLeschyshyn.map.jim",
         "label": "Curtis Leschyshyn",
         "group": "Players",
         "kind": "jim",
@@ -2214,7 +2214,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMatsSundin.bin",
+        "id": "CardMatsSundin.map.jim",
         "label": "Mats Sundin",
         "group": "Players",
         "kind": "jim",
@@ -2223,7 +2223,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKellyKisio.bin",
+        "id": "CardKellyKisio.map.jim",
         "label": "Kelly Kisio",
         "group": "Players",
         "kind": "jim",
@@ -2232,7 +2232,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDougWilson.bin",
+        "id": "CardDougWilson.map.jim",
         "label": "Doug Wilson",
         "group": "Players",
         "kind": "jim",
@@ -2241,7 +2241,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPatFalloon.bin",
+        "id": "CardPatFalloon.map.jim",
         "label": "Pat Falloon",
         "group": "Players",
         "kind": "jim",
@@ -2250,7 +2250,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardArtursIrbe.bin",
+        "id": "CardArtursIrbe.map.jim",
         "label": "Arturs Irbe",
         "group": "Players",
         "kind": "jim",
@@ -2259,7 +2259,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardNeilWilkinson.bin",
+        "id": "CardNeilWilkinson.map.jim",
         "label": "Neil Wilkinson",
         "group": "Players",
         "kind": "jim",
@@ -2268,7 +2268,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJohanGarpenlov.bin",
+        "id": "CardJohanGarpenlov.map.jim",
         "label": "Johan Garpenlov",
         "group": "Players",
         "kind": "jim",
@@ -2277,7 +2277,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardCurtisJoseph.bin",
+        "id": "CardCurtisJoseph.map.jim",
         "label": "Curtis Joseph",
         "group": "Players",
         "kind": "jim",
@@ -2286,7 +2286,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardCraigJanney.bin",
+        "id": "CardCraigJanney.map.jim",
         "label": "Craig Janney",
         "group": "Players",
         "kind": "jim",
@@ -2295,7 +2295,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBrettHull.bin",
+        "id": "CardBrettHull.map.jim",
         "label": "Brett Hull",
         "group": "Players",
         "kind": "jim",
@@ -2304,7 +2304,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGarthButcher.bin",
+        "id": "CardGarthButcher.map.jim",
         "label": "Garth Butcher",
         "group": "Players",
         "kind": "jim",
@@ -2313,7 +2313,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJeffBrown.bin",
+        "id": "CardJeffBrown.map.jim",
         "label": "Jeff Brown",
         "group": "Players",
         "kind": "jim",
@@ -2322,7 +2322,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBrendanShanahan.bin",
+        "id": "CardBrendanShanahan.map.jim",
         "label": "Brendan Shanahan",
         "group": "Players",
         "kind": "jim",
@@ -2331,7 +2331,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBrianBradley.bin",
+        "id": "CardBrianBradley.map.jim",
         "label": "Brian Bradley",
         "group": "Players",
         "kind": "jim",
@@ -2340,7 +2340,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardWendellYoung.bin",
+        "id": "CardWendellYoung.map.jim",
         "label": "Wendell Young",
         "group": "Players",
         "kind": "jim",
@@ -2349,7 +2349,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardRomanHamrlik.bin",
+        "id": "CardRomanHamrlik.map.jim",
         "label": "Roman Hamrlik",
         "group": "Players",
         "kind": "jim",
@@ -2358,7 +2358,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBobBeers.bin",
+        "id": "CardBobBeers.map.jim",
         "label": "Bob Beers",
         "group": "Players",
         "kind": "jim",
@@ -2367,7 +2367,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMikaelAndersson.bin",
+        "id": "CardMikaelAndersson.map.jim",
         "label": "Mikael Andersson",
         "group": "Players",
         "kind": "jim",
@@ -2376,7 +2376,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardChrisKontos.bin",
+        "id": "CardChrisKontos.map.jim",
         "label": "Chris Kontos",
         "group": "Players",
         "kind": "jim",
@@ -2385,7 +2385,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardFelixPotvin.bin",
+        "id": "CardFelixPotvin.map.jim",
         "label": "Felix Potvin",
         "group": "Players",
         "kind": "jim",
@@ -2394,7 +2394,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDougGilmour.bin",
+        "id": "CardDougGilmour.map.jim",
         "label": "Doug Gilmour",
         "group": "Players",
         "kind": "jim",
@@ -2403,7 +2403,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardNikolaiBorshevsky.bin",
+        "id": "CardNikolaiBorshevsky.map.jim",
         "label": "Nikolai Borshevsky",
         "group": "Players",
         "kind": "jim",
@@ -2412,7 +2412,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDaveEllett.bin",
+        "id": "CardDaveEllett.map.jim",
         "label": "Dave Ellett",
         "group": "Players",
         "kind": "jim",
@@ -2421,7 +2421,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardToddGill.bin",
+        "id": "CardToddGill.map.jim",
         "label": "Todd Gill",
         "group": "Players",
         "kind": "jim",
@@ -2430,7 +2430,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDaveAndreychuk.bin",
+        "id": "CardDaveAndreychuk.map.jim",
         "label": "Dave Andreychuk",
         "group": "Players",
         "kind": "jim",
@@ -2439,7 +2439,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKirkMcLean.bin",
+        "id": "CardKirkMcLean.map.jim",
         "label": "Kirk Mc Lean",
         "group": "Players",
         "kind": "jim",
@@ -2448,7 +2448,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardGeoffCourtnall.bin",
+        "id": "CardGeoffCourtnall.map.jim",
         "label": "Geoff Courtnall",
         "group": "Players",
         "kind": "jim",
@@ -2457,7 +2457,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPavelBure.bin",
+        "id": "CardPavelBure.map.jim",
         "label": "Pavel Bure",
         "group": "Players",
         "kind": "jim",
@@ -2466,7 +2466,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardJyrkiLumme.bin",
+        "id": "CardJyrkiLumme.map.jim",
         "label": "Jyrki Lumme",
         "group": "Players",
         "kind": "jim",
@@ -2475,7 +2475,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDougLidster.bin",
+        "id": "CardDougLidster.map.jim",
         "label": "Doug Lidster",
         "group": "Players",
         "kind": "jim",
@@ -2484,7 +2484,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardCliffRonning.bin",
+        "id": "CardCliffRonning.map.jim",
         "label": "Cliff Ronning",
         "group": "Players",
         "kind": "jim",
@@ -2493,7 +2493,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDonBeaupre.bin",
+        "id": "CardDonBeaupre.map.jim",
         "label": "Don Beaupre",
         "group": "Players",
         "kind": "jim",
@@ -2502,7 +2502,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardMikeRidley.bin",
+        "id": "CardMikeRidley.map.jim",
         "label": "Mike Ridley",
         "group": "Players",
         "kind": "jim",
@@ -2511,7 +2511,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardDimitriKhristich.bin",
+        "id": "CardDimitriKhristich.map.jim",
         "label": "Dimitri Khristich",
         "group": "Players",
         "kind": "jim",
@@ -2520,7 +2520,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPeterBondra.bin",
+        "id": "CardPeterBondra.map.jim",
         "label": "Peter Bondra",
         "group": "Players",
         "kind": "jim",
@@ -2529,7 +2529,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardKevinHatcher.bin",
+        "id": "CardKevinHatcher.map.jim",
         "label": "Kevin Hatcher",
         "group": "Players",
         "kind": "jim",
@@ -2538,7 +2538,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAlIafrate.bin",
+        "id": "CardAlIafrate.map.jim",
         "label": "Al Iafrate",
         "group": "Players",
         "kind": "jim",
@@ -2547,7 +2547,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardThomasSteen.bin",
+        "id": "CardThomasSteen.map.jim",
         "label": "Thomas Steen",
         "group": "Players",
         "kind": "jim",
@@ -2556,7 +2556,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTeemuSelanne.bin",
+        "id": "CardTeemuSelanne.map.jim",
         "label": "Teemu Selanne",
         "group": "Players",
         "kind": "jim",
@@ -2565,7 +2565,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardPhilHousley.bin",
+        "id": "CardPhilHousley.map.jim",
         "label": "Phil Housley",
         "group": "Players",
         "kind": "jim",
@@ -2574,7 +2574,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardBobEssensa.bin",
+        "id": "CardBobEssensa.map.jim",
         "label": "Bob Essensa",
         "group": "Players",
         "kind": "jim",
@@ -2583,7 +2583,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardTeppoNumminen.bin",
+        "id": "CardTeppoNumminen.map.jim",
         "label": "Teppo Numminen",
         "group": "Players",
         "kind": "jim",
@@ -2592,7 +2592,7 @@
         "paletteAt": 812898
       },
       {
-        "id": "CardAlexeiZhamnov.bin",
+        "id": "CardAlexeiZhamnov.map.jim",
         "label": "Alexei Zhamnov",
         "group": "Players",
         "kind": "jim",

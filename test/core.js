@@ -471,7 +471,7 @@ assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
 assert.ok(g94.banks.some((bank) => bank.id === 'StanleyCup.anim'));
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
 assert.ok(g94.images.some((image) => image.id === 'logoBOS.map.jim' && image.paletteAt === 0xFF482));
-assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.bin' && image.paletteAt === 0xC6762));
+assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.map.jim' && image.paletteAt === 0xC6762));
 assert.ok(g95.images.some((image) => image.id === 'CardGuyHebert.bin' && image.paletteAt));
 assert.ok(g95.images.some((image) => image.id === 'logoANA.map.jim'));
 assert.ok(g95.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
@@ -570,7 +570,7 @@ if (genesis94) {
   const title = decodeJim(genesis94.subarray(titleSpec.start, titleSpec.end));
   assert.ok(title.renderFrame(1).width >= 64);
   assert.ok(inkCount(title.renderFrame(1)) > 100);
-  const card = g94.images.find((image) => image.id === 'CardMarioLemieux.bin');
+  const card = g94.images.find((image) => image.id === 'CardMarioLemieux.map.jim');
   const portrait = decodeJim(
     genesis94.subarray(card.start, card.end),
     genesis94.subarray(card.paletteAt, card.paletteAt + 128)
