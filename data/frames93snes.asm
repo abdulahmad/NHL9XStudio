@@ -21,7 +21,7 @@ SPFsweep	= 257
 SPFfallback	= 273
 SPFfallfwd	= 305
 SPFduck	= 337
-SPFhold	= 345
+SPFHold	= 345
 SPFgloves	= 353
 SPFfight	= 354
 SPFfinjury	= 371
@@ -73,7 +73,7 @@ SPAgready2	= *-SPAList	; goalie ready position, held frame (used by the goalie s
 .6	dc.w	424,-30
 .7	dc.w	427,-30
 
-SPAgglover	= *-SPAList	; glove save (GoalieSaveList 0)
+SPAgglover	= *-SPAList	; glove save (assgoalie_list 0)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -86,7 +86,7 @@ SPAgglover	= *-SPAList	; glove save (GoalieSaveList 0)
 .6	dc.w	425,-32
 .7	dc.w	428,-32
 
-SPAgglovel	= *-SPAList	; glove save (GoalieSaveList 1)
+SPAgglovel	= *-SPAList	; glove save (assgoalie_list 1)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -99,7 +99,7 @@ SPAgglovel	= *-SPAList	; glove save (GoalieSaveList 1)
 .6	dc.w	426,-32
 .7	dc.w	429,-32
 
-SPAgstickr	= *-SPAList	; stick save (GoalieSaveList 4) (93G $20C)
+SPAgstickr	= *-SPAList	; stick save (assgoalie_list 4) (93G $20C)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -112,7 +112,7 @@ SPAgstickr	= *-SPAList	; stick save (GoalieSaveList 4) (93G $20C)
 .6	dc.w	482,-32
 .7	dc.w	484,-32
 
-SPAgstickl	= *-SPAList	; stick save (GoalieSaveList 5) (93G $23E)
+SPAgstickl	= *-SPAList	; stick save (assgoalie_list 5) (93G $23E)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -125,7 +125,7 @@ SPAgstickl	= *-SPAList	; stick save (GoalieSaveList 5) (93G $23E)
 .6	dc.w	483,-32
 .7	dc.w	485,-32
 
-SPAgstackr	= *-SPAList	; stack pad save (GoalieSaveList 2) (93G $270)
+SPAgstackr	= *-SPAList	; stack pad save (assgoalie_list 2) (93G $270)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
@@ -138,7 +138,7 @@ SPAgstackr	= *-SPAList	; stack pad save (GoalieSaveList 2) (93G $270)
 .6	dc.w	454,8,455,-20
 .7	dc.w	456,8,457,-20
 
-SPAgstackl	= *-SPAList	; stack pad save (GoalieSaveList 3) (93G $2C2)
+SPAgstackl	= *-SPAList	; stack pad save (assgoalie_list 3) (93G $2C2)
 .t
 	dc.w	.0-.t,.1-.t,.2-.t,.3-.t,.4-.t,.5-.t,.6-.t,.7-.t
 	dc.w	0
