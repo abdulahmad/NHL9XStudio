@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-asset-versions>(function(){var V={"anim/Crowd.anim":"be0ef785a3","anim/Puck.anim":"56df9f431a","anim/Sprites.anim":"41c2b8392f","anim/Zam.anim":"6dd540000c","changelog.json":"44af7d6f26","data/audio/nhl92-68k-driver.json":"8cca4d9eb5","data/audio/nhl92-chip-tests.json":"bb71a44f19","data/audio/nhl92-gm-map.json":"fcce3b2ed4","data/audio/nhl92-patch-analysis.json":"0390b0fb71","data/audio/nhl92-sound-chain.json":"cd8dd816b7","data/audio/nhl92.json":"124c0a1004","data/audio/nhl93s-gm-map.json":"25ba0d721c","data/audio/nhl93s-instrument-analysis.json":"7c5b677131","data/audio/nhl93s-sound.json":"020b1f9441","data/audio/nhl94.json":"718c5ebbe7","data/audio/nhl94s-gm-map.json":"4b129c4c92","data/audio/nhl94s-sound-analysis.json":"6884defe08","data/audio/nhl94s-sound.json":"056f1f6c1c","data/audio/nhl95-gm-map.json":"17683f2409","data/audio/nhl95-sound-chain.json":"171eb1263b","data/audio/nhl95.json":"d859139cd2","data/audio/nhl9x-dac-analysis.json":"a5789c09fb","data/audio/nhl9x-gm-map.json":"85b50c7b90","data/audio/nhl9x-patch-analysis.json":"60ffbfb058","data/audio/nhl9x-sound-chain.json":"a5855ca283","data/audio/nhlpa93.json":"4e8292c8e0","data/fixtures/README.md":"311d0aeaf7","data/fixtures/nhl92-sound-fixture.json":"e1b8a0714c","data/fixtures/nhl92-sound-slice.bin":"d0ed9bc79b","data/fixtures/nhl92-z80-program.bin":"781163eeb0","data/fixtures/nhl93-sound-fixture.json":"668dac7c2e","data/fixtures/nhl93-sound-slice.bin":"d2bf0412cc","data/fixtures/nhl94-sound-fixture.json":"7b17bdabd8","data/fixtures/nhl94-sound-slice.bin":"2c5043f83a","data/fixtures/nhl95-sound-fixture.json":"e33a3f8d2f","data/fixtures/nhl95-sound-slice.bin":"dc5b637c43","data/frames.asm":"ef7420738a","data/frames93.asm":"a26c1730c9","data/frames93snes.asm":"1443b2730c","data/frames94.asm":"4f2e7d0dfb","data/frames94pc.asm":"fbb085b7ec","data/frames94snes.asm":"7304925e62","data/frames95.asm":"4be44cf9f8","data/frames95pc.asm":"09e254abde","data/pals/genesis/ALLSTARH.pal":"9794c5d2dd","data/pals/genesis/ALLSTARV.pal":"7e804ada01","data/pals/genesis/Bruinsh.pal":"63f9d53404","data/pals/genesis/Bruinsv.pal":"6a5d10bde0","data/pals/genesis/Campbellh.pal":"7e804ada01","data/pals/genesis/Campbellv.pal":"9794c5d2dd","data/pals/genesis/Kingsh.pal":"9a32c8a410","data/pals/genesis/Kingsv.pal":"b6085d4000","data/pals/genesis/Redwingsh.pal":"d15792d377","data/pals/genesis/Redwingsv.pal":"ccd237202d","data/pals/genesis/Sharksh.pal":"b427f51fc6","data/pals/genesis/Sharksv.pal":"1033ecb093","data/pals/genesis/Walesh.pal":"7e804ada01","data/pals/genesis/Walesv.pal":"9794c5d2dd","data/pals/genesis/blackhawksh.pal":"96db84f48c","data/pals/genesis/blackhawksv.pal":"dcbb952b1f","data/pals/genesis/bluesh.pal":"d33710b025","data/pals/genesis/bluesv.pal":"77b7424bb1","data/pals/genesis/canadiensh.pal":"2ea85bfcc8","data/pals/genesis/canadiensv.pal":"70463c45ce","data/pals/genesis/canucksh.pal":"2959275f60","data/pals/genesis/canucksv.pal":"e42a083cf0","data/pals/genesis/capitalsh.pal":"987cfcc3ad","data/pals/genesis/capitalsv.pal":"5984d4092d","data/pals/genesis/devilsh.pal":"4e4cd60803","data/pals/genesis/devilsv.pal":"44097f7192","data/pals/genesis/flamesh.pal":"b8d2e4f9a6","data/pals/genesis/flamesv.pal":"5400cb4324","data/pals/genesis/flyersh.pal":"6db66ee9c1","data/pals/genesis/flyersv.pal":"dc14f5e5c9","data/pals/genesis/islandersh.pal":"5c041da397","data/pals/genesis/islandersv.pal":"6057b3933e","data/pals/genesis/jetsh.pal":"860f0a92fb","data/pals/genesis/jetsv.pal":"1f6d6b5c10","data/pals/genesis/mapleleafsh.pal":"0053a546ed","data/pals/genesis/mapleleafsv.pal":"bfb778acc3","data/pals/genesis/nordiquesh.pal":"794ce345af","data/pals/genesis/nordiquesv.pal":"819ff9c9dc","data/pals/genesis/northstarsh.pal":"21bda3ad49","data/pals/genesis/northstarsv.pal":"01cd8ecf12","data/pals/genesis/oilersh.pal":"733591f1b8","data/pals/genesis/oilersv.pal":"f4401cc356","data/pals/genesis/penguinsh.pal":"6135251ffd","data/pals/genesis/penguinsv.pal":"78b9c813b7","data/pals/genesis/rangersh.pal":"b7ead56656","data/pals/genesis/rangersv.pal":"8ea9e3e65f","data/pals/genesis/sabresh.pal":"f36b792441","data/pals/genesis/sabresv.pal":"54673d086e","data/pals/genesis/whalersh.pal":"41c395c547","data/pals/genesis/whalersv.pal":"af9ddd3835","data/pals/genesis95/Bruinsh.pal":"122ebf5903","data/pals/genesis95/Bruinsv.pal":"5b47de1d2c","data/pals/genesis95/anah.pal":"55d42712d4","data/pals/genesis95/anav.pal":"03408a2f89","data/pals/genesis95/flamesh.pal":"77d0ea5ec0","data/pals/genesis95/flamesv.pal":"6b43ae25ed","data/pals/genesis95/sabresh.pal":"31c86c498a","data/pals/genesis95/sabresv.pal":"c9a7f5aebd","data/pals/snes/ASEh.snespal":"7e804ada01","data/pals/snes/ASEv.snespal":"9794c5d2dd","data/pals/snes/ASWh.snespal":"7e804ada01","data/pals/snes/ASWv.snespal":"9794c5d2dd","data/pals/snes/BOSh.snespal":"63f9d53404","data/pals/snes/BOSv.snespal":"6a5d10bde0","data/pals/snes/BUFh.snespal":"f36b792441","data/pals/snes/BUFv.snespal":"54673d086e","data/pals/snes/CGYh.snespal":"b8d2e4f9a6","data/pals/snes/CGYv.snespal":"5400cb4324","data/pals/snes/CHIh.snespal":"96db84f48c","data/pals/snes/CHIv.snespal":"dcbb952b1f","data/pals/snes/DETh.snespal":"d15792d377","data/pals/snes/DETv.snespal":"ccd237202d","data/pals/snes/EDMh.snespal":"733591f1b8","data/pals/snes/EDMv.snespal":"f4401cc356","data/pals/snes/HFDh.snespal":"41c395c547","data/pals/snes/HFDv.snespal":"af9ddd3835","data/pals/snes/LAh.snespal":"9a32c8a410","data/pals/snes/LAv.snespal":"b6085d4000","data/pals/snes/LIh.snespal":"5c041da397","data/pals/snes/LIv.snespal":"6057b3933e","data/pals/snes/MINh.snespal":"8e5ce1653b","data/pals/snes/MINv.snespal":"a6551b366e","data/pals/snes/MTLh.snespal":"2ea85bfcc8","data/pals/snes/MTLv.snespal":"70463c45ce","data/pals/snes/NJh.snespal":"10a56c9229","data/pals/snes/NJv.snespal":"79ea0475e0","data/pals/snes/NYh.snespal":"b7ead56656","data/pals/snes/NYv.snespal":"8ea9e3e65f","data/pals/snes/OTWh.snespal":"6db66ee9c1","data/pals/snes/OTWv.snespal":"dc14f5e5c9","data/pals/snes/PHIh.snespal":"6db66ee9c1","data/pals/snes/PHIv.snespal":"dc14f5e5c9","data/pals/snes/PITh.snespal":"6135251ffd","data/pals/snes/PITv.snespal":"78b9c813b7","data/pals/snes/QUEh.snespal":"794ce345af","data/pals/snes/QUEv.snespal":"819ff9c9dc","data/pals/snes/Rink.snespal":"f31d514c7d","data/pals/snes/SJh.snespal":"b427f51fc6","data/pals/snes/SJv.snespal":"1033ecb093","data/pals/snes/STLh.snespal":"d33710b025","data/pals/snes/STLv.snespal":"77b7424bb1","data/pals/snes/TBYh.snespal":"39a62b3d33","data/pals/snes/TBYv.snespal":"24afe2bdfa","data/pals/snes/TORh.snespal":"0053a546ed","data/pals/snes/TORv.snespal":"bfb778acc3","data/pals/snes/VANh.snespal":"2959275f60","data/pals/snes/VANv.snespal":"e42a083cf0","data/pals/snes/WPGh.snespal":"860f0a92fb","data/pals/snes/WPGv.snespal":"1f6d6b5c10","data/pals/snes/WSHh.snespal":"987cfcc3ad","data/pals/snes/WSHv.snespal":"5984d4092d","games.json":"fe380e37e5","jed-pals/createjerseyShadowfixed.act":"e72f7af63d","jed-pals/rinkpal.act":"c0ce7ee1f2","jed-pals/rinkpalShadowfixed.act":"155fafeb97","lib/audio/README.md":"332f9ad4e1","lib/audio/data/nhl94-music.json":"84a5bd8903","lib/audio/data/nhl94-streams.json":"2016f81f74","lib/audio/data/nhlpa93-streams.json":"d55a9377ae","lib/audio/generated/ym2612_wasm.wasm":"694282ba9d","lib/audio/licenses-ymfm.txt":"2281404259"};var M={"lib/audio/generated/ym2612-runtime.js":"d3157c772a","lib/audio/generated/ym2612_wasm.js":"cd7cb8d43c"};var R=new URL("./",location.href).href;var f=window.fetch;window.fetch=function(u,o){try{var a=new URL((u&&u.url)||String(u),document.baseURI);if(a.href.indexOf(R)===0&&!a.search){var h=V[a.pathname.slice(new URL(R).pathname.length)];if(h){a.search="?v="+h;if(typeof u==="string"||u instanceof URL)u=a.href;}}}catch(e){}return f.call(this,u,o);};window.assetUrl=function(p){var a=new URL(p,R);if(M[p])a.search="?v="+M[p];return a.href;};})();</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jersey & centre ice editor (NHL 94 / 95 PC) — NHL9X Studio</title>
+  <link rel="stylesheet" href="viewer.css?v=785e0e9fb6">
+  <link rel="stylesheet" href="jed.css?v=fbf89a7b94">
+</head>
+<body class="jed">
+  <header class="jed-head">
+    <div>
+      <h1 class="product-name studio-title">
+        <a id="jed-exit" class="studio-back" href="index.html" title="Back to NHL9X Studio">← NHL9X Studio</a>
+        <span class="studio-title-sep" aria-hidden="true">|</span>
+        Jersey &amp; centre ice editor
+      </h1>
+      <nav class="jed-tabs" role="tablist" aria-label="Editor">
+        <button type="button" role="tab" id="tab-jerseys" aria-selected="true">Jerseys</button>
+        <button type="button" role="tab" id="tab-ice" aria-selected="false">Centre ice</button>
+      </nav>
+      <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
+    </div>
+    <div class="jed-actions" role="group" aria-label="Files">
+      <div id="jed-game" class="pin-options" role="group" aria-label="Game" hidden>
+        <button type="button" id="jed-game-94" data-game="nhl94pc" aria-pressed="false">NHL 94 PC</button>
+        <button type="button" id="jed-game-95" data-game="nhl95pc" aria-pressed="false">NHL 95 PC</button>
+      </div>
+      <button type="button" id="jed-open-folder" class="ghost-btn" title="An NHL 94 PC or 95 PC install folder: HOMEPALS/AWAYPALS plus the PPV sprites for the preview">Open game folder…</button>
+      <button type="button" id="jed-open-files" class="ghost-btn" title="HOMEPALS.BIN and/or AWAYPALS.BIN (plus PPV sheets and RINKPAL for the preview)">Open files…</button>
+      <button type="button" id="jed-export-all" class="ghost-btn" data-tip="One .zip of everything you edited: HOMEPALS.BIN, AWAYPALS.BIN, CRESTS4.PPV and each edited centre ice (.MAP, .TIL, placement JSON)">Export all (.zip)</button>
+      <input type="file" id="jed-folder" hidden multiple webkitdirectory>
+      <input type="file" id="jed-import-crest" hidden accept=".png,.bmp,.gif,.pcx,.spt,image/*">
+      <input type="file" id="jed-import-ppv" hidden accept=".ppv,.qpp,.095">
+      <input type="file" id="jed-files" hidden multiple>
+      <input type="file" id="jed-import-bin" hidden accept=".bin">
+      <input type="file" id="jed-import-file" hidden accept=".bin,.o94,.o95">
+      <input type="file" id="jed-import-act" hidden accept=".act">
+    </div>
+  </header>
+  <main class="jed-main">
+    <section class="jed-col jed-teams" aria-label="Team">
+      <div class="pin-options" role="group" aria-label="Side">
+        <button type="button" id="jed-home" aria-pressed="true">Home</button>
+        <button type="button" id="jed-away" aria-pressed="false">Away</button>
+      </div>
+      <div id="jed-team-list" class="jed-team-list" role="listbox" aria-label="Teams" tabindex="0"></div>
+      <p class="keys">↑ ↓ team · ← → home / away</p>
+    </section>
+    <section class="jed-col jed-edit" aria-label="Palette">
+      <h2>Team palette <span class="muted">64 colours · game palette 128–191 · 6-bit VGA (0–63)</span></h2>
+      <div id="jed-swatches" class="jed-swatches" role="listbox" aria-label="Colours"></div>
+      <div class="jed-color" id="jed-color">
+        <div class="jed-big" id="jed-big"></div>
+        <div class="jed-rgb">
+          <p><b id="jed-color-name">Colour</b> <span class="mono muted" id="jed-hex"></span></p>
+          <label>R <input type="range" min="0" max="63" id="jed-r"><input type="number" min="0" max="63" id="jed-rn"></label>
+          <label>G <input type="range" min="0" max="63" id="jed-g"><input type="number" min="0" max="63" id="jed-gn"></label>
+          <label>B <input type="range" min="0" max="63" id="jed-b"><input type="number" min="0" max="63" id="jed-bn"></label>
+          <label title="Type #RRGGBB (8-bit); it is snapped to the game's 6-bit VGA colour">Hex <input type="text" id="jed-hex-in" class="mono" size="8" maxlength="7" spellcheck="false"></label>
+          <label>Picker <input type="color" id="jed-picker" title="Snapped to the nearest 6-bit VGA colour"></label>
+        </div>
+      </div>
+      <div class="jed-io" role="group" aria-label="Import and export">
+        <button type="button" id="jed-undo" class="ghost-btn" title="Undo the last edit (Ctrl+Z)" disabled>Undo</button>
+        <button type="button" id="jed-redo" class="ghost-btn" title="Redo (Ctrl+Shift+Z or Ctrl+Y)" disabled>Redo</button>
+        <button type="button" id="jed-export-file" class="ghost-btn" title="The whole HOMEPALS.BIN (every team) with your edits">Export homepals.bin</button>
+        <button type="button" id="jed-import-file-btn" class="ghost-btn" title="Replace the whole HOMEPALS.BIN (every team); NHL 94 PC 11,648 or NHL 95 PC 12,544 bytes">Import homepals.bin</button>
+        <button type="button" id="jed-export-bin" class="ghost-btn" title="The jersey on screen: this team and side as one 448-byte record (team_side.bin)">Export jersey</button>
+        <button type="button" id="jed-import-bin-btn" class="ghost-btn" title="Replace the jersey on screen (this team and side) with a 448-byte record, or 192 bytes of colours only">Import jersey</button>
+        <button type="button" id="jed-export-act" class="ghost-btn" title="Adobe Color Table in sprite-colour space: entry i = what raw sprite pixel i shows (EA-NHL-Tools createPal). Load it on a raw sprite in Photoshop.">Export .ACT</button>
+        <button type="button" id="jed-import-act-btn" class="ghost-btn" title="768 or 772-byte sprite-space ACT: each team colour is read from the lowest sprite index (144–250) that shows it (÷4); conflicts are reported">Import .ACT</button>
+        <button type="button" id="jed-revert" class="ghost-btn" title="Undo every edit to this team and side">Revert team</button>
+      </div>
+      <h2>Jersey spots <span class="muted">big sprite, crests and spots: click paints (or picks the colour when off)</span></h2>
+      <label class="check" title="On: clicking the big sprite, a crest pixel or a spot below gives that spot the selected colour. Off: clicking selects the colour the spot uses (eyedropper)."><input type="checkbox" id="jed-paint" checked> Click paints spots with the selected colour</label>
+      <label class="check"><input type="checkbox" id="jed-hover-outline" checked> Outline on sprite when hovering a spot</label>
+      <div id="jed-zones" class="jed-zones"></div>
+    </section>
+    <section class="jed-col jed-preview" aria-label="Preview">
+      <h2>Preview <span class="muted" id="jed-preview-note"></span></h2>
+      <div class="jed-frame-bar">
+        <button type="button" id="jed-prev" class="ghost-btn" aria-label="Previous frame">◀</button>
+        <label>Frame <input type="number" id="jed-frame" min="0" value="0"></label>
+        <button type="button" id="jed-next" class="ghost-btn" aria-label="Next frame">▶</button>
+        <input type="range" id="jed-frame-slider" min="0" value="0" aria-label="Frame">
+        <label>Scale <input type="range" id="jed-scale" min="1" max="30" step="1" value="13"> <output id="jed-scale-val" class="mono">13×</output></label>
+        <label class="check"><input type="checkbox" id="jed-skip-empty" checked> Hide empty</label>
+      </div>
+      <div class="jed-stage" id="jed-stage"><div id="jed-left" class="jed-nbs"></div><span class="jed-mainwrap" id="jed-mainwrap"><canvas id="jed-canvas" width="1" height="1" title="Click a jersey pixel to give its spot the selected colour"></canvas><canvas id="jed-overlay" width="1" height="1" aria-hidden="true"></canvas></span><div id="jed-right" class="jed-nbs"></div><p id="jed-empty" class="jed-empty">No sprites loaded. Click <b>Open game folder…</b> and pick your NHL 94 PC or NHL 95 PC install: the editor reads <span class="mono">HOMEPALS.BIN</span>, <span class="mono">AWAYPALS.BIN</span> and the player sheets <span class="mono">000_049.PPV</span> … <span class="mono">11001149.PPV</span>. The palette editor works without them.</p></div>
+      <div id="jed-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Resize the frame grid" title="Drag to resize the frame grid"></div>
+      <div id="jed-strip" class="jed-strip" aria-label="All frames"></div>
+    </section>
+  </main>
+  <main class="ice-main" id="ice-main" hidden>
+    <section class="jed-col" aria-label="Arena">
+      <h2>Arena <span class="muted">home team's rink</span></h2>
+      <div id="ice-team-list" class="jed-team-list" role="listbox" aria-label="Arenas"></div>
+      <label class="ice-field">Away team (preview) <select id="ice-away"></select></label>
+      <fieldset class="ice-place"><legend>Placement (tiles)</legend>
+        <label>x <input type="number" id="ice-x" class="ice-edit" min="0" max="47"></label>
+        <label>y <input type="number" id="ice-y" class="ice-edit" min="0" max="73"></label>
+        <label>x2 <input type="number" id="ice-x2" class="ice-edit" min="-1" max="47"></label>
+        <label>y2 <input type="number" id="ice-y2" class="ice-edit" min="-1" max="73"></label>
+      </fieldset>
+      <p class="muted">x2 &gt; 0: second copy, rotated 180°, bottom-right tile at (x2, y2). Placement lives in the JSON; HOCKEY.EXE is not changed.</p>
+      <button type="button" id="ice-retail" class="ghost-btn">Reload from game files</button>
+    </section>
+    <section class="jed-col" aria-label="Palette and tiles">
+      <h2>Rink palette <span class="muted">256 colours as in a game</span></h2>
+      <div id="ice-swatches" class="ice-swatches" role="listbox" aria-label="Colours"></div>
+      <ul class="ice-legend">
+        <li><i class="src-rink"></i>0–127 rink (fixed)</li>
+        <li><i class="src-home"></i>128–191 home team (changes per home team)</li>
+        <li><i class="src-away"></i>192–250 away team (changes every game, not allowed)</li>
+        <li><i class="src-fixed"></i>251–254 rink (fixed; overwrite away 59–63)</li>
+        <li><i class="src-clear"></i>255 transparent</li>
+      </ul>
+      <p id="ice-color" class="ice-colorline"></p>
+      <h2>Tiles <span id="ice-count" class="muted"></span></h2>
+      <div id="ice-tiles" class="ice-tiles"></div>
+      <div class="ice-tilebox">
+        <canvas id="ice-tile-edit" width="192" height="192" title="Click: paint · right-click / Alt: transparent"></canvas>
+        <div class="ice-tilebtns">
+          <button type="button" id="ice-new-tile" class="ghost-btn ice-edit">New tile</button>
+          <button type="button" id="ice-mirror" class="ghost-btn ice-edit">Mirror</button>
+          <button type="button" id="ice-flip" class="ghost-btn ice-edit">Flip</button>
+          <button type="button" id="ice-del-tile" class="ghost-btn ice-edit" title="Remove the selected tile from the tile set; later tiles are renumbered and cells that use it become empty">Delete tile</button>
+          <button type="button" id="ice-unused" class="ghost-btn ice-edit" title="Drop every tile no cell uses and renumber the map">Remove unused tiles</button>
+        </div>
+      </div>
+    </section>
+    <section class="jed-col ice-view" aria-label="Rink">
+      <p id="ice-warn" class="ice-warn" hidden>NHL 94 PC: view only. Team .TIL logos are not the same pixel order as 95 PC, so editing stays off. The full rink under them is RINK.TIL + RINK.MAP.</p>
+      <div class="ice-toolbar">
+        <div class="pin-options" role="group" aria-label="Tool">
+          <button type="button" data-tool="paint" aria-pressed="true" class="ice-edit">Paint</button>
+          <button type="button" data-tool="place" aria-pressed="false" class="ice-edit">Place tile</button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="ice-edit">Erase tile</button>
+          <button type="button" data-tool="move" aria-pressed="false" class="ice-edit">Move logo</button>
+          <button type="button" data-tool="select" aria-pressed="false" class="ice-edit" title="Drag a rectangle of cells; drag inside it to move it as a whole">Select</button>
+          <button type="button" data-tool="pick" aria-pressed="false">Pick colour</button>
+        </div>
+        <label class="ice-zoom">Zoom <input type="range" id="ice-zoom" min="1" max="16" value="2"> <output id="ice-zoom-val">2×</output></label>
+        <label><input type="checkbox" id="ice-grid" checked> Grid</label>
+        <button type="button" id="ice-undo" class="ghost-btn">Undo</button>
+        <button type="button" id="ice-redo" class="ghost-btn">Redo</button>
+      </div>
+      <div class="ice-blockbar" id="ice-blockbar">
+        <button type="button" id="ice-sel-logo" class="ghost-btn ice-edit" title="Select every placed cell as one block">Select logo</button>
+        <button type="button" id="ice-copy" class="ghost-btn ice-edit ice-needsel" title="Ctrl+C">Copy</button>
+        <button type="button" id="ice-cut" class="ghost-btn ice-edit ice-needsel" title="Ctrl+X">Cut</button>
+        <button type="button" id="ice-paste" class="ghost-btn ice-edit" title="Ctrl+V: pastes at the selection's top-left (or the top-left of the rink); drag it with Select">Paste</button>
+        <button type="button" id="ice-clear" class="ghost-btn ice-edit ice-needsel" title="Delete: empty the selected cells">Clear</button>
+        <button type="button" data-xf="h" class="ghost-btn ice-edit ice-needsel" title="Mirror left-right with the cells' 0x2000 bit (tile pixels unchanged)">Mirror ↔</button>
+        <button type="button" data-xf="v" class="ghost-btn ice-edit ice-needsel" title="Flip top-bottom with the cells' 0x4000 bit (tile pixels unchanged)">Flip ↕</button>
+        <button type="button" data-xf="90" class="ghost-btn ice-edit ice-needsel" title="Rotate 90° clockwise (adds rotated tiles: the map has no rotate bit)">⟳ 90°</button>
+        <button type="button" data-xf="180" class="ghost-btn ice-edit ice-needsel" title="Rotate 180° with both cell bits (no new tiles)">180°</button>
+        <button type="button" data-xf="270" class="ghost-btn ice-edit ice-needsel" title="Rotate 90° counter-clockwise (adds rotated tiles)">⟲ 270°</button>
+        <span id="ice-sel-info" class="muted"></span>
+      </div>
+      <div class="ice-float-bar" id="ice-float-bar" hidden>
+        <b id="ice-float-name"></b> <span class="muted">floating: drag it to place · <span class="ice-redkey"></span> = non-empty cells it overwrites</span>
+        <button type="button" id="ice-float-apply" class="ghost-btn">Apply</button>
+        <button type="button" id="ice-float-cancel" class="ghost-btn">Cancel</button>
+      </div>
+      <div class="ice-scroll"><canvas id="ice-rink"></canvas></div>
+      <p id="ice-note" class="muted"></p>
+      <div class="jed-io">
+        <button type="button" id="ice-import-image" class="ghost-btn ice-edit" title="PNG, BMP, GIF, JPEG (384×592 = full rink): matched to the allowed colours, cut into 8×8 tiles, duplicates removed, max 1024">Import image…</button>
+        <label class="muted"><input type="checkbox" id="ice-q-replace" checked> replace logo</label>
+        <fieldset class="ice-popts" id="ice-popts"><legend>Image colours</legend>
+          <label><input type="checkbox" id="ice-o-team" checked> team colour slots (home 128–191)</label>
+          <label><input type="checkbox" id="ice-o-rink" checked> rink colours (0–127, 251–254, never changed)</label>
+          <label><input type="checkbox" id="ice-o-overwrite"> overwrite the whole team palette</label>
+          <label><input type="checkbox" id="ice-o-jersey" checked> keep colours the jersey uses</label>
+          <label><input type="checkbox" id="ice-o-crest" checked> keep colours the scoreboard crest uses</label>
+          <label><input type="checkbox" id="ice-o-tiles" checked> keep colours existing tiles use</label>
+          <label><input type="checkbox" id="ice-o-free"> only free team slots</label>
+          <label><input type="checkbox" id="ice-o-cells"> overwrite existing tiles</label>
+          <span id="ice-slots" class="muted"></span>
+        </fieldset>
+        <label class="muted" title="A 384×592 image is taken as the whole rink at 0,0">tiles from <select id="ice-q-cells"><option value="all">every visible cell</option><option value="diff">cells that differ from the rink</option><option value="mask">the mask (white = tile)</option></select></label>
+        <button type="button" id="ice-mask" class="ghost-btn ice-edit" title="Black / white image the size of the import: white cells become tiles">Mask…</button>
+        <button type="button" id="ice-import-til" class="ghost-btn ice-edit">Import .TIL / .MAP…</button>
+        <button type="button" id="ice-import-json" class="ghost-btn ice-edit">Import placement…</button>
+        <button type="button" id="ice-export-til" class="ghost-btn">Export .TIL</button>
+        <button type="button" id="ice-export-map" class="ghost-btn">Export .MAP</button>
+        <button type="button" id="ice-export-json" class="ghost-btn">Export placement JSON</button>
+        <button type="button" id="ice-export-logo" class="ghost-btn">Logo PNG</button>
+        <button type="button" id="ice-export-rink" class="ghost-btn">Rink PNG</button>
+      </div>
+      <input type="file" id="ice-image-file" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
+      <input type="file" id="ice-tilmap-file" hidden accept=".til,.map">
+      <input type="file" id="ice-json-file" hidden accept=".json">
+      <input type="file" id="ice-mask-file" hidden accept="image/png,image/bmp,image/gif,.png,.bmp,.gif">
+    </section>
+  </main>
+  <script src="button-icons.js?v=60d25890ac"></script>
+  <script src="lib/snespak.js?v=3e7aab94d0"></script>
+  <script src="lib/pc95.js?v=6eef7dbf11"></script>
+  <script src="lib/pc94-pack.js?v=eb68366999"></script>
+  <script src="lib/pc94-shape.js?v=46bacbb6bd"></script>
+  <script src="lib/pc-jersey.js?v=a328df735c"></script>
+  <script src="lib/pc-rink.js?v=e4d0f81665"></script>
+  <script src="lib/pc-palette.js?v=93013ef0c3"></script>
+  <script src="lib/pc-crests.js?v=aa6c67c702"></script>
+  <script src="lib/zip-store.js?v=fed55de4ed"></script>
+  <script src="lib/indexed-image.js?v=862db1cf89"></script>
+  <script src="jed.js?v=33031d903b"></script>
+  <script src="ice.js?v=538903f182"></script>
+</body>
+</html>

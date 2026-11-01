@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-asset-versions>(function(){var V={"anim/Crowd.anim":"be0ef785a3","anim/Puck.anim":"56df9f431a","anim/Sprites.anim":"41c2b8392f","anim/Zam.anim":"6dd540000c","changelog.json":"44af7d6f26","data/audio/nhl92-68k-driver.json":"8cca4d9eb5","data/audio/nhl92-chip-tests.json":"bb71a44f19","data/audio/nhl92-gm-map.json":"fcce3b2ed4","data/audio/nhl92-patch-analysis.json":"0390b0fb71","data/audio/nhl92-sound-chain.json":"cd8dd816b7","data/audio/nhl92.json":"124c0a1004","data/audio/nhl93s-gm-map.json":"25ba0d721c","data/audio/nhl93s-instrument-analysis.json":"7c5b677131","data/audio/nhl93s-sound.json":"020b1f9441","data/audio/nhl94.json":"718c5ebbe7","data/audio/nhl94s-gm-map.json":"4b129c4c92","data/audio/nhl94s-sound-analysis.json":"6884defe08","data/audio/nhl94s-sound.json":"056f1f6c1c","data/audio/nhl95-gm-map.json":"17683f2409","data/audio/nhl95-sound-chain.json":"171eb1263b","data/audio/nhl95.json":"d859139cd2","data/audio/nhl9x-dac-analysis.json":"a5789c09fb","data/audio/nhl9x-gm-map.json":"85b50c7b90","data/audio/nhl9x-patch-analysis.json":"60ffbfb058","data/audio/nhl9x-sound-chain.json":"a5855ca283","data/audio/nhlpa93.json":"4e8292c8e0","data/fixtures/README.md":"311d0aeaf7","data/fixtures/nhl92-sound-fixture.json":"e1b8a0714c","data/fixtures/nhl92-sound-slice.bin":"d0ed9bc79b","data/fixtures/nhl92-z80-program.bin":"781163eeb0","data/fixtures/nhl93-sound-fixture.json":"668dac7c2e","data/fixtures/nhl93-sound-slice.bin":"d2bf0412cc","data/fixtures/nhl94-sound-fixture.json":"7b17bdabd8","data/fixtures/nhl94-sound-slice.bin":"2c5043f83a","data/fixtures/nhl95-sound-fixture.json":"e33a3f8d2f","data/fixtures/nhl95-sound-slice.bin":"dc5b637c43","data/frames.asm":"ef7420738a","data/frames93.asm":"a26c1730c9","data/frames93snes.asm":"1443b2730c","data/frames94.asm":"4f2e7d0dfb","data/frames94pc.asm":"fbb085b7ec","data/frames94snes.asm":"7304925e62","data/frames95.asm":"4be44cf9f8","data/frames95pc.asm":"09e254abde","data/pals/genesis/ALLSTARH.pal":"9794c5d2dd","data/pals/genesis/ALLSTARV.pal":"7e804ada01","data/pals/genesis/Bruinsh.pal":"63f9d53404","data/pals/genesis/Bruinsv.pal":"6a5d10bde0","data/pals/genesis/Campbellh.pal":"7e804ada01","data/pals/genesis/Campbellv.pal":"9794c5d2dd","data/pals/genesis/Kingsh.pal":"9a32c8a410","data/pals/genesis/Kingsv.pal":"b6085d4000","data/pals/genesis/Redwingsh.pal":"d15792d377","data/pals/genesis/Redwingsv.pal":"ccd237202d","data/pals/genesis/Sharksh.pal":"b427f51fc6","data/pals/genesis/Sharksv.pal":"1033ecb093","data/pals/genesis/Walesh.pal":"7e804ada01","data/pals/genesis/Walesv.pal":"9794c5d2dd","data/pals/genesis/blackhawksh.pal":"96db84f48c","data/pals/genesis/blackhawksv.pal":"dcbb952b1f","data/pals/genesis/bluesh.pal":"d33710b025","data/pals/genesis/bluesv.pal":"77b7424bb1","data/pals/genesis/canadiensh.pal":"2ea85bfcc8","data/pals/genesis/canadiensv.pal":"70463c45ce","data/pals/genesis/canucksh.pal":"2959275f60","data/pals/genesis/canucksv.pal":"e42a083cf0","data/pals/genesis/capitalsh.pal":"987cfcc3ad","data/pals/genesis/capitalsv.pal":"5984d4092d","data/pals/genesis/devilsh.pal":"4e4cd60803","data/pals/genesis/devilsv.pal":"44097f7192","data/pals/genesis/flamesh.pal":"b8d2e4f9a6","data/pals/genesis/flamesv.pal":"5400cb4324","data/pals/genesis/flyersh.pal":"6db66ee9c1","data/pals/genesis/flyersv.pal":"dc14f5e5c9","data/pals/genesis/islandersh.pal":"5c041da397","data/pals/genesis/islandersv.pal":"6057b3933e","data/pals/genesis/jetsh.pal":"860f0a92fb","data/pals/genesis/jetsv.pal":"1f6d6b5c10","data/pals/genesis/mapleleafsh.pal":"0053a546ed","data/pals/genesis/mapleleafsv.pal":"bfb778acc3","data/pals/genesis/nordiquesh.pal":"794ce345af","data/pals/genesis/nordiquesv.pal":"819ff9c9dc","data/pals/genesis/northstarsh.pal":"21bda3ad49","data/pals/genesis/northstarsv.pal":"01cd8ecf12","data/pals/genesis/oilersh.pal":"733591f1b8","data/pals/genesis/oilersv.pal":"f4401cc356","data/pals/genesis/penguinsh.pal":"6135251ffd","data/pals/genesis/penguinsv.pal":"78b9c813b7","data/pals/genesis/rangersh.pal":"b7ead56656","data/pals/genesis/rangersv.pal":"8ea9e3e65f","data/pals/genesis/sabresh.pal":"f36b792441","data/pals/genesis/sabresv.pal":"54673d086e","data/pals/genesis/whalersh.pal":"41c395c547","data/pals/genesis/whalersv.pal":"af9ddd3835","data/pals/genesis95/Bruinsh.pal":"122ebf5903","data/pals/genesis95/Bruinsv.pal":"5b47de1d2c","data/pals/genesis95/anah.pal":"55d42712d4","data/pals/genesis95/anav.pal":"03408a2f89","data/pals/genesis95/flamesh.pal":"77d0ea5ec0","data/pals/genesis95/flamesv.pal":"6b43ae25ed","data/pals/genesis95/sabresh.pal":"31c86c498a","data/pals/genesis95/sabresv.pal":"c9a7f5aebd","data/pals/snes/ASEh.snespal":"7e804ada01","data/pals/snes/ASEv.snespal":"9794c5d2dd","data/pals/snes/ASWh.snespal":"7e804ada01","data/pals/snes/ASWv.snespal":"9794c5d2dd","data/pals/snes/BOSh.snespal":"63f9d53404","data/pals/snes/BOSv.snespal":"6a5d10bde0","data/pals/snes/BUFh.snespal":"f36b792441","data/pals/snes/BUFv.snespal":"54673d086e","data/pals/snes/CGYh.snespal":"b8d2e4f9a6","data/pals/snes/CGYv.snespal":"5400cb4324","data/pals/snes/CHIh.snespal":"96db84f48c","data/pals/snes/CHIv.snespal":"dcbb952b1f","data/pals/snes/DETh.snespal":"d15792d377","data/pals/snes/DETv.snespal":"ccd237202d","data/pals/snes/EDMh.snespal":"733591f1b8","data/pals/snes/EDMv.snespal":"f4401cc356","data/pals/snes/HFDh.snespal":"41c395c547","data/pals/snes/HFDv.snespal":"af9ddd3835","data/pals/snes/LAh.snespal":"9a32c8a410","data/pals/snes/LAv.snespal":"b6085d4000","data/pals/snes/LIh.snespal":"5c041da397","data/pals/snes/LIv.snespal":"6057b3933e","data/pals/snes/MINh.snespal":"8e5ce1653b","data/pals/snes/MINv.snespal":"a6551b366e","data/pals/snes/MTLh.snespal":"2ea85bfcc8","data/pals/snes/MTLv.snespal":"70463c45ce","data/pals/snes/NJh.snespal":"10a56c9229","data/pals/snes/NJv.snespal":"79ea0475e0","data/pals/snes/NYh.snespal":"b7ead56656","data/pals/snes/NYv.snespal":"8ea9e3e65f","data/pals/snes/OTWh.snespal":"6db66ee9c1","data/pals/snes/OTWv.snespal":"dc14f5e5c9","data/pals/snes/PHIh.snespal":"6db66ee9c1","data/pals/snes/PHIv.snespal":"dc14f5e5c9","data/pals/snes/PITh.snespal":"6135251ffd","data/pals/snes/PITv.snespal":"78b9c813b7","data/pals/snes/QUEh.snespal":"794ce345af","data/pals/snes/QUEv.snespal":"819ff9c9dc","data/pals/snes/Rink.snespal":"f31d514c7d","data/pals/snes/SJh.snespal":"b427f51fc6","data/pals/snes/SJv.snespal":"1033ecb093","data/pals/snes/STLh.snespal":"d33710b025","data/pals/snes/STLv.snespal":"77b7424bb1","data/pals/snes/TBYh.snespal":"39a62b3d33","data/pals/snes/TBYv.snespal":"24afe2bdfa","data/pals/snes/TORh.snespal":"0053a546ed","data/pals/snes/TORv.snespal":"bfb778acc3","data/pals/snes/VANh.snespal":"2959275f60","data/pals/snes/VANv.snespal":"e42a083cf0","data/pals/snes/WPGh.snespal":"860f0a92fb","data/pals/snes/WPGv.snespal":"1f6d6b5c10","data/pals/snes/WSHh.snespal":"987cfcc3ad","data/pals/snes/WSHv.snespal":"5984d4092d","games.json":"fe380e37e5","jed-pals/createjerseyShadowfixed.act":"e72f7af63d","jed-pals/rinkpal.act":"c0ce7ee1f2","jed-pals/rinkpalShadowfixed.act":"155fafeb97","lib/audio/README.md":"332f9ad4e1","lib/audio/data/nhl94-music.json":"84a5bd8903","lib/audio/data/nhl94-streams.json":"2016f81f74","lib/audio/data/nhlpa93-streams.json":"d55a9377ae","lib/audio/generated/ym2612_wasm.wasm":"694282ba9d","lib/audio/licenses-ymfm.txt":"2281404259"};var M={"lib/audio/generated/ym2612-runtime.js":"d3157c772a","lib/audio/generated/ym2612_wasm.js":"cd7cb8d43c"};var R=new URL("./",location.href).href;var f=window.fetch;window.fetch=function(u,o){try{var a=new URL((u&&u.url)||String(u),document.baseURI);if(a.href.indexOf(R)===0&&!a.search){var h=V[a.pathname.slice(new URL(R).pathname.length)];if(h){a.search="?v="+h;if(typeof u==="string"||u instanceof URL)u=a.href;}}}catch(e){}return f.call(this,u,o);};window.assetUrl=function(p){var a=new URL(p,R);if(M[p])a.search="?v="+M[p];return a.href;};})();</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Image Editor — NHL9X Studio</title>
+  <link rel="stylesheet" href="viewer.css?v=785e0e9fb6">
+  <link rel="stylesheet" href="jed.css?v=fbf89a7b94">
+  <link rel="stylesheet" href="jim.css?v=6e87b577ee">
+</head>
+<body class="jed jim-app">
+  <svg class="jim-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-paint" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M14.8 3.8l5.4 5.4-11.6 11.6H3.2v-5.4L14.8 3.8z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M13 5.6l5.4 5.4"/></symbol>
+    <symbol id="i-place" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.4" d="M3 9h18M3 15h18M9 3v18M15 3v18"/><rect x="9" y="9" width="6" height="6" fill="currentColor" opacity="0.85"/></symbol>
+    <symbol id="i-erase" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M4 14.5l7.2-7.2 6.5 6.5-4.4 4.4H6.2L4 16.2z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8.2 18.2H20"/></symbol>
+    <symbol id="i-select" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="3 2.5"/></symbol>
+    <symbol id="i-pick" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M14.2 4.2l5.6 5.6-8.4 8.4-3.2-3.2 6-10.8z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M7.2 16.2L4 20"/><path fill="currentColor" d="M8.8 17.2l3.2-3.2 1.8 1.8-3.2 3.2z"/></symbol>
+    <symbol id="i-pan" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11m0-3.2V5.5a1.5 1.5 0 0 1 3 0V11m0-2.2V6.8a1.5 1.5 0 0 1 3 0V13c0 3-1.4 6.5-4.6 6.5H12c-2.8 0-5-1.6-6.2-3.4L4.2 13.2A1.4 1.4 0 0 1 6.6 12L8 13"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M7 8H3.5V4.5M3.8 7.6A8 8 0 1 1 4 16"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M17 8h3.5V4.5M20.2 7.6A8 8 0 1 0 20 16"/></symbol>
+    <symbol id="i-selall" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8 16H5.5A1.5 1.5 0 0 1 4 14.5v-10A1.5 1.5 0 0 1 5.5 3h10A1.5 1.5 0 0 1 17 4.5V8"/></symbol>
+    <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="17.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8.4 16.2L20 4M15.6 16.2L4 4"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><path fill="none" stroke="currentColor" stroke-width="1.6" d="M8 11h8M8 15h6"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 6h16M10 6V4h4v2M10 11l4 4m0-4l-4 4"/></symbol>
+    <symbol id="i-mirror" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 3v18"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 7L4 12l6 5M14 7l6 5-6 5"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M3 12h18"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M7 10L12 4l5 6M7 14l5 6 5-6"/></symbol>
+    <symbol id="i-rot90" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.2-5.6"/><path fill="currentColor" d="M20 4v6h-6z"/></symbol>
+    <symbol id="i-rot180" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 5a7 7 0 1 1-5 2.1"/><path fill="currentColor" d="M4 4h6v6z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 15h6M12 12v6"/></symbol>
+    <symbol id="i-rot270" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4 12a8 8 0 1 0 2.2-5.6"/><path fill="currentColor" d="M4 4v6h6z"/></symbol>
+    <symbol id="i-new" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M12 9v6M9 12h6"/></symbol>
+    <symbol id="i-delete" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M5 7h14l-1.2 13H6.2L5 7z"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M9 4h6v3H9zM4 7h16"/></symbol>
+    <symbol id="i-unused" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M7 7l10 10"/></symbol>
+    <symbol id="i-dedupe" viewBox="0 0 24 24"><rect x="3" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="6" width="10" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M8 12h8"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.4" d="M4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"/></symbol>
+    <symbol id="i-trans" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="currentColor" d="M4.8 4.8h7.2v7.2H4.8zm7.2 7.2h7.2v7.2H12z"/></symbol>
+    <symbol id="i-seams" viewBox="0 0 24 24"><rect x="3" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="5" width="7.5" height="14" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v16"/></symbol>
+    <symbol id="i-pal" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="3" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="13" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="13" width="8" height="8" fill="currentColor" opacity="0.85"/></symbol>
+    <symbol id="i-optseams" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="4" width="7" height="16" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M10 12h4M13 9l3 3-3 3"/></symbol>
+    <symbol id="i-lockseams" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M8 11V8a4 4 0 0 1 8 0v3"/><path fill="none" stroke="currentColor" stroke-width="1.7" d="M12 14.5v3"/></symbol>
+  </svg>
+  <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
+      <p>Drop a .map.jim, .map.sjim, NHL 94 SNES .zip/.huf/.lz/.rle, .jim, .bin, image, .act, .pal, or .snespal</p>
+  </div>
+  <header class="jed-head">
+    <div>
+      <h1 class="product-name studio-title">
+        <a href="index.html" id="jim-exit" class="studio-back" title="Back to NHL9X Studio">← NHL9X Studio</a>
+        <span class="studio-title-sep" aria-hidden="true">|</span>
+        Image Editor
+      </h1>
+      <p id="jim-status" class="jed-status">Open a Genesis .map.jim, a 93S .map.sjim, or an NHL 94 SNES screen. Nothing is written back into a ROM.</p>
+    </div>
+    <div class="jed-actions" role="group" aria-label="Files">
+      <button type="button" id="jim-open-btn" class="ghost-btn" title="Open a .map.jim, .jim, .bin, SNES .map.sjim, or NHL 94 SNES .zip/.huf/.lz/.rle">Open…</button>
+      <button type="button" id="jim-export" class="ghost-btn" title="Choose a format and download">Export…</button>
+      <input type="file" id="jim-open" hidden accept=".jim,.map.jim,.bin,.sjim,.map.sjim,.huf,.lz,.rle,.pairs,.zip,.chr,.pal">
+    </div>
+  </header>
+  <main class="jim-main">
+    <section class="jed-col jim-side" aria-label="File, palettes, and import">
+      <h2>File <span class="muted" id="jim-variant"></span></h2>
+      <p id="jim-file-meta" class="jim-meta"></p>
+      <fieldset class="ice-place jim-bitonly-hide">
+        <legend>Map size (cells)</legend>
+        <label>W <input type="number" id="jim-map-w" min="1" max="1024" value="8"></label>
+        <label>H <input type="number" id="jim-map-h" min="1" max="1024" value="8"></label>
+        <button type="button" id="jim-resize" class="ghost-btn jim-edit">Resize…</button>
+        <p id="jim-map-px" class="muted">64×64 pixels</p>
+      </fieldset>
+      <label class="jim-bitonly-hide">Kind <select id="jim-kind" class="jim-edit" title="Map writes name-table cells. Tile sheet is sequential tiles with a shared zero header (95G ArenaGfx).">
+        <option value="map">Map</option>
+        <option value="sheet">Tile sheet</option>
+      </select></label>
+      <label class="check jim-bitonly-hide" title="Checked: write 128 bytes of CRAM (Genesis) or BGR555 lines (SNES). Unchecked: $FFFFFFFF (no palette), a logo whose palette offset equals the map, or a shared zero header when the sheet is still sequential."><input type="checkbox" id="jim-embed" checked> Embed palettes</label>
+      <p id="jim-header-mode" class="muted"></p>
+
+      <div id="jim-pal-block" class="jim-bitonly-hide">
+      <h2>Palettes <span class="muted" id="jim-pal-sub">4 × 16 CRAM · 3-bit (GEN)</span></h2>
+      <p class="muted">Pal 0 color 0 is opaque. Index 0 of the other lines is a VDP hole onto the backdrop (often the same ice ink). Check Transparency to show those holes. Genesis has four CRAM lines; SNES has eight BGR555 lines. <b>Use</b> is which lines an import may write. <b>Lock</b> keeps a line out of quantization; checking it does not rebuild a floating import. <b>On map</b> is whether any cell already uses that line. Importing an .ACT locks the lines it fills. <b>Lock seams</b> (next to Pal) keeps the tiles you assigned when color options change.</p>
+      <div class="jim-pal-flags" id="jim-pal-flags">
+        <span>Pal</span><span>Use</span><span>Lock</span><span>On map</span>
+      </div>
+      <div id="jim-swatches" class="jim-swatches"></div>
+      <div class="jim-color">
+        <div class="jim-color-swatch" id="jim-color-swatch" role="img" aria-label="Selected color"></div>
+        <div class="jed-rgb jim-rgb">
+          <label>R <input type="range" min="0" max="7" id="jim-r"><input type="number" min="0" max="7" id="jim-rn"></label>
+          <label>G <input type="range" min="0" max="7" id="jim-g"><input type="number" min="0" max="7" id="jim-gn"></label>
+          <label>B <input type="range" min="0" max="7" id="jim-b"><input type="number" min="0" max="7" id="jim-bn"></label>
+          <div class="jim-hex-row">
+            <label title="Type #RRGGBB. Genesis snaps to 3-bit × 36 (0, 36, …, 252). SNES snaps to 5-bit.">Hex <input type="text" id="jim-hex" class="mono" size="8" maxlength="7" spellcheck="false"></label>
+            <span id="jim-rgb-readout" class="mono muted"></span>
+          </div>
+        </div>
+      </div>
+      <div class="jed-io">
+        <button type="button" id="jim-act-btn" class="ghost-btn" title="Import palettes from .act, Genesis .pal, SNES .snespal, .bin, .map.jim, or .map.sjim. A dialog maps each file palette onto an editor pal.">Import palettes…</button>
+        <button type="button" id="jim-act-export" class="ghost-btn" title="768-byte ACT of one palette line, or all lines combined. Optional 772-byte trailer with color count.">Export .ACT</button>
+        <input type="file" id="jim-act" hidden accept=".act,.pal,.snespal,.bin,.jim,.map.jim,.sjim,.map.sjim">
+      </div>
+      </div>
+
+      <h2>Import <span class="muted">PNG, BMP, GIF, JPEG</span></h2>
+      <label>Color mode <select id="jim-color-mode" class="jim-edit" title="Genesis CRAM is 3-bit per channel (512 colors). SNES CGRAM is 5-bit BGR555 (32,768 colors). Import snaps to that lattice. Tile import then reduces onto the palettes in Use.">
+        <option value="genesis">Genesis — 3-bit (GEN), 512 colors</option>
+        <option value="snes">SNES — 5-bit (SNES), 32,768 colors</option>
+      </select></label>
+      <p class="muted" id="jim-color-mode-help">Genesis import snaps each channel to 8 levels (3-bit). SNES import snaps to 32 levels (5-bit) and does not do the 3-bit crush.</p>
+      <label>Import mode <select id="jim-import-mode" class="jim-edit" title="New image resizes the map. Import into current image floats a layer and adds unique tiles. Import tiles appends to the set and leaves the map picture. Lattice-only and count-only skip palettes and export PNG.">
+        <option value="replace">Import New Image &amp; Overwrite Tiles (Resize Map)</option>
+        <option value="place">Import into current Image &amp; Add Tiles</option>
+        <option value="add">Import Tiles (keep existing image &amp; tiles)</option>
+        <option value="bitonly" id="jim-import-bitonly">3-bit (GEN) color reduction only (for export)</option>
+        <option value="countonly" id="jim-import-countonly">Reduce count only (for export)</option>
+      </select></label>
+      <fieldset class="ice-popts" id="jim-q-opts">
+        <legend id="jim-q-legend">Two-step color</legend>
+        <label class="jim-q-two-step">Order <select id="jim-q-order">
+          <option value="bitFirst">3-bit (GEN), then reduce count</option>
+          <option value="countFirst">Reduce count, then 3-bit (GEN)</option>
+        </select></label>
+        <label class="jim-q-step-a">Step A <select id="jim-a-method"></select></label>
+        <label class="jim-q-step-a">Dither <select id="jim-a-dither"></select></label>
+        <label class="jim-q-step-a">Strength <input type="number" id="jim-a-strength" min="0" max="100" value="100"></label>
+        <label class="jim-q-step-b">Step B <select id="jim-b-method"></select></label>
+        <label class="jim-q-step-b">Dither <select id="jim-b-dither"></select></label>
+        <label class="jim-q-step-b">Strength <input type="number" id="jim-b-strength" min="0" max="100" value="100"></label>
+        <label class="jim-q-count-n" title="How many unique opaque colors to keep. Not snapped to 3-bit (GEN) or 5-bit (SNES).">Colors <input type="number" id="jim-color-count" min="2" max="256" value="16"></label>
+        <label class="check jim-q-two-step" title="The picture always draws pal 0 color 0. This tells quantization that the slot is an ink, not transparent."><input type="checkbox" id="jim-opaque0" checked> Pal 0 color 0 is ink</label>
+        <label>Alpha cutoff <input type="number" id="jim-alpha" min="0" max="255" value="128"></label>
+        <label class="check jim-q-two-step" title="When placing the import, skip cells that already have a tile (a non-zero map word). Later images in a batch keep what earlier ones wrote instead of overwriting them."><input type="checkbox" id="jim-only-empty"> Only empty cells</label>
+      </fieldset>
+      <div class="jed-io">
+        <button type="button" id="jim-import-btn" class="ghost-btn jim-edit" title="Quantize and float the image. Change color options before Apply. Mode chooses overwrite, add tiles, or resize as a new image.">Import image…</button>
+        <input type="file" id="jim-image" hidden accept="image/png,image/bmp,image/gif,image/jpeg,.png,.bmp,.gif,.jpg,.jpeg">
+      </div>
+      <p id="jim-q-warn" class="muted"></p>
+    </section>
+
+    <section class="jed-col jim-view" id="jim-view" aria-label="Map">
+      <div class="jim-chrome" id="jim-chrome">
+      <p id="jim-portrait" class="ice-warn" hidden>Portrait: each row is 3 bytes of 3-bit pixels plus 5 (indexes 5–12). Export writes UnpackPicture rows.</p>
+      <p id="jim-hash" class="ice-warn" hidden></p>
+      <div class="ice-toolbar jim-toolbar">
+        <div class="pin-options jim-tools" role="group" aria-label="Tool">
+          <button type="button" data-tool="pan" aria-pressed="false" class="jim-icon-btn" title="Pan">
+            <svg><use href="#i-pan"/></svg><span>Pan</span>
+          </button>
+          <button type="button" data-tool="select" aria-pressed="true" class="jim-icon-btn jim-edit" title="Drag a rectangle of cells. Drag inside it to move the block.">
+            <svg><use href="#i-select"/></svg><span>Select</span>
+          </button>
+          <button type="button" data-tool="pick" aria-pressed="false" class="jim-icon-btn" title="Pick color">
+            <svg><use href="#i-pick"/></svg><span>Pick</span>
+          </button>
+          <button type="button" data-tool="place" aria-pressed="false" class="jim-icon-btn jim-edit" title="Place tile">
+            <svg><use href="#i-place"/></svg><span>Place</span>
+          </button>
+          <button type="button" data-tool="paint" aria-pressed="false" class="jim-icon-btn jim-edit" title="Paint pixel">
+            <svg><use href="#i-paint"/></svg><span>Paint</span>
+          </button>
+          <button type="button" data-tool="erase" aria-pressed="false" class="jim-icon-btn jim-edit" title="Erase cell">
+            <svg><use href="#i-erase"/></svg><span>Erase</span>
+          </button>
+        </div>
+        <div class="jim-toolbar-hist" role="group" aria-label="History">
+          <button type="button" id="jim-undo" class="jim-icon-btn ghost-btn" title="Ctrl+Z" disabled>
+            <svg><use href="#i-undo"/></svg><span>Undo</span>
+          </button>
+          <button type="button" id="jim-redo" class="jim-icon-btn ghost-btn" title="Ctrl+Shift+Z or Ctrl+Y" disabled>
+            <svg><use href="#i-redo"/></svg><span>Redo</span>
+          </button>
+        </div>
+        <div class="jim-toolbar-view" role="group" aria-label="Map view">
+          <input type="checkbox" id="jim-grid" checked hidden>
+          <input type="checkbox" id="jim-trans" hidden>
+          <input type="checkbox" id="jim-seam" hidden>
+          <input type="checkbox" id="jim-lock-seams" hidden>
+          <button type="button" class="jim-icon-btn" data-flag="jim-grid" aria-pressed="true" title="Show the 8×8 cell lattice">
+            <svg><use href="#i-grid"/></svg><span>Grid</span>
+          </button>
+          <button type="button" class="jim-icon-btn" data-flag="jim-trans" aria-pressed="false" title="Pal 1+ index 0 is VDP-transparent (the backdrop shows through in-game). Off draws those slots as CRAM color.">
+            <svg><use href="#i-trans"/></svg><span>Trans</span>
+          </button>
+          <button type="button" class="jim-icon-btn" data-flag="jim-seam" aria-pressed="false" title="Tile edges where the palette line changes">
+            <svg><use href="#i-seams"/></svg><span>Seams</span>
+          </button>
+          <button type="button" class="jim-icon-btn jim-edit" data-tool="pal" aria-pressed="false" title="Click a floating tile, or drag a rectangle, to move those tiles onto the selected palette. That pal is rebuilt from every tile on it. Click Pal again for Pan.">
+            <svg><use href="#i-pal"/></svg><span>Pal</span>
+          </button>
+          <button type="button" id="jim-float-opt" class="jim-icon-btn jim-edit" title="Move tiles that share colors onto the same palette so other lines get free ink slots.">
+            <svg><use href="#i-optseams"/></svg><span>Optimize</span>
+          </button>
+          <button type="button" class="jim-icon-btn jim-edit" data-flag="jim-lock-seams" aria-pressed="false" title="Keep the per-tile palette assignment when you change color options. Unlock to let quantize reassign tiles.">
+            <svg><use href="#i-lockseams"/></svg><span>Lock seams</span>
+          </button>
+        </div>
+      </div>
+      <div class="ice-blockbar" id="jim-blockbar">
+        <button type="button" id="jim-sel-all" class="jim-icon-btn ghost-btn jim-edit" title="Select every cell">
+          <svg><use href="#i-selall"/></svg><span>Select all</span>
+        </button>
+        <button type="button" id="jim-copy" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Ctrl+C">
+          <svg><use href="#i-copy"/></svg><span>Copy</span>
+        </button>
+        <button type="button" id="jim-cut" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Ctrl+X">
+          <svg><use href="#i-cut"/></svg><span>Cut</span>
+        </button>
+        <button type="button" id="jim-paste" class="jim-icon-btn ghost-btn jim-edit" title="Ctrl+V">
+          <svg><use href="#i-paste"/></svg><span>Paste</span>
+        </button>
+        <button type="button" id="jim-clear" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Delete">
+          <svg><use href="#i-clear"/></svg><span>Clear</span>
+        </button>
+        <button type="button" data-xf="h" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR the H-flip bit and reorder the block. Tile pixels stay as they are.">
+          <svg><use href="#i-mirror"/></svg><span>Mirror</span>
+        </button>
+        <button type="button" data-xf="v" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR the V-flip bit and reorder the block. Tile pixels stay as they are.">
+          <svg><use href="#i-flip"/></svg><span>Flip</span>
+        </button>
+        <button type="button" data-xf="90" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">
+          <svg><use href="#i-rot90"/></svg><span>90°</span>
+        </button>
+        <button type="button" data-xf="180" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="XOR both flip bits and reorder the block. No new tiles.">
+          <svg><use href="#i-rot180"/></svg><span>180°</span>
+        </button>
+        <button type="button" data-xf="270" class="jim-icon-btn ghost-btn jim-edit jim-needsel" title="Bake new 8×8 tiles. The VDP name table has no rotate bit.">
+          <svg><use href="#i-rot270"/></svg><span>270°</span>
+        </button>
+        <label class="ice-zoom jim-toolbar-zoom" title="How many map cells fit on screen. 1–32×. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this.">Zoom <input type="range" id="jim-zoom" min="1" max="32" value="4" title="1–32×. Lower zoom shows more of the map at once. Ctrl+scroll on the map also changes this."> <output id="jim-zoom-val">4×</output></label>
+        <span id="jim-sel-info" class="muted"></span>
+      </div>
+      <div class="ice-float-bar" id="jim-float-bar" hidden>
+        <b id="jim-float-name"></b>
+        <span class="muted" id="jim-float-hint">dotted outline · drag to place · Apply to commit · <span class="ice-redkey"></span> overwrites a non-empty cell</span>
+        <span class="muted" id="jim-float-hint-add" hidden>Apply appends tiles · the map picture stays</span>
+        <button type="button" id="jim-float-apply" class="ghost-btn">Apply</button>
+        <button type="button" id="jim-float-cancel" class="ghost-btn">Cancel</button>
+      </div>
+      <fieldset class="jim-preview-set" hidden>
+        <legend>Preview only, not saved</legend>
+        <p class="muted jim-preview-help">These change how the map looks here. They are not JIM fields. Export still writes the stored pixels and map words.</p>
+        <label class="check" title="When the game loads some screens it rewrites each tile pixel through an 8-byte nibble table in 68000 code (not in the .map.jim). Each box is two palette indexes: high nibble then low. Identity is 01 23 45 67 89 AB CD EF."><input type="checkbox" id="jim-remap-on"> Remap</label>
+        <span id="jim-remap">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="01" aria-label="Remap byte 0, nibbles 0 and 1" title="Nibbles 0–1">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="23" aria-label="Remap byte 1, nibbles 2 and 3" title="Nibbles 2–3">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="45" aria-label="Remap byte 2, nibbles 4 and 5" title="Nibbles 4–5">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="67" aria-label="Remap byte 3, nibbles 6 and 7" title="Nibbles 6–7">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="89" aria-label="Remap byte 4, nibbles 8 and 9" title="Nibbles 8–9">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="AB" aria-label="Remap byte 5, nibbles 10 and 11" title="Nibbles 10–11">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="CD" aria-label="Remap byte 6, nibbles 12 and 13" title="Nibbles 12–13">
+          <input class="jim-nibble mono" maxlength="2" size="2" value="EF" aria-label="Remap byte 7, nibbles 14 and 15" title="Nibbles 14–15">
+        </span>
+        <label class="check" title="When the game draws a plane it XORs printa onto every map word. That can flip priority and palette relative to the file. This preview XORs only the $F800 attribute bits, so the tile index stays. Default $F800 matches dobitmap."><input type="checkbox" id="jim-printa-on"> printa XOR</label>
+        <input type="text" id="jim-printa" class="mono" value="F800" size="6" maxlength="4" spellcheck="false" aria-label="printa attribute mask" title="Hex mask XORed onto each map word for preview. Only bits 15–11 are used ($F800).">
+        <label class="check" title="d5 bitmask dobitmap uses when copying CRAM lines (bit 0 = pal 0). Not stored in the file. Auto follows the lines the map references."><input type="checkbox" id="jim-dobitmap-on"> dobitmap mask</label>
+        <select id="jim-dobitmap" class="mono" aria-label="dobitmap palette bitmask" title="d5 is any combination of pal bits (bit 0 = pal 0), not only consecutive lines from pal 0. Games use $00 (none), $02 (pal 1), $0C (pals 2–3), $0D (pals 0, 2, 3), $0F (all four), and the rest. Auto follows the map."></select>
+        <span id="jim-dobitmap-hint" class="muted"></span>
+        <label>Note <input type="text" id="jim-memo" maxlength="120" placeholder="printa / VRAM start (not in the file)"></label>
+      </fieldset>
+      <div id="jim-compare" class="jim-compare" hidden>
+        <figure>
+          <canvas id="jim-compare-src" width="64" height="64"></canvas>
+          <figcaption>Original</figcaption>
+        </figure>
+        <figure class="jim-q-step-a">
+          <canvas id="jim-compare-a" width="64" height="64"></canvas>
+          <figcaption id="jim-compare-a-cap">Step A</figcaption>
+        </figure>
+        <figure class="jim-q-step-b">
+          <canvas id="jim-compare-q" width="64" height="64"></canvas>
+          <figcaption id="jim-compare-b-cap">Step B</figcaption>
+        </figure>
+      </div>
+      </div>
+      <div id="jim-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Resize the map" title="Drag to show more or less of the map"></div>
+      <div class="ice-scroll" id="jim-scroll"><div class="jim-map-wrap"><canvas id="jim-map" width="64" height="64"></canvas><canvas id="jim-grid-lines" width="1" height="1"></canvas></div></div>
+      <p id="jim-note" class="muted"></p>
+    </section>
+
+    <section class="jed-col jim-side jim-tiles-col" aria-label="Tiles, cell, export">
+      <h2>Tiles <span id="jim-count" class="muted"></span></h2>
+      <div id="jim-tiles" class="ice-tiles jim-tiles"></div>
+      <div class="jim-tiles-resize">
+        <div id="jim-tiles-split" class="jed-split" role="separator" aria-orientation="horizontal" aria-label="Show more tiles" title="Drag to show more or fewer tiles at once"></div>
+        <button type="button" id="jim-tiles-more" class="ghost-btn" title="Show more of the tile sheet at once">Show more tiles</button>
+      </div>
+      <div class="ice-tilebox">
+        <canvas id="jim-tile-edit" width="128" height="128" title="Zoomed tile. Click does nothing unless Pick is on, then it samples that pixel's color."></canvas>
+        <div class="ice-tilebtns">
+          <button type="button" id="jim-new-tile" class="jim-icon-btn ghost-btn jim-edit" title="Add a blank tile filled with palette color 0">
+            <svg><use href="#i-new"/></svg><span>New</span>
+          </button>
+          <button type="button" id="jim-del-tile" class="jim-icon-btn ghost-btn jim-edit" title="Remove this tile. Cells that used it become a blank pal-0 tile. Later tiles renumber.">
+            <svg><use href="#i-delete"/></svg><span>Delete</span>
+          </button>
+          <button type="button" id="jim-unused" class="jim-icon-btn ghost-btn jim-edit" title="Drop tiles no cell uses and renumber">
+            <svg><use href="#i-unused"/></svg><span>Unused</span>
+          </button>
+          <button type="button" id="jim-dedupe" class="jim-icon-btn ghost-btn jim-edit" title="Reuse identical tiles, including ones that only match after H-flip and/or V-flip">
+            <svg><use href="#i-dedupe"/></svg><span>Duplicates</span>
+          </button>
+          <button type="button" id="jim-mirror" class="jim-icon-btn ghost-btn jim-edit" title="Mirror this tile's pixels left-right">
+            <svg><use href="#i-mirror"/></svg><span>Mirror</span>
+          </button>
+          <button type="button" id="jim-flip" class="jim-icon-btn ghost-btn jim-edit" title="Flip this tile's pixels top-bottom">
+            <svg><use href="#i-flip"/></svg><span>Flip</span>
+          </button>
+        </div>
+      </div>
+      <p class="muted">Strip Mirror / Flip edit tile pixels. The block bar edits H-flip and V-flip on the cells. Duplicates also folds H/V mirrors into one tile.</p>
+
+      <h2 class="jim-cell-head">Cell <span class="muted" id="jim-cellpos"></span> <span class="mono" id="jim-word"></span></h2>
+      <div class="jim-inspector">
+        <label>Tile index <input type="number" id="jim-tile" class="jim-edit" min="0" max="2047"></label>
+        <label>Palette <select id="jim-pal" class="jim-edit" size="1"></select></label>
+        <label class="check"><input type="checkbox" id="jim-h" class="jim-edit"> H-flip <span id="jim-h-bit">(bit 11)</span></label>
+        <label class="check"><input type="checkbox" id="jim-v" class="jim-edit"> V-flip <span id="jim-v-bit">(bit 12)</span></label>
+        <label class="check jim-insp-span"><input type="checkbox" id="jim-pri" class="jim-edit"> Priority <span id="jim-pri-bit">(bit 15)</span></label>
+        <p class="mono muted jim-insp-span" id="jim-preview-word"></p>
+      </div>
+
+      <h2 class="jim-view-head">View</h2>
+      <label class="check" title="Outline every cell that uses the tile selected in the strip"><input type="checkbox" id="jim-show-users"> Highlight cells using this tile</label>
+      <label class="check" title="Outline tiles no cell uses"><input type="checkbox" id="jim-show-unused"> Highlight unused tiles</label>
+    </section>
+  </main>
+  <div id="jim-palmap" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-palmap-title">
+      <h2 id="jim-palmap-title">Assign palettes</h2>
+      <p class="muted" id="jim-palmap-help">Each row is a palette in the file (.act, Genesis .pal, or SNES .snespal). Pick which editor pal it fills. Skip leaves that editor pal alone. Lock keeps the destination out of quantization.</p>
+      <div id="jim-palmap-rows"></div>
+      <div class="jed-io">
+        <button type="button" id="jim-palmap-ok" class="ghost-btn">Apply</button>
+        <button type="button" id="jim-palmap-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="jim-float-export-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-float-export-title">
+      <h2 id="jim-float-export-title">Apply image first</h2>
+      <p class="muted" id="jim-float-export-help">A floating image is not committed. Apply it before export, or cancel and leave Export closed.</p>
+      <div class="jed-io">
+        <button type="button" id="jim-float-export-apply" class="ghost-btn">Apply, then export</button>
+        <button type="button" id="jim-float-export-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="jim-export-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-export-title">
+      <h2 id="jim-export-title">Export</h2>
+      <p class="muted">Pick a format. Export stays disabled when this picture cannot become that file; the reason is next to the buttons.</p>
+      <fieldset class="jim-export-kinds">
+        <legend class="muted">Format</legend>
+        <label><input type="radio" name="jim-export-kind" value="native" checked> Native file <span class="muted" id="jim-export-native-name"></span></label>
+        <label><input type="radio" name="jim-export-kind" value="jim"> Genesis .map.jim</label>
+        <label><input type="radio" name="jim-export-kind" value="sjim"> SNES .map.sjim</label>
+        <label><input type="radio" name="jim-export-kind" value="snes94"> NHL 94 SNES screen (.zip: <span id="jim-export-zip-files">Tiles.chr, Map.map, palette, screen.json</span>)</label>
+        <label><input type="radio" name="jim-export-kind" value="png" id="jim-png"> <span id="jim-png-label">Map PNG</span></label>
+        <label><input type="radio" name="jim-export-kind" value="tiles" id="jim-png-tiles"> Tiles PNG</label>
+      </fieldset>
+      <label class="check" title="Off: uncompressed tiles (92G / DoDMApro) or raw 94S chr/map. On: 93G/94G bytecode, always-packed .map.sjim, or 94S LZ/Huffman/RLE. Disabled when the format has only one packing."><input type="checkbox" id="jim-packed"> Packed export</label>
+      <div class="jim-export-foot">
+        <p class="muted" id="jim-export-why"></p>
+        <div class="jed-io">
+          <button type="button" id="jim-export-ok" class="ghost-btn">Export</button>
+          <button type="button" id="jim-export-cancel" class="ghost-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="jim-act-dlg" class="jim-palmap" hidden>
+    <div class="jim-palmap-card" role="dialog" aria-labelledby="jim-act-title">
+      <h2 id="jim-act-title">Export .ACT</h2>
+      <p class="muted">One palette line, or every line packed into one Adobe Color Table.</p>
+      <div id="jim-act-pals" class="jim-export-kinds"></div>
+      <label class="check" title="Photoshop 772-byte trailer: color count then transparent index."><input type="checkbox" id="jim-act-trailer"> 772-byte ACT</label>
+      <div class="jed-io">
+        <button type="button" id="jim-act-ok" class="ghost-btn">Export</button>
+        <button type="button" id="jim-act-cancel" class="ghost-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <script src="button-icons.js?v=60d25890ac"></script>
+  <script src="lib/anim.js?v=02ab5bc959"></script>
+  <script src="lib/jim-compress.js?v=b0b7744c15"></script>
+  <script src="lib/jim.js?v=bc0fd92de3"></script>
+  <script src="lib/sjim.js?v=ae46fd0c13"></script>
+  <script src="lib/snespak.js?v=3e7aab94d0"></script>
+  <script src="lib/zip-store.js?v=fed55de4ed"></script>
+  <script src="lib/sscr.js?v=7dbef81de7"></script>
+  <script src="lib/open-asset.js?v=091dd108c3"></script>
+  <script src="lib/genesis-quantize.js?v=e9dbb616b5"></script>
+  <script src="jim.js?v=a5501ec388"></script>
+</body>
+</html>
