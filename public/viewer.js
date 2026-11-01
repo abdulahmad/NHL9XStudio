@@ -1011,20 +1011,26 @@ function renderSoundList(box, q) {
     return;
   }
   // Every Audio group but the MIDI tools collapses. Songs and SFX start open; lists flagged collapsible (DAC samples,
-  // Instruments) start closed. openGroups holds the groups flipped from that default.
+  // Instruments) start closed. openGroups holds the groups flipped from that default. Speech packs (XBRUCE2.VIV)
+  // start open; their extension subgroups (NUM, HOM, …) start closed.
   const foldable = (entry) => entry.group !== 'MIDI';
   const startsOpen = (entry) => !entry.collapsible;
+  const subKeyOf = (entry) => entry.group + '\x1f' + entry.subgroup;
   // A link to an item inside a list that starts closed opens that list once, so the selection is visible.
   if (!state.groupsInit && list.length) {
     state.groupsInit = true;
     const sel = list.find((e) => e.id === state[panel.key]);
     if (sel && foldable(sel) && !startsOpen(sel)) state.openGroups.add(sel.group);
+    if (sel && sel.subgroup) state.openGroups.add(subKeyOf(sel));
   }
   let group = '';
+  let subgroup = null;
   let open = true;
+  let subOpen = true;
   for (const entry of list) {
     if (entry.group !== group) {
       group = entry.group;
+      subgroup = null;
       // A search shows every match.
       open = !foldable(entry) || !!q || (startsOpen(entry) !== state.openGroups.has(group));
       let label;
@@ -1047,6 +1053,24 @@ function renderSoundList(box, q) {
       box.appendChild(label);
     }
     if (!open) continue;
+    const sg = entry.subgroup || '';
+    if (sg && sg !== subgroup) {
+      subgroup = sg;
+      const key = subKeyOf(entry);
+      subOpen = !!q || state.openGroups.has(key);
+      const n = list.filter((e) => e.group === group && e.subgroup === sg).length;
+      const subLabel = document.createElement('button');
+      subLabel.type = 'button';
+      subLabel.className = 'group-label is-toggle is-sub';
+      subLabel.setAttribute('aria-expanded', subOpen ? 'true' : 'false');
+      subLabel.textContent = (subOpen ? '▾ ' : '▸ ') + sg + ' (' + n + ')';
+      subLabel.addEventListener('click', () => {
+        if (state.openGroups.has(key)) state.openGroups.delete(key); else state.openGroups.add(key);
+        renderList();
+      });
+      box.appendChild(subLabel);
+    }
+    if (sg && !subOpen) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'item';

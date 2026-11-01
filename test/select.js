@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const SUITES = [
   'chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-data', 'nhl93-names', 'roll-snes-progressive',
   'nhl93-crowd', 'm68k-cpu', 'spc700-cpu', 'snes-dsp', 'snes-spc', 'nhl94s-sound-data', 'nhl94s-player', 'nhl94s-midi',
-  'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'pc94-audio', 'pc95-audio', 'pc94-shape', 'snes-gm-map',
+  'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'pc-audio-groups', 'pc94-audio', 'pc95-audio', 'pc94-shape', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests',
@@ -54,7 +54,8 @@ const RULES = [
   { re: /^tools\/(extract|build)-pc94-spa\.js$/, tests: ['core'], why: '94 PC SPA catalog' },
   { re: /^lib\/audio\/viv\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio', 'pc-audio-kms'], why: 'PC VIV speech' },
   { re: /^lib\/audio\/pc94-(kms|player|sfx)\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio'], why: '94/95 PC EACSNDF' },
-  { re: /^public\/sound-test-pc94\.js$/, tests: ['pc94-audio', 'pc95-audio', 'browser:audio-list', 'browser:sound-smoke', 'browser:load-errors'], why: '94/95 PC Audio tab' },
+  { re: /^lib\/audio\/pc-audio-groups\.js$/, tests: ['pc-audio-groups', 'pc94-audio', 'pc95-audio', 'browser:audio-list'], why: '94/95 PC Audio list groups' },
+  { re: /^public\/sound-test-pc94\.js$/, tests: ['pc-audio-groups', 'pc94-audio', 'pc95-audio', 'browser:audio-list', 'browser:sound-smoke', 'browser:load-errors'], why: '94/95 PC Audio tab' },
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.

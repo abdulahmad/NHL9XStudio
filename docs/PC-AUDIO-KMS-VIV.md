@@ -34,7 +34,7 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. Bot
 
 ### NHL 94 PC (`XBRUCE2.VIV`, `XRBARR2.VIV`)
 
-C0 FB directory: unknown be16 at +2, be16 count at +4, then count × (`u24be` offset, `u24be` size, `name\\0`) from byte 6 — the same slot order as 95 OpenSpeechBank. Reading name-first from byte 12 paired TWELVE with TWENTY's payload. Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab (`NhlSoundTestPc94` Speech group). Retail `XBRUCE2.VIV` ends on `PIT.CTY`; `XRBARR2.VIV` ends on `EDM.RNK`.
+C0 FB directory: unknown be16 at +2, be16 count at +4, then count × (`u24be` offset, `u24be` size, `name\\0`) from byte 6 — the same slot order as 95 OpenSpeechBank. Reading name-first from byte 12 paired TWELVE with TWENTY's payload. Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab. Each `.VIV` pack is its own list group (`XBRUCE2.VIV`, `XRBARR2.VIV`) with collapsible subgroups by clip extension (`BRU`, `HOM`, `NUM`, …). Team `.KMS` files sit together under Team songs, after desk Songs and before Songs — MT-32 (`lib/audio/pc-audio-groups.js`). Retail `XBRUCE2.VIV` ends on `PIT.CTY`; `XRBARR2.VIV` ends on `EDM.RNK`.
 
 Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` city, `.RNK` rank, `.MSC` misc, `.OFF` official, `.HOM` home, `.AWA` away, `.INT` intro. Team codes expand only for CTY/RNK/HOM/AWA (`BOS.CTY` → `Boston (city)`). Do not title-case or strip digits (`THE3RD.BAR` → `THE3RD (Barr)`, `TWELVE.BRU` → `TWELVE (Bruce)`).
 

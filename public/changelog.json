@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.19.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94/95 PC Audio lists desk Songs, then all team songs together, then MT-32. Announcer speech is split into XBRUCE2.VIV and XRBARR2.VIV, each with collapsible subgroups by clip extension (NUM, HOM, BRU, …)"
+      ]
+    },
+    {
       "version": "1.18.0",
       "date": "2026-11-01",
       "changes": [
