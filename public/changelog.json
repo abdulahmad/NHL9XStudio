@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.20.0",
+      "date": "2026-11-01",
+      "changes": [
+        "Export frame / Export all frames write 8-bit indexed PNGs with the selected palette stored in the file (PLTE, and tRNS for sprite color 0 or picture holes). Centre-ice logo/rink PNG and scoreboard crest PNG do the same"
+      ]
+    },
+    {
       "version": "1.19.0",
       "date": "2026-11-01",
       "changes": [

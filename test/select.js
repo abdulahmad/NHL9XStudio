@@ -16,11 +16,11 @@ const SUITES = [
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests',
-  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr'
+  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape'];
+const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -77,6 +77,7 @@ const RULES = [
   { re: /^lib\/sscr\.js$/, tests: ['sscr', 'jim-roundtrip', 'browser:jim'], why: 'NHL 94 SNES screens' },
   { re: /^lib\/genesis-quantize\.js$/, tests: ['genesis-quantize'], why: 'Genesis palette quantize' },
   { re: /^public\/jim\.(js|css|html)$/, tests: ['browser:jim', 'browser:load-errors'], why: 'Maps editor page' },
+  { re: /^lib\/indexed-image\.js$/, tests: ['indexed-image', 'core', 'browser:indexed-export'], why: 'indexed PNG/BMP export' },
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.

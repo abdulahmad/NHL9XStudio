@@ -118,8 +118,8 @@
         <label class="check" title="Matches updateanim: the expiring vblank still shows this picture, and a new picture cannot appear until 4 vblanks after the last change."><input id="min-gap" type="checkbox" checked> Game timing</label>
         <label class="check" id="transparent-field" title="Screens start solid: pal 1+ color 0 is often the same ice as the VDP backdrop. Check this to punch those VDP holes (the studio stage shows through). Sprites still skip color 0 on export."><input id="transparent" type="checkbox"> Transparency</label>
         <button type="button" id="edit-image" title="Open this picture in the Image Editor">Edit image</button>
-        <button type="button" id="export-frame" title="Save the shown frame as a PNG at 1:1 size in the selected palette, with no marks. Sprites skip color 0. Pictures follow the Transparency checkbox.">Export frame (PNG)</button>
-        <button type="button" id="export-all" title="Save every frame in this file as PNGs (1:1, selected palette, no marks) in one ZIP. Sprites skip color 0. Pictures follow the Transparency checkbox.">Export all frames (ZIP)</button>
+        <button type="button" id="export-frame" title="Save the shown frame as an 8-bit PNG at 1:1 size. The selected palette is stored in the file (PLTE). Sprites skip color 0. Pictures follow the Transparency checkbox.">Export frame (PNG)</button>
+        <button type="button" id="export-all" title="Save every frame in this file as 8-bit PNGs (1:1, selected palette stored in each file, no marks) in one ZIP. Sprites skip color 0. Pictures follow the Transparency checkbox.">Export all frames (ZIP)</button>
         <label class="field grow" id="frame-field">
           <span>Step <b id="frame-readout">1</b></span>
           <input id="frame" type="range" min="1" max="1" value="1" title="Scrub through every step in the current sequence">
@@ -183,6 +183,7 @@
   <script src="lib/pc94-shape.js"></script>
   <script src="lib/audio/viv.js"></script>
   <script src="lib/zip-store.js"></script>
+  <script src="lib/indexed-image.js"></script>
   <script src="lib/sscr.js"></script>
   <script src="lib/audio/genesis-constants.js"></script>
   <script src="lib/audio/genesis-92-sequence.js"></script>

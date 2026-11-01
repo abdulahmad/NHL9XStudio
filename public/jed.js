@@ -359,8 +359,7 @@
     const name = teamCode();
     if (kind === 'spt') { download(NhlPcCrests.exportSpit(shape), name + '-crest.spt'); return; }
     if (kind === 'pcx') { download(NhlPcCrests.writePcx(shape.pixels, shape.width, shape.height, crestPalette8(shape)), name + '-crest.pcx'); return; }
-    const c = document.createElement('canvas'); c.width = shape.width; c.height = shape.height; c.getContext('2d').putImageData(new ImageData(J.crestRgb(shape, teamPalette()), shape.width, shape.height), 0, 0);
-    download(await new Promise((ok) => c.toBlob((b) => b.arrayBuffer().then((a) => ok(new Uint8Array(a))), 'image/png')), name + '-crest.png');
+    download(NhlIndexedImage.encodePng8(shape.width, shape.height, shape.pixels, crestPalette8(shape), { transparent: 255 }), name + '-crest.png');
   }
   async function decodeImage(f) {
     const url = URL.createObjectURL(new Blob([f.bytes]));
