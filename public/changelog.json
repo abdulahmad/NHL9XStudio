@@ -1,6 +1,30 @@
 {
   "releases": [
     {
+      "version": "1.13.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94/95 PC AdLib songs play to the end of the sequencer (ADAWARDS is about a minute, not cut off at 12 seconds)",
+        "NHL 94/95 PC AdLib visualizer: click a lane to mute it, like Genesis. OPL1–OPL9 sit in the left gutter; $E7 track names (bsec, trum, kick/snar, …) are tags at the left of each lane, same placement as the Genesis instrument tags",
+        "NHL 94/95 PC AdLib songs keep the FM patch total level. Mapping MIDI velocity onto OPL TL 38 made KMS a whisper next to IFF and speech",
+        "NHL 95 PC IFF desk music: FORM 8SVX is signed 8-bit. VHDR 22050/22500 is 2× the play rate (AFAN.IFF at the header rate was ~3.6 s and scratchy; half that rate is ≥ 7 s, same as ADAFAN.KMS). RIFF WAVE XOR 80h, then 8-bit unless fmt bits is 16",
+        "NHL 94 PC XBRUCE2.VIV / XRBARR2.VIV directory is offset, size, name from byte 6 (count at +4). TWELVE, TWENTY, and TWO play the clip on their own label; PIT.CTY and EDM.RNK are real last clips, not garbage",
+        "NHL 94 PC RINK.TIL tiles are VGA Mode X planar 8×8 (four 16-byte planes). Horizontal flip 0x800 swaps the two 4-pixel groups (VgaStamp8), not a reverse of eight pixels. 95 PC tiles stay linear",
+        "NHL 94/95 PC Images inspector lists the shape header fields: tag, type, offset (the QFS/QPP xOffset/yOffset), position, quads, extra, and flags. 94 pictures use the header hotspot instead of 0,0"
+      ]
+    },
+    {
+      "version": "1.12.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 and 95 PC Audio now follow the game executables (NHL94PC MUSIC_FORMAT / SFX_FORMAT from HOCKEY.EXE and YM30.BGP), not the old EA-NHL-Tools format notes: KMS/CFG songs, 95 PC IFF desk music, 95 PC VIV OpenSpeechBank plus ReadSpeechSample DPCM, and 94 PC VIV clip names keep their suffixes (TWELVE (Bruce), Boston (city), THE3RD (Barr))",
+        "NHL 94/95 PC AdLib songs add 24 to every MIDI note (HOCKEY.EXE 1844:022E) and use the YM30 fnum table (block = note/12) with real OPL2 operator offsets. Without +24 the organ tunes were two octaves low and sounded like little pops. PAT rec[7] is still the signed transpose the driver adds at note-on",
+        "NHL 95 PC IFF desk music is RIFF WAVE XOR 80h then 16-bit (sub_8FB8E halves the byte counts), or FORM 8SVX (no XOR; Fibonacci-delta when the header says so). Playing 16-bit as 8-bit was twice as fast and static. 94 PC has no IFF music files",
+        "NHL 94 PC Images lists the full ice rink from RINK.TIL and RINK.MAP (384×592, the same LoadRink blit as the jersey ice tab). 94 PC has no RINK.QFS. 94 PC tiles stay linear 8×8 (the same as 95), not Mode X unswizzle",
+        "NHL 94 PC is listed before NHL 95 PC. Either shows [loaded] when sprites, pictures, both jersey bins, and AdLib songs are present. Jersey editor prefers 94 PC and loads CRESTS4.QPP; PLAYER.QPP stays a picture, not a sprite sheet. Audio tab has the Genesis-style channel visualizer: nine AdLib (YM3812) piano-roll lanes, or a waveform for speech / IFF / SFX"
+      ]
+    },
+    {
       "version": "1.11.0",
       "date": "2026-10-31",
       "changes": [

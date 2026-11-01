@@ -17,6 +17,20 @@ const t1 = tile(R.CLEAR); t1[9] = 3;
 const til = R.writeTil([t0, t1]);
 assert.strictEqual(til.length, 128);
 assert.throws(() => R.parseTil(new Uint8Array(65)), /multiple of 64/);
+{
+  const linear = new Uint8Array(64);
+  for (let i = 0; i < 64; i++) linear[i] = i + 1;
+  const packed = R.swizzle94(linear);
+  assert.notDeepStrictEqual(Array.from(packed), Array.from(linear));
+  assert.deepStrictEqual(Array.from(R.unswizzle94(packed)), Array.from(linear));
+  const file = R.writeTil([linear], 94);
+  assert.deepStrictEqual(Array.from(R.parseTil(file, 94)[0]), Array.from(linear));
+  const t = new Uint8Array(64); t[0] = 1; t[4] = 2;
+  const flipMap = { w: 1, h: 1, flag: 528, cells: Uint16Array.from([0x800]) };
+  const flipped = R.composite(new Uint8Array(R.PX_W * R.PX_H).fill(7), flipMap, [t], [0, 0, -1, -1], 94);
+  assert.strictEqual(flipped[4], 1, '94 0x800 swaps 4-pixel groups, not reverse-8');
+  assert.strictEqual(flipped[0], 2);
+}
 const map = { w: 2, h: 1, flag: 16, cells: Uint16Array.from([0, 1 | R.HFLIP]) };
 const mb = R.writeMap(map);
 assert.deepStrictEqual(Array.from(mb), [2, 0, 1, 0, 16, 0, 0, 0, 1, 0x20]);
@@ -128,6 +142,25 @@ if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
   assert.throws(() => R.placeImage(empty, mock, R.PX_W, R.PX_H, 0, 0), /1024/, 'the whole rink without a mask is over 1024');
   console.log('pc-rink: 26 retail arenas round-trip; full-rink diff import ' + R.tileCount(mm) + ' tiles');
 } else console.log('pc-rink: NHL_PC95_DIR not set, retail round trip skipped');
+
+const DIR94 = process.env.NHL_PC94_DIR
+  || [path.join(__dirname, '..', 'pc94'), path.join(__dirname, '..', 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94'), '/tmp/nhl94pc-src/lst/game']
+    .find((d) => fs.existsSync(path.join(d, 'RINK.TIL')));
+if (DIR94 && fs.existsSync(path.join(DIR94, 'RINK.MAP'))) {
+  const tilBytes = new Uint8Array(fs.readFileSync(path.join(DIR94, 'RINK.TIL')));
+  const mapBytes = new Uint8Array(fs.readFileSync(path.join(DIR94, 'RINK.MAP')));
+  const pic = R.fullPicture(tilBytes, mapBytes, 94);
+  assert.strictEqual(pic.width, R.PX_W);
+  assert.strictEqual(pic.height, R.PX_H);
+  let ink = 0;
+  for (let i = 0; i < pic.pixels.length; i++) if (pic.pixels[i] !== R.CLEAR) ink++;
+  assert.ok(ink > 100000, '94 RINK.TIL/MAP full picture (' + ink + ')');
+  const lin = R.parseTil(tilBytes)[0];
+  const planar = R.parseTil(tilBytes, 94)[0];
+  assert.notDeepStrictEqual(Array.from(lin), Array.from(planar), '94 tiles unswizzle off disk');
+  same(R.writeTil(R.parseTil(tilBytes, 94), 94), tilBytes, '94 TIL round-trips through Mode X');
+  console.log('pc-rink: 94 PC RINK.TIL/MAP full picture ok');
+}
 
 // blocks: mirror / flip / 180 via cell bits (tile pixels untouched), 90 / 270 add rotated tiles; tile delete / unused
 {

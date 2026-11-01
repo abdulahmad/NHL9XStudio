@@ -505,6 +505,7 @@ select:focus, input:focus, button:focus-visible {
 .st-seq-tab[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
 .st-roll { width: 100%; }
 .st-roll canvas { display: block; width: 100%; max-width: 100%; border-radius: 6px; }
+.st-viz-canvas { background: #101418; }
 .st-events { margin: 0; padding: 8px 10px; max-height: 280px; overflow: auto; background: var(--raise); border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: 11px/1.55 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .st-events[hidden], .st-roll[hidden] { display: none; }
 .sound-panel .st-seq-note { margin: 6px 0 0; color: var(--muted); font-size: 12px; }

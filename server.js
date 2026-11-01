@@ -243,7 +243,7 @@ function gameStatus(game) {
     banks,
     images: placed.images,
     pixels,
-    rom: hasRom,
+    rom: isPcKind(game.kind) ? pc95.installReady(pc) : hasRom,
     sheet: placed.sheet,
     // images and sheet above are placed for `revision` (the ROM on disk); the retail layout lets the page re-place them.
     revisions: Revisions.list(game.id),

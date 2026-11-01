@@ -27,6 +27,9 @@ assert.strictEqual(opened.shapes[0].width, 4);
 assert.strictEqual(opened.shapes[0].height, 2);
 assert.strictEqual(opened.shapes[0].hotX, 3);
 assert.strictEqual(opened.shapes[0].hotY, -5);
+assert.strictEqual(opened.shapes[0].xOffset, 3);
+assert.strictEqual(opened.shapes[0].quads, 1);
+assert.strictEqual(opened.shapes[0].flags, 0x10);
 assert.deepStrictEqual(Array.from(opened.shapes[0].pixels), Array.from(pixels));
 assert.ok(opened.palette);
 assert.deepStrictEqual(opened.palette[1], [
@@ -57,9 +60,27 @@ assert.ok(decoded);
 assert.strictEqual(decoded.gameId, 'nhl94pc');
 assert.strictEqual(decoded.parsed.numFrames, 876);
 assert.deepStrictEqual(Array.from(decoded.parsed.renderFrame(1).pixels), Array.from(pixels));
+assert.strictEqual(decoded.parsed.renderFrame(1).hotX, 3);
+assert.strictEqual(decoded.parsed.renderFrame(1).xOffset, 3);
+assert.strictEqual(decoded.parsed.renderFrame(1).extra, 0);
+assert.strictEqual(decoded.parsed.renderFrame(1).flags, 0x10);
 
 const qfs = openAsset.classify('ARENA.QFS', packed);
 assert.strictEqual(openAsset.pcGameIdOf(qfs), 'nhl95pc');
+
+const dropped = pc95.catalogFromPaths(['ARENA.QPP', 'RINK.TIL', 'RINK.MAP', 'RINKPAL.QPP'], (rel) => {
+  if (rel === 'ARENA.QPP') return packed;
+  if (/\.TIL$/i.test(rel)) return new Uint8Array(64);
+  if (/\.MAP$/i.test(rel)) {
+    const out = new Uint8Array(6 + 48 * 74 * 2);
+    out[0] = 48; out[2] = 74;
+    return out;
+  }
+  return packed;
+});
+const droppedRink = dropped.images.find((image) => image.label === 'Ice rink');
+assert.ok(droppedRink && droppedRink.kind === 'pc-rink');
+assert.strictEqual(droppedRink.rinkGame, 94);
 
 function retail94Dir() {
   const root = path.join(__dirname, '..');
@@ -81,16 +102,50 @@ if (retail) {
   const arena = pc95.openBytes(fs.readFileSync(path.join(retail, 'ARENA.QPP')));
   assert.ok(arena && arena.shapes.length >= 1, 'ARENA.QPP unpacks');
   assert.ok(arena.palette, 'ARENA.QPP carries !pal');
+  assert.strictEqual(arena.shapes[0].xOffset, 85, 'ARENA.QPP stores the SPIT-style image offset');
+  const arenaPic = pc95.openImage(fs.readFileSync(path.join(retail, 'ARENA.QPP')));
+  assert.strictEqual(arenaPic.renderFrame(1).xOffset, 85);
+  assert.strictEqual(arenaPic.renderFrame(1).yOffset, 42);
+  assert.strictEqual(arenaPic.renderFrame(1).hotspotX, 85);
+  assert.strictEqual(arenaPic.renderFrame(1).hotspotY, 42);
+  const playerPic = pc95.openImage(fs.readFileSync(path.join(retail, 'PLAYER.QPP')));
+  assert.strictEqual(playerPic.renderFrame(1).xOffset, -134);
+  assert.strictEqual(playerPic.renderFrame(1).xPos, 216);
   const cflag = pc95.openBytes(fs.readFileSync(path.join(retail, 'CFLAG.QPP')));
   assert.ok(cflag && cflag.shapes.length >= 1, 'CFLAG.QPP (46 FB) unpacks');
   const listed = pc95.catalogDirectory(retail);
   assert.ok(listed.spriteFiles.some((rel) => /000_049\.PPV$/i.test(rel)));
+  assert.ok(!listed.spriteFiles.some((rel) => /PLAYER\.QPP$/i.test(rel)), 'PLAYER.QPP is not a sprite sheet');
+  assert.ok(listed.images.some((image) => /PLAYER/i.test(image.id)), 'PLAYER.QPP is an image');
   assert.ok(listed.rinkFiles.some((rel) => /F000_049\.PPV$/i.test(rel)));
   assert.ok(listed.images.length >= 20, 'QPP pictures catalogued');
   assert.ok(listed.audio.songs.length >= 10, 'KMS songs catalogued');
   assert.ok(listed.audio.dig, 'PCFF DIG catalogued');
   const playoffs = listed.images.find((image) => /PLAYOFFS/i.test(image.id));
   assert.ok(playoffs && /EMBPAL/i.test(playoffs.palette || ''), '94 PLAYOFFS borrows EMBPAL');
+  const rink = listed.images.find((image) => image.label === 'Ice rink');
+  assert.ok(rink, '94 PC Ice rink from RINK.TIL / RINK.MAP');
+  assert.strictEqual(rink.kind, 'pc-rink');
+  assert.strictEqual(rink.rinkGame, 94);
+  assert.ok(/RINKPAL/i.test(rink.palette || ''), 'Ice rink uses RINKPAL');
+  assert.ok(rink.files.some((rel) => /\.TIL$/i.test(rel)) && rink.files.some((rel) => /\.MAP$/i.test(rel)));
+  const til = fs.readFileSync(path.join(retail, rink.files.find((rel) => /\.TIL$/i.test(rel))));
+  const map = fs.readFileSync(path.join(retail, rink.files.find((rel) => /\.MAP$/i.test(rel))));
+  const pal = fs.readFileSync(path.join(retail, rink.palette));
+  const pic = pc95.openRinkImage(til, map, pal, 94);
+  assert.strictEqual(pic.numFrames, 1);
+  const frame = pic.renderFrame(1);
+  assert.strictEqual(frame.width, 384);
+  assert.strictEqual(frame.height, 592);
+  let ink = 0;
+  for (let i = 0; i < frame.pixels.length; i++) if (frame.pixels[i] !== 255) ink++;
+  assert.ok(ink > 100000, 'full rink is not empty (' + ink + ' pixels)');
+  assert.ok(pc95.installReady(listed), '94 PC install is marked loaded');
+  const Crests = require('../lib/pc-crests');
+  const crests = pc95.openBytes(fs.readFileSync(path.join(retail, 'CRESTS4.QPP')));
+  const bank = Crests.fromShapes(crests);
+  assert.ok(bank.entries.length >= 24, '94 CRESTS4.QPP shapes');
+  assert.ok(Crests.find(bank, 'BOS'));
 }
 
 console.log('pc94-shape: ok');
