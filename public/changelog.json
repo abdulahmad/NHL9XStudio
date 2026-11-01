@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.16.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94 PC RINK.TIL and team .TIL files are four concatenated Mode X planes (hockey94demo VgaStorePlanes / sub_2447D), not 64-byte linear tiles. The Images tab Ice rink is sparkly ice, faceoff circles, and crowd — the same picture the game scrolls, not a scanline dither"
+      ]
+    },
+    {
       "version": "1.15.0",
       "date": "2026-11-01",
       "changes": [
