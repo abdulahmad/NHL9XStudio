@@ -69,6 +69,24 @@ assert.strictEqual(Groups.extOf('BOS.HOM'), 'HOM');
 assert.strictEqual(Groups.packRank('XBRUCE2.VIV') < Groups.packRank('XRBARR2.VIV'), true);
 assert.strictEqual(Groups.subKey('XBRUCE2.VIV', 'NUM'), 'XBRUCE2.VIV\x1fNUM');
 
+// NHL 95 PC OpenAnnouncerBank is XBRUCE2.VIV only (no XRBARR in HOCKEY.EXE).
+// NUM / COR / TEA / PEN / FRM rink calls, then BAR / INT / HOM / AWA / RNK.
+const pc95 = Groups.sortSpeech([
+  { group: 'XBRUCE2.VIV', subgroup: 'HOM', name: 'BOS.HOM' },
+  { group: 'XBRUCE2.VIV', subgroup: 'BAR', name: 'EASPORTS.BAR' },
+  { group: 'XBRUCE2.VIV', subgroup: 'NUM', name: '73.NUM' },
+  { group: 'XBRUCE2.VIV', subgroup: 'INT', name: 'BACKMOMT.INT' },
+  { group: 'XBRUCE2.VIV', subgroup: 'TEA', name: 'BOS.TEA' },
+  { group: 'XBRUCE2.VIV', subgroup: 'PEN', name: 'ROUGHING.PEN' },
+  { group: 'XBRUCE2.VIV', subgroup: 'FRM', name: 'BOS.FRM' },
+  { group: 'XBRUCE2.VIV', subgroup: 'COR', name: '1SECOND.COR' },
+  { group: 'XBRUCE2.VIV', subgroup: 'AWA', name: 'BUF.AWA' },
+  { group: 'XBRUCE2.VIV', subgroup: 'RNK', name: 'LA.RNK' }
+]);
+assert.deepStrictEqual(runs(pc95, 'group'), ['XBRUCE2.VIV']);
+assert.deepStrictEqual(runs(pc95, 'subgroup'), ['NUM', 'COR', 'TEA', 'PEN', 'FRM', 'BAR', 'INT', 'HOM', 'AWA', 'RNK']);
+assert.strictEqual(pc95[0].name, '73.NUM');
+
 const ui = fs.readFileSync(path.join(__dirname, '../public/sound-test-pc94.js'), 'utf8');
 assert.ok(ui.includes('NhlPcAudioGroups'), 'Audio tab uses NhlPcAudioGroups');
 assert.ok(ui.includes('sortSongs') && ui.includes('sortSpeech'), 'songs and speech are grouped before listing');
@@ -90,6 +108,16 @@ function retail94Dir() {
     '/tmp/ea-nhl-tools/Sprite-Viewer/pc94'
   ].filter(Boolean);
   return cands.find((dir) => fs.existsSync(path.join(dir, 'ADTITLE.KMS'))) || null;
+}
+
+function retail95Viv() {
+  const root = path.join(__dirname, '..');
+  const cands = [
+    process.env.NHL_PC95_DIR && path.join(process.env.NHL_PC95_DIR, 'XBRUCE2.VIV'),
+    path.join(root, 'pc95', 'XBRUCE2.VIV'),
+    '/cursor/stores/self/media/nhl95pc-audio/XBRUCE2.VIV'
+  ].filter(Boolean);
+  return cands.find((p) => fs.existsSync(p)) || null;
 }
 
 const retail = retail94Dir();
@@ -128,6 +156,28 @@ if (retail) {
     const barr = ordered.filter((c) => c.group === 'XRBARR2.VIV');
     assert.deepStrictEqual(runs(barr, 'subgroup'), ['BAR', 'INT', 'HOM', 'AWA', 'RNK']);
   }
+}
+
+const viv95 = retail95Viv();
+if (viv95) {
+  const buf = fs.readFileSync(viv95);
+  assert.strictEqual(buf[0], 0xc0);
+  const count = (buf[4] << 8) | buf[5];
+  const clips = [];
+  let w = 6;
+  for (let i = 0; i < count; i++) {
+    w += 6;
+    let z = w;
+    while (z < buf.length && buf[z] !== 0) z++;
+    const name = Buffer.from(buf.slice(w, z)).toString('ascii');
+    clips.push({ group: 'XBRUCE2.VIV', subgroup: Groups.extOf(name), name: name });
+    w = z + 1;
+  }
+  assert.strictEqual(clips.length, 344, 'retail 95 XBRUCE2.VIV clip count');
+  const ordered = Groups.sortSpeech(clips.slice().reverse());
+  assert.deepStrictEqual(runs(ordered, 'group'), ['XBRUCE2.VIV']);
+  assert.deepStrictEqual(runs(ordered, 'subgroup'), ['NUM', 'COR', 'TEA', 'PEN', 'FRM', 'BAR', 'INT', 'HOM', 'AWA', 'RNK']);
+  assert.ok(/\.NUM$/i.test(ordered[0].name));
 }
 
 console.log('pc-audio-groups: ok');

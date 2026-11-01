@@ -27,14 +27,14 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. Bot
 
 ### Still missing on the VM
 
-- A retail NHL 95 PC install for hash pins of OpenSpeechBank VIV / IFF desk files.
+- A full retail NHL 95 PC install for IFF desk-file hash pins. Retail `XBRUCE2.VIV` is in the agent store (`media/nhl95pc-audio/`); tests look there plus `NHL_PC95_DIR` / `pc95/`.
 - MT-32 / PC speaker paths (EACSNDF supports them via other banks).
 
 ## `.VIV` — announcer / menu speech
 
 ### NHL 94 PC (`XBRUCE2.VIV`, `XRBARR2.VIV`)
 
-C0 FB directory: unknown be16 at +2, be16 count at +4, then count × (`u24be` offset, `u24be` size, `name\\0`) from byte 6 — the same slot order as 95 OpenSpeechBank. Reading name-first from byte 12 paired TWELVE with TWENTY's payload. Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab. Each `.VIV` pack is its own list group (`XBRUCE2.VIV`, `XRBARR2.VIV`) with collapsible subgroups by clip extension (`BRU`, `HOM`, `NUM`, …). Team `.KMS` files sit together under Team songs, after desk Songs and before Songs — MT-32 (`lib/audio/pc-audio-groups.js`). Retail `XBRUCE2.VIV` ends on `PIT.CTY`; `XRBARR2.VIV` ends on `EDM.RNK`.
+C0 FB directory: unknown be16 at +2, be16 count at +4, then count × (`u24be` offset, `u24be` size, `name\\0`) from byte 6 — the same slot order as 95 OpenSpeechBank. Reading name-first from byte 12 paired TWELVE with TWENTY's payload. Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab. Each `.VIV` pack is its own list group with collapsible subgroups by clip extension (`BRU`, `HOM`, `NUM`, …). 94 PC has `XBRUCE2.VIV` and `XRBARR2.VIV`. Team `.KMS` files sit together under Team songs, after desk Songs and before Songs — MT-32 (`lib/audio/pc-audio-groups.js`). Retail `XBRUCE2.VIV` ends on `PIT.CTY`; `XRBARR2.VIV` ends on `EDM.RNK`.
 
 Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` city, `.RNK` rank, `.MSC` misc, `.OFF` official, `.HOM` home, `.AWA` away, `.INT` intro. Team codes expand only for CTY/RNK/HOM/AWA (`BOS.CTY` → `Boston (city)`). Do not title-case or strip digits (`THE3RD.BAR` → `THE3RD (Barr)`, `TWELVE.BRU` → `TWELVE (Bruce)`).
 
@@ -45,10 +45,10 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 `OpenSpeechBank` reads the same 6-byte directory as 94 PC: two-byte type, then two more BE words, **count is the third word** (file offset +4). The EXE loop is `*(int *)(speechbank+0x3B8F) >> 16` — that dword overlaps the stored count word at +0x3B8F and w3 at +0x3B91, so the clip count is w3. Retail `XBRUCE2.VIV` is **C0 FB**, the 94 magic; Studio lists it with `parseArchive94`. Codec is per clip, not per archive. The 2-byte type at the clip offset decides the play path (`QueueSpeechClip` / `SpeechTimerTick`):
 
-- **`'G'` (47 FB):** `LoadSpeechSlot` → `ReadSpeechSample` unpacks via `sub_98028` then delta-decodes, dropping a 5-byte 72 FB header. Mixer `sub_8FBE5` flag 0 (signed 8-bit PCM) at 11025 Hz (`0x2B11`). This is `BACKMOMT.INT` … `LA.RNK`.
-- **Anything else (kind 0xFF):** `PlaceSpeechSlot` copies the file bytes as-is. Mixer `sub_8FC37` flag 1 → `loc_A91DA` `word_D7414` (two samples per byte, same as desk IFF). This is the in-game rink announcer: `73.NUM` … `1SECOND.COR` (`QueueTimeClips` `str_Num` / `str_1secondCor`). Running `ReadSpeechSample` on those clips garbles them.
+- **`'G'` (47 FB):** `LoadSpeechSlot` → `ReadSpeechSample` unpacks via `sub_98028` then delta-decodes, dropping a 5-byte 72 FB header. Mixer `sub_8FBE5` flag 0 (signed 8-bit PCM) at 11025 Hz (`0x2B11`). This is `BACKMOMT.INT` … `QUE.RNK` (every `.INT` / `.BAR` / `.HOM` / `.AWA` / `.RNK`).
+- **Anything else (kind 0xFF):** `PlaceSpeechSlot` copies the file bytes as-is. Mixer `sub_8FC37` flag 1 → `loc_A91DA` `word_D7414` (two samples per byte, same as desk IFF). This is the in-game rink announcer: `.NUM` / `.COR` / `.TEA` / `.PEN` / `.FRM` (`QueueTimeClips` `str_Num` / `str_1secondCor`; `SayGoal` / `SayPenalty` / `SayPlayerNumber` sprintf team+`str_Tea`, penalty+`str_Pen`, team+`str_Frm`). Running `ReadSpeechSample` on those clips garbles them (RMS saturates). Retail `XBRUCE2.VIV` is 344 clips, 200 D7414 + 144 G.
 
-The Audio tab is the same `NhlSoundTestPc94` module with `setGame('nhl95pc')`.
+The Audio tab is the same `NhlSoundTestPc94` module with `setGame('nhl95pc')`. Speech is one group, `XBRUCE2.VIV` (`OpenAnnouncerBank`; the EXE has no `XRBARR` string), folded by clip extension: `.NUM` / `.COR` / `.TEA` / `.PEN` / `.FRM` rink calls first, then `.BAR` / `.INT` / `.HOM` / `.AWA` / `.RNK`.
 
 Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads FORM 8SVX or RIFF WAVE:
 

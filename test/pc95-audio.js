@@ -77,6 +77,9 @@ assert.strictEqual(numClips[0].name, '73.NUM');
 assert.strictEqual(numClips[0].label, '73 (number)');
 assert.strictEqual(numClips[1].name, '1SECOND.COR');
 assert.strictEqual(numClips[1].label, '1SECOND (call)');
+assert.strictEqual(Viv.labelOf('BOS.TEA'), 'Boston (team)');
+assert.strictEqual(Viv.labelOf('BOS.FRM'), 'Boston (from)');
+assert.strictEqual(Viv.labelOf('ROUGHING.PEN'), 'ROUGHING (penalty)');
 assert.strictEqual(numClips[0].pcm.length, fibBody.length * 2, 'D7414 expands two samples per byte');
 assert.deepStrictEqual(Array.from(numClips[0].pcm), Array.from(Viv.deskFib(fibBody)));
 assert.notDeepStrictEqual(Array.from(numClips[0].pcm), Array.from(Viv.readSpeechSample(fibBody)),
@@ -315,7 +318,8 @@ function retail95Dir() {
   const cands = [
     process.env.NHL_PC95_DIR,
     path.join(root, 'pc95'),
-    path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc95')
+    path.join(root, 'EA-NHL-Tools', 'Sprite-Viewer', 'pc95'),
+    '/cursor/stores/self/media/nhl95pc-audio'
   ].filter(Boolean);
   return cands.find((dir) => fs.existsSync(path.join(dir, 'ADTITLE.KMS')) || fs.existsSync(path.join(dir, 'XBRUCE2.VIV'))) || null;
 }
@@ -336,12 +340,14 @@ if (retail) {
   }
   const vivPath = ['XBRUCE2.VIV', 'XRBARR2.VIV'].map((n) => path.join(retail, n)).find((p) => fs.existsSync(p));
   if (vivPath) {
-    const retailViv = Viv.listClips(fs.readFileSync(vivPath), { delta: true });
+    const vivBytes = fs.readFileSync(vivPath);
+    const retailViv = Viv.listClips(vivBytes, { delta: true });
     assert.ok(retailViv.length >= 10, path.basename(vivPath) + ' clips');
     assert.ok(retailViv[0].pcm.length > 100);
     const peak = Viv.toFloat32(retailViv[0].pcm).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
     assert.ok(peak > 0.01, 'retail 95 VIV clip is not silence');
-    const parsedRetail = Viv.parseArchive95(fs.readFileSync(vivPath));
+    const parsedRetail = Viv.parseArchive(vivBytes);
+    const Groups = require('../lib/audio/pc-audio-groups');
     const numEnt = parsedRetail.entries.find((e) => /\.NUM$/i.test(e.name));
     const gEnt = parsedRetail.entries.find((e) => e.data[0] === 0x47);
     if (numEnt) {
@@ -349,11 +355,32 @@ if (retail) {
       const numClip = retailViv.find((c) => c.name === numEnt.name);
       assert.ok(numClip);
       assert.strictEqual(numClip.pcm.length, numEnt.data.length * 2, numEnt.name + ' is D7414 not DPCM');
+      const wrong = Viv.readSpeechSample(numEnt.data);
+      assert.notStrictEqual(wrong.length, numClip.pcm.length, numEnt.name + ' ReadSpeechSample garbles length');
     }
     if (gEnt) {
       const gClip = retailViv.find((c) => c.name === gEnt.name);
       assert.ok(gClip && gClip.pcm.length > 100, gEnt.name + ' is ReadSpeechSample PCM');
+      assert.notStrictEqual(gClip.pcm.length, gEnt.data.length * 2, gEnt.name + ' is not D7414');
     }
+    const d7414Ext = ['NUM', 'COR', 'TEA', 'PEN', 'FRM'];
+    const gExt = ['INT', 'BAR', 'HOM', 'AWA', 'RNK'];
+    for (const e of parsedRetail.entries) {
+      const ext = Groups.extOf(e.name);
+      if (d7414Ext.includes(ext)) assert.notStrictEqual(e.data[0], 0x47, e.name + ' rink call is D7414');
+      if (gExt.includes(ext)) assert.strictEqual(e.data[0], 0x47, e.name + ' is 47 FB');
+    }
+    const ordered = Groups.sortSpeech(parsedRetail.entries.map((e) => ({
+      group: path.basename(vivPath),
+      subgroup: Groups.extOf(e.name),
+      name: e.name
+    })));
+    const runs = [];
+    for (const it of ordered) if (!runs.length || runs[runs.length - 1] !== it.subgroup) runs.push(it.subgroup);
+    assert.deepStrictEqual(runs.slice(0, 5), ['NUM', 'COR', 'TEA', 'PEN', 'FRM']);
+    assert.ok(retailViv.find((c) => c.name === 'BOS.TEA' && c.label === 'Boston (team)'));
+    assert.ok(retailViv.find((c) => c.name === 'ROUGHING.PEN' && c.label === 'ROUGHING (penalty)'));
+    assert.ok(retailViv.find((c) => c.name === 'BOS.FRM' && c.label === 'Boston (from)'));
   }
   ['AFAN.IFF', 'AWARDS.IFF'].forEach((name) => {
     const p = path.join(retail, name);

@@ -4,7 +4,7 @@
       "version": "1.19.0",
       "date": "2026-11-01",
       "changes": [
-        "NHL 94/95 PC Audio lists desk Songs, then all team songs together, then MT-32. Announcer speech is split into XBRUCE2.VIV and XRBARR2.VIV, each with collapsible subgroups by clip extension (NUM, HOM, BRU, …)"
+        "NHL 94/95 PC Audio lists desk Songs, then all team songs together, then MT-32. Speech groups are the VIV packs: NHL 95 PC is XBRUCE2.VIV (OpenAnnouncerBank) with collapsible NUM / COR / TEA / PEN / FRM rink-call subgroups, then BAR / INT / HOM / AWA / RNK; NHL 94 PC splits XBRUCE2.VIV and XRBARR2.VIV the same way (BRU, HOM, …)"
       ]
     },
     {
