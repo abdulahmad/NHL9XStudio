@@ -523,8 +523,36 @@ function exportBase() {
   return strip(spriteBank()) + '_' + pal;
 }
 
-function canvasPng(canvas) {
-  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encode failed'))), 'image/png'));
+function exportPalette(frame, colors) {
+  const named = state.paletteName;
+  const team = Boolean(named) && (isEmbeddedLine(named) || paletteFiles.has(named));
+  const own = Boolean(frame.colors) && !team;
+  let palette = own ? frame.colors : colors;
+  if (!own && frame.dynamic === false && colors && colors.game) palette = colors.game;
+  return palette || colors;
+}
+
+function exportTransparent(frame, palette) {
+  const opaque = frame && frame.picture ? !imageTransparencyOn(frame) : false;
+  if (opaque) return [];
+  const skip = frame.transparent == null ? 0 : frame.transparent;
+  if (frame.rowTransparent && typeof Nhl92Jim !== 'undefined' && Nhl92Jim.picturePixelHidden) {
+    const holes = [];
+    const n = Math.max(palette && palette.length || 0, skip + 1);
+    for (let i = 0; i < n && i < 256; i++) {
+      if (Nhl92Jim.picturePixelHidden(i, frame.clearIndex)) holes.push(i);
+    }
+    return holes;
+  }
+  return [skip];
+}
+
+function indexedPng(frame, colors) {
+  if (typeof NhlIndexedImage === 'undefined' || !NhlIndexedImage.encodePng8) throw new Error('indexed PNG encoder missing');
+  const palette = exportPalette(frame, colors);
+  return NhlIndexedImage.encodePng8(frame.width, frame.height, frame.pixels, palette, {
+    transparent: exportTransparent(frame, palette)
+  });
 }
 
 function saveBlob(name, blob) {
@@ -539,15 +567,15 @@ function saveBlob(name, blob) {
 
 const pad3 = (n) => String(n).padStart(3, '0');
 
-async function exportFrame() {
+function exportFrame() {
   const step = sequence().steps[state.step];
   const colors = activeColors();
   const frame = step && colors ? renderedFrame(step.frame) : null;
   if (!frame || !frame.width) throw new Error('no frame shown');
-  saveBlob(exportBase() + '_frame' + pad3(shownFrame(step.frame)) + '.png', await canvasPng(exportCanvas(frame, colors)));
+  saveBlob(exportBase() + '_frame' + pad3(shownFrame(step.frame)) + '.png', new Blob([indexedPng(frame, colors)], { type: 'image/png' }));
 }
 
-async function exportAllFrames() {
+function exportAllFrames() {
   const anim = currentAnim();
   const colors = activeColors();
   if (!anim || !colors) throw new Error('nothing loaded');
@@ -555,8 +583,7 @@ async function exportAllFrames() {
   for (let f = 1; f <= anim.numFrames; f++) {
     const frame = renderedFrame(f);
     if (!frame || !frame.width || !frame.height) continue;
-    const blob = await canvasPng(exportCanvas(frame, colors));
-    entries.push({ name: exportBase() + '_frame' + pad3(shownFrame(f)) + '.png', data: new Uint8Array(await blob.arrayBuffer()) });
+    entries.push({ name: exportBase() + '_frame' + pad3(shownFrame(f)) + '.png', data: indexedPng(frame, colors) });
   }
   if (!entries.length) throw new Error('no frames to export');
   saveBlob(exportBase() + '_frames.zip', new Blob([NhlZipStore.zipStore(entries)], { type: 'application/zip' }));
@@ -1011,20 +1038,26 @@ function renderSoundList(box, q) {
     return;
   }
   // Every Audio group but the MIDI tools collapses. Songs and SFX start open; lists flagged collapsible (DAC samples,
-  // Instruments) start closed. openGroups holds the groups flipped from that default.
+  // Instruments) start closed. openGroups holds the groups flipped from that default. Speech packs (XBRUCE2.VIV)
+  // start open; their extension subgroups (NUM, HOM, …) start closed.
   const foldable = (entry) => entry.group !== 'MIDI';
   const startsOpen = (entry) => !entry.collapsible;
+  const subKeyOf = (entry) => entry.group + '\x1f' + entry.subgroup;
   // A link to an item inside a list that starts closed opens that list once, so the selection is visible.
   if (!state.groupsInit && list.length) {
     state.groupsInit = true;
     const sel = list.find((e) => e.id === state[panel.key]);
     if (sel && foldable(sel) && !startsOpen(sel)) state.openGroups.add(sel.group);
+    if (sel && sel.subgroup) state.openGroups.add(subKeyOf(sel));
   }
   let group = '';
+  let subgroup = null;
   let open = true;
+  let subOpen = true;
   for (const entry of list) {
     if (entry.group !== group) {
       group = entry.group;
+      subgroup = null;
       // A search shows every match.
       open = !foldable(entry) || !!q || (startsOpen(entry) !== state.openGroups.has(group));
       let label;
@@ -1047,6 +1080,24 @@ function renderSoundList(box, q) {
       box.appendChild(label);
     }
     if (!open) continue;
+    const sg = entry.subgroup || '';
+    if (sg && sg !== subgroup) {
+      subgroup = sg;
+      const key = subKeyOf(entry);
+      subOpen = !!q || state.openGroups.has(key);
+      const n = list.filter((e) => e.group === group && e.subgroup === sg).length;
+      const subLabel = document.createElement('button');
+      subLabel.type = 'button';
+      subLabel.className = 'group-label is-toggle is-sub';
+      subLabel.setAttribute('aria-expanded', subOpen ? 'true' : 'false');
+      subLabel.textContent = (subOpen ? '▾ ' : '▸ ') + sg + ' (' + n + ')';
+      subLabel.addEventListener('click', () => {
+        if (state.openGroups.has(key)) state.openGroups.delete(key); else state.openGroups.add(key);
+        renderList();
+      });
+      box.appendChild(subLabel);
+    }
+    if (sg && !subOpen) continue;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'item';
@@ -1982,13 +2033,13 @@ function wire() {
     state.holdKey = '';
     state.acc = 0;
   });
-  el('export-frame').addEventListener('click', () => exportFrame().catch((e) => alert('Export failed: ' + e.message)));
+  el('export-frame').addEventListener('click', () => { try { exportFrame(); } catch (e) { alert('Export failed: ' + e.message); } });
   if (el('edit-image')) {
     el('edit-image').addEventListener('click', () => {
       openJimEditor().catch((err) => alert(err.message));
     });
   }
-  el('export-all').addEventListener('click', () => exportAllFrames().catch((e) => alert('Export failed: ' + e.message)));
+  el('export-all').addEventListener('click', () => { try { exportAllFrames(); } catch (e) { alert('Export failed: ' + e.message); } });
   el('transparent').addEventListener('change', () => {
     state.transparentOverride = el('transparent').checked;
     bitmaps.clear();

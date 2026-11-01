@@ -6,6 +6,7 @@
   const CAT = () => (root.NhlAudioCategories && root.NhlAudioCategories.CATEGORY) || {
     songs: 'Songs', sfx: 'SFX', samples: 'Samples'
   };
+  const Groups = root.NhlPcAudioGroups;
   const TEAM = {
     BOS: 'Boston', BUF: 'Buffalo', CAL: 'Calgary', CGY: 'Calgary', CHI: 'Chicago', CHIC: 'Chicago',
     DET: 'Detroit', ED: 'Edmonton', EDM: 'Edmonton', HART: 'Hartford', HFD: 'Hartford',
@@ -58,9 +59,11 @@
   }
 
   function groupOf(stem) {
-    if (/^MT/.test(stem)) return 'Songs — MT-32';
-    if (/^(AD|TITLE|ROCK|SB|SLAP|CANADA|USA)/.test(stem)) return CAT().songs;
-    return 'Team songs';
+    return Groups ? Groups.songGroup(stem, CAT().songs) : (
+      /^MT/.test(stem) ? 'Songs — MT-32'
+        : /^(AD|TITLE|ROCK|SB|SLAP|CANADA|USA)/.test(stem) ? CAT().songs
+          : 'Team songs'
+    );
   }
 
   function filesHost() {
@@ -116,7 +119,7 @@
           : 'Open a 94 PC folder (pc94/) to load .KMS / PCFF / .VIV files.' };
         return true;
       }
-      const songs = audio.songs.map((s) => ({
+      const songs = (Groups && Groups.sortSongs ? Groups.sortSongs : function (rows) { return rows; })(audio.songs.map((s) => ({
         id: 'song-' + s.stem,
         stem: s.stem,
         kms: s.kms,
@@ -124,7 +127,7 @@
         group: groupOf(s.stem),
         label: labelOf(s.stem),
         sub: s.stem + '.KMS' + (/^MT/.test(s.stem) ? ' · MT-32' : ' · AdLib')
-      }));
+      })), CAT().songs);
       let samples = [];
       if (audio.dig && audio.tim && audio.tim.length) {
         const tim = await readRel(audio.tim.find((n) => /PCFF001/i.test(n)) || audio.tim[0]);
@@ -151,9 +154,12 @@
           const packName = String(rel).split(/[\\/]/).pop();
           const clips = root.NhlViv.listClips(buf, { delta: is95() });
           for (const c of clips) {
+            const ext = Groups && Groups.extOf ? Groups.extOf(c.name) : ((c.name.split('.').pop() || '').toUpperCase());
             speech.push({
               id: 'speech-' + packName + '-' + c.name,
-              group: 'Speech',
+              group: packName,
+              subgroup: ext,
+              name: c.name,
               label: c.label,
               sub: packName + ' · ' + c.name + ' · ' + c.rate + ' Hz · ' + c.length + ' bytes',
               clip: c
@@ -191,7 +197,13 @@
           });
         }
       }
-      catalog = { songs: songs, digital: digital, samples: samples, speech: speech, audio: audio };
+      catalog = {
+        songs: songs,
+        digital: digital,
+        samples: samples,
+        speech: Groups && Groups.sortSpeech ? Groups.sortSpeech(speech) : speech,
+        audio: audio
+      };
       return true;
     })().catch((err) => {
       error = err && err.message ? err.message : String(err);
@@ -743,7 +755,7 @@
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
-          ? 'OpenSpeechBank directory (C0 FB like 94; count at +4). 47 FB (G) clips: ReadSpeechSample unpack + DPCM, mixer flag 0. Other clips (.NUM / .COR rink calls): PlaceSpeechSlot + mixer flag 1 (loc_A91DA D7414, two samples per byte). Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
+          ? 'OpenSpeechBank / OpenAnnouncerBank on XBRUCE2.VIV (C0 FB like 94; count at +4). 47 FB (G) clips: ReadSpeechSample unpack + DPCM, mixer flag 0. Other clips (.NUM / .COR / .TEA / .PEN / .FRM rink calls): PlaceSpeechSlot + mixer flag 1 (loc_A91DA D7414, two samples per byte). Played at 11025 Hz. 95 has no XRBARR pack; NUM, COR, TEA, PEN, FRM, HOM, BAR, INT, … are subgroups of this file.'
           : 'C0 FB directory (count at +4, then offset/size/name from byte 6). Each clip is BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
         : id.startsWith('sfx-')
           ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'

@@ -47,6 +47,8 @@ assert.ok(ui.includes('laneNamesOf') && ui.includes('E7'), 'AdLib roll labels $E
 assert.ok(ui.includes("fillText(lab, x0 + 6, top + 12)") && ui.includes("fillRect(x0 + 2, top + 2, w, 13)"),
   'E7 names are in-lane tags at the Genesis patch-label position');
 assert.ok(ui.includes("fillText('OPL' + (i + 1), 6, top + 13)"), 'short OPL1–OPL9 names sit in the gutter');
+assert.ok(ui.includes('NhlPcAudioGroups') && ui.includes('sortSongs') && ui.includes('subgroup'),
+  'Audio tab groups team songs and speech by VIV pack / extension');
 const durTiny = Player.songSeconds(parsed, { loops: 1 });
 assert.ok(durTiny > 0 && durTiny < 8, 'tiny songSeconds is the sequenced length (' + durTiny + ')');
 assert.ok(typeof Player.songSeconds === 'function');
@@ -147,6 +149,9 @@ assert.strictEqual(Viv.labelOf('BOS.HOM'), 'Boston (home)');
 assert.strictEqual(Viv.labelOf('BUF.AWA'), 'Buffalo (away)');
 assert.strictEqual(Viv.labelOf('GOODNITE.INT'), 'GOODNITE (intro)');
 assert.strictEqual(Viv.labelOf('ASC.CTY'), 'All-Star East (city)');
+assert.strictEqual(Viv.labelOf('BOS.TEA'), 'Boston (team)');
+assert.strictEqual(Viv.labelOf('BOS.FRM'), 'Boston (from)');
+assert.strictEqual(Viv.labelOf('ROUGHING.PEN'), 'ROUGHING (penalty)');
 const twoName = Buffer.from('TWELVE.BRU\0');
 const twoNameB = Buffer.from('TWENTY.BRU\0');
 const twoDir = 6 + (6 + twoName.length) + (6 + twoNameB.length);

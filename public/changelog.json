@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.20.0",
+      "date": "2026-11-01",
+      "changes": [
+        "Export frame / Export all frames write 8-bit indexed PNGs with the selected palette stored in the file (PLTE, and tRNS for sprite color 0 or picture holes). Centre-ice logo/rink PNG and scoreboard crest PNG do the same"
+      ]
+    },
+    {
+      "version": "1.19.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94/95 PC Audio lists desk Songs, then all team songs together, then MT-32. Speech groups are the VIV packs: NHL 95 PC is XBRUCE2.VIV (OpenAnnouncerBank) with collapsible NUM / COR / TEA / PEN / FRM rink-call subgroups, then BAR / INT / HOM / AWA / RNK; NHL 94 PC splits XBRUCE2.VIV and XRBARR2.VIV the same way (BRU, HOM, …)"
+      ]
+    },
+    {
       "version": "1.18.0",
       "date": "2026-11-01",
       "changes": [

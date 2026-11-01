@@ -246,6 +246,11 @@ select:focus, input:focus, button:focus-visible {
   cursor: pointer;
 }
 .group-label.is-toggle:hover { color: var(--text); }
+.group-label.is-sub {
+  margin-left: 12px;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
 .item {
   width: 100%;
   text-align: left;

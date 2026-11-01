@@ -44,7 +44,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | `server.js` | Node HTTP server (default port **8732**). Serves `public/`, `lib/*.js`, `data/*.asm`, ROMs from `roms/`, PC assets from `pc95/`, palettes from sibling tool folders. |
 | `public/viewer.js` | Single-page UI: catalog, stage, transport, filmstrip, compass, jersey palette, URL hash state. |
 | `lib/games.js` | **Game profiles**: frames file, platform, banks, image catalog, ROM hints, sheet/SNES/PC options. |
-| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). |
+| `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). `indexed-image.js` writes 8-bit PNG (PLTE + tRNS) and BMP for frame / ice / crest export. |
 | `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames95pc.asm` / `frames94pc.asm` for DOS. |
 | `test.js` | Parser tests, PC95 tests, NHL 92 frame BMP cross-check when ROM present. |
 

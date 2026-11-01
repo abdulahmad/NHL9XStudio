@@ -330,8 +330,9 @@
       note: 'Tiles, top-left of the .MAP on the 48x74 rink; x2 > 0 draws a second copy rotated 180 degrees, its bottom-right tile at (x2, y2). HOCKEY.EXE arena table, not patched by this editor.' };
   }
   function pngOf(pix, w, h) {
-    const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').putImageData(putPixels(c.getContext('2d'), pix, w, h), 0, 0);
-    return new Promise((ok) => c.toBlob((b) => b.arrayBuffer().then((a) => ok(new Uint8Array(a))), 'image/png'));
+    const pal = [];
+    for (let i = 0; i < 256; i++) pal.push(rgbOf(i));
+    return Promise.resolve(NhlIndexedImage.encodePng8(w, h, pix, pal, { transparent: R.CLEAR }));
   }
   async function readImage(file) {
     const url = URL.createObjectURL(file);
