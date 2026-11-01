@@ -169,13 +169,13 @@
           const packName = String(rel).split(/[\\/]/).pop();
           const kind = clip.kind === 'riff'
             ? 'IFF RIFF (XOR 80h, ' + (clip.depth || 8) + '-bit)'
-            : 'IFF FORM 8SVX';
+            : 'IFF FORM 8SVX (D7414, vol 0x4C)';
           digital.push({
             id: 'iff-' + packName,
             group: 'Desk music',
             label: packName.replace(/\.[^.]+$/, ''),
-            sub: packName + ' · ' + kind + ' · ' + clip.rate + ' Hz · ' + clip.length + ' bytes',
-            clip: { name: packName, pcm: clip.pcm, rate: clip.rate, length: clip.length }
+            sub: packName + ' · ' + kind + ' · ' + clip.rate + ' Hz · ' + clip.length + ' samples',
+            clip: { name: packName, pcm: clip.pcm, rate: clip.rate, length: clip.length, vol: clip.vol }
           });
         }
       }
@@ -517,7 +517,7 @@
     if (id.startsWith('speech-') || id.startsWith('iff-')) {
       const rec = (catalog.speech || []).concat(catalog.digital || []).find((s) => s.id === id);
       if (!rec || !rec.clip) throw new Error('Unknown clip');
-      playBuffer(id, root.NhlViv.toFloat32(rec.clip.pcm), rec.clip.rate);
+      playBuffer(id, root.NhlViv.toFloat32(rec.clip.pcm, rec.clip.vol), rec.clip.rate);
       return;
     }
     if (id.startsWith('sfx-')) {
@@ -620,7 +620,7 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', id.startsWith('iff-')
-      ? 'NHL95PC sub_8F98F load. FORM 8SVX is signed 8-bit (Fibonacci-delta when sCompression is 1). VHDR 22050/22500 is 2× the play rate, so AFAN.IFF is ≥ 7 s like ADAFAN.KMS, not ~3.6 s and scratchy. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
+      ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. Playing the packed nibbles as PCM was scratchy and loud; AFAN.IFF stays ≥ 7 s. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
           ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
@@ -694,7 +694,7 @@
       rows.push(['Rate', rec.clip.rate + ' Hz']);
       rows.push(['Length', rec.clip.length + ' bytes']);
       rows.push(['Path', id.startsWith('iff-') || /\.iff$/i.test(rec.clip.name)
-        ? 'sub_8F98F FORM 8SVX 8-bit / RIFF XOR 80h'
+        ? 'sub_8F98F FORM 8SVX D7414 + 0x4C / RIFF XOR 80h'
         : (is95()
           ? '.VIV OpenSpeechBank → 47/10 FB → ReadSpeechSample DPCM'
           : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM')]);

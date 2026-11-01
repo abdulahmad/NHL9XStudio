@@ -24,7 +24,8 @@ assert.throws(() => R.parseTil(new Uint8Array(65)), /multiple of 64/);
   assert.notDeepStrictEqual(Array.from(packed), Array.from(linear));
   assert.deepStrictEqual(Array.from(R.unswizzle94(packed)), Array.from(linear));
   const file = R.writeTil([linear], 94);
-  assert.deepStrictEqual(Array.from(R.parseTil(file, 94)[0]), Array.from(linear));
+  assert.deepStrictEqual(Array.from(R.parseTil(file, 94)[0]), Array.from(linear),
+    '94 TIL on disk is linear 8×8; VgaStamp8 is the VGA blit, not the file layout');
   const t = new Uint8Array(64); t[0] = 1; t[4] = 2;
   const flipMap = { w: 1, h: 1, flag: 528, cells: Uint16Array.from([0x800]) };
   const flipped = R.composite(new Uint8Array(R.PX_W * R.PX_H).fill(7), flipMap, [t], [0, 0, -1, -1], 94);
@@ -155,10 +156,25 @@ if (DIR94 && fs.existsSync(path.join(DIR94, 'RINK.MAP'))) {
   let ink = 0;
   for (let i = 0; i < pic.pixels.length; i++) if (pic.pixels[i] !== R.CLEAR) ink++;
   assert.ok(ink > 100000, '94 RINK.TIL/MAP full picture (' + ink + ')');
-  const lin = R.parseTil(tilBytes)[0];
-  const planar = R.parseTil(tilBytes, 94)[0];
-  assert.notDeepStrictEqual(Array.from(lin), Array.from(planar), '94 tiles unswizzle off disk');
-  same(R.writeTil(R.parseTil(tilBytes, 94), 94), tilBytes, '94 TIL round-trips through Mode X');
+  same(R.parseTil(tilBytes)[0], R.parseTil(tilBytes, 94)[0], '94 parseTil does not Mode-X-unswizzle disk tiles');
+  same(R.writeTil(R.parseTil(tilBytes, 94), 94), tilBytes, '94 TIL round-trips as linear 8×8');
+  const fromLinear = R.composite(null, R.parseMap(mapBytes), R.parseTil(tilBytes), [0, 0, -1, -1], 94);
+  const fromPlanar = R.composite(null, R.parseMap(mapBytes), R.parseTil(tilBytes).map(R.unswizzle94), [0, 0, -1, -1], 94);
+  same(pic.pixels, fromLinear, 'Images-tab fullPicture blits linear 94 tiles with VgaStamp8 0x800/0x1000');
+  assert.ok(!Buffer.from(pic.pixels).equals(Buffer.from(fromPlanar)),
+    'Mode X unswizzle of disk tiles must not be the Images-tab path');
+  const map94 = R.parseMap(mapBytes);
+  const used = {};
+  for (const c of map94.cells) used[c & 0x7FF] = (used[c & 0x7FF] || 0) + 1;
+  const fillId = Object.keys(used).sort((a, b) => used[b] - used[a])[0] | 0;
+  const fill = R.parseTil(tilBytes)[fillId];
+  let row106 = false;
+  for (let y = 0; y < 8; y++) {
+    let n = 0;
+    for (let x = 0; x < 8; x++) if (fill[y * 8 + x] === 106) n++;
+    if (n >= 6) row106 = true;
+  }
+  assert.ok(row106, '94 ice-fill tile ' + fillId + ' keeps ice 106 in whole rows (linear), not scattered planes');
   console.log('pc-rink: 94 PC RINK.TIL/MAP full picture ok');
 }
 

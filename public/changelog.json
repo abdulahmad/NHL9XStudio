@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.14.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 95 PC IFF desk music follows the NHL95PC mixer: FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. Playing the packed nibbles as PCM was scratchy and loud; AFAN.IFF stays ≥ 7 s like ADAFAN.KMS",
+        "NHL 94 PC RINK.TIL is linear 8×8 on disk. VgaStamp8 (94 PC seg000) still supplies the blit flags: 0x800 swaps the two 4-pixel groups, 0x1000 flips vertically. Treating the 64 disk bytes as Mode X planes striped the ice fill"
+      ]
+    },
+    {
       "version": "1.13.0",
       "date": "2026-11-01",
       "changes": [

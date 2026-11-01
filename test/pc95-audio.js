@@ -76,7 +76,9 @@ const iffClip = Viv.decodeIff(iff);
 assert.ok(iffClip);
 assert.strictEqual(iffClip.kind, 'form');
 assert.strictEqual(iffClip.rate, 11025);
-assert.deepStrictEqual(Array.from(iffClip.pcm), Array.from(iffPcm));
+assert.strictEqual(iffClip.vol, Viv.DESK_VOL, 'desk IFF volume is MainDeskLoop 0x4C');
+assert.strictEqual(iffClip.pcm.length, iffPcm.length * 2, 'D7414 expands two samples per BODY byte');
+assert.deepStrictEqual(Array.from(iffClip.pcm), Array.from(Viv.deskFib(iffPcm)));
 
 function le16(n) { return [n & 255, (n >> 8) & 255]; }
 function le32(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255]; }
@@ -103,7 +105,7 @@ assert.strictEqual(riffClip.rate, 11025);
 assert.strictEqual(riffClip.depth, 8, '8-bit WAVE stays 8-bit after XOR 80h');
 assert.strictEqual(riffClip.pcm.length, riffPcm.length);
 assert.strictEqual(riffClip.pcm[0], riffPcm[0] ^ 0x80);
-assert.strictEqual(iffClip.depth, 8, 'FORM 8SVX is signed 8-bit');
+assert.strictEqual(iffClip.depth, 8, 'FORM 8SVX is signed 8-bit after D7414');
 assert.strictEqual(iffClip.rate, 11025, '11025 VHDR rate is not halved');
 
 const longPcm = new Uint8Array(80000);
@@ -123,9 +125,21 @@ iff22.set(be32(longPcm.length), r); r += 4;
 iff22.set(longPcm, r);
 const iff22Clip = Viv.decodeIff(iff22);
 assert.ok(iff22Clip);
-assert.strictEqual(iff22Clip.rate, 11025, 'VHDR 22050 plays at 11025');
+assert.strictEqual(iff22Clip.rate, 22050, 'VHDR 22050 plays at 22050 (sub_8FF5E byteswap only)');
+assert.strictEqual(iff22Clip.pcm.length, longPcm.length * 2);
 assert.ok(iff22Clip.pcm.length / iff22Clip.rate >= 7,
   'an AFAN-sized 8SVX at VHDR 22050 is at least 7s (' + (iff22Clip.pcm.length / iff22Clip.rate) + '), not 2× fast');
+{
+  const full = Viv.toFloat32(iff22Clip.pcm);
+  const desk = Viv.toFloat32(iff22Clip.pcm, iff22Clip.vol);
+  let peakFull = 0, peakDesk = 0;
+  for (let i = 0; i < full.length; i++) {
+    peakFull = Math.max(peakFull, Math.abs(full[i]));
+    peakDesk = Math.max(peakDesk, Math.abs(desk[i]));
+  }
+  assert.ok(peakFull > 0);
+  assert.ok(Math.abs(peakDesk / peakFull - Viv.DESK_GAIN) < 1e-6, '0x4C LUT vs full scale');
+}
 
 const tone = new Int16Array(8);
 for (let i = 0; i < 8; i++) tone[i] = (i - 4) * 4000;
@@ -160,7 +174,16 @@ assert.ok(Math.abs(f16[0] - r16.pcm[0] / 32768) < 1e-6);
 
 const fibSrc = Uint8Array.from([40, 0x98, 0x87]);
 const fib = Viv.fibDelta(fibSrc);
-assert.ok(fib.length === 5, 'fib-delta expands ~2×');
+assert.ok(fib.length === 5, 'classic 8SVX fib-delta expands ~2× (not the mixer path)');
+const desk = Viv.deskFib(fibSrc);
+assert.strictEqual(desk.length, 6, 'D7414 expands every BODY byte, acc starts 0');
+assert.notDeepStrictEqual(Array.from(desk), Array.from(fib));
+{
+  /* word_D7414: low nibble then high; byte 0 → (−34, −34). */
+  const z = Viv.deskFib(Uint8Array.from([0]));
+  assert.strictEqual(z[0], (0 - 34) & 255);
+  assert.strictEqual(z[1], (z[0] - 34) & 255);
+}
 const iffFib = new Uint8Array(12 + 8 + 20 + 8 + fibSrc.length);
 let q = 0;
 iffFib.set(form, q); q += 4;
@@ -177,7 +200,8 @@ iffFib.set(fibSrc, q);
 const fibClip = Viv.decodeIff(iffFib);
 assert.ok(fibClip);
 assert.strictEqual(fibClip.rate, 8363);
-assert.deepStrictEqual(Array.from(fibClip.pcm), Array.from(fib));
+assert.deepStrictEqual(Array.from(fibClip.pcm), Array.from(desk),
+  'sub_8F98F never reads sCompression; FORM always takes loc_A91DA');
 
 function retail95Dir() {
   const root = path.join(__dirname, '..');
