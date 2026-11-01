@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.18.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 95 PC in-game rink announcer (.NUM / .COR in XBRUCE2.VIV, 73.NUM through 1SECOND.COR) plays through mixer flag 1 (SpeechTimerTick sub_8FC37 / loc_A91DA word_D7414), not ReadSpeechSample DPCM. Retail XBRUCE2.VIV is C0 FB like 94, so decode follows the first byte of each clip rather than the archive magic. 47 FB clips (BACKMOMT.INT through LA.RNK) stay on the DPCM path"
+      ]
+    },
+    {
       "version": "1.17.0",
       "date": "2026-11-01",
       "changes": [
