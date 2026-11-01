@@ -37,7 +37,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - See also the 93 SNES section below.
 
 ### PC and long-term
-- **PC audio:** [x] wiki `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). [x] NHL 94/95 PC EACSNDF `.KMS`/`.CFG` AdLib playback and PCFF digital SFX from the EXE (`lib/audio/pc94-*.js`, Audio tab). [x] NHL 94 PC VIV speech with suffix labels (`XBRUCE2.VIV` / `XRBARR2.VIV`). [x] NHL 95 PC OpenSpeechBank VIV (`ReadSpeechSample` DPCM) and IFF FORM 8SVX / RIFF XOR `80h` (`sub_8F98F`). Still open: MT-32 playback, YM30.BGP ear-match.
+- **PC audio:** [x] wiki `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). [x] NHL 94/95 PC EACSNDF `.KMS`/`.CFG` AdLib playback and PCFF digital SFX from the EXE (`lib/audio/pc94-*.js`, Audio tab). [x] NHL 94 PC VIV speech with suffix labels (`XBRUCE2.VIV` / `XRBARR2.VIV`). [x] NHL 95 PC OpenSpeechBank VIV (`ReadSpeechSample` DPCM for 47 FB; `.NUM`/`.COR` mixer flag 1 D7414) and IFF FORM 8SVX / RIFF XOR `80h` (`sub_8F98F`). Still open: MT-32 playback, YM30.BGP ear-match.
 - Longer-term goals: a full FM patch editor, SPC disassembly upload, importing back to ROM, tracker editing, and MT-32/GUS parity. (`docs/DESIGN.md` §6, `docs/IMPLEMENTATION.md` §3)
 - `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/IMPLEMENTATION.md`)
 

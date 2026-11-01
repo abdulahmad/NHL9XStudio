@@ -27,7 +27,11 @@ raw[0] = 0x72;
 raw[1] = 0xfb;
 raw.set(be24(pcmClip.length), 2);
 raw.set(pcmClip, 5);
-const packed = Pack.wrapBtree(raw);
+const packed46 = Pack.wrapBtree(raw);
+const packed = new Uint8Array(packed46.length + 3);
+packed[0] = 0x47;
+packed[1] = 0xfb;
+packed.set(packed46.subarray(2), 5);
 assert.ok(Pack.isBtree(packed));
 
 const name = Buffer.from('HI.BRU\0');
@@ -50,6 +54,35 @@ assert.strictEqual(clips[0].pcm.length, pcmClip.length);
 const decoded = Viv.deltaDecode(pcmClip);
 assert.deepStrictEqual(Array.from(clips[0].pcm), Array.from(decoded));
 assert.ok(Viv.toFloat32(clips[0].pcm).some((v) => v !== 0));
+
+// Non-G rink clips (.NUM / .COR): OpenSpeechBank kind 0xFF, PlaceSpeechSlot +
+// SpeechTimerTick sub_8FC37 mixer flag 1 (loc_A91DA D7414), not ReadSpeechSample.
+const fibBody = Uint8Array.from([0x10, 0x21, 0x32, 0x43, 0x54, 0x65]);
+assert.notStrictEqual(fibBody[0], 0x47);
+const numName = Buffer.from('73.NUM\0');
+const corName = Buffer.from('1SECOND.COR\0');
+const dir2 = 6 + (6 + numName.length) + (6 + corName.length);
+const vivNum = new Uint8Array(dir2 + fibBody.length * 2);
+vivNum.set(be16(2), 2);
+let o = 6;
+vivNum.set(be24(dir2), o); vivNum.set(be24(fibBody.length), o + 3); o += 6;
+vivNum.set(numName, o); o += numName.length;
+vivNum.set(be24(dir2 + fibBody.length), o); vivNum.set(be24(fibBody.length), o + 3); o += 6;
+vivNum.set(corName, o);
+vivNum.set(fibBody, dir2);
+vivNum.set(fibBody, dir2 + fibBody.length);
+const numClips = Viv.listClips(vivNum);
+assert.strictEqual(numClips.length, 2);
+assert.strictEqual(numClips[0].name, '73.NUM');
+assert.strictEqual(numClips[0].label, '73 (number)');
+assert.strictEqual(numClips[1].name, '1SECOND.COR');
+assert.strictEqual(numClips[1].label, '1SECOND (call)');
+assert.strictEqual(numClips[0].pcm.length, fibBody.length * 2, 'D7414 expands two samples per byte');
+assert.deepStrictEqual(Array.from(numClips[0].pcm), Array.from(Viv.deskFib(fibBody)));
+assert.notDeepStrictEqual(Array.from(numClips[0].pcm), Array.from(Viv.readSpeechSample(fibBody)),
+  '73.NUM must not go through ReadSpeechSample');
+assert.deepStrictEqual(Array.from(Viv.decode95Clip(packed)), Array.from(decoded), 'G still ReadSpeechSample');
+assert.deepStrictEqual(Array.from(Viv.decode95Clip(fibBody)), Array.from(Viv.deskFib(fibBody)));
 const pastEof = Uint8Array.from(vivBuf);
 pastEof[6] = 0xff; pastEof[7] = 0xff; pastEof[8] = 0xff;
 assert.strictEqual(Viv.parseArchive95(pastEof).entries.length, 0, '95 VIV drops offsets past EOF');
@@ -283,6 +316,19 @@ if (retail) {
     assert.ok(retailViv[0].pcm.length > 100);
     const peak = Viv.toFloat32(retailViv[0].pcm).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
     assert.ok(peak > 0.01, 'retail 95 VIV clip is not silence');
+    const parsedRetail = Viv.parseArchive95(fs.readFileSync(vivPath));
+    const numEnt = parsedRetail.entries.find((e) => /\.NUM$/i.test(e.name));
+    const gEnt = parsedRetail.entries.find((e) => e.data[0] === 0x47);
+    if (numEnt) {
+      assert.notStrictEqual(numEnt.data[0], 0x47, numEnt.name + ' is not 47 FB');
+      const numClip = retailViv.find((c) => c.name === numEnt.name);
+      assert.ok(numClip);
+      assert.strictEqual(numClip.pcm.length, numEnt.data.length * 2, numEnt.name + ' is D7414 not DPCM');
+    }
+    if (gEnt) {
+      const gClip = retailViv.find((c) => c.name === gEnt.name);
+      assert.ok(gClip && gClip.pcm.length > 100, gEnt.name + ' is ReadSpeechSample PCM');
+    }
   }
   ['AFAN.IFF', 'AWARDS.IFF'].forEach((name) => {
     const p = path.join(retail, name);
