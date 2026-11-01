@@ -125,10 +125,23 @@
     Shared.loaded.forEach((fn) => fn());
     loadCrests();
   }
+  function crestBankName() { return S.game === '94' ? 'CRESTS4.QPP' : 'CRESTS4.PPV'; }
+  function openCrestBank(bytes) {
+    try { return NhlPcCrests.parse(bytes); } catch (err) {
+      const opened = Nhl95Pc.openBytes(bytes);
+      if (opened && NhlPcCrests.fromShapes) return NhlPcCrests.fromShapes(opened);
+      throw err;
+    }
+  }
   async function loadCrests() {
     S.crests = null; let b = null;
-    try { b = S.game !== '94' ? await Shared.file('CRESTS4.PPV') : null; } catch (err) { b = null; }
-    if (b) { try { S.crests = NhlPcCrests.parse(b); } catch (err) { S.crests = null; } }
+    try {
+      b = await Shared.file(crestBankName());
+      if (!b) b = await Shared.file(S.game === '94' ? 'CRESTS4.PPV' : 'CRESTS4.QPP');
+    } catch (err) { b = null; }
+    if (b) {
+      try { S.crests = openCrestBank(b); } catch (err) { S.crests = null; }
+    }
     if (cur()) renderZones();
   }
 
@@ -314,9 +327,13 @@
     btn('jed-crest-png', 'PNG', 'Export this crest as PNG (transparent background)', () => exportCrest(shape, 'png'));
     btn('jed-crest-pcx', 'PCX', 'Export as 8-bit PCX like JED (F6): pixel values are the sprite colours', () => exportCrest(shape, 'pcx'));
     btn('jed-crest-spt', 'SPT', 'Export the game-format shape (SPIT header + RLE, as stored in CRESTS4.PPV)', () => exportCrest(shape, 'spt'));
-    btn('jed-crest-revert', 'Revert', 'Put back this crest\'s pixels from CRESTS4.PPV as opened', () => { shape.pixels = Uint8Array.from(shape.orig); renderZones(); status(teamCode() + ' crest pixels reverted (colours: use Undo)'); });
-    btn('jed-crests-in', 'Open CRESTS4.PPV…', 'Replace the whole crests file', async () => { const f = await readFile($('jed-import-ppv')); if (!f) return; S.crests = NhlPcCrests.parse(f.bytes); renderZones(); status(f.name + ': ' + S.crests.entries.length + ' crests'); });
-    btn('jed-crests-out', 'Save CRESTS4.PPV', 'Export the whole crests file with your edits', () => { download(NhlPcCrests.write(S.crests), 'CRESTS4.PPV'); status('CRESTS4.PPV saved' + (NhlPcCrests.edited(S.crests) ? ' (edited crests re-encoded)' : ' (unchanged)')); });
+    btn('jed-crest-revert', 'Revert', 'Put back this crest\'s pixels from ' + crestBankName() + ' as opened', () => { shape.pixels = Uint8Array.from(shape.orig); renderZones(); status(teamCode() + ' crest pixels reverted (colours: use Undo)'); });
+    btn('jed-crests-in', 'Open ' + crestBankName() + '…', 'Replace the whole crests file', async () => { const f = await readFile($('jed-import-ppv')); if (!f) return; S.crests = openCrestBank(f.bytes); renderZones(); status(f.name + ': ' + S.crests.entries.length + ' crests'); });
+    btn('jed-crests-out', 'Save ' + crestBankName(), 'Export the whole crests file with your edits', () => { download(NhlPcCrests.write(S.crests), crestBankName()); status(crestBankName() + ' saved' + (NhlPcCrests.edited(S.crests) ? ' (edited crests re-encoded)' : ' (unchanged)')); });
+    if (S.crests && S.crests.planar) {
+      const save = bar.querySelector('#jed-crests-out');
+      if (save) { save.disabled = true; save.dataset.tip = 'NHL 94 PC CRESTS4.QPP cannot be saved yet (view / paint only)'; }
+    }
     box.appendChild(bar);
     const fs = document.createElement('fieldset'); fs.className = 'jed-crest-opts'; fs.id = 'jed-crest-opts';
     const lg = document.createElement('legend'); lg.textContent = 'Crest import colours'; fs.appendChild(lg);
@@ -381,14 +398,15 @@
       report.push(side + ': ' + games.length + ' colours, slots rewritten ' + (alloc.written.length ? alloc.written.join(', ') : 'none'));
     }
     S.side = keepSide; shape.pixels = pixels; renderAll();
-    status(f.name + ' → ' + teamCode() + ' scoreboard crest (' + im.w + '×' + im.h + '); ' + report.join('; ') + '. Save HOMEPALS/AWAYPALS and CRESTS4.PPV (or Export all).');
+    status(f.name + ' → ' + teamCode() + ' scoreboard crest (' + im.w + '×' + im.h + '); ' + report.join('; ') + '. Save HOMEPALS/AWAYPALS and ' + crestBankName() + ' (or Export all).');
   }
-  /** NHL 95 PC scoreboard crest (CRESTS4.PPV shape tagged with the team code), drawn as DrawHudPanel does. */
+  /** Scoreboard crest (CRESTS4.QPP on 94 PC, CRESTS4.PPV on 95 PC), tagged with the team code. */
   function scoreboardCrest(box) {
     const shape = S.crests && NhlPcCrests.find(S.crests, teamCode());
     const h = document.createElement('div'); h.className = 'jed-grid-title';
-    h.textContent = shape ? 'Scoreboard crest (CRESTS4.PPV ' + shape.width + ' × ' + shape.height + ', sprite colours 197–202, 213–218, 229–234, 245–250)'
-      : 'Scoreboard crest: ' + (S.crests ? 'no ' + teamCode() + ' shape in CRESTS4.PPV' : 'CRESTS4.PPV not found in the game files');
+    const bank = crestBankName();
+    h.textContent = shape ? 'Scoreboard crest (' + bank + ' ' + shape.width + ' × ' + shape.height + ', sprite colours 197–202, 213–218, 229–234, 245–250)'
+      : 'Scoreboard crest: ' + (S.crests ? 'no ' + teamCode() + ' shape in ' + bank : bank + ' not found in the game files');
     box.appendChild(h); if (!shape) return;
     const k = 6; const c = document.createElement('canvas'); c.id = 'jed-sbcrest'; c.className = 'jed-crest'; c.width = shape.width * k; c.height = shape.height * k;
     const img = new ImageData(J.crestRgb(shape, teamPalette()), shape.width, shape.height);
@@ -586,7 +604,7 @@
   function exportAll() {
     const same = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]); const enc = new TextEncoder(); const entries = [];
     for (const side of ['home', 'away']) { const f = S.files[side]; if (f && !same(f.file.bytes, f.original)) entries.push({ name: side === 'home' ? 'HOMEPALS.BIN' : 'AWAYPALS.BIN', data: J.exportFile(f.file) }); }
-    if (S.crests && NhlPcCrests.edited(S.crests)) entries.push({ name: 'CRESTS4.PPV', data: NhlPcCrests.write(S.crests) });
+    if (S.crests && !S.crests.planar && NhlPcCrests.edited(S.crests)) entries.push({ name: crestBankName(), data: NhlPcCrests.write(S.crests) });
     for (const a of (window.JedIce ? window.JedIce.editedArenas() : [])) entries.push({ name: a.name + '.MAP', data: a.map }, { name: a.name + '.TIL', data: a.til }, { name: a.name + '-placement.json', data: enc.encode(JSON.stringify(a.json, null, 2) + '\n') });
     if (!entries.length) { status('Nothing edited yet: no file differs from what you opened', true); return; }
     download(NhlZipStore.zipStore(entries), 'nhl95pc-edits.zip');
@@ -685,10 +703,10 @@
     try { const r = await fetch('api/games'); if (!r.ok) return; list = await r.json(); } catch (err) { return; }
     const pcs = (list || []).filter((g) => (g.kind === 'pc94' || g.kind === 'pc95') && g.pixels);
     if (!pcs.length) return;
-    // Auto-load the server's PC game (NHL 95 PC first). With both, the 94 / 95 switch picks; no menu.
+    // Auto-load the server's PC game (NHL 94 PC first, same order as the Game list). With both, the switch picks.
     const pick = (id) => pcs.find((g) => g.id === id);
     const want = new URLSearchParams(location.hash.slice(1)).get('game');
-    const first = pick(want) || pcs.find((g) => g.kind === 'pc95') || pcs[0];
+    const first = pick(want) || pcs.find((g) => g.kind === 'pc94') || pcs[0];
     const group = $('jed-game');
     const mark = (id) => group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.game === id)));
     group.querySelectorAll('button').forEach((b) => {

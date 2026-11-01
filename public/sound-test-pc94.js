@@ -36,7 +36,10 @@
   let live = null;
   let volume = 0.8;
   let gain = null;
+  let analyser = null;
   let panel = null;
+  let vizRaf = 0;
+  const OPL_COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a', '#7ad0ff', '#e0c36e', '#c9a0dc'];
 
   function make(tag, cls, text) {
     const n = document.createElement(tag);
@@ -206,11 +209,13 @@
   }
 
   function stop() {
+    if (vizRaf) { cancelAnimationFrame(vizRaf); vizRaf = 0; }
     if (live && live.source) {
       try { live.source.stop(); } catch (err) { /* already stopped */ }
     }
     live = null;
     if (onChange) onChange();
+    drawViz();
   }
 
   function audioCtx() {
@@ -219,21 +224,227 @@
     ctx = new AC();
     gain = ctx.createGain();
     gain.gain.value = volume;
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.55;
+    analyser.connect(gain);
     gain.connect(ctx.destination);
     return ctx;
   }
 
-  function playBuffer(id, float32, rate) {
+  function playBuffer(id, float32, rate, viz) {
     const ac = audioCtx();
     const buf = ac.createBuffer(1, float32.length, rate);
     buf.getChannelData(0).set(float32);
     const src = ac.createBufferSource();
     src.buffer = buf;
-    src.connect(gain);
+    src.connect(analyser);
     src.onended = () => { if (live && live.id === id) { live = null; if (onChange) onChange(); } };
     src.start();
-    live = { id: id, source: src };
+    live = {
+      id: id,
+      source: src,
+      started: ac.currentTime,
+      duration: float32.length / rate,
+      events: (viz && viz.events) || [],
+      ticks: (viz && viz.ticks) || 0,
+      tickHz: 100
+    };
     if (onChange) onChange();
+    drawViz();
+  }
+
+  function voiceOf(midiCh) {
+    if (midiCh === 9) return 8;
+    return midiCh % 9;
+  }
+
+  function theme() {
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => (css.getPropertyValue(name) || '').trim() || fallback;
+    return {
+      bg: v('--bg', '#101418'),
+      panel: v('--raise', '#1a2129'),
+      line: v('--line', '#33414d'),
+      text: v('--text', '#e8eef3'),
+      muted: v('--muted', '#8ea0b0'),
+      amber: v('--amber', '#f0b429'),
+      mono: v('--mono', 'ui-monospace, monospace')
+    };
+  }
+
+  function noteSpans(events, atTick) {
+    const notes = [];
+    const hold = {};
+    for (let i = 0; i < events.length; i++) {
+      const e = events[i];
+      const st = e.msg[0], cmd = st & 0xf0, ch = voiceOf(st & 0x0f);
+      if (cmd === 0x90 && e.msg[2]) hold[ch] = { tick: e.tick, note: e.msg[1], ch: ch };
+      else if ((cmd === 0x80 || (cmd === 0x90 && !e.msg[2])) && hold[ch]) {
+        notes.push({ ch: ch, note: hold[ch].note, start: hold[ch].tick, end: e.tick });
+        delete hold[ch];
+      }
+    }
+    Object.keys(hold).forEach((k) => {
+      const h = hold[k];
+      notes.push({ ch: h.ch, note: h.note, start: h.tick, end: Math.max(atTick, h.tick) + 4 });
+    });
+    return notes;
+  }
+
+  function clock(secs) {
+    return Math.floor(secs / 60) + ':' + (secs % 60 < 10 ? '0' : '') + (secs % 60).toFixed(2);
+  }
+
+  function syncHud() {
+    if (!panel) return;
+    const bar = panel.querySelector('.st-bar');
+    const timeEl = panel.querySelector('.st-time');
+    const btn = panel.querySelector('#sound-test-toggle');
+    const playing = !!(live && live.id === panel.dataset.item);
+    if (btn) {
+      btn.textContent = playing ? '■ Stop' : '▶ Play';
+      btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    }
+    if (!playing) {
+      if (bar) bar.style.width = '0%';
+      if (timeEl) timeEl.textContent = '0:00.00 / 0:00.00';
+      return;
+    }
+    const t = Math.max(0, ctx.currentTime - live.started);
+    const frac = live.duration ? Math.min(1, t / live.duration) : 0;
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.width = (frac * 100).toFixed(1) + '%';
+    }
+    if (timeEl) timeEl.textContent = clock(t) + ' / ' + clock(live.duration);
+  }
+
+  function sizeCanvas(canvas, cssH) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cssW = Math.max(240, Math.floor(canvas.clientWidth || 520));
+    const h = Math.max(72, Math.floor(cssH));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    canvas.style.height = h + 'px';
+    const g = canvas.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { g: g, cssW: cssW, cssH: h };
+  }
+
+  function drawRoll(canvas, C) {
+    const lanes = 9;
+    const cssWGuess = canvas.clientWidth || 520;
+    const laneH = cssWGuess < 460 ? 26 : 30;
+    const axis = 16;
+    const { g, cssW, cssH } = sizeCanvas(canvas, axis + lanes * (laneH + 2) + 2);
+    const gutter = cssW < 460 ? 48 : 62;
+    const x0 = gutter;
+    const x1 = cssW - 4;
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, cssW, cssH);
+    g.fillStyle = C.muted;
+    g.font = '10px ' + C.mono;
+    g.fillText('now →', x1 - 36, 11);
+    for (let i = 0; i < lanes; i++) {
+      const top = axis + i * (laneH + 2);
+      g.fillStyle = C.panel;
+      g.fillRect(x0, top, x1 - x0, laneH);
+      g.strokeStyle = C.line;
+      g.lineWidth = 1;
+      g.strokeRect(x0 + 0.5, top + 0.5, x1 - x0 - 1, laneH - 1);
+      g.font = '600 11px ' + C.mono;
+      g.fillStyle = OPL_COLORS[i];
+      g.fillText('OPL' + (i + 1), 6, top + 13);
+      g.beginPath();
+      g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
+      g.strokeStyle = C.line;
+      g.stroke();
+      g.font = '11px ' + C.mono;
+      g.fillStyle = C.muted;
+      g.fillText('—', 6, top + laneH - 5);
+    }
+    const playing = !!(live && live.events && live.events.length && live.id === panel.dataset.item);
+    if (!playing) {
+      g.fillStyle = C.muted;
+      g.font = '12px ' + C.mono;
+      g.textAlign = 'center';
+      g.fillText('Press Play to see what each channel does', (x0 + x1) / 2, axis + 4 * (laneH + 2) + laneH / 2 + 4);
+      g.textAlign = 'left';
+      return;
+    }
+    const t = Math.max(0, ctx.currentTime - live.started);
+    const atTick = t * live.tickHz;
+    const windowTicks = 6 * live.tickHz;
+    const t0 = atTick - windowTicks;
+    const notes = noteSpans(live.events, atTick);
+    const sounding = {};
+    for (let i = 0; i < notes.length; i++) {
+      const n = notes[i];
+      if (n.end < t0 || n.start > atTick) continue;
+      const xA = x0 + ((n.start - t0) / windowTicks) * (x1 - x0);
+      const xB = x0 + ((Math.min(n.end, atTick) - t0) / windowTicks) * (x1 - x0);
+      const nn = Math.max(24, Math.min(96, n.note));
+      const top = axis + n.ch * (laneH + 2);
+      const ny = top + 4 + (1 - (nn - 24) / 72) * (laneH - 10);
+      g.fillStyle = OPL_COLORS[n.ch];
+      g.fillRect(Math.max(x0, xA), ny, Math.max(2, xB - xA), 4);
+      if (n.start <= atTick && n.end > atTick) sounding[n.ch] = n.note;
+    }
+    for (let i = 0; i < lanes; i++) {
+      if (sounding[i] == null) continue;
+      const top = axis + i * (laneH + 2);
+      g.fillStyle = C.text;
+      g.font = '11px ' + C.mono;
+      g.fillText(String(sounding[i]), 6, top + laneH - 5);
+      g.beginPath();
+      g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
+      g.fillStyle = OPL_COLORS[i];
+      g.fill();
+    }
+    g.fillStyle = C.amber;
+    g.fillRect(x1 - 1.5, axis - 3, 1.5, cssH - axis + 1);
+  }
+
+  function drawWave(canvas, C) {
+    const { g, cssW, cssH } = sizeCanvas(canvas, 88);
+    g.fillStyle = C.bg;
+    g.fillRect(0, 0, cssW, cssH);
+    const playing = !!(live && analyser && live.id === panel.dataset.item);
+    if (!playing) {
+      g.fillStyle = C.muted;
+      g.font = '12px ' + C.mono;
+      g.textAlign = 'center';
+      g.fillText('Press Play to see the waveform', cssW / 2, cssH / 2 + 4);
+      g.textAlign = 'left';
+      return;
+    }
+    const wave = new Uint8Array(analyser.fftSize);
+    analyser.getByteTimeDomainData(wave);
+    g.strokeStyle = C.amber;
+    g.lineWidth = 1.5;
+    g.beginPath();
+    for (let i = 0; i < wave.length; i++) {
+      const x = i / (wave.length - 1) * cssW;
+      const y = (1 - wave[i] / 255) * (cssH - 8) + 4;
+      if (i) g.lineTo(x, y); else g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+
+  function drawViz() {
+    vizRaf = 0;
+    if (!panel) return;
+    syncHud();
+    const canvas = panel.querySelector('.st-viz-canvas');
+    if (!canvas) return;
+    const C = theme();
+    const item = panel.dataset.item || '';
+    if (item.indexOf('song-') === 0) drawRoll(canvas, C);
+    else drawWave(canvas, C);
+    if (live) vizRaf = requestAnimationFrame(drawViz);
   }
 
   async function play(id) {
@@ -279,7 +490,7 @@
     });
     const f32 = new Float32Array(pcm.length / 2);
     for (let i = 0; i < f32.length; i++) f32[i] = pcm[i * 2] / 32768;
-    playBuffer(id, f32, root.NhlPc94Player.RATE);
+    playBuffer(id, f32, root.NhlPc94Player.RATE, { events: pcm.events || [], ticks: pcm.ticks || 0 });
   }
 
   async function toggle(id) {
@@ -288,6 +499,7 @@
   }
 
   function renderPanel(box, id) {
+    if (vizRaf) { cancelAnimationFrame(vizRaf); vizRaf = 0; }
     panel = box;
     box.replaceChildren();
     box.dataset.item = id;
@@ -341,7 +553,28 @@
     vol.appendChild(range);
     controls.append(btn, vol);
     box.appendChild(controls);
+    const progress = make('div', 'st-progress');
+    progress.appendChild(make('div', 'st-bar'));
+    box.appendChild(progress);
+    box.appendChild(make('p', 'st-time mono', '0:00.00 / 0:00.00'));
+    const seq = make('div', 'st-seq');
+    const head = make('div', 'st-seq-head');
+    head.appendChild(make('span', 'st-seq-title', id.startsWith('song-') ? 'Channels' : 'Waveform'));
+    seq.appendChild(head);
+    const wrap = make('div', 'st-roll');
+    const canvas = make('canvas', 'st-viz-canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', id.startsWith('song-')
+      ? 'Piano roll of the nine YM3812 AdLib voices, newest at the right edge'
+      : 'Waveform of the playing sample');
+    wrap.appendChild(canvas);
+    seq.appendChild(wrap);
+    seq.appendChild(make('p', 'st-seq-note', id.startsWith('song-')
+      ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). PCM clips show the waveform only.'
+      : 'Live waveform from the playing PCM (speech, IFF, or digital SFX).'));
+    box.appendChild(seq);
     box.appendChild(make('p', 'st-status', catalog.note || ''));
+    drawViz();
   }
 
   function metaRows(id) {

@@ -20,6 +20,10 @@ const pcm = Player.renderSong(parsed, { seconds: 0.4, loops: 1 });
 let peak = 0;
 for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
 assert.ok(peak > 50, '94 KMS fixture renders non-silent OPL output (' + peak + ')');
+assert.ok(pcm.events && pcm.events.length > 0, 'renderSong traces MIDI events for the visualizer');
+assert.ok(pcm.events.some((e) => (e.msg[0] & 0xf0) === 0x90));
+const ui = fs.readFileSync(path.join(__dirname, '../public/sound-test-pc94.js'), 'utf8');
+assert.ok(ui.includes('st-viz-canvas') && ui.includes('drawRoll'), 'Audio tab draws the AdLib piano roll');
 
 function u16(n) { return [n & 255, (n >> 8) & 255]; }
 function u32(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255]; }

@@ -1,7 +1,7 @@
 /**
  * Browser test: jed.html has no server game menu. Without PC games on the server only Open game folder / Open files
  * show; with NHL_PC95_DIR (and NHL_PC94_DIR) set (local only, game files are never committed) the server game loads by
- * itself, NHL 95 PC first, and with both the NHL 95 PC / NHL 94 PC switch changes game.
+ * itself, NHL 94 PC first, and with both the NHL 94 PC / NHL 95 PC switch changes game.
  *
  *   node test/browser/jed-server.js
  */
@@ -23,7 +23,7 @@ withBrowser('jed-server', async ({ url, newPage }) => {
     console.log('jed-server: no PC games on this server, auto-load not checked');
   } else {
     await page.waitForSelector('#jed-team-list .item');
-    const want = games.includes('nhl95pc') ? '95' : '94';
+    const want = games.includes('nhl94pc') ? '94' : '95';
     assert.match(await page.textContent('#jed-status'), new RegExp('NHL ' + want + ' PC'));
     if (games.length > 1) {
       assert.ok(await page.isVisible('#jed-game'));

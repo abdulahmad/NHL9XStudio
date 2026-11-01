@@ -1050,6 +1050,7 @@ assert.strictEqual(pcCatalog.spfs.find((spf) => spf.name === 'SPFbenchcheck').gr
 assert.strictEqual(pcCatalog.spfs.find((spf) => spf.name === 'SPFref').group, 'Other');
 assert.ok(pcCatalog.spfs.find((spf) => spf.name === 'SPFskaters').blurb.includes('000-351'));
 
+assert.ok(GAMES.findIndex((game) => game.id === 'nhl94pc') < GAMES.findIndex((game) => game.id === 'nhl95pc'), '94 PC before 95 PC');
 const pcGame = GAMES.find((game) => game.id === 'nhl95pc');
 assert.strictEqual(pcGame.kind, 'pc95');
 assert.strictEqual(pcGame.paletteKind, 'pc');

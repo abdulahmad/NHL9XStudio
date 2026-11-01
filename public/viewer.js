@@ -2918,7 +2918,7 @@ async function ingestDroppedFiles(fileList) {
     let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
     entry = Object.assign({}, entry, {
       pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,
-      rom: true,
+      rom: Nhl95Pc.installReady ? Nhl95Pc.installReady(clientPc.catalog) : true,
       images: clientPc.catalog.images,
       paletteFiles: clientPc.catalog.paletteNames
     });

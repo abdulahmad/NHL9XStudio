@@ -35,7 +35,9 @@
     I.rink = null;
     if (rb && !I.ro) { try { I.rink = Nhl95Pc.openBytes(rb, 'RINK.QFS').shapes[0].pixels; } catch (e) { I.rink = null; } }
     if (rb && I.ro) { try { const m = await X.file('RINK.MAP'); if (m) I.rink = R.composite(null, R.parseMap(m), R.parseTil(rb), [0, 0, -1, -1], 94); } catch (e) { I.rink = null; } }
-    I.rinkNote = I.rink ? '' : 'No rink picture (RINK.QFS) loaded — showing the logo on a plain background. ';
+    I.rinkNote = I.rink ? '' : (I.ro
+      ? 'No rink picture (RINK.TIL / RINK.MAP) loaded — showing the logo on a plain background. '
+      : 'No rink picture (RINK.QFS) loaded — showing the logo on a plain background. ');
     const place = (R.PLACEMENT[S.game] || R.PLACEMENT[95])[name] || [21, 37, -1, -1];
     I.raw = tb && mb ? { til: tb, map: mb } : null; I.cacheTeam = I.team;
     const hit = I.cache[S.game + name];
@@ -351,7 +353,7 @@
     const x = full ? 0 : Math.max(0, Math.round((R.W - tw) / 2)), y = full ? 0 : Math.max(0, Math.round((R.H - th) / 2));
     const mode = $('ice-q-cells').value; let pick = null, how = 'every cell with a visible pixel';
     if (mode === 'diff') {
-      if (!I.rink) throw new Error('"Differs from the rink" needs RINK.QFS: open the game folder');
+      if (!I.rink) throw new Error('"Differs from the rink" needs RINK.QFS (95) or RINK.TIL / RINK.MAP (94): open the game folder');
       pick = R.cellsDiffering(idx, im.w, im.h, x, y, I.rink); how = 'cells that differ from RINK.QFS';
     } else if (mode === 'mask') {
       if (!I.mask) throw new Error('Choose a mask image first (Mask…): white cells become tiles');

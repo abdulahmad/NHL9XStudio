@@ -122,6 +122,12 @@ if (retail) {
   let ink = 0;
   for (let i = 0; i < frame.pixels.length; i++) if (frame.pixels[i] !== 255) ink++;
   assert.ok(ink > 100000, 'full rink is not empty (' + ink + ' pixels)');
+  assert.ok(pc95.installReady(listed), '94 PC install is marked loaded');
+  const Crests = require('../lib/pc-crests');
+  const crests = pc95.openBytes(fs.readFileSync(path.join(retail, 'CRESTS4.QPP')));
+  const bank = Crests.fromShapes(crests);
+  assert.ok(bank.entries.length >= 24, '94 CRESTS4.QPP shapes');
+  assert.ok(Crests.find(bank, 'BOS'));
 }
 
 console.log('pc94-shape: ok');
