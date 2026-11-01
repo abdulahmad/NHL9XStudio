@@ -165,7 +165,7 @@
           const clip = root.NhlViv.decodeIff(buf);
           if (!clip || !clip.pcm.length) continue;
           const packName = String(rel).split(/[\\/]/).pop();
-          const kind = clip.kind === 'riff' ? 'IFF RIFF (XOR 80h)' : 'IFF FORM 8SVX';
+          const kind = clip.kind === 'riff' ? 'IFF RIFF (XOR 80h, 16-bit)' : 'IFF FORM 8SVX';
           digital.push({
             id: 'iff-' + packName,
             group: 'Desk music',
@@ -521,14 +521,14 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', id.startsWith('iff-')
-      ? 'NHL95PC sub_8F98F: FORM 8SVX (VHDR big-endian rate, BODY) or RIFF WAVE (rate at +0x18, PCM XOR 80h). Desk music, not announcer speech.'
+      ? 'NHL95PC sub_8F98F load + sub_8FB8E 16-bit play. FORM 8SVX (VHDR rate, BODY, no XOR; Fibonacci-delta when sCompression is 1) or RIFF WAVE (rate at +0x18, XOR 80h, then 16-bit). 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
           ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
           : 'C0 FB directory, each clip BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
         : id.startsWith('sfx-')
           ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
-          : 'EACSNDF sequencer from NHL95PC sub_990CB / sub_99925 (same library as NHL 94 PC). FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
+          : 'EACSNDF sequencer from NHL95PC sub_990CB / sub_99925 (same library as NHL 94 PC). MIDI send adds 24 (HOCKEY.EXE 1844:022E). YM30 fnum table (block = note/12); PAT rec[7] transposes at note-on. FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
     const controls = make('div', 'st-controls');
     const btn = make('button', 'ghost-btn st-toggle', live && live.id === id ? '■ Stop' : '▶ Play');
     btn.type = 'button';

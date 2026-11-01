@@ -16,12 +16,25 @@ assert.strictEqual(parsed.tempo, 120);
 assert.ok(parsed.tracks[0].events.some((e) => (e.cmd & 0x7f) === 0x3c && e.cmd >= 0x80));
 assert.ok(parsed.tracks[0].events.some((e) => e.cmd === 0xd9));
 
+assert.strictEqual(Player.NOTE_OFFSET, 24, 'HOCKEY.EXE 1844:022E adds 18h');
+const a4 = Player.midiToFnum(69);
+assert.strictEqual(a4.block, 5, 'YM30 block = note/12 (MIDI 69 → 5)');
+assert.strictEqual(a4.fnum, 0x90, 'YM30 fnum table[69%12]');
 const pcm = Player.renderSong(parsed, { seconds: 0.4, loops: 1 });
 let peak = 0;
 for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
 assert.ok(peak > 50, '94 KMS fixture renders non-silent OPL output (' + peak + ')');
 assert.ok(pcm.events && pcm.events.length > 0, 'renderSong traces MIDI events for the visualizer');
-assert.ok(pcm.events.some((e) => (e.msg[0] & 0xf0) === 0x90));
+assert.ok(pcm.events.some((e) => (e.msg[0] & 0xf0) === 0x90 && e.msg[1] === 0x3c + 24),
+  'MIDI send adds 24 (file note 0x3C → 0x54)');
+const velOnly = Kms.decodeEvent(Uint8Array.from([0x00, 0x30, 24]), 0);
+assert.strictEqual(velOnly.cmd, 0x30);
+assert.strictEqual(velOnly.a1, 0, '00–80 notes do not consume a velocity byte');
+assert.strictEqual(velOnly.a2, 24);
+const withVel = Kms.decodeEvent(Uint8Array.from([0x00, 0xbc, 0x64, 24]), 0);
+assert.strictEqual(withVel.cmd, 0xbc);
+assert.strictEqual(withVel.a1, 0x64);
+assert.strictEqual(withVel.a2, 24);
 const ui = fs.readFileSync(path.join(__dirname, '../public/sound-test-pc94.js'), 'utf8');
 assert.ok(ui.includes('st-viz-canvas') && ui.includes('drawRoll'), 'Audio tab draws the AdLib piano roll');
 
@@ -147,7 +160,9 @@ if (retail) {
   assert.ok(samples.length >= 1, 'PCFF001 digital timbres');
   assert.ok(samples[0].pcm.length > 0);
   const notes = song.tracks[0].events.filter((e) => e.cmd < 0xd9);
-  assert.ok(notes.some((e) => (e.cmd & 0x7f) === 0x30), 'ADTITLE notes are MIDI values, not +24');
+  assert.ok(notes.some((e) => (e.cmd & 0x7f) === 0x30), 'ADTITLE file notes are MIDI values');
+  assert.ok(live.events.some((e) => (e.msg[0] & 0xf0) === 0x90 && e.msg[1] === 0x30 + 24),
+    'ADTITLE MIDI send adds 24 (0x30 → 0x48)');
   function checkViv(file, lastName, labels) {
     const p = path.join(retail, file);
     if (!fs.existsSync(p)) return;

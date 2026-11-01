@@ -100,7 +100,63 @@ const riffClip = Viv.decodeIff(riff);
 assert.ok(riffClip);
 assert.strictEqual(riffClip.kind, 'riff');
 assert.strictEqual(riffClip.rate, 11025);
-assert.deepStrictEqual(Array.from(riffClip.pcm), Array.from(riffPcm).map((b) => b ^ 0x80));
+assert.strictEqual(riffClip.depth, 16, 'sub_8FB8E plays RIFF as 16-bit after XOR 80h');
+assert.strictEqual(riffClip.pcm.length, riffPcm.length >> 1);
+const x0 = riffPcm[0] ^ 0x80, x1 = riffPcm[1] ^ 0x80;
+const word0 = (x0 | (x1 << 8));
+assert.strictEqual(riffClip.pcm[0], word0 > 32767 ? word0 - 65536 : word0);
+
+const tone = new Int16Array(8);
+for (let i = 0; i < 8; i++) tone[i] = (i - 4) * 4000;
+const riff16 = new Uint8Array(0x2c + tone.length * 2);
+riff16.set(Buffer.from('RIFF'), 0);
+riff16.set(le32(riff16.length - 8), 4);
+riff16.set(Buffer.from('WAVE'), 8);
+riff16.set(Buffer.from('fmt '), 12);
+riff16.set(le32(16), 16);
+riff16.set(le16(1), 20);
+riff16.set(le16(1), 22);
+riff16.set(le32(22050), 0x18);
+riff16.set(le32(44100), 0x1c);
+riff16.set(le16(2), 0x20);
+riff16.set(le16(16), 0x22);
+riff16.set(Buffer.from('data'), 0x24);
+riff16.set(le32(tone.length * 2), 0x28);
+for (let i = 0; i < tone.length; i++) {
+  riff16[0x2c + i * 2] = tone[i] & 255;
+  riff16[0x2c + i * 2 + 1] = (tone[i] >> 8) & 255;
+}
+const r16 = Viv.decodeIff(riff16);
+assert.ok(r16 && r16.depth === 16, '16-bit WAVE');
+assert.strictEqual(r16.rate, 22050);
+assert.strictEqual(r16.pcm.length, tone.length);
+const xLo = (tone[0] & 255) ^ 0x80;
+const xHi = ((tone[0] >> 8) & 255) ^ 0x80;
+const xorWord = xLo | (xHi << 8);
+assert.strictEqual(r16.pcm[0], xorWord > 32767 ? xorWord - 65536 : xorWord);
+const f16 = Viv.toFloat32(r16.pcm);
+assert.ok(Math.abs(f16[0] - r16.pcm[0] / 32768) < 1e-6);
+
+const fibSrc = Uint8Array.from([40, 0x98, 0x87]);
+const fib = Viv.fibDelta(fibSrc);
+assert.ok(fib.length === 5, 'fib-delta expands ~2×');
+const iffFib = new Uint8Array(12 + 8 + 20 + 8 + fibSrc.length);
+let q = 0;
+iffFib.set(form, q); q += 4;
+iffFib.set(be32(iffFib.length - 8), q); q += 4;
+iffFib.set(svx, q); q += 4;
+iffFib.set(vhdr, q); q += 4;
+iffFib.set(be32(20), q); q += 4;
+q += 12;
+iffFib.set(be16(8363), q); q += 2;
+iffFib[q] = 1; iffFib[q + 1] = 1; q += 6;
+iffFib.set(body, q); q += 4;
+iffFib.set(be32(fibSrc.length), q); q += 4;
+iffFib.set(fibSrc, q);
+const fibClip = Viv.decodeIff(iffFib);
+assert.ok(fibClip);
+assert.strictEqual(fibClip.rate, 8363);
+assert.deepStrictEqual(Array.from(fibClip.pcm), Array.from(fib));
 
 function retail95Dir() {
   const root = path.join(__dirname, '..');

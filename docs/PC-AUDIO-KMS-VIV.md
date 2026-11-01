@@ -1,6 +1,6 @@
 # PC audio: `.KMS` and `.VIV` (94PC / 95PC)
 
-Retail install trees (`pc94/`, `pc95/`) are **not** bundled in this repo. Layouts here come from the NHL 95 PC / NHL 94 PC executables (`nhl95pc`, `EA-NHL-Disassembly-Project/NHL94-PC`), not from EA-NHL-Tools format notes.
+Retail install trees (`pc94/`, `pc95/`) are **not** bundled in this repo. Layouts here come from the NHL 95 PC / NHL 94 PC executables (`nhl95pc`, `NHL94PC` `docs/MUSIC_FORMAT.md` / `docs/SFX_FORMAT.md`, worked out from `HOCKEY.EXE` and `YM30.BGP`). Not from the old EA-NHL-Tools IFF-To-WAV / wiki Kris notes.
 
 The wiki Kris parser is tested in `test/pc-audio-kms.js` and is **not** what 94/95 PC play. NHL 94/95 PC songs, SFX, VIV, and IFF are tested in `test/pc94-audio.js` and `test/pc95-audio.js`.
 
@@ -10,10 +10,11 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. Bot
 
 - **KMS:** version byte 1, tempo at +1, track count at +6, little-endian u16 offsets at +8. First payload is at `0x30`. The TRAK wrapper is unused by the sequencer. Tempo rate is `32000 / tempo` (`sub_8F347`); the interrupt accumulator steps `0x80` (`sub_990CB`).
 - **CFG:** 8-byte header, then 16-byte records at +8 (mask u16, volume +6, pan +7, program +0x0C). Channel is the lowest set bit of the mask (`word_D4F68`).
-- **Events (`sub_99925`):** VLQ delta, command. Notes (`cmd < 0xD9`) always consume a velocity byte and a duration VLQ; `cmd >= 0x80` uses that velocity, otherwise the running velocity (`track+0x52` / `0xE4`). `0xD9`/`0xDA`/`0xDB`/`0xE3` have no payload; `0xDF` is two bytes (CC number, value); `0xE5` is u16; `0xE6` is a byte plus u32 LE then a jump to that address + 4; `0xE7`/`0xE8` are length-prefixed. Song transpose at `unk_D41D2+0x13` is 0 in the retail template — notes are MIDI values with **no +24 offset**.
+- **Events (`1630:0A90` / `sub_99925`):** VLQ delta, command. Notes `81`–`D8` consume a velocity byte and a duration VLQ; `00`–`80` are duration only (running velocity from `E4`). Retail songs use only `81`–`D8`. `0xD9`/`0xDA`/`0xDB`/`0xE3` have no payload; `0xDF` is two bytes (CC number, value); `0xE5` is u16; `0xE6` is a byte plus u32 LE then a jump to that address + 4; `0xE7`/`0xE8` are length-prefixed. Song-handle transpose at `+0x13` is 0.
+- **MIDI send (`1844:022E`):** adds **24** to every note-on and note-off. A KMS byte `9B` is note `1Bh+24` = 51. Without that offset the organ tunes are two octaves low and sound like envelope clicks.
 - **Parser:** `lib/audio/pc94-kms.js`
-- **SFX:** `lib/audio/pc94-sfx.js` — PCFF `.TIM` / `.DIG` / `.PAT` (`asc_C3FA8` / `asc_C3FB8`). Digital samples are signed 8-bit PCM; the Sound Blaster DAC XOR-flips with `0x80`.
-- **Playback:** `lib/audio/pc94-player.js` sequences those events into the MIT `opl3` core (browser copy: `lib/audio/opl3-chip.js`). CC7 is volume, CC10 is pan. The Audio tab is `public/sound-test-pc94.js`.
+- **SFX:** `lib/audio/pc94-sfx.js` — PCFF `.TIM` / `.DIG` / `.PAT` (`asc_C3FA8` / `asc_C3FB8`). Digital samples are signed 8-bit PCM; the Sound Blaster DAC XOR-flips with `0x80`. PAT records are 20 bytes at `0x102 + 20*(i+1)`. FM timbre type `04`: carrier then modulator, then C0h.
+- **Playback:** `lib/audio/pc94-player.js` sequences those events into the MIT `opl3` core (browser copy: `lib/audio/opl3-chip.js`). OPL2 `fnum`/`block` come from the YM30 12-entry table (`fnum = FNUM12[note%12]`, `block = note/12`). Operator registers use offsets `0,1,2,8,9,10,16,17,18` (not operator numbers 6,7,8). Waveform select is enabled (`reg 0x01 = 0x20`). PAT rec[7] is the signed transpose the driver adds at note-on. Channel 9 program is `note+5Ch` (drum programs `80h`–`BFh`). CC7 is volume, CC10 is pan. The Audio tab is `public/sound-test-pc94.js`.
 - **Not a YM30.BGP unicorn capture** — envelopes after timbre `+0x0F` are unknown, so this is not an ear match yet.
 - MT-32 `.KMS` files (`MT*.KMS`) still take the AdLib path and will not sound like Roland.
 
@@ -44,10 +45,10 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 `OpenSpeechBank`: three big-endian words (type, count, extra), then per clip u24be offset, u24be size, `name\\0`. Packed clips start with **47 FB** (`'G'`) or RefPack **10 FB**. `ReadSpeechSample` unpacks via `sub_98028` then delta-decodes, dropping a 5-byte header (`lib/audio/viv.js` `readSpeechSample`). The Audio tab is the same `NhlSoundTestPc94` module with `setGame('nhl95pc')`.
 
-Loose `.IFF` files are desk music, not speech. NHL95PC `sub_8F98F`:
+Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads, `sub_8FB8E` plays 16-bit (halves the stored byte counts):
 
-- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR).
-- **RIFF** `0x46464952` WAVE: sample rate at +0x18, PCM from +0x2C XOR `0x80`.
+- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR). `sCompression == 1` is Fibonacci-delta; a BODY twice the VHDR sample count is 16-bit PCM.
+- **RIFF** `0x46464952` WAVE: sample rate at +0x18, payload from +0x2C, size at +0x28. XOR `0x80` then 16-bit (the loader ignores the fmt bits field). Playing those bytes as 8-bit is twice as fast and static. Do not use EA-NHL-Tools IFF-To-WAV (rate/2, BODY+4).
 
 Songs and SFX are the EACSNDF `.KMS`/`.CFG` + `PCFF%03d.TIM/.PAT/.DIG` path, not wiki Kris.
 

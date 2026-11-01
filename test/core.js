@@ -970,6 +970,7 @@ assert.strictEqual(pc95.isRinkBank({ shapes: numbered.slice(0, 50) }, 'F000_049.
 assert.strictEqual(pc95.isRinkBank({ shapes: numbered.slice(0, 105) }, 'F000_149.PPV'), true);
 assert.strictEqual(pc95.isSpriteBank({ shapes: numbered.slice(0, 105) }, 'F000_149.PPV'), false);
 assert.strictEqual(pc95.isSpriteBank({ shapes: [] }, 'sprites.ppv'), true);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: 'dbox' }] }, 'PLAYER.QPP'), false, 'PLAYER.QPP is a picture');
 
 const playerSheet = pc95.encodeBundle([
   { name: '000_049.PPV', data: shapeBank('0000', rawSpit) },

@@ -99,6 +99,8 @@ if (retail) {
   assert.ok(cflag && cflag.shapes.length >= 1, 'CFLAG.QPP (46 FB) unpacks');
   const listed = pc95.catalogDirectory(retail);
   assert.ok(listed.spriteFiles.some((rel) => /000_049\.PPV$/i.test(rel)));
+  assert.ok(!listed.spriteFiles.some((rel) => /PLAYER\.QPP$/i.test(rel)), 'PLAYER.QPP is not a sprite sheet');
+  assert.ok(listed.images.some((image) => /PLAYER/i.test(image.id)), 'PLAYER.QPP is an image');
   assert.ok(listed.rinkFiles.some((rel) => /F000_049\.PPV$/i.test(rel)));
   assert.ok(listed.images.length >= 20, 'QPP pictures catalogued');
   assert.ok(listed.audio.songs.length >= 10, 'KMS songs catalogued');

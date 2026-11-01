@@ -4,9 +4,11 @@
       "version": "1.12.0",
       "date": "2026-10-31",
       "changes": [
-        "NHL 94 and 95 PC Audio now follow the game executables, not the old EA-NHL-Tools format notes: KMS/CFG songs play at the written MIDI notes with CFG pan, 95 PC IFF is FORM 8SVX or RIFF WAVE (PCM XOR 80h), 95 PC VIV uses OpenSpeechBank plus ReadSpeechSample DPCM, and 94 PC VIV clip names keep their suffixes (TWELVE (Bruce), Boston (city), THE3RD (Barr))",
-        "NHL 94 PC Images lists the full ice rink from RINK.TIL and RINK.MAP (384×592, the same LoadRink blit as the jersey ice tab). 94 PC has no RINK.QFS",
-        "NHL 94 PC is listed before NHL 95 PC. Either shows [loaded] when sprites, pictures, both jersey bins, and AdLib songs are present. Jersey editor prefers 94 PC and loads CRESTS4.QPP. Audio tab has the Genesis-style channel visualizer: nine AdLib (YM3812) piano-roll lanes, or a waveform for speech / IFF / SFX"
+        "NHL 94 and 95 PC Audio now follow the game executables (NHL94PC MUSIC_FORMAT / SFX_FORMAT from HOCKEY.EXE and YM30.BGP), not the old EA-NHL-Tools format notes: KMS/CFG songs, 95 PC IFF desk music, 95 PC VIV OpenSpeechBank plus ReadSpeechSample DPCM, and 94 PC VIV clip names keep their suffixes (TWELVE (Bruce), Boston (city), THE3RD (Barr))",
+        "NHL 94/95 PC AdLib songs add 24 to every MIDI note (HOCKEY.EXE 1844:022E) and use the YM30 fnum table (block = note/12) with real OPL2 operator offsets. Without +24 the organ tunes were two octaves low and sounded like little pops. PAT rec[7] is still the signed transpose the driver adds at note-on",
+        "NHL 95 PC IFF desk music is RIFF WAVE XOR 80h then 16-bit (sub_8FB8E halves the byte counts), or FORM 8SVX (no XOR; Fibonacci-delta when the header says so). Playing 16-bit as 8-bit was twice as fast and static. 94 PC has no IFF music files",
+        "NHL 94 PC Images lists the full ice rink from RINK.TIL and RINK.MAP (384×592, the same LoadRink blit as the jersey ice tab). 94 PC has no RINK.QFS. 94 PC tiles stay linear 8×8 (the same as 95), not Mode X unswizzle",
+        "NHL 94 PC is listed before NHL 95 PC. Either shows [loaded] when sprites, pictures, both jersey bins, and AdLib songs are present. Jersey editor prefers 94 PC and loads CRESTS4.QPP; PLAYER.QPP stays a picture, not a sprite sheet. Audio tab has the Genesis-style channel visualizer: nine AdLib (YM3812) piano-roll lanes, or a waveform for speech / IFF / SFX"
       ]
     },
     {
