@@ -252,7 +252,8 @@ function gameStatus(game) {
       ? { images: game.images || [], sheet: game.sheet || null, banks: game.kind === 'sheet' ? sheetGameBanks(game.images || []) : game.banks }
       : null,
     snes: game.snes || null,
-    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))
+    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null)),
+    pcAudio: pc && pc.audio ? pc.audio : undefined
   };
 }
 
@@ -427,7 +428,7 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/viewer.js' || pathname === '/about.js' || pathname === '/button-icons.js' || pathname === '/changelog.json' || pathname === '/viewer.css' || pathname === '/jed.html' || pathname === '/jed.js' || pathname === '/ice.js' || pathname === '/jed.css' || pathname === '/jim.html' || pathname === '/jim.js' || pathname === '/jim.css' || /^\/jed-pals\/[a-zA-Z]+\.act$/.test(pathname) || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
-      pathname === '/sound-test-view.js' || pathname === '/sound-instruments.js' || pathname === '/sound-roll-snes.js' || pathname === '/sound-test-snes.js' || pathname === '/sound-test-snes93.js' ||
+      pathname === '/sound-test-view.js' || pathname === '/sound-test-pc94.js' || pathname === '/sound-instruments.js' || pathname === '/sound-roll-snes.js' || pathname === '/sound-test-snes.js' || pathname === '/sound-test-snes93.js' ||
       pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js' || pathname === '/sound-editor-extras.js' || pathname === '/sound-patch-editor.js' || pathname === '/sound-tools-snes.js' || pathname === '/sound-snes-inst-editor.js') {
     serveFile(res, path.join(PUBLIC, pathname.slice(1)), req);
     return;

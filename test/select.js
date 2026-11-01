@@ -12,7 +12,7 @@ const ROOT = path.join(__dirname, '..');
 const SUITES = [
   'chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-data', 'nhl93-names', 'roll-snes-progressive',
   'nhl93-crowd', 'm68k-cpu', 'spc700-cpu', 'snes-dsp', 'snes-spc', 'nhl94s-sound-data', 'nhl94s-player', 'nhl94s-midi',
-  'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'snes-gm-map',
+  'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'pc94-audio', 'pc95-audio', 'pc94-shape', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests',
@@ -20,7 +20,7 @@ const SUITES = [
 ];
 // Playwright scripts under test/browser/ that test.js runs.
 const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -51,6 +51,8 @@ const RULES = [
   { re: /^lib\/audio\/(spc700-cpu|snes-dsp|snes-spc)\.js$/, tests: SPC, why: 'SPC700 / S-DSP' },
   { re: /^tools\/fingerprint-site\.js$/, tests: ['fingerprint-site'], why: 'fingerprint tool' },
   { re: /^tools\/build-manifest\.js$/, tests: ['core'], why: 'manifest tool' },
+  { re: /^tools\/(extract|build)-pc94-spa\.js$/, tests: ['core'], why: '94 PC SPA catalog' },
+  { re: /^lib\/audio\/viv\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio', 'pc-audio-kms'], why: 'PC VIV speech' },
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.
@@ -61,6 +63,7 @@ const RULES = [
   { re: /^test\/pc-rink\.js$/, tests: ['pc-rink'], why: 'centre ice tests' },
   { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed', 'browser:jed-ice', 'browser:jed-server'], why: 'jersey editor page' },
   { re: /^public\/ice\.js$/, tests: ['browser:jed-ice'], why: 'centre ice tab' },
+  { re: /^lib\/pc94-[\w-]+\.js$/, tests: ['core', 'pc94-shape'], why: 'NHL 94 PC pack / planar bank' },
   { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },
   { re: /^lib\/jim\.js$/, tests: ['core', 'jim-roundtrip', 'jim-compress', 'sjim'], why: 'JIM parse / encode' },

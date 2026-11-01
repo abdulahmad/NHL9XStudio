@@ -154,7 +154,7 @@
         <p><b>Frame</b> is the picture number: 1-based in the Genesis and SNES ANIM files, 0-based on PC like the game's own index. The index is always 0-based.</p>
         <p><b>SPF</b> names a run of those pictures in <span class="mono">frames.asm</span>. When the run is eight facings side by side, the compass steps through them.</p>
         <p><b>SPA</b> is an animation. Each of the eight facings has its own list of frame and vblank pairs. A negative time is the last step. The picture stays up for one extra vblank, the one that expires the counter, and never changes faster than every 4 vblanks. Bit 0 of the flags word loops it. <b>Groups</b> follows the sidebar categories. <b>File</b> is the order in frames.asm. Switching games stays on an SPA or SPF of the same name when the new game has one.</p>
-        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code> or <code>pc95/</code>.</p>
+        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code>, <code>pc95/</code>, or <code>pc94/</code>.</p>
         <p>Facing 0 is north on a vertical rink, then clockwise. A horizontal rink subtracts 2 from the facing before this lookup.</p>
         <p>The dashed box is the frame's canvas. <b>Pin</b> chooses the point held in the middle of the stage. <b>0, 0</b> is the player's position, at the skates, and <b>Hotspot</b> is where the puck sits. The amber mark is 0, 0. The red cross is the hotspot.</p>
       </section>
@@ -178,6 +178,9 @@
   <script src="lib/snespak.js"></script>
   <script src="lib/snes.js"></script>
   <script src="lib/pc95.js"></script>
+  <script src="lib/pc94-pack.js"></script>
+  <script src="lib/pc94-shape.js"></script>
+  <script src="lib/audio/viv.js"></script>
   <script src="lib/zip-store.js"></script>
   <script src="lib/sscr.js"></script>
   <script src="lib/audio/genesis-constants.js"></script>
@@ -242,7 +245,12 @@
   <script src="sound-tools-nx.js"></script>
   <script src="sound-tools-snes.js"></script>
   <script src="sound-instruments.js"></script>
+  <script src="lib/audio/opl3-chip.js"></script>
+  <script src="lib/audio/pc94-kms.js"></script>
+  <script src="lib/audio/pc94-sfx.js"></script>
+  <script src="lib/audio/pc94-player.js"></script>
   <script src="sound-test-view.js"></script>
+  <script src="sound-test-pc94.js"></script>
   <script src="audio-engine.js"></script>
   <script src="viewer.js"></script>
   <script src="about.js"></script>

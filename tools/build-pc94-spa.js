@@ -1,8 +1,8 @@
 /**
- * Build SPA section for data/frames94pc.asm from NHL 95 PC scripts that fit
- * the 876-frame player sheet. NHL 94 PC HOCKEY.EXE uses different packed bytes
- * for some sequences; this is an interim catalog so the SPA tab is usable until
- * tools/extract-pc94-spa.js can emit retail-accurate tables.
+ * Superseded. Retail SPA lives in data/frames94pc.asm from
+ *   node tools/extract-pc94-spa.js --write path/to/HOCKEY.EXE
+ * This script kept the SPA tab usable from a 95 PC subset (frames ≤875)
+ * before the EXE table at 0x358A4 was decoded.
  *
  * Usage: node tools/build-pc94-spa.js
  */

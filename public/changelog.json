@@ -1,6 +1,30 @@
 {
   "releases": [
     {
+      "version": "1.11.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 95 PC Audio: AdLib .KMS/.CFG songs, PCFF digital SFX, XBRUCE2.VIV announcer clips, and IFF 8SVX samples play in the Audio tab"
+      ]
+    },
+    {
+      "version": "1.10.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: SPA scripts now come from retail HOCKEY.EXE (file offset 0x358A4, 95 sequences) instead of an interim 95 PC subset",
+        "NHL 94 PC Audio: XBRUCE2.VIV and XRBARR2.VIV announcer clips unpack and play in the Audio tab",
+        "NHL 94 PC: player-frame hotspots use the planar bank header; arrows, puck, siren, glass, and referee keep the game palette"
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: player sheets, rink and crowd PPV, and QPP pictures decode as Mode X planar banks (Huffman 30 FB or BTree 46 FB), not NHL 95 PC SHPI/RefPack",
+        "NHL 94 PC Audio: AdLib .KMS/.CFG songs and PCFF digital SFX play in the Audio tab"
+      ]
+    },
+    {
       "version": "1.8.2",
       "date": "2026-10-31",
       "changes": [

@@ -16,9 +16,17 @@ function isPcGame(kind) {
 function shownFrame(n) {
   return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
 }
-/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 94 SNES, and NHLPA 93 SNES. */
+/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, and NHL 94/95 PC AdLib/SFX. */
 function hasSoundTest(info) {
-  return !!(info && (info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined');
+  if (!info) return false;
+  if (info.id === 'nhl94pc' || info.id === 'nhl95pc') return typeof NhlSoundTestPc94 !== 'undefined';
+  return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
+}
+
+function soundTestViewFor(info) {
+  const id = (info || gameInfo || {}).id;
+  if ((id === 'nhl94pc' || id === 'nhl95pc') && typeof NhlSoundTestPc94 !== 'undefined') return NhlSoundTestPc94;
+  return typeof NhlSoundTestView !== 'undefined' ? NhlSoundTestView : null;
 }
 
 /**
@@ -30,34 +38,42 @@ function hasAudioTab(info) {
 }
 
 /** The Sound test panel replaces the sprite stage: its view module and selection key in state. */
-const SOUND_TEST = { view: () => NhlSoundTestView, key: 'soundTestItem', title: 'Audio', available: hasSoundTest };
+const SOUND_TEST = { view: () => soundTestViewFor(), key: 'soundTestItem', title: 'Audio', available: hasSoundTest };
 const soundPanel = (mode) => ((mode || state.mode) === 'soundtest' ? SOUND_TEST : null);
+
+function stopIdleSoundViews(keep) {
+  if (typeof NhlSoundTestView !== 'undefined' && NhlSoundTestView.playing && keep !== NhlSoundTestView) NhlSoundTestView.stop();
+  if (typeof NhlSoundTestPc94 !== 'undefined' && NhlSoundTestPc94.playing && keep !== NhlSoundTestPc94) NhlSoundTestPc94.stop();
+}
 
 function renderSoundPanel() {
   const view = el('sound-panel');
   const panel = soundPanel();
-  if (!panel && typeof NhlSoundTestView !== 'undefined' && NhlSoundTestView.playing) NhlSoundTestView.stop();
-  view.hidden = !panel;
+  const api = panel && panel.view();
+  stopIdleSoundViews(api);
+  view.hidden = !panel || !api;
   el('stage').parentElement.parentElement.classList.toggle('is-soundpanel', !!panel);
-  if (!panel) return;
-  if (panel.view().setGame) panel.view().setGame(state.game);
+  if (!panel || !api) return;
+  if (api.setGame) api.setGame(state.game);
   const item = state[panel.key];
-  const key = state.game + '|' + state.mode + '|' + item + '|' + (panel.view().ready ? 1 : 0);
+  const key = state.game + '|' + state.mode + '|' + item + '|' + (api.ready ? 1 : 0);
   if (view.dataset.key === key) return;
   view.dataset.key = key;
   view.scrollTop = 0;
-  panel.view().renderPanel(view, item);
+  api.renderPanel(view, item);
 }
 
 async function enterSoundPanel() {
   const mode = state.mode;
   const panel = soundPanel(mode);
   if (!panel) return;
-  if (panel.view().setGame) panel.view().setGame(state.game);
+  const api = panel.view();
+  if (!api) return;
+  if (api.setGame) api.setGame(state.game);
   try {
-    await panel.view().ensure(pathPrefix);
+    await api.ensure(pathPrefix);
   } catch (err) { /* the view's error carries the message */ }
-  const ids = panel.view().entries().map((e) => e.id);
+  const ids = api.entries().map((e) => e.id);
   if (ids.length && !ids.includes(state[panel.key])) state[panel.key] = ids.find((id) => !/^tool-/.test(id)) || ids[0];
   if (state.mode === mode) refreshAll();
 }
@@ -1059,8 +1075,10 @@ function renderSoundList(box, q) {
 
 /** Play or stop a Sound test item; failures show in the panel's status line. */
 function toggleSoundTest(id) {
-  if (!soundPanel() || typeof NhlSoundTestView === 'undefined') return;
-  NhlSoundTestView.toggle(id).catch((err) => {
+  const panel = soundPanel();
+  const api = panel && panel.view();
+  if (!api || typeof api.toggle !== 'function') return;
+  api.toggle(id).catch((err) => {
     const st = el('sound-panel').querySelector('.st-status');
     if (st) st.textContent = 'Playback failed: ' + (err && err.message ? err.message : String(err));
   });
@@ -2692,6 +2710,17 @@ async function loadGame(id, keepSelection) {
   } else if (info.paletteFiles) {
     pals = info.paletteFiles;
   }
+  if (typeof NhlSoundTestPc94 !== 'undefined') {
+    if (info.id === 'nhl94pc' || info.id === 'nhl95pc') {
+      window.NhlPcAudioFiles = window.NhlPc94Files = clientPc
+        ? { map: clientPc.map, catalog: clientPc.catalog, baseUrl: pathPrefix || '', gameId: info.id }
+        : { map: null, catalog: info.pcAudio ? { audio: info.pcAudio } : null, baseUrl: pathPrefix || '', gameId: info.id };
+      if (NhlSoundTestPc94.setGame) NhlSoundTestPc94.setGame(info.id);
+      if (NhlSoundTestPc94.reset) NhlSoundTestPc94.reset();
+    } else if (NhlSoundTestPc94.playing) {
+      NhlSoundTestPc94.stop();
+    }
+  }
   catalog = Nhl92Frames.parseFrames(asm);
   const bankId = info.banks.some((bank) => bank.id === previous.bank) ? previous.bank : info.banks[0].id;
   fillSelect(el('bank'), info.banks.map((bank) => ({
@@ -3061,7 +3090,9 @@ async function boot() {
   gameInfo = games.find((game) => game.id === state.game) || games[0];
   el('game').value = state.game;
   wire();
-  if (typeof NhlSoundTestView !== 'undefined') NhlSoundTestView.onChange = () => { if (soundPanel()) renderList(); };
+  const onSoundChange = () => { if (soundPanel()) renderList(); };
+  if (typeof NhlSoundTestView !== 'undefined') NhlSoundTestView.onChange = onSoundChange;
+  if (typeof NhlSoundTestPc94 !== 'undefined') NhlSoundTestPc94.onChange = onSoundChange;
   await loadGame(state.game, true);
   requestAnimationFrame(clock);
 }
