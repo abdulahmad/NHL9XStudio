@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.11.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 95 PC Audio: AdLib .KMS/.CFG songs, PCFF digital SFX, XBRUCE2.VIV announcer clips, and IFF 8SVX samples play in the Audio tab"
+      ]
+    },
+    {
       "version": "1.10.0",
       "date": "2026-10-31",
       "changes": [

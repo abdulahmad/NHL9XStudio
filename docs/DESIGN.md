@@ -14,7 +14,7 @@ This is the product document. It describes what the studio is, who it is for, an
 
 NHL9X Studio is a **modding studio for EA’s 16-bit and DOS NHL games**. One app, one chrome, a **game profile** per title. People open a ROM or a PC install on their machine, browse what the game actually draws and plays, and edit the assets they are allowed to export. Nothing is uploaded. Nothing is written back into a ROM.
 
-**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 PC frames, QPP pictures, AdLib/SFX, and announcer VIV speech are in the product. **Next** it fills remaining picture catalogs and audio parity (95 PC ear-match). **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
+**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 and 95 PC frames, pictures, AdLib/SFX, and announcer VIV speech are in the product. **Next** it fills remaining picture catalogs and ear-match. **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
 
 ### 1.1 Who it is for
 
@@ -58,7 +58,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 4 | **95G** | NHL 95 | Genesis | Frames, images, Sound test |
 | 5 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
 | 6 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
-| 7 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor; audio parser exists, ear-match still open |
+| 7 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
 | 8 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
 
 **Not in the game list:** NHL 96 Genesis, Sega CD, later EA NHL. Extract scripts or folders may exist; they are not a studio profile.
@@ -206,7 +206,7 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | SNES `.snespal` | Team line (32 bytes) or rink CGRAM (256 bytes, eight BGR555 lines) |
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | NHL 94 PC `.PPV` / `.QPP` | Mode X planar PackBits banks; QPP is Huffman `30 FB` or BTree `46 FB` (not 95 PC SHPI / RefPack `10 FB`) |
-| NHL 94 PC `.KMS` / `.CFG` / `PCFF*` | AdLib songs and digital SFX (Sound Blaster PCM) |
+| NHL 94/95 PC `.KMS` / `.CFG` / `PCFF*` / `.VIV` | AdLib songs, digital SFX, and announcer speech |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 
 If an export would be illegal for that picture (SNES→Genesis is lossy; SNES indexes above 1024 tiles), **tell the person and stop**. Do not write a file they cannot use. Explicit format picks that fit (Genesis→sjim or Genesis→94S zip at ≤1024 tiles) are conversions, not errors.

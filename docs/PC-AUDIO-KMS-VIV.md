@@ -34,11 +34,17 @@ C0 FB named directory (`name\\0` + u24be offset + u24be size from byte 12). Each
 - **Parser / playback:** `lib/audio/viv.js` (`isViv`, `parseArchive`, `unpackClip`, `listClips`, `toFloat32`)
 - Tests: synthetic C0 FB + BTree + 72 FB clip in `test/pc94-audio.js`; retail files when `pc94/` (or `NHL_PC94_DIR`) is present
 
-### NHL 95 PC / older sniffers
+### NHL 95 PC (`XBRUCE2.VIV`, optional `.IFF`)
+
+OpenSpeechBank layout in `HOCKEY.EXE`: three big-endian words (type, count, extra), then per clip u24be offset, u24be size, `name\\0`. Packed clips start with **47 FB** (`'G'`) or RefPack **10 FB**; after unpack a **72 FB** header remains. `ReadSpeechSample` then delta-decodes the PCM (`lib/audio/viv.js` `deltaDecode`). Loose `.IFF` files are 8SVX (`decodeIff`). The Audio tab is the same `NhlSoundTestPc94` module with `setGame('nhl95pc')`.
+
+Songs and SFX are the EACSNDF `.KMS`/`.CFG` + `PCFF%03d.TIM/.PAT/.DIG` path, not wiki Kris.
+
+### Older sniffers
 
 - EA archive; may embed **`BNKl`** sound banks, ASF music, or loose samples.
 - **BNK** headers: `lib/audio/viv.js` (`findBnk`, `parseBnkHeader`) following [EA-MUS / MultimediaWiki](https://wiki.multimedia.cx/index.php/Electronic_Arts_Formats_(2)).
-- Forum reports (`XBRUCE.VIV`): extracted clips are often **IFF `8SVX` bodies without the `FORM` header** (~5.5–6 kHz mono). `findIffSpeech` locates `8SVX` / `FORM` markers only; 95 PC has no full VIV unpack yet.
+- `findIffSpeech` still locates `8SVX` / `FORM` markers for leftover buffers.
 
 ### Reference tools (out of tree)
 
@@ -46,4 +52,4 @@ C0 FB named directory (`name\\0` + u24be offset + u24be size from byte 12). Each
 
 ## Tests
 
-`node test/pc-audio-kms.js` (also run via `node test.js`): synthetic KMS round-trip + OPL peak; minimal BNK header inside a buffer. `node test/pc94-audio.js` covers EXE-format KMS, PCFF SFX, and 94 PC VIV.
+`node test/pc-audio-kms.js` (also run via `node test.js`): synthetic KMS round-trip + OPL peak; minimal BNK header inside a buffer. `node test/pc94-audio.js` covers EXE-format KMS, PCFF SFX, and 94 PC VIV. `node test/pc95-audio.js` covers 95 OpenSpeechBank VIV, IFF 8SVX, and EACSNDF KMS.

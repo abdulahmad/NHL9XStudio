@@ -16,16 +16,16 @@ function isPcGame(kind) {
 function shownFrame(n) {
   return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
 }
-/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, and NHL 94 PC AdLib/SFX. */
+/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, and NHL 94/95 PC AdLib/SFX. */
 function hasSoundTest(info) {
   if (!info) return false;
-  if (info.id === 'nhl94pc') return typeof NhlSoundTestPc94 !== 'undefined';
+  if (info.id === 'nhl94pc' || info.id === 'nhl95pc') return typeof NhlSoundTestPc94 !== 'undefined';
   return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
 }
 
 function soundTestViewFor(info) {
   const id = (info || gameInfo || {}).id;
-  if (id === 'nhl94pc' && typeof NhlSoundTestPc94 !== 'undefined') return NhlSoundTestPc94;
+  if ((id === 'nhl94pc' || id === 'nhl95pc') && typeof NhlSoundTestPc94 !== 'undefined') return NhlSoundTestPc94;
   return typeof NhlSoundTestView !== 'undefined' ? NhlSoundTestView : null;
 }
 
@@ -2711,10 +2711,11 @@ async function loadGame(id, keepSelection) {
     pals = info.paletteFiles;
   }
   if (typeof NhlSoundTestPc94 !== 'undefined') {
-    if (info.id === 'nhl94pc') {
-      window.NhlPc94Files = clientPc
-        ? { map: clientPc.map, catalog: clientPc.catalog, baseUrl: pathPrefix || '' }
-        : { map: null, catalog: info.pcAudio ? { audio: info.pcAudio } : null, baseUrl: pathPrefix || '' };
+    if (info.id === 'nhl94pc' || info.id === 'nhl95pc') {
+      window.NhlPcAudioFiles = window.NhlPc94Files = clientPc
+        ? { map: clientPc.map, catalog: clientPc.catalog, baseUrl: pathPrefix || '', gameId: info.id }
+        : { map: null, catalog: info.pcAudio ? { audio: info.pcAudio } : null, baseUrl: pathPrefix || '', gameId: info.id };
+      if (NhlSoundTestPc94.setGame) NhlSoundTestPc94.setGame(info.id);
       if (NhlSoundTestPc94.reset) NhlSoundTestPc94.reset();
     } else if (NhlSoundTestPc94.playing) {
       NhlSoundTestPc94.stop();
