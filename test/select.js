@@ -53,6 +53,8 @@ const RULES = [
   { re: /^tools\/build-manifest\.js$/, tests: ['core'], why: 'manifest tool' },
   { re: /^tools\/(extract|build)-pc94-spa\.js$/, tests: ['core'], why: '94 PC SPA catalog' },
   { re: /^lib\/audio\/viv\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio', 'pc-audio-kms'], why: 'PC VIV speech' },
+  { re: /^lib\/audio\/pc94-(kms|player|sfx)\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio'], why: '94/95 PC EACSNDF' },
+  { re: /^public\/sound-test-pc94\.js$/, tests: ['pc94-audio', 'pc95-audio', 'browser:audio-list', 'browser:sound-smoke', 'browser:load-errors'], why: '94/95 PC Audio tab' },
   // Everything else in sound: all sound suites, the core checks (they read the audio catalogue) and the sound pages.
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.

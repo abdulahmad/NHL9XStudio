@@ -1,6 +1,6 @@
 /**
  * NHL 94 / 95 PC Audio tab: AdLib .KMS/.CFG songs, PCFF digital samples,
- * VIV speech, and (95) IFF 8SVX clips.
+ * VIV speech, and (95) IFF desk music (FORM 8SVX or RIFF XOR 0x80).
  */
 (function (root) {
   const CAT = () => (root.NhlAudioCategories && root.NhlAudioCategories.CATEGORY) || {
@@ -14,7 +14,7 @@
     PHIL: 'Philadelphia', PHI: 'Philadelphia', PITTS: 'Pittsburgh', PIT: 'Pittsburgh',
     QU: 'Quebec', QUE: 'Quebec', SHK: 'San Jose', SJ: 'San Jose', SL: 'St. Louis', STL: 'St. Louis',
     TB: 'Tampa Bay', TOR: 'Toronto', VAN: 'Vancouver', WASH: 'Washington', WSH: 'Washington',
-    WINN: 'Winnipeg', WPG: 'Winnipeg', ANA: 'Anaheim', FLA: 'Florida', MIN: 'Minnesota',
+    WINN: 'Winnipeg', WPG: 'Winnipeg', ANA: 'Anaheim', FLA: 'Florida', MIN: 'Minnesota', DAL: 'Dallas',
     ASE: 'All-Star East', ASW: 'All-Star West'
   };
   const CUES = {
@@ -89,7 +89,7 @@
   }
 
   async function ensure() {
-    if (catalog && (catalog.songs.length || catalog.samples.length || (catalog.speech && catalog.speech.length))) return true;
+    if (catalog && (catalog.songs.length || catalog.samples.length || (catalog.speech && catalog.speech.length) || (catalog.digital && catalog.digital.length))) return true;
     if (loading) return loading;
     loading = (async () => {
       error = '';
@@ -137,6 +137,7 @@
         }
       }
       const speech = [];
+      const digital = [];
       if (root.NhlViv && audio.extra && audio.extra.length) {
         for (const rel of audio.extra) {
           if (!/\.viv$/i.test(rel)) continue;
@@ -161,16 +162,17 @@
           const clip = root.NhlViv.decodeIff(buf);
           if (!clip || !clip.pcm.length) continue;
           const packName = String(rel).split(/[\\/]/).pop();
-          speech.push({
-            id: 'speech-' + packName,
-            group: 'Speech',
-            label: root.NhlViv.labelOf(packName),
-            sub: packName + ' · IFF 8SVX · ' + clip.rate + ' Hz · ' + clip.length + ' bytes',
+          const kind = clip.kind === 'riff' ? 'IFF RIFF (XOR 80h)' : 'IFF FORM 8SVX';
+          digital.push({
+            id: 'iff-' + packName,
+            group: 'Desk music',
+            label: packName.replace(/\.[^.]+$/, ''),
+            sub: packName + ' · ' + kind + ' · ' + clip.rate + ' Hz · ' + clip.length + ' bytes',
             clip: { name: packName, pcm: clip.pcm, rate: clip.rate, length: clip.length }
           });
         }
       }
-      catalog = { songs: songs, samples: samples, speech: speech, audio: audio };
+      catalog = { songs: songs, digital: digital, samples: samples, speech: speech, audio: audio };
       return true;
     })().catch((err) => {
       error = err && err.message ? err.message : String(err);
@@ -184,6 +186,7 @@
     if (!catalog) return [];
     const out = [];
     for (const s of catalog.songs) out.push(s);
+    for (const s of catalog.digital || []) out.push(s);
     for (const s of catalog.samples) out.push(s);
     for (const s of catalog.speech || []) out.push(s);
     return out;
@@ -236,8 +239,8 @@
   async function play(id) {
     stop();
     await ensure();
-    if (id.startsWith('speech-')) {
-      const rec = (catalog.speech || []).find((s) => s.id === id);
+    if (id.startsWith('speech-') || id.startsWith('iff-')) {
+      const rec = (catalog.speech || []).concat(catalog.digital || []).find((s) => s.id === id);
       if (!rec || !rec.clip) throw new Error('Unknown clip');
       playBuffer(id, root.NhlViv.toFloat32(rec.clip.pcm), rec.clip.rate);
       return;
@@ -294,22 +297,26 @@
     }
     const rec = entries().find((e) => e.id === id);
     const title = is95() ? 'NHL 95 PC' : 'NHL 94 PC';
-    const kind = id.startsWith('speech-')
-      ? title + ' announcer speech'
-      : id.startsWith('sfx-') ? title + ' digital SFX' : title + ' AdLib song';
+    const kind = id.startsWith('iff-')
+      ? title + ' desk music (IFF)'
+      : id.startsWith('speech-')
+        ? title + ' announcer speech'
+        : id.startsWith('sfx-') ? title + ' digital SFX' : title + ' AdLib song';
     box.appendChild(make('p', 'st-kind', kind));
     box.appendChild(make('h3', null, rec ? rec.label : id));
     if (rec && rec.sub) box.appendChild(make('p', 'st-note mono', rec.sub));
     if (id.startsWith('song-') && rec && /^MT/.test(rec.stem)) {
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
-    box.appendChild(make('p', 'st-note', id.startsWith('speech-')
-      ? (is95()
-        ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips are BTree 47 FB or RefPack 10 FB, then a 72 FB body; ReadSpeechSample delta-decodes the PCM. Played at 11025 Hz. XBRUCE2.VIV is Bruce. Loose .IFF files are 8SVX.'
-        : 'C0 FB directory, each clip BTree 47 FB then a 72 FB signed 8-bit PCM body. Played at 11025 Hz. XBRUCE2.VIV is Bruce, XRBARR2.VIV is Barr.')
-      : id.startsWith('sfx-')
-        ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
-        : 'Sequencer from HOCKEY.EXE (KMS/CFG, EACSNDF). FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
+    box.appendChild(make('p', 'st-note', id.startsWith('iff-')
+      ? 'NHL95PC sub_8F98F: FORM 8SVX (VHDR big-endian rate, BODY) or RIFF WAVE (rate at +0x18, PCM XOR 80h). Desk music, not announcer speech.'
+      : id.startsWith('speech-')
+        ? (is95()
+          ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
+          : 'C0 FB directory, each clip BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
+        : id.startsWith('sfx-')
+          ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
+          : 'EACSNDF sequencer from NHL95PC sub_990CB / sub_99925 (same library as NHL 94 PC). FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
     const controls = make('div', 'st-controls');
     const btn = make('button', 'ghost-btn st-toggle', live && live.id === id ? '■ Stop' : '▶ Play');
     btn.type = 'button';
@@ -340,13 +347,15 @@
   function metaRows(id) {
     const rec = entries().find((e) => e.id === id);
     const rows = [['Plays', rec ? rec.label : id]];
-    if (id.startsWith('speech-') && rec && rec.clip) {
+    if ((id.startsWith('speech-') || id.startsWith('iff-')) && rec && rec.clip) {
       rows.push(['File', rec.clip.name]);
       rows.push(['Rate', rec.clip.rate + ' Hz']);
       rows.push(['Length', rec.clip.length + ' bytes']);
-      rows.push(['Path', is95()
-        ? (/\.iff$/i.test(rec.clip.name) ? 'IFF 8SVX signed PCM' : '.VIV OpenSpeechBank → 47/10 FB → 72 FB DPCM')
-        : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM']);
+      rows.push(['Path', id.startsWith('iff-') || /\.iff$/i.test(rec.clip.name)
+        ? 'sub_8F98F FORM 8SVX / RIFF XOR 80h'
+        : (is95()
+          ? '.VIV OpenSpeechBank → 47/10 FB → ReadSpeechSample DPCM'
+          : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM')]);
     } else if (id.startsWith('sfx-') && rec && rec.sample) {
       rows.push(['Timbre', String(rec.sample.timbre)]);
       rows.push(['Rate', rec.sample.rate + ' Hz']);
@@ -354,7 +363,7 @@
       rows.push(['Path', 'PCFF001.TIM / .DIG → signed 8-bit PCM']);
     } else {
       rows.push(['Path', '.KMS + .CFG sequencer → OPL2 (AdLib)']);
-      rows.push(['Source', 'NHL94PC docs/MUSIC_FORMAT.md']);
+      rows.push(['Source', 'NHL95PC sub_990CB / sub_99925']);
     }
     rows.push(['Notes', 'docs/PC-AUDIO-KMS-VIV.md']);
     return rows;

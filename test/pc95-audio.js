@@ -50,6 +50,9 @@ assert.strictEqual(clips[0].pcm.length, pcmClip.length);
 const decoded = Viv.deltaDecode(pcmClip);
 assert.deepStrictEqual(Array.from(clips[0].pcm), Array.from(decoded));
 assert.ok(Viv.toFloat32(clips[0].pcm).some((v) => v !== 0));
+const pastEof = Uint8Array.from(vivBuf);
+pastEof[6] = 0xff; pastEof[7] = 0xff; pastEof[8] = 0xff;
+assert.strictEqual(Viv.parseArchive95(pastEof).entries.length, 0, '95 VIV drops offsets past EOF');
 
 const body = Buffer.from('BODY');
 const vhdr = Buffer.from('VHDR');
@@ -71,8 +74,33 @@ iff.set(be32(iffPcm.length), p); p += 4;
 iff.set(iffPcm, p);
 const iffClip = Viv.decodeIff(iff);
 assert.ok(iffClip);
+assert.strictEqual(iffClip.kind, 'form');
 assert.strictEqual(iffClip.rate, 11025);
 assert.deepStrictEqual(Array.from(iffClip.pcm), Array.from(iffPcm));
+
+function le16(n) { return [n & 255, (n >> 8) & 255]; }
+function le32(n) { return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255]; }
+const riffPcm = Uint8Array.from([10, 20, 30, 40, 30, 20, 10, 0]);
+const riff = new Uint8Array(0x2c + riffPcm.length);
+riff.set(Buffer.from('RIFF'), 0);
+riff.set(le32(riff.length - 8), 4);
+riff.set(Buffer.from('WAVE'), 8);
+riff.set(Buffer.from('fmt '), 12);
+riff.set(le32(16), 16);
+riff.set(le16(1), 20);
+riff.set(le16(1), 22);
+riff.set(le32(11025), 0x18);
+riff.set(le32(11025), 0x1c);
+riff.set(le16(1), 0x20);
+riff.set(le16(8), 0x22);
+riff.set(Buffer.from('data'), 0x24);
+riff.set(le32(riffPcm.length), 0x28);
+riff.set(riffPcm, 0x2c);
+const riffClip = Viv.decodeIff(riff);
+assert.ok(riffClip);
+assert.strictEqual(riffClip.kind, 'riff');
+assert.strictEqual(riffClip.rate, 11025);
+assert.deepStrictEqual(Array.from(riffClip.pcm), Array.from(riffPcm).map((b) => b ^ 0x80));
 
 function retail95Dir() {
   const root = path.join(__dirname, '..');

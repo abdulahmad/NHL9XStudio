@@ -186,7 +186,7 @@ Parity with **95PC** in the viewer: Frame / SPF / SPA / Images, team jerseys, ho
 | Frame count | 1134 (per `frames95pc.asm`) | **876** player sprites `000–875`, crowd `F000–F149` |
 | SPA/SPF | `HOCKEY.EXE` @ `0x110471`, names @ `0x109030` | Retail SPA from `HOCKEY.EXE` @ `0x358A4` (`tools/extract-pc94-spa.js` → `frames94pc.asm`; 95 sequences, flags-first PC `updateanim`) |
 | Palette files | Same HOMEPALS/AWAYPALS layout | Present in `pc94/`; same family as 95. 94 QPP donors differ (`PAL_DONOR_94`, e.g. PLAYOFFS → EMBPAL). |
-| Audio | Same EACSNDF `.KMS`/`.CFG` + PCFF + VIV in the Audio tab (`NhlSoundTestPc94`) | EXE-format `.KMS`/`.CFG` + PCFF TIM/DIG/PAT in the Audio tab (`lib/audio/pc94-*.js`) |
+| Audio | Same EACSNDF `.KMS`/`.CFG` + PCFF + OpenSpeechBank VIV + IFF (`sub_8F98F`) in the Audio tab (`NhlSoundTestPc94`) | Same EACSNDF `.KMS`/`.CFG` + PCFF TIM/DIG/PAT + C0 FB VIV (suffix labels) in the Audio tab (`lib/audio/pc94-*.js`, `lib/audio/viv.js`) |
 
 **In tree:** decode + catalog + Audio tab (AdLib/SFX + VIV speech) + retail SPA. Remaining: MT-32 playback, YM30.BGP ear-match.
 
@@ -341,8 +341,8 @@ Follow **implementation priority**: **92G → 93G → 94G → 95G → 93S → 94
 | **AUD-0** | — | `lib/audio/README.md`, catalog schema, `/api/games/:id/audio` listing endpoint |
 | **AUD-1** | **92G → 95G** (one title at a time) | Per-title Genesis audio: `Hockey.snd` sample browser + cmdstream/SFX where documented (`sound*.asm`, `Docs/SND`). **94G** is the richest cmdstream set (`$30–$7A`) but lands **third** in the queue after 92G and 93G. Player is **new** `lib/audio/genesis.js` (not `MID94-Tools`). |
 | **AUD-2** | **93S → 94S** | SNES sample decode + music once format confirmed |
-| **AUD-3** | **94PC / 95PC** | AdLib `.KMS`/`.CFG` + PCFF SFX via MIT OPL3 (`NhlSoundTestPc94`). Wiki Kris parser remains for synthetic tests only |
-| **AUD-4** | **94PC / 95PC** | VIV speech unpack + play (94 C0 FB; 95 OpenSpeechBank + IFF 8SVX) |
+| **AUD-3** | **94PC / 95PC** | EACSNDF `.KMS`/`.CFG` (`sub_8F27A` / `sub_99925`) + PCFF SFX via MIT OPL3 (`NhlSoundTestPc94`). Wiki Kris parser remains for synthetic tests only |
+| **AUD-4** | **94PC / 95PC** | VIV speech unpack + play (94 C0 FB suffix labels; 95 OpenSpeechBank `ReadSpeechSample`; IFF FORM 8SVX / RIFF XOR `80h`) |
 | **AUD-5** | All eight | Patch viewer (FM/OPL regs), trigger xref from SPA/SPF, export WAV |
 
 Dependencies: **94PC** audio and graphics share planned `lib/pc*.js`; building **95PC** audio/catalog first validates that module before **94PC** QPP/PPV differences.

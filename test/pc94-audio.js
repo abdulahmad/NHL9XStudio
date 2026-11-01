@@ -101,10 +101,26 @@ assert.ok(Viv.isViv(vivBuf));
 const clips = Viv.listClips(vivBuf);
 assert.strictEqual(clips.length, 1);
 assert.strictEqual(clips[0].name, 'HI.BRU');
+assert.strictEqual(clips[0].label, 'HI (Bruce)');
 assert.strictEqual(clips[0].pcm.length, pcmClip.length);
 assert.deepStrictEqual(Array.from(clips[0].pcm), Array.from(pcmClip));
 const speech = Viv.toFloat32(clips[0].pcm);
 assert.ok(speech.some((v) => v !== 0));
+assert.strictEqual(Viv.labelOf('TWELVE.BRU'), 'TWELVE (Bruce)');
+assert.strictEqual(Viv.labelOf('EASPORTS.BAR'), 'EASPORTS (Barr)');
+assert.strictEqual(Viv.labelOf('BOS.CTY'), 'Boston (city)');
+assert.strictEqual(Viv.labelOf('BUF.RNK'), 'Buffalo (rank)');
+assert.strictEqual(Viv.labelOf('THE3RD.BAR'), 'THE3RD (Barr)');
+assert.strictEqual(Viv.labelOf('DAL.CTY'), 'Dallas (city)');
+assert.strictEqual(Viv.labelOf('BOS.HOM'), 'Boston (home)');
+assert.strictEqual(Viv.labelOf('BUF.AWA'), 'Buffalo (away)');
+assert.strictEqual(Viv.labelOf('GOODNITE.INT'), 'GOODNITE (intro)');
+assert.strictEqual(Viv.labelOf('ASC.CTY'), 'All-Star East (city)');
+const tinyCfg = Kms.parseCfg(tiny.cfg, 1);
+assert.strictEqual(tinyCfg.tracks[0].chan, 1);
+assert.strictEqual(tinyCfg.tracks[0].program, 1);
+assert.strictEqual(tinyCfg.tracks[0].vol, 100);
+assert.strictEqual(tinyCfg.tracks[0].pan, 64);
 
 const retail = retail94Dir();
 if (retail) {
@@ -113,6 +129,10 @@ if (retail) {
   assert.ok(Kms.isKms(kms));
   const song = Kms.parse(kms, cfg);
   assert.ok(song.ntracks >= 1 && song.ntracks <= 16);
+  assert.strictEqual(song.tracks[0].chan, 1);
+  assert.strictEqual(song.tracks[0].program, 0x5f);
+  assert.strictEqual(song.tracks[0].vol, 100);
+  assert.strictEqual(song.tracks[0].pan, 64);
   const live = Player.renderSong(song, { seconds: 2, loops: 1 });
   let livePeak = 0;
   for (let i = 0; i < live.length; i++) livePeak = Math.max(livePeak, Math.abs(live[i]));
@@ -122,14 +142,24 @@ if (retail) {
   const samples = Sfx.listDigital(timBuf, digBuf, null);
   assert.ok(samples.length >= 1, 'PCFF001 digital timbres');
   assert.ok(samples[0].pcm.length > 0);
-  const vivPath = ['XBRUCE2.VIV', 'XRBARR2.VIV'].map((n) => path.join(retail, n)).find((p) => fs.existsSync(p));
-  if (vivPath) {
-    const retailViv = Viv.listClips(fs.readFileSync(vivPath));
-    assert.ok(retailViv.length >= 20, path.basename(vivPath) + ' clips');
+  const notes = song.tracks[0].events.filter((e) => e.cmd < 0xd9);
+  assert.ok(notes.some((e) => (e.cmd & 0x7f) === 0x30), 'ADTITLE notes are MIDI values, not +24');
+  function checkViv(file, lastName, labels) {
+    const p = path.join(retail, file);
+    if (!fs.existsSync(p)) return;
+    const retailViv = Viv.listClips(fs.readFileSync(p));
+    assert.ok(retailViv.length >= 80, file + ' clips (' + retailViv.length + ')');
     assert.ok(retailViv[0].pcm.length > 100);
     const peak = Viv.toFloat32(retailViv[0].pcm).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
-    assert.ok(peak > 0.01, 'retail VIV clip is not silence');
+    assert.ok(peak > 0.01, file + ' clip is not silence');
+    assert.ok(retailViv.every((c) => c.pcm.length < 200000), file + ' no over-read');
+    assert.ok(!retailViv.some((c) => c.name === 'PIT.CTY' && c.pcm.length > 100000), 'no garbage PIT.CTY');
+    assert.ok(!retailViv.some((c) => c.name === 'EDM.RNK' && c.pcm.length > 100000), 'no garbage EDM.RNK');
+    assert.strictEqual(retailViv[retailViv.length - 1].name, lastName);
+    for (const lab of labels) assert.ok(retailViv.some((c) => c.label === lab), file + ' has ' + lab);
   }
+  checkViv('XBRUCE2.VIV', 'QUE.CTY', ['TWELVE (Bruce)', 'Boston (city)', 'Dallas (city)']);
+  checkViv('XRBARR2.VIV', 'DET.RNK', ['EASPORTS (Barr)', 'THE3RD (Barr)', 'Boston (home)']);
 }
 
 console.log('pc94-audio: ok');
