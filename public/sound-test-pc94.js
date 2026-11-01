@@ -743,7 +743,7 @@
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
-          ? 'OpenSpeechBank directory (count then offset/size/name). 47 FB (G) clips: ReadSpeechSample unpack + DPCM, mixer flag 0. Other clips (.NUM / .COR rink calls): PlaceSpeechSlot + mixer flag 1 (loc_A91DA D7414, two samples per byte). Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
+          ? 'OpenSpeechBank directory (C0 FB like 94; count at +4). 47 FB (G) clips: ReadSpeechSample unpack + DPCM, mixer flag 0. Other clips (.NUM / .COR rink calls): PlaceSpeechSlot + mixer flag 1 (loc_A91DA D7414, two samples per byte). Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
           : 'C0 FB directory (count at +4, then offset/size/name from byte 6). Each clip is BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
         : id.startsWith('sfx-')
           ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
@@ -867,7 +867,7 @@
       rows.push(['Path', id.startsWith('iff-') || /\.iff$/i.test(rec.clip.name)
         ? 'sub_8F98F FORM 8SVX D7414 + 0x4C / VHDR oneShot+repeat / RIFF XOR 80h'
         : (is95()
-          ? '.VIV OpenSpeechBank → 47/10 FB → ReadSpeechSample DPCM'
+          ? '.VIV OpenSpeechBank → 47 FB ReadSpeechSample DPCM, else D7414 (.NUM/.COR)'
           : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM')]);
       if (/^pioneer\.iff$/i.test(rec.clip.name || '')) {
         rows.push(['Used', 'No. RunIntro loads pioneer2.iff / pioneer3.iff / pioneer4.iff only']);

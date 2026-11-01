@@ -353,7 +353,7 @@ Dependencies: **94PC** audio and graphics share planned `lib/pc*.js`; building *
 |------|------------|
 | FM cmdstream **timing** (per-channel factors) | Do not depend on MID94-Tools output; validate against retail in-emulator audio; use disasm + labeled song inventory |
 | **WASM** build/size | Lazy-load emulators per platform |
-| **VIV** 95 vs 94 layout | 94 is C0 FB name-first + 47 FB PCM. 95 is OpenSpeechBank offset-first: 47 FB DPCM or non-G D7414. Both are wired |
+| **VIV** 95 vs 94 layout | Both are C0 FB, count at +4. 94 lumps are 47 FB PCM. 95 splits per clip: 47 FB DPCM or non-G D7414. Both are wired |
 | **SNES music** not isolated | Start with **SFX/samples**; music after SPC/BRR map |
 | Legal/distribution | Viewer plays user-supplied ROMs/files only; no assets in repo |
 

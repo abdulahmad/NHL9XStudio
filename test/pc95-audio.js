@@ -83,6 +83,31 @@ assert.notDeepStrictEqual(Array.from(numClips[0].pcm), Array.from(Viv.readSpeech
   '73.NUM must not go through ReadSpeechSample');
 assert.deepStrictEqual(Array.from(Viv.decode95Clip(packed)), Array.from(decoded), 'G still ReadSpeechSample');
 assert.deepStrictEqual(Array.from(Viv.decode95Clip(fibBody)), Array.from(Viv.deskFib(fibBody)));
+
+// Retail 95 XBRUCE2.VIV is C0 FB (same directory as 94). OpenSpeechBank still
+// uses the third header word as count and splits codec on the first file byte.
+// listClips({delta:true}) must not treat the whole bank as 47 FB DPCM.
+const c0Name = Buffer.from('73.NUM\0');
+const c0Dir = 6 + 6 + c0Name.length;
+const c0Viv = new Uint8Array(c0Dir + fibBody.length);
+c0Viv[0] = 0xc0;
+c0Viv[1] = 0xfb;
+c0Viv[5] = 1;
+c0Viv.set(be24(c0Dir), 6);
+c0Viv.set(be24(fibBody.length), 9);
+c0Viv.set(c0Name, 12);
+c0Viv.set(fibBody, c0Dir);
+assert.ok(Viv.isViv(c0Viv));
+assert.strictEqual(Viv.parseArchive(c0Viv).kind, 'pc94');
+const c0Plain = Viv.listClips(c0Viv);
+assert.notDeepStrictEqual(Array.from(c0Plain[0].pcm), Array.from(Viv.deskFib(fibBody)),
+  '94 path must not D7414 a C0 FB lump');
+const c0As95 = Viv.listClips(c0Viv, { delta: true });
+assert.strictEqual(c0As95[0].name, '73.NUM');
+assert.strictEqual(c0As95[0].pcm.length, fibBody.length * 2);
+assert.deepStrictEqual(Array.from(c0As95[0].pcm), Array.from(Viv.deskFib(fibBody)),
+  '95 C0 FB .NUM is D7414, not ReadSpeechSample');
+assert.notDeepStrictEqual(Array.from(c0As95[0].pcm), Array.from(Viv.readSpeechSample(fibBody)));
 const pastEof = Uint8Array.from(vivBuf);
 pastEof[6] = 0xff; pastEof[7] = 0xff; pastEof[8] = 0xff;
 assert.strictEqual(Viv.parseArchive95(pastEof).entries.length, 0, '95 VIV drops offsets past EOF');

@@ -43,7 +43,7 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 ### NHL 95 PC (`XBRUCE2.VIV`, optional `.IFF`)
 
-`OpenSpeechBank`: three big-endian words (type, count, extra), then per clip u24be offset, u24be size, `name\\0`. The 2-byte type at the clip offset decides the play path (`QueueSpeechClip` / `SpeechTimerTick`):
+`OpenSpeechBank` reads the same 6-byte directory as 94 PC: two-byte type, then two more BE words, **count is the third word** (file offset +4). The EXE loop is `*(int *)(speechbank+0x3B8F) >> 16` — that dword overlaps the stored count word at +0x3B8F and w3 at +0x3B91, so the clip count is w3. Retail `XBRUCE2.VIV` is **C0 FB**, the 94 magic; Studio lists it with `parseArchive94`. Codec is per clip, not per archive. The 2-byte type at the clip offset decides the play path (`QueueSpeechClip` / `SpeechTimerTick`):
 
 - **`'G'` (47 FB):** `LoadSpeechSlot` → `ReadSpeechSample` unpacks via `sub_98028` then delta-decodes, dropping a 5-byte 72 FB header. Mixer `sub_8FBE5` flag 0 (signed 8-bit PCM) at 11025 Hz (`0x2B11`). This is `BACKMOMT.INT` … `LA.RNK`.
 - **Anything else (kind 0xFF):** `PlaceSpeechSlot` copies the file bytes as-is. Mixer `sub_8FC37` flag 1 → `loc_A91DA` `word_D7414` (two samples per byte, same as desk IFF). This is the in-game rink announcer: `73.NUM` … `1SECOND.COR` (`QueueTimeClips` `str_Num` / `str_1secondCor`). Running `ReadSpeechSample` on those clips garbles them.
