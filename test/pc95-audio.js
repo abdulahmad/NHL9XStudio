@@ -104,6 +104,28 @@ assert.strictEqual(riffClip.depth, 8, '8-bit WAVE stays 8-bit after XOR 80h');
 assert.strictEqual(riffClip.pcm.length, riffPcm.length);
 assert.strictEqual(riffClip.pcm[0], riffPcm[0] ^ 0x80);
 assert.strictEqual(iffClip.depth, 8, 'FORM 8SVX is signed 8-bit');
+assert.strictEqual(iffClip.rate, 11025, '11025 VHDR rate is not halved');
+
+const longPcm = new Uint8Array(80000);
+for (let i = 0; i < longPcm.length; i++) longPcm[i] = (i & 63) - 32;
+const iff22 = new Uint8Array(12 + 8 + 20 + 8 + longPcm.length);
+let r = 0;
+iff22.set(form, r); r += 4;
+iff22.set(be32(iff22.length - 8), r); r += 4;
+iff22.set(svx, r); r += 4;
+iff22.set(vhdr, r); r += 4;
+iff22.set(be32(20), r); r += 4;
+r += 12;
+iff22.set(be16(22050), r); r += 2;
+r += 6;
+iff22.set(body, r); r += 4;
+iff22.set(be32(longPcm.length), r); r += 4;
+iff22.set(longPcm, r);
+const iff22Clip = Viv.decodeIff(iff22);
+assert.ok(iff22Clip);
+assert.strictEqual(iff22Clip.rate, 11025, 'VHDR 22050 plays at 11025');
+assert.ok(iff22Clip.pcm.length / iff22Clip.rate >= 7,
+  'an AFAN-sized 8SVX at VHDR 22050 is at least 7s (' + (iff22Clip.pcm.length / iff22Clip.rate) + '), not 2× fast');
 
 const tone = new Int16Array(8);
 for (let i = 0; i < 8; i++) tone[i] = (i - 4) * 4000;
@@ -189,6 +211,14 @@ if (retail) {
     const peak = Viv.toFloat32(retailViv[0].pcm).reduce((m, v) => Math.max(m, Math.abs(v)), 0);
     assert.ok(peak > 0.01, 'retail 95 VIV clip is not silence');
   }
+  ['AFAN.IFF', 'AWARDS.IFF'].forEach((name) => {
+    const p = path.join(retail, name);
+    if (!fs.existsSync(p)) return;
+    const clip = Viv.decodeIff(fs.readFileSync(p));
+    assert.ok(clip && clip.pcm.length, name + ' decodes');
+    const sec = clip.pcm.length / clip.rate;
+    assert.ok(sec >= 7, name + ' is at least 7s (' + sec + '), not 2× fast');
+  });
 }
 
 console.log('pc95-audio: ok');

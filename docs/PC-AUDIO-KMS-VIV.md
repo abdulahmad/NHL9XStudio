@@ -47,7 +47,7 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads FORM 8SVX or RIFF WAVE:
 
-- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR), signed 8-bit. `sCompression == 1` is Fibonacci-delta. A BODY twice the VHDR sample count is still 8-bit — treating it as 16-bit made `AFAN.IFF` / `AWARDS.IFF` twice as fast and scratchy versus `ADAFAN.KMS`.
+- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR), signed 8-bit. `sCompression == 1` is Fibonacci-delta. Header rates ≥ 16 kHz are stored 2× (`AFAN.IFF` VHDR 22050/22500 plays at 11025). 8-bit at the header rate is ~3.6 s and scratchy; half that rate is ≥ 7 s, the same length as `ADAFAN.KMS`. Do not treat BODY as 16-bit at the header rate.
 - **RIFF** `0x46464952` WAVE: sample rate at +0x18, payload from +0x2C, size at +0x28. XOR `0x80`, then 8-bit unless the fmt bits field is 16. Do not use EA-NHL-Tools IFF-To-WAV (rate/2, BODY+4).
 
 Songs and SFX are the EACSNDF `.KMS`/`.CFG` + `PCFF%03d.TIM/.PAT/.DIG` path, not wiki Kris.

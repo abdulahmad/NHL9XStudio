@@ -24,6 +24,7 @@ const pcm = Player.renderSong(parsed, { seconds: 0.4, loops: 1 });
 let peak = 0;
 for (let i = 0; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
 assert.ok(peak > 50, '94 KMS fixture renders non-silent OPL output (' + peak + ')');
+assert.ok(peak > 400, 'KMS keeps patch total level (not MIDI vel as TL 38) (' + peak + ')');
 assert.ok(pcm.events && pcm.events.length > 0, 'renderSong traces MIDI events for the visualizer');
 assert.ok(pcm.events.some((e) => (e.msg[0] & 0xf0) === 0x90 && e.msg[1] === 0x3c + 24),
   'MIDI send adds 24 (file note 0x3C → 0x54)');
@@ -43,6 +44,9 @@ const ui = fs.readFileSync(path.join(__dirname, '../public/sound-test-pc94.js'),
 assert.ok(ui.includes('st-viz-canvas') && ui.includes('drawRoll'), 'Audio tab draws the AdLib piano roll');
 assert.ok(ui.includes('toggleMute') && ui.includes('chMuted'), 'AdLib roll click-mutes a lane');
 assert.ok(ui.includes('laneNamesOf') && ui.includes('E7'), 'AdLib roll labels $E7 track names');
+assert.ok(ui.includes("fillText(lab, x0 + 6, top + 12)") && ui.includes("fillRect(x0 + 2, top + 2, w, 13)"),
+  'E7 names are in-lane tags at the Genesis patch-label position');
+assert.ok(ui.includes("fillText('OPL' + (i + 1), 6, top + 13)"), 'short OPL1–OPL9 names sit in the gutter');
 const durTiny = Player.songSeconds(parsed, { loops: 1 });
 assert.ok(durTiny > 0 && durTiny < 8, 'tiny songSeconds is the sequenced length (' + durTiny + ')');
 assert.ok(typeof Player.songSeconds === 'function');

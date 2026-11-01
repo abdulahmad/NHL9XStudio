@@ -276,18 +276,13 @@
     return names;
   }
 
-  function fitName(s, small) {
-    const max = small ? 8 : 12;
-    if (!s) return '';
-    return s.length <= max ? s : s.slice(0, max - 1) + '…';
-  }
-
   function rollGeom(canvas) {
     const cssW = Math.max(240, Math.floor(canvas.clientWidth || 520));
-    const laneH = cssW < 460 ? 26 : 30;
+    const small = cssW < 460;
+    const laneH = small ? 30 : 34;
     const axis = 16;
     const lanes = 9;
-    return { cssW, laneH, axis, lanes, gutter: cssW < 460 ? 56 : 78 };
+    return { cssW, small, laneH, axis, lanes, gutter: small ? 54 : 70 };
   }
 
   function theme() {
@@ -365,80 +360,116 @@
     return { g: g, cssW: cssW, cssH: h };
   }
 
+  function drawLaneTags(g, C, names, x0, x1, laneH, axis, small) {
+    g.font = '600 ' + (small ? 9 : 10) + 'px ' + C.mono;
+    g.textBaseline = 'alphabetic';
+    g.textAlign = 'left';
+    const room = Math.max(40, Math.min(x1 - x0 - 10, (x1 - x0) * 0.45));
+    for (let i = 0; i < 9; i++) {
+      let lab = names[i];
+      if (!lab) continue;
+      while (lab.length > 4 && g.measureText(lab).width > room) lab = lab.slice(0, -2) + '…';
+      const w = g.measureText(lab).width + 8;
+      const top = axis + i * (laneH + 2);
+      g.globalAlpha = 0.82;
+      g.fillStyle = C.bg;
+      g.fillRect(x0 + 2, top + 2, w, 13);
+      g.globalAlpha = 1;
+      g.fillStyle = OPL_COLORS[i];
+      g.fillText(lab, x0 + 6, top + 12);
+    }
+  }
+
+  function dimMuted(g, C, x0, x1, laneH, axis, lanes) {
+    for (let i = 0; i < lanes; i++) {
+      if (!chMuted[i]) continue;
+      const top = axis + i * (laneH + 2);
+      g.fillStyle = 'rgba(16,20,24,0.72)';
+      g.fillRect(x0, top, x1 - x0, laneH);
+      g.strokeStyle = C.muted;
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(x0 + 6, top + laneH / 2 + 0.5);
+      g.lineTo(x1 - 6, top + laneH / 2 + 0.5);
+      g.stroke();
+    }
+  }
+
   function drawRoll(canvas, C) {
-    const { cssW: cssWGuess, laneH, axis, lanes, gutter } = rollGeom(canvas);
+    const { laneH, axis, lanes, gutter, small } = rollGeom(canvas);
     const { g, cssW, cssH } = sizeCanvas(canvas, axis + lanes * (laneH + 2) + 2);
     const x0 = gutter;
     const x1 = cssW - 4;
     const names = (live && live.names) || (songCache && songCache.names) || [];
-    const small = cssW < 460;
     g.fillStyle = C.bg;
     g.fillRect(0, 0, cssW, cssH);
     g.fillStyle = C.muted;
     g.font = '10px ' + C.mono;
+    g.textBaseline = 'alphabetic';
+    g.textAlign = 'left';
     g.fillText('now →', x1 - 36, 11);
     for (let i = 0; i < lanes; i++) {
       const top = axis + i * (laneH + 2);
-      g.globalAlpha = chMuted[i] ? 0.38 : 1;
       g.fillStyle = C.panel;
       g.fillRect(x0, top, x1 - x0, laneH);
       g.strokeStyle = C.line;
       g.lineWidth = 1;
       g.strokeRect(x0 + 0.5, top + 0.5, x1 - x0 - 1, laneH - 1);
-      g.font = '600 11px ' + C.mono;
-      g.fillStyle = OPL_COLORS[i];
-      g.fillText(fitName(names[i] || ('OPL' + (i + 1)), small), 6, top + 13);
-      g.beginPath();
-      g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
-      g.strokeStyle = C.line;
-      g.stroke();
-      g.font = '11px ' + C.mono;
-      g.fillStyle = C.muted;
-      g.fillText(chMuted[i] ? 'muted' : '—', 6, top + laneH - 5);
-      g.globalAlpha = 1;
     }
     const playing = !!(live && live.events && live.events.length && live.id === panel.dataset.item);
+    const sounding = {};
+    if (playing) {
+      const t = Math.max(0, ctx.currentTime - live.started);
+      const atTick = t * live.tickHz;
+      const windowTicks = 6 * live.tickHz;
+      const t0 = atTick - windowTicks;
+      const notes = noteSpans(live.events, atTick);
+      for (let i = 0; i < notes.length; i++) {
+        const n = notes[i];
+        if (n.end < t0 || n.start > atTick) continue;
+        const xA = x0 + ((n.start - t0) / windowTicks) * (x1 - x0);
+        const xB = x0 + ((Math.min(n.end, atTick) - t0) / windowTicks) * (x1 - x0);
+        const nn = Math.max(24, Math.min(96, n.note));
+        const top = axis + n.ch * (laneH + 2);
+        const ny = top + 4 + (1 - (nn - 24) / 72) * (laneH - 10);
+        g.fillStyle = OPL_COLORS[n.ch];
+        g.fillRect(Math.max(x0, xA), ny, Math.max(2, xB - xA), 4);
+        if (n.start <= atTick && n.end > atTick) sounding[n.ch] = n.note;
+      }
+    }
+    drawLaneTags(g, C, names, x0, x1, laneH, axis, small);
+    for (let i = 0; i < lanes; i++) {
+      const top = axis + i * (laneH + 2);
+      const muted = chMuted[i];
+      const keyed = !muted && sounding[i] != null;
+      g.font = '600 ' + (small ? 10 : 11) + 'px ' + C.mono;
+      g.fillStyle = OPL_COLORS[i];
+      g.fillText('OPL' + (i + 1), 6, top + 13);
+      g.beginPath();
+      g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
+      if (keyed) {
+        g.fillStyle = OPL_COLORS[i];
+        g.fill();
+      } else {
+        g.strokeStyle = C.line;
+        g.lineWidth = 1;
+        g.stroke();
+      }
+      g.font = (small ? 10 : 11) + 'px ' + C.mono;
+      g.fillStyle = keyed ? C.text : C.muted;
+      g.fillText(muted ? 'muted' : (keyed ? String(sounding[i]) : '—'), 6, top + laneH - 5);
+    }
     if (!playing) {
       g.fillStyle = C.muted;
       g.font = '12px ' + C.mono;
       g.textAlign = 'center';
       g.fillText('Press Play to see what each channel does', (x0 + x1) / 2, axis + 4 * (laneH + 2) + laneH / 2 + 4);
       g.textAlign = 'left';
-      return;
+    } else {
+      g.fillStyle = C.amber;
+      g.fillRect(x1 - 1.5, axis - 3, 1.5, cssH - axis + 1);
     }
-    const t = Math.max(0, ctx.currentTime - live.started);
-    const atTick = t * live.tickHz;
-    const windowTicks = 6 * live.tickHz;
-    const t0 = atTick - windowTicks;
-    const notes = noteSpans(live.events, atTick);
-    const sounding = {};
-    for (let i = 0; i < notes.length; i++) {
-      const n = notes[i];
-      if (n.end < t0 || n.start > atTick) continue;
-      const xA = x0 + ((n.start - t0) / windowTicks) * (x1 - x0);
-      const xB = x0 + ((Math.min(n.end, atTick) - t0) / windowTicks) * (x1 - x0);
-      const nn = Math.max(24, Math.min(96, n.note));
-      const top = axis + n.ch * (laneH + 2);
-      const ny = top + 4 + (1 - (nn - 24) / 72) * (laneH - 10);
-      g.globalAlpha = chMuted[n.ch] ? 0.28 : 1;
-      g.fillStyle = OPL_COLORS[n.ch];
-      g.fillRect(Math.max(x0, xA), ny, Math.max(2, xB - xA), 4);
-      g.globalAlpha = 1;
-      if (n.start <= atTick && n.end > atTick) sounding[n.ch] = n.note;
-    }
-    for (let i = 0; i < lanes; i++) {
-      if (sounding[i] == null || chMuted[i]) continue;
-      const top = axis + i * (laneH + 2);
-      g.fillStyle = C.text;
-      g.font = '11px ' + C.mono;
-      g.fillText(String(sounding[i]), 6, top + laneH - 5);
-      g.beginPath();
-      g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
-      g.fillStyle = OPL_COLORS[i];
-      g.fill();
-    }
-    g.fillStyle = C.amber;
-    g.fillRect(x1 - 1.5, axis - 3, 1.5, cssH - axis + 1);
+    dimMuted(g, C, x0, x1, laneH, axis, lanes);
   }
 
   function drawWave(canvas, C) {
@@ -589,7 +620,7 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', id.startsWith('iff-')
-      ? 'NHL95PC sub_8F98F load. FORM 8SVX is signed 8-bit at the VHDR rate (Fibonacci-delta when sCompression is 1). RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
+      ? 'NHL95PC sub_8F98F load. FORM 8SVX is signed 8-bit (Fibonacci-delta when sCompression is 1). VHDR 22050/22500 is 2× the play rate, so AFAN.IFF is ≥ 7 s like ADAFAN.KMS, not ~3.6 s and scratchy. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
           ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
@@ -648,7 +679,7 @@
     }
     seq.appendChild(wrap);
     seq.appendChild(make('p', 'st-seq-note', id.startsWith('song-')
-      ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). Lane labels are the $E7 track names. Click a lane to mute or unmute that voice.'
+      ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). OPL1–OPL9 sit in the gutter; $E7 track names are tags at the left of each lane. Click a lane to mute or unmute that voice.'
       : 'Live waveform from the playing PCM (speech, IFF, or digital SFX).'));
     box.appendChild(seq);
     box.appendChild(make('p', 'st-status', catalog.note || ''));
