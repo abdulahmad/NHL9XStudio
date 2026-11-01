@@ -203,6 +203,55 @@ assert.strictEqual(fibClip.rate, 8363);
 assert.deepStrictEqual(Array.from(fibClip.pcm), Array.from(desk),
   'sub_8F98F never reads sCompression; FORM always takes loc_A91DA');
 
+{
+  const loopPcm = Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]);
+  const looped = new Uint8Array(12 + 8 + 20 + 8 + loopPcm.length);
+  let lp = 0;
+  looped.set(form, lp); lp += 4;
+  looped.set(be32(looped.length - 8), lp); lp += 4;
+  looped.set(svx, lp); lp += 4;
+  looped.set(vhdr, lp); lp += 4;
+  looped.set(be32(20), lp); lp += 4;
+  looped.set(be32(4), lp); lp += 4;
+  looped.set(be32(12), lp); lp += 4;
+  looped.set(be32(0), lp); lp += 4;
+  looped.set(be16(11025), lp); lp += 2;
+  lp += 6;
+  looped.set(body, lp); lp += 4;
+  looped.set(be32(loopPcm.length), lp); lp += 4;
+  looped.set(loopPcm, lp);
+  const loopClip = Viv.decodeIff(looped);
+  assert.strictEqual(loopClip.oneShot, 4, 'VHDR oneShotHiSamples');
+  assert.strictEqual(loopClip.repeat, 12, 'VHDR repeatHiSamples');
+  const intro = Viv.iffSlice(loopClip, 'intro');
+  assert.strictEqual(intro.pcm.length, 4);
+  assert.deepStrictEqual(Array.from(intro.pcm), Array.from(loopClip.pcm.subarray(0, 4)));
+  const tail = Viv.iffSlice(loopClip, 'loop');
+  assert.ok(tail && tail.loop);
+  assert.strictEqual(tail.pcm.length, 12);
+  const song = Viv.iffSlice(loopClip, 'song');
+  assert.ok(song.loop);
+  assert.strictEqual(song.loopStart, 4);
+  assert.strictEqual(song.loopEnd, 16);
+  const Wav = require('../lib/audio/wav');
+  const wav16 = Wav.encode16(Viv.pcmToInt16(song.pcm, song.vol), song.rate, 1, {
+    loop: { start: song.loopStart, end: song.loopEnd }
+  });
+  const back = Wav.decode16(wav16);
+  assert.strictEqual(back.sampleRate, 11025);
+  assert.strictEqual(back.channels, 1);
+  assert.strictEqual(back.samples.length, song.pcm.length);
+  assert.ok(back.loop);
+  assert.strictEqual(back.loop.start, 4);
+  assert.strictEqual(back.loop.end, 16);
+  const aiff = Wav.encodeAiff16(Viv.pcmToInt16(intro.pcm, intro.vol), intro.rate, 1);
+  assert.strictEqual(String.fromCharCode(aiff[0], aiff[1], aiff[2], aiff[3]), 'FORM');
+  assert.strictEqual(String.fromCharCode(aiff[8], aiff[9], aiff[10], aiff[11]), 'AIFF');
+  const once = Viv.iffSlice(iffClip, 'once');
+  assert.strictEqual(once.pcm.length, iffClip.pcm.length);
+  assert.ok(!once.loop);
+}
+
 function retail95Dir() {
   const root = path.join(__dirname, '..');
   const cands = [
