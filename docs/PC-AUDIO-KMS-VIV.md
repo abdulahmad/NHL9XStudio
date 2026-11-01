@@ -47,8 +47,10 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads FORM 8SVX or RIFF WAVE:
 
-- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR), signed 8-bit. `sCompression == 1` is Fibonacci-delta. Header rates ≥ 16 kHz are stored 2× (`AFAN.IFF` VHDR 22050/22500 plays at 11025). 8-bit at the header rate is ~3.6 s and scratchy; half that rate is ≥ 7 s, the same length as `ADAFAN.KMS`. Do not treat BODY as 16-bit at the header rate.
+- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR). `sub_8F98F` never reads `sCompression`. Play flag 1 always runs mixer `loc_A91DA`: each BODY byte is two `word_D7414` Fibonacci deltas (low nibble then high, acc starts 0) at the VHDR rate, volume `0x4C` from MainDeskLoop (`0x7F` is full-scale). `AFAN.IFF` stays ≥ 7 s, the same length as `ADAFAN.KMS`.
+- **Loop:** VHDR `oneShotHiSamples` / `repeatHiSamples` (BE u32 at tag+8 / tag+12). `sub_8FB8E` shifts those counts `>> 1` because the mixer consumes BODY bytes (two output samples each). Mixer `loc_A92E6` replays the repeat tail when voice flag `byte_D6CE0 == 1` and `dword_D6CE4` is nonzero. That is intro-then-loop, not verse/chorus branches. The Audio tab can play the intro, the loop, the whole BODY once, or the game path (intro then looping tail), and export WAV / AIFF.
 - **RIFF** `0x46464952` WAVE: sample rate at +0x18, payload from +0x2C, size at +0x28. XOR `0x80`, then 8-bit unless the fmt bits field is 16. Do not use EA-NHL-Tools IFF-To-WAV (rate/2, BODY+4).
+- **`pioneer.iff`:** no string `pioneer` without a digit in NHL95PC. `RunIntro` loads graphics `pioneer1` / `pioneer2` and music `pioneer2.iff`, `pioneer3.iff`, `pioneer4.iff` (`str_Iff2` = `.iff`). A leftover `pioneer.iff` on disk is unused — not mixed under the Pioneer intro.
 
 Songs and SFX are the EACSNDF `.KMS`/`.CFG` + `PCFF%03d.TIM/.PAT/.DIG` path, not wiki Kris.
 

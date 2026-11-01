@@ -24,12 +24,22 @@ assert.throws(() => R.parseTil(new Uint8Array(65)), /multiple of 64/);
   assert.notDeepStrictEqual(Array.from(packed), Array.from(linear));
   assert.deepStrictEqual(Array.from(R.unswizzle94(packed)), Array.from(linear));
   const file = R.writeTil([linear], 94);
-  assert.deepStrictEqual(Array.from(R.parseTil(file, 94)[0]), Array.from(linear));
-  const t = new Uint8Array(64); t[0] = 1; t[4] = 2;
+  assert.notDeepStrictEqual(Array.from(file), Array.from(linear),
+    '94 TIL on disk is four concatenated Mode X planes, not 64 linear pixels');
+  assert.deepStrictEqual(Array.from(R.parseTil(file, 94)[0]), Array.from(linear),
+    '94 parseTil undoes VgaStorePlanes (plane p is 16 bytes × N tiles)');
+  const t = new Uint8Array(64); t[0] = 1; t[7] = 2;
   const flipMap = { w: 1, h: 1, flag: 528, cells: Uint16Array.from([0x800]) };
   const flipped = R.composite(new Uint8Array(R.PX_W * R.PX_H).fill(7), flipMap, [t], [0, 0, -1, -1], 94);
-  assert.strictEqual(flipped[4], 1, '94 0x800 swaps 4-pixel groups, not reverse-8');
+  assert.strictEqual(flipped[7], 1, '94 0x800 is a true reverse (VgaStamp8 plane 3-p + byte swap)');
   assert.strictEqual(flipped[0], 2);
+  const vMap = { w: 1, h: 1, flag: 528, cells: Uint16Array.from([0x1000]) };
+  const vflipped = R.composite(new Uint8Array(R.PX_W * R.PX_H).fill(7), vMap, [t], [0, 0, -1, -1], 94);
+  assert.strictEqual(vflipped[7 * R.PX_W], 1, '94 0x1000 walks rows backward');
+  const rotMap = { w: 1, h: 1, flag: 528, cells: Uint16Array.from([0x1800]) };
+  const rot = R.composite(new Uint8Array(R.PX_W * R.PX_H).fill(7), rotMap, [t], [0, 0, -1, -1], 94);
+  assert.strictEqual(rot[7 * R.PX_W + 7], 1, '94 0x1800 is 180 degrees: (0,0) -> (7,7)');
+  assert.strictEqual(rot[7 * R.PX_W], 2, '94 0x1800: (7,0) -> (0,7)');
 }
 const map = { w: 2, h: 1, flag: 16, cells: Uint16Array.from([0, 1 | R.HFLIP]) };
 const mb = R.writeMap(map);
@@ -155,11 +165,49 @@ if (DIR94 && fs.existsSync(path.join(DIR94, 'RINK.MAP'))) {
   let ink = 0;
   for (let i = 0; i < pic.pixels.length; i++) if (pic.pixels[i] !== R.CLEAR) ink++;
   assert.ok(ink > 100000, '94 RINK.TIL/MAP full picture (' + ink + ')');
-  const lin = R.parseTil(tilBytes)[0];
-  const planar = R.parseTil(tilBytes, 94)[0];
-  assert.notDeepStrictEqual(Array.from(lin), Array.from(planar), '94 tiles unswizzle off disk');
-  same(R.writeTil(R.parseTil(tilBytes, 94), 94), tilBytes, '94 TIL round-trips through Mode X');
+  assert.ok(!Buffer.from(R.parseTil(tilBytes)[0]).equals(Buffer.from(R.parseTil(tilBytes, 94)[0])),
+    '94 parseTil is file-level Mode X, not 64-byte linear tiles');
+  same(R.writeTil(R.parseTil(tilBytes, 94), 94), tilBytes, '94 TIL round-trips as four concatenated planes');
+  const fromLinear = R.composite(null, R.parseMap(mapBytes), R.parseTil(tilBytes), [0, 0, -1, -1], 94);
+  const fromFilePlanes = R.composite(null, R.parseMap(mapBytes), R.parseTil(tilBytes, 94), [0, 0, -1, -1], 94);
+  same(pic.pixels, fromFilePlanes, 'Images-tab fullPicture uses VgaStorePlanes file layout');
+  assert.ok(!Buffer.from(pic.pixels).equals(Buffer.from(fromLinear)),
+    'linear 64-byte tiles must not be the Images-tab path');
+  const map94 = R.parseMap(mapBytes);
+  const used = {};
+  for (const c of map94.cells) used[c & 0x7FF] = (used[c & 0x7FF] || 0) + 1;
+  const fillId = Object.keys(used).sort((a, b) => used[b] - used[a])[0] | 0;
+  const fill = R.parseTil(tilBytes, 94)[fillId];
+  let ice = 0;
+  for (let i = 0; i < 64; i++) if (fill[i] === 106) ice++;
+  assert.ok(ice >= 60, '94 ice-fill tile ' + fillId + ' is solid ice 106 (' + ice + '/64), not scanline dither');
   console.log('pc-rink: 94 PC RINK.TIL/MAP full picture ok');
+  const palPath = path.join(DIR94, 'RINKPAL.QPP');
+  if (fs.existsSync(palPath)) {
+    const P = require('../lib/pc95');
+    const d = P.decompressEaContainer(fs.readFileSync(palPath));
+    const count = d[4] | (d[5] << 8);
+    const base = 6 + count * 8;
+    let pal94 = null;
+    for (let i = 0; i < count; i++) {
+      if (String.fromCharCode(d[6 + i * 4], d[7 + i * 4], d[8 + i * 4], d[9 + i * 4]) !== '!pal') continue;
+      const o = 6 + count * 4 + i * 4;
+      const at = base + (d[o] | (d[o + 1] << 8) | (d[o + 2] << 16));
+      pal94 = P.decodeEaPalette(d.subarray(at));
+    }
+    const pal95 = fs.readFileSync(path.join(__dirname, '..', 'public', 'jed-pals', 'rinkpal.act'));
+    assert.ok(pal94, '94 RINKPAL.QPP !pal');
+    assert.notDeepStrictEqual(pal94[106], [pal95[318], pal95[319], pal95[320]],
+      '94 ice (index 106) is not the bundled 95 rinkpal.act grey');
+    const gp94 = R.gamePalette(P.colorsToAct(pal94), home, away);
+    const gp95 = R.gamePalette(pal95, home, away);
+    assert.notDeepStrictEqual(gp94[106], gp95[106], 'centre-ice gamePalette must follow RINKPAL.QPP on 94');
+    const over = J.overlayRink(plain, P.colorsToAct(pal94));
+    assert.deepStrictEqual(Array.from(over.subarray(106 * 3, 106 * 3 + 3)), pal94[106],
+      'overlayRink copies 94 ice onto the bundled ACT');
+    same(over.subarray(144 * 3, 144 * 3 + 3), plain.subarray(144 * 3, 144 * 3 + 3),
+      'overlayRink leaves jersey-shadow slots alone');
+  }
 }
 
 // blocks: mirror / flip / 180 via cell bits (tile pixels untouched), 90 / 270 add rotated tiles; tile delete / unused

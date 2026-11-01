@@ -79,6 +79,15 @@ const BASE = {
 for (const n of ['rinkpalShadowfixed.act', 'createjerseyShadowfixed.act', 'rinkpal.act']) {
   same(fs.readFileSync(path.join(__dirname, '..', 'public', 'jed-pals', n)), fs.readFileSync(path.join(PALS, n)), 'public/jed-pals/' + n + ' = fixture');
 }
+{
+  const ice = Uint8Array.from(BASE.rinkPlain);
+  ice[106 * 3] = 1; ice[106 * 3 + 1] = 2; ice[106 * 3 + 2] = 3;
+  ice[144 * 3] = 9; ice[144 * 3 + 1] = 8; ice[144 * 3 + 2] = 7;
+  const over = J.overlayRink(BASE.rink, ice);
+  assert.deepStrictEqual(Array.from(over.subarray(106 * 3, 106 * 3 + 3)), [1, 2, 3], 'overlayRink copies ice 106');
+  same(over.subarray(144 * 3, 144 * 3 + 3), BASE.rink.subarray(144 * 3, 144 * 3 + 3), 'overlayRink keeps jersey-shadow 144');
+  same(over.subarray(251 * 3, 251 * 3 + 3), ice.subarray(251 * 3, 251 * 3 + 3), 'overlayRink copies rink 251');
+}
 // byte-for-byte equal to the createPal ACTs EA-NHL-Tools ships in PPV-To-BMP/Palettes (test/fixtures/pc-jersey/createPal).
 // Exception: NHL 95 HOMEPALS ANA, whose shipped ACT was built from a different HOMEPALS (5 crest/white entries differ).
 const EA_DIFFERS = { 'HOMEPALS95.BIN': ['ana'] };

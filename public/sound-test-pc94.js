@@ -169,13 +169,25 @@
           const packName = String(rel).split(/[\\/]/).pop();
           const kind = clip.kind === 'riff'
             ? 'IFF RIFF (XOR 80h, ' + (clip.depth || 8) + '-bit)'
-            : 'IFF FORM 8SVX';
+            : 'IFF FORM 8SVX (D7414, vol 0x4C)';
+          const loopNote = clip.kind === 'form' && clip.repeat
+            ? ' · intro ' + clip.oneShot + ' + loop ' + clip.repeat
+            : '';
           digital.push({
             id: 'iff-' + packName,
             group: 'Desk music',
             label: packName.replace(/\.[^.]+$/, ''),
-            sub: packName + ' · ' + kind + ' · ' + clip.rate + ' Hz · ' + clip.length + ' bytes',
-            clip: { name: packName, pcm: clip.pcm, rate: clip.rate, length: clip.length }
+            sub: packName + ' · ' + kind + ' · ' + clip.rate + ' Hz · ' + clip.length + ' samples' + loopNote,
+            clip: {
+              name: packName,
+              pcm: clip.pcm,
+              rate: clip.rate,
+              length: clip.length,
+              vol: clip.vol,
+              oneShot: clip.oneShot || 0,
+              repeat: clip.repeat || 0,
+              kind: clip.kind
+            }
           });
         }
       }
@@ -240,11 +252,17 @@
   function playBuffer(id, float32, rate, viz) {
     const ac = audioCtx();
     const offset = Math.max(0, (viz && viz.offset) || 0);
-    const buf = ac.createBuffer(1, float32.length, rate);
+    const buf = ac.createBuffer(1, Math.max(1, float32.length), rate);
     buf.getChannelData(0).set(float32);
     const src = ac.createBufferSource();
     src.buffer = buf;
     src.connect(analyser);
+    const looping = !!(viz && viz.loop);
+    src.loop = looping;
+    if (looping) {
+      if (viz.loopStart != null) src.loopStart = viz.loopStart;
+      if (viz.loopEnd != null) src.loopEnd = viz.loopEnd;
+    }
     src.onended = () => { if (live && live.id === id && live.source === src) { live = null; if (onChange) onChange(); } };
     src.start(0, offset);
     live = {
@@ -252,6 +270,10 @@
       source: src,
       started: ac.currentTime - offset,
       duration: float32.length / rate,
+      loop: looping,
+      loopStart: src.loopStart || 0,
+      loopEnd: src.loopEnd || (float32.length / rate),
+      part: (viz && viz.part) || '',
       events: (viz && viz.events) || [],
       ticks: (viz && viz.ticks) || 0,
       tickHz: 100,
@@ -338,12 +360,21 @@
       return;
     }
     const t = Math.max(0, ctx.currentTime - live.started);
-    const frac = live.duration ? Math.min(1, t / live.duration) : 0;
+    let frac = live.duration ? Math.min(1, t / live.duration) : 0;
+    let total = clock(live.duration);
+    if (live.loop) {
+      const intro = live.loopStart || 0;
+      const span = Math.max(0.01, (live.loopEnd || live.duration) - intro);
+      if (t <= intro) frac = live.duration ? t / live.duration : 0;
+      else frac = Math.min(1, intro / Math.max(live.duration, intro + span) + ((t - intro) % span) / Math.max(live.duration, intro + span));
+      total = clock(live.duration) + ' loop';
+    }
     if (bar) {
       bar.style.transition = 'none';
       bar.style.width = (frac * 100).toFixed(1) + '%';
+      bar.classList.toggle('is-loop', !!live.loop);
     }
-    if (timeEl) timeEl.textContent = clock(t) + ' / ' + clock(live.duration);
+    if (timeEl) timeEl.textContent = clock(t) + ' / ' + total;
   }
 
   function sizeCanvas(canvas, cssH) {
@@ -511,13 +542,23 @@
     if (live) vizRaf = requestAnimationFrame(drawViz);
   }
 
-  async function play(id) {
+  async function play(id, opts) {
     stop();
     await ensure();
     if (id.startsWith('speech-') || id.startsWith('iff-')) {
       const rec = (catalog.speech || []).concat(catalog.digital || []).find((s) => s.id === id);
       if (!rec || !rec.clip) throw new Error('Unknown clip');
-      playBuffer(id, root.NhlViv.toFloat32(rec.clip.pcm), rec.clip.rate);
+      const part = (opts && opts.part) || (id.startsWith('iff-') && rec.clip.repeat ? 'song' : 'once');
+      const slice = id.startsWith('iff-') && root.NhlViv.iffSlice
+        ? (root.NhlViv.iffSlice(rec.clip, part) || rec.clip)
+        : rec.clip;
+      const viz = { part: slice.part || part };
+      if (slice.loop) {
+        viz.loop = true;
+        viz.loopStart = (slice.loopStart || 0) / slice.rate;
+        viz.loopEnd = (slice.loopEnd != null ? slice.loopEnd : slice.pcm.length) / slice.rate;
+      }
+      playBuffer(id, root.NhlViv.toFloat32(slice.pcm, slice.vol), slice.rate, viz);
       return;
     }
     if (id.startsWith('sfx-')) {
@@ -592,9 +633,88 @@
     drawViz();
   }
 
-  async function toggle(id) {
-    if (live && live.id === id) { stop(); return; }
-    await play(id);
+  async function toggle(id, opts) {
+    if (live && live.id === id && (!opts || !opts.part || opts.part === live.part)) { stop(); return; }
+    await play(id, opts);
+  }
+
+  function safeName(s) {
+    return String(s || 'clip').replace(/\.[^.]+$/, '').replace(/[^A-Za-z0-9_-]+/g, '_') || 'clip';
+  }
+
+  function downloadBytes(name, bytes, type) {
+    if (root.NhlSoundTools && root.NhlSoundTools.download) {
+      root.NhlSoundTools.download(name, bytes, type);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([bytes], { type: type || 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function clipInt16(clip) {
+    if (root.NhlViv.pcmToInt16) return root.NhlViv.pcmToInt16(clip.pcm, clip.vol);
+    const f = root.NhlViv.toFloat32(clip.pcm, clip.vol);
+    const out = new Int16Array(f.length);
+    for (let i = 0; i < f.length; i++) {
+      const s = Math.max(-1, Math.min(1, f[i]));
+      out[i] = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+    }
+    return out;
+  }
+
+  function exportClip(rec, part, format) {
+    if (!rec || !rec.clip || !root.NhlWav) throw new Error('WAV encoder missing');
+    const slice = rec.clip.oneShot != null && root.NhlViv.iffSlice
+      ? (root.NhlViv.iffSlice(rec.clip, part) || rec.clip)
+      : rec.clip;
+    const pcm = clipInt16(slice);
+    const base = safeName(rec.clip.name || rec.label) + (part && part !== 'once' && part !== 'song' ? '-' + part : '');
+    if (format === 'aiff') {
+      downloadBytes(base + '.aiff', root.NhlWav.encodeAiff16(pcm, slice.rate, 1), 'audio/aiff');
+      return base + '.aiff';
+    }
+    const opts = slice.loop && slice.part === 'song'
+      ? { loop: { start: slice.loopStart || 0, end: slice.loopEnd || slice.pcm.length } }
+      : (slice.loop ? { loop: { start: 0, end: slice.pcm.length } } : undefined);
+    downloadBytes(base + '.wav', root.NhlWav.encode16(pcm, slice.rate, 1, opts), 'audio/wav');
+    return base + '.wav';
+  }
+
+  async function exportSongWav(id) {
+    await ensure();
+    const rec = catalog.songs.find((s) => s.id === id);
+    if (!rec) throw new Error('Unknown song');
+    const kms = await readRel(rec.kms);
+    const cfg = rec.cfg ? await readRel(rec.cfg) : null;
+    if (!kms) throw new Error(rec.stem + '.KMS not found');
+    const parsed = root.NhlPc94Kms.parse(kms, cfg);
+    const audio = catalog.audio || {};
+    const patRel = (audio.pat || []).find((n) => /PCFF004/i.test(n)) || (audio.pat || [])[0];
+    const timMap = {};
+    for (const rel of audio.tim || []) {
+      const buf = await readRel(rel);
+      if (!buf) continue;
+      const loaded = root.NhlPc94Sfx.loadTim(buf);
+      const m = /PCFF(\d+)/i.exec(rel);
+      const bank = m ? Number(m[1]) : 0;
+      timMap[bank] = loaded.timbres;
+    }
+    const pat = patRel ? await readRel(patRel) : null;
+    const seconds = Math.min(180, Math.max(0.5, root.NhlPc94Player.songSeconds(parsed, { loops: 1 })));
+    const pcm = root.NhlPc94Player.renderSong(parsed, {
+      seconds: seconds,
+      loops: 1,
+      pat: pat,
+      timbres: timMap,
+      muted: chMuted.slice()
+    });
+    downloadBytes(safeName(rec.stem) + '.wav', root.NhlWav.encode16(pcm, root.NhlPc94Player.RATE, 2), 'audio/wav');
   }
 
   function renderPanel(box, id) {
@@ -620,7 +740,7 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', id.startsWith('iff-')
-      ? 'NHL95PC sub_8F98F load. FORM 8SVX is signed 8-bit (Fibonacci-delta when sCompression is 1). VHDR 22050/22500 is 2× the play rate, so AFAN.IFF is ≥ 7 s like ADAFAN.KMS, not ~3.6 s and scratchy. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
+      ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
           ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
@@ -629,14 +749,15 @@
           ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
           : 'EACSNDF sequencer from NHL95PC sub_990CB / sub_99925 (same library as NHL 94 PC). MIDI send adds 24 (HOCKEY.EXE 1844:022E). YM30 fnum table (block = note/12); PAT rec[7] transposes at note-on. FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
     const controls = make('div', 'st-controls');
+    const fail = (label) => (err) => {
+      const st = box.querySelector('.st-status');
+      if (st) st.textContent = label + ': ' + (err && err.message ? err.message : String(err));
+    };
     const btn = make('button', 'ghost-btn st-toggle', live && live.id === id ? '■ Stop' : '▶ Play');
     btn.type = 'button';
     btn.id = 'sound-test-toggle';
     btn.addEventListener('click', () => {
-      toggle(id).catch((err) => {
-        const st = box.querySelector('.st-status');
-        if (st) st.textContent = 'Playback failed: ' + (err && err.message ? err.message : String(err));
-      });
+      toggle(id).catch(fail('Playback failed'));
     });
     const vol = make('label', 'st-volume');
     vol.appendChild(make('span', null, 'Volume'));
@@ -651,7 +772,53 @@
     });
     vol.appendChild(range);
     controls.append(btn, vol);
+    if (id.startsWith('iff-') && rec && rec.clip && rec.clip.repeat) {
+      [['song', 'Play intro + loop'], ['intro', 'Play intro'], ['loop', 'Play loop'], ['once', 'Play once']].forEach(([part, label]) => {
+        const b = make('button', 'ghost-btn', label);
+        b.type = 'button';
+        b.title = part === 'song' ? 'One-shot head, then the repeating tail (the desk mixer path)' : '';
+        b.addEventListener('click', () => toggle(id, { part: part }).catch(fail('Playback failed')));
+        controls.appendChild(b);
+      });
+    }
     box.appendChild(controls);
+    if (id.startsWith('iff-') && rec && rec.clip && /^pioneer\.iff$/i.test(rec.clip.name || '')) {
+      box.appendChild(make('p', 'st-note',
+        'This file is not loaded anywhere in NHL95PC. RunIntro plays pioneer2.iff, then pioneer3.iff, then pioneer4.iff over the pioneer1 / pioneer2 graphics. A leftover pioneer.iff was never wired up — not an overlay on the Pioneer intro.'));
+    }
+    const ex = make('div', 'st-controls st-exports');
+    const addEx = (label, title, fn) => {
+      const b = make('button', 'ghost-btn', label);
+      b.type = 'button';
+      b.title = title;
+      b.addEventListener('click', () => {
+        Promise.resolve().then(fn).then((name) => {
+          const st = box.querySelector('.st-status');
+          if (st && name) st.textContent = 'Saved ' + name;
+        }).catch(fail('Export failed'));
+      });
+      ex.appendChild(b);
+    };
+    if (id.startsWith('iff-') && rec && rec.clip) {
+      addEx('Export WAV', '16-bit PCM WAV of the whole song (smpl loop when VHDR repeat is set)', () => exportClip(rec, rec.clip.repeat ? 'song' : 'once', 'wav'));
+      addEx('Export AIFF', '16-bit PCM AIFF of the whole song', () => exportClip(rec, rec.clip.repeat ? 'song' : 'once', 'aiff'));
+      if (rec.clip.repeat) {
+        addEx('Export intro WAV', 'The one-shot head only', () => exportClip(rec, 'intro', 'wav'));
+        addEx('Export loop WAV', 'The repeating tail only, with a smpl loop', () => exportClip(rec, 'loop', 'wav'));
+      }
+    } else if ((id.startsWith('speech-') || id.startsWith('sfx-')) && rec) {
+      addEx('Export WAV', '16-bit PCM WAV', () => {
+        if (id.startsWith('sfx-')) {
+          const rendered = root.NhlPc94Player.renderSfx(rec.sample, rec.sample.loop ? { seconds: 2 } : {});
+          downloadBytes(safeName(rec.label) + '.wav', root.NhlWav.encode16(rendered.pcm, rendered.rate, 2), 'audio/wav');
+          return safeName(rec.label) + '.wav';
+        }
+        return exportClip(rec, 'once', 'wav');
+      });
+    } else if (id.startsWith('song-') && rec) {
+      addEx('Export WAV', 'AdLib render as 16-bit stereo WAV at the OPL2 rate', () => exportSongWav(id).then(() => safeName(rec.stem) + '.wav'));
+    }
+    if (ex.childNodes.length) box.appendChild(ex);
     const progress = make('div', 'st-progress');
     progress.appendChild(make('div', 'st-bar'));
     box.appendChild(progress);
@@ -692,12 +859,19 @@
     if ((id.startsWith('speech-') || id.startsWith('iff-')) && rec && rec.clip) {
       rows.push(['File', rec.clip.name]);
       rows.push(['Rate', rec.clip.rate + ' Hz']);
-      rows.push(['Length', rec.clip.length + ' bytes']);
+      rows.push(['Length', rec.clip.length + ' samples']);
+      if (id.startsWith('iff-') && rec.clip.kind === 'form') {
+        rows.push(['Intro', (rec.clip.oneShot || 0) + ' samples']);
+        rows.push(['Loop', (rec.clip.repeat || 0) + ' samples']);
+      }
       rows.push(['Path', id.startsWith('iff-') || /\.iff$/i.test(rec.clip.name)
-        ? 'sub_8F98F FORM 8SVX 8-bit / RIFF XOR 80h'
+        ? 'sub_8F98F FORM 8SVX D7414 + 0x4C / VHDR oneShot+repeat / RIFF XOR 80h'
         : (is95()
           ? '.VIV OpenSpeechBank → 47/10 FB → ReadSpeechSample DPCM'
           : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM')]);
+      if (/^pioneer\.iff$/i.test(rec.clip.name || '')) {
+        rows.push(['Used', 'No. RunIntro loads pioneer2.iff / pioneer3.iff / pioneer4.iff only']);
+      }
     } else if (id.startsWith('sfx-') && rec && rec.sample) {
       rows.push(['Timbre', String(rec.sample.timbre)]);
       rows.push(['Rate', rec.sample.rate + ' Hz']);
