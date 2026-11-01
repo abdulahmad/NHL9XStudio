@@ -181,7 +181,7 @@ Parity with **95PC** in the viewer: Frame / SPF / SPA / Images, team jerseys, ho
 
 | Topic | NHL 95 PC (`pc95.js`) | NHL 94 PC (`pc94-pack.js` / `pc94-shape.js`) |
 |--------|------------------------|----------------------|
-| Picture container | `.QFS` (RefPack `10 FB` → SHPI) | `.QPP` (Huffman **`30 FB`** or BTree **`46 FB`**, then the same planar bank as PPV — not RefPack, not SHPI) |
+| Picture container | `.QFS` (RefPack `10 FB` → SHPI); full rink is `RINK.QFS` | `.QPP` (Huffman **`30 FB`** or BTree **`46 FB`**, then the same planar bank as PPV — not RefPack, not SHPI). Full rink is `RINK.TIL` + `RINK.MAP` (no `RINK.QFS`) |
 | Sprite banks | `.PPV` = SHPI in file | `.PPV` = Mode X planar PackBits bank (u32 size, u16 count, 4-char names, flags `0x0010`). Not gfxpak SPIT. |
 | Frame count | 1134 (per `frames95pc.asm`) | **876** player sprites `000–875`, crowd `F000–F149` |
 | SPA/SPF | `HOCKEY.EXE` @ `0x110471`, names @ `0x109030` | Retail SPA from `HOCKEY.EXE` @ `0x358A4` (`tools/extract-pc94-spa.js` → `frames94pc.asm`; 95 sequences, flags-first PC `updateanim`) |

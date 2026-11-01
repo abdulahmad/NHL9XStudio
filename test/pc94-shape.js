@@ -61,6 +61,20 @@ assert.deepStrictEqual(Array.from(decoded.parsed.renderFrame(1).pixels), Array.f
 const qfs = openAsset.classify('ARENA.QFS', packed);
 assert.strictEqual(openAsset.pcGameIdOf(qfs), 'nhl95pc');
 
+const dropped = pc95.catalogFromPaths(['ARENA.QPP', 'RINK.TIL', 'RINK.MAP', 'RINKPAL.QPP'], (rel) => {
+  if (rel === 'ARENA.QPP') return packed;
+  if (/\.TIL$/i.test(rel)) return new Uint8Array(64);
+  if (/\.MAP$/i.test(rel)) {
+    const out = new Uint8Array(6 + 48 * 74 * 2);
+    out[0] = 48; out[2] = 74;
+    return out;
+  }
+  return packed;
+});
+const droppedRink = dropped.images.find((image) => image.label === 'Ice rink');
+assert.ok(droppedRink && droppedRink.kind === 'pc-rink');
+assert.strictEqual(droppedRink.rinkGame, 94);
+
 function retail94Dir() {
   const root = path.join(__dirname, '..');
   const cands = [
@@ -91,6 +105,23 @@ if (retail) {
   assert.ok(listed.audio.dig, 'PCFF DIG catalogued');
   const playoffs = listed.images.find((image) => /PLAYOFFS/i.test(image.id));
   assert.ok(playoffs && /EMBPAL/i.test(playoffs.palette || ''), '94 PLAYOFFS borrows EMBPAL');
+  const rink = listed.images.find((image) => image.label === 'Ice rink');
+  assert.ok(rink, '94 PC Ice rink from RINK.TIL / RINK.MAP');
+  assert.strictEqual(rink.kind, 'pc-rink');
+  assert.strictEqual(rink.rinkGame, 94);
+  assert.ok(/RINKPAL/i.test(rink.palette || ''), 'Ice rink uses RINKPAL');
+  assert.ok(rink.files.some((rel) => /\.TIL$/i.test(rel)) && rink.files.some((rel) => /\.MAP$/i.test(rel)));
+  const til = fs.readFileSync(path.join(retail, rink.files.find((rel) => /\.TIL$/i.test(rel))));
+  const map = fs.readFileSync(path.join(retail, rink.files.find((rel) => /\.MAP$/i.test(rel))));
+  const pal = fs.readFileSync(path.join(retail, rink.palette));
+  const pic = pc95.openRinkImage(til, map, pal, 94);
+  assert.strictEqual(pic.numFrames, 1);
+  const frame = pic.renderFrame(1);
+  assert.strictEqual(frame.width, 384);
+  assert.strictEqual(frame.height, 592);
+  let ink = 0;
+  for (let i = 0; i < frame.pixels.length; i++) if (frame.pixels[i] !== 255) ink++;
+  assert.ok(ink > 100000, 'full rink is not empty (' + ink + ' pixels)');
 }
 
 console.log('pc94-shape: ok');

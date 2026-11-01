@@ -2525,7 +2525,7 @@ async function ensureImage(id) {
     const missing = bytes.length >= 4 && new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0) === 0xffffffff;
     const frameOpts = frameOptions();
     parsed = Nhl92Sheet.openFrames(bytes, Nhl92Jim, missing ? await framesDonor(image) : null, frameOpts);
-  } else if (isPcGame(gameInfo.kind) || image.kind === 'pc95') {
+  } else if (isPcGame(gameInfo.kind) || image.kind === 'pc95' || image.kind === 'pc-rink') {
     const paths = image.files && image.files.length ? image.files : [image.id];
     const parts = [];
     for (const rel of paths) {
@@ -2548,7 +2548,14 @@ async function ensureImage(id) {
         if (pal.ok) donor = new Uint8Array(await pal.arrayBuffer());
       }
     }
-    parsed = Nhl95Pc.openImageParts(parts, donor);
+    if (image.kind === 'pc-rink' && Nhl95Pc.openRinkImage) {
+      const til = parts.find((part) => /\.til$/i.test(part.name));
+      const map = parts.find((part) => /\.map$/i.test(part.name));
+      if (!til || !map) return null;
+      parsed = Nhl95Pc.openRinkImage(til.data, map.data, donor, image.rinkGame || 94);
+    } else {
+      parsed = Nhl95Pc.openImageParts(parts, donor);
+    }
   } else if (image.kind && image.kind.indexOf('snes') === 0) {
     const rom = await ensureRom();
     if (!rom) return null;

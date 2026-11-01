@@ -129,6 +129,23 @@ if (DIR && fs.existsSync(path.join(DIR, 'TOR.MAP'))) {
   console.log('pc-rink: 26 retail arenas round-trip; full-rink diff import ' + R.tileCount(mm) + ' tiles');
 } else console.log('pc-rink: NHL_PC95_DIR not set, retail round trip skipped');
 
+const DIR94 = process.env.NHL_PC94_DIR
+  || [path.join(__dirname, '..', 'pc94'), path.join(__dirname, '..', 'EA-NHL-Tools', 'Sprite-Viewer', 'pc94'), '/tmp/nhl94pc-src/lst/game']
+    .find((d) => fs.existsSync(path.join(d, 'RINK.TIL')));
+if (DIR94 && fs.existsSync(path.join(DIR94, 'RINK.MAP'))) {
+  const pic = R.fullPicture(
+    new Uint8Array(fs.readFileSync(path.join(DIR94, 'RINK.TIL'))),
+    new Uint8Array(fs.readFileSync(path.join(DIR94, 'RINK.MAP'))),
+    94
+  );
+  assert.strictEqual(pic.width, R.PX_W);
+  assert.strictEqual(pic.height, R.PX_H);
+  let ink = 0;
+  for (let i = 0; i < pic.pixels.length; i++) if (pic.pixels[i] !== R.CLEAR) ink++;
+  assert.ok(ink > 100000, '94 RINK.TIL/MAP full picture (' + ink + ')');
+  console.log('pc-rink: 94 PC RINK.TIL/MAP full picture ok');
+}
+
 // blocks: mirror / flip / 180 via cell bits (tile pixels untouched), 90 / 270 add rotated tiles; tile delete / unused
 {
   const t0 = new Uint8Array(64).fill(255); t0[0] = 1; // pixel top-left

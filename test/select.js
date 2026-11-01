@@ -65,6 +65,7 @@ const RULES = [
   { re: /^test\/pc-rink\.js$/, tests: ['pc-rink'], why: 'centre ice tests' },
   { re: /^public\/jed\.(js|css|html)$/, tests: ['browser:jed', 'browser:jed-ice', 'browser:jed-server'], why: 'jersey editor page' },
   { re: /^public\/ice\.js$/, tests: ['browser:jed-ice'], why: 'centre ice tab' },
+  { re: /^lib\/pc95\.js$/, tests: ['core', 'pc94-shape', 'pc-rink'], why: 'PC QFS/QPP catalog' },
   { re: /^lib\/pc94-[\w-]+\.js$/, tests: ['core', 'pc94-shape'], why: 'NHL 94 PC pack / planar bank' },
   { re: /^test\/pc95-sprite-pipeline\.js$/, tests: ['pc-jersey'], why: 'NHL 95 PC sprite pipeline check' },
   { re: /^public\/jed-pals\//, tests: ['pc-jersey', 'browser:jed'], why: 'jersey editor base palettes' },
