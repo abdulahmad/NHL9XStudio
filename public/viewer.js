@@ -1395,6 +1395,20 @@ function renderMeta() {
       rows.push(['Art', frame.width + '×' + frame.height]);
     }
     rows.push(['Hotspot', frame.hotspotX + ', ' + frame.hotspotY]);
+    if (frame.tag) rows.push(['Tag', frame.tag]);
+    if (frame.type != null) {
+      const kind = frame.type === 123 ? 'raw' : frame.type === 5 ? 'type 5' : 'RLE';
+      rows.push(['Type', frame.type + ' (' + kind + ')']);
+    }
+    if (frame.xOffset != null || frame.yOffset != null) {
+      rows.push(['Offset', (frame.xOffset != null ? frame.xOffset : 0) + ', ' + (frame.yOffset != null ? frame.yOffset : 0)]);
+    }
+    if (frame.xPos != null || frame.yPos != null) {
+      rows.push(['Position', (frame.xPos != null ? frame.xPos : 0) + ', ' + (frame.yPos != null ? frame.yPos : 0)]);
+    }
+    if (frame.quads != null) rows.push(['Quads', String(frame.quads)]);
+    if (frame.extra != null) rows.push(['Extra', String(frame.extra)]);
+    if (frame.flags != null) rows.push(['Flags', '0x' + (frame.flags >>> 0).toString(16)]);
     if (step) {
       const shown = stepTicks(step);
       rows.push(['Hold', shown == null ? 'forever (' + step.ticks + ')' : step.ticks + ' in the table · ' + shown + ' on screen']);

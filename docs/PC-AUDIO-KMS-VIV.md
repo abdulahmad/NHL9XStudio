@@ -34,7 +34,7 @@ This is **not** the wiki Kris' Music System container in `lib/audio/kms.js`. Bot
 
 ### NHL 94 PC (`XBRUCE2.VIV`, `XRBARR2.VIV`)
 
-C0 FB named directory (`name\\0` + u24be offset + u24be size from byte 12). Stop before the first payload; drop the last dir slot when its offset is past EOF (retail `PIT.CTY` / `EDM.RNK` at `0x480000`). Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab (`NhlSoundTestPc94` Speech group).
+C0 FB directory: unknown be16 at +2, be16 count at +4, then count × (`u24be` offset, `u24be` size, `name\\0`) from byte 6 — the same slot order as 95 OpenSpeechBank. Reading name-first from byte 12 paired TWELVE with TWENTY's payload. Each lump is BTree **47 FB** wrapping a **72 FB** raw-PCM header (signed 8-bit, 3-byte BE size at +2, PCM at +5). Played at 11025 Hz in the Audio tab (`NhlSoundTestPc94` Speech group). Retail `XBRUCE2.VIV` ends on `PIT.CTY`; `XRBARR2.VIV` ends on `EDM.RNK`.
 
 Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` city, `.RNK` rank, `.MSC` misc, `.OFF` official, `.HOM` home, `.AWA` away, `.INT` intro. Team codes expand only for CTY/RNK/HOM/AWA (`BOS.CTY` → `Boston (city)`). Do not title-case or strip digits (`THE3RD.BAR` → `THE3RD (Barr)`, `TWELVE.BRU` → `TWELVE (Bruce)`).
 
@@ -45,10 +45,10 @@ Labels keep the file stem and suffix role: `.BRU` Bruce, `.BAR` Barr, `.CTY` cit
 
 `OpenSpeechBank`: three big-endian words (type, count, extra), then per clip u24be offset, u24be size, `name\\0`. Packed clips start with **47 FB** (`'G'`) or RefPack **10 FB**. `ReadSpeechSample` unpacks via `sub_98028` then delta-decodes, dropping a 5-byte header (`lib/audio/viv.js` `readSpeechSample`). The Audio tab is the same `NhlSoundTestPc94` module with `setGame('nhl95pc')`.
 
-Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads, `sub_8FB8E` plays 16-bit (halves the stored byte counts):
+Loose `.IFF` files are desk music, not speech. **NHL 94 PC has no IFF music files.** NHL95PC `sub_8F98F` loads FORM 8SVX or RIFF WAVE:
 
-- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR). `sCompression == 1` is Fibonacci-delta; a BODY twice the VHDR sample count is 16-bit PCM.
-- **RIFF** `0x46464952` WAVE: sample rate at +0x18, payload from +0x2C, size at +0x28. XOR `0x80` then 16-bit (the loader ignores the fmt bits field). Playing those bytes as 8-bit is twice as fast and static. Do not use EA-NHL-Tools IFF-To-WAV (rate/2, BODY+4).
+- **FORM** `0x4D524F46` 8SVX: `VHDR` samplesPerSec is a big-endian u16 at tag+20; PCM is the `BODY` chunk (no XOR), signed 8-bit. `sCompression == 1` is Fibonacci-delta. A BODY twice the VHDR sample count is still 8-bit — treating it as 16-bit made `AFAN.IFF` / `AWARDS.IFF` twice as fast and scratchy versus `ADAFAN.KMS`.
+- **RIFF** `0x46464952` WAVE: sample rate at +0x18, payload from +0x2C, size at +0x28. XOR `0x80`, then 8-bit unless the fmt bits field is 16. Do not use EA-NHL-Tools IFF-To-WAV (rate/2, BODY+4).
 
 Songs and SFX are the EACSNDF `.KMS`/`.CFG` + `PCFF%03d.TIM/.PAT/.DIG` path, not wiki Kris.
 

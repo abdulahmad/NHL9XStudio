@@ -27,6 +27,9 @@ assert.strictEqual(opened.shapes[0].width, 4);
 assert.strictEqual(opened.shapes[0].height, 2);
 assert.strictEqual(opened.shapes[0].hotX, 3);
 assert.strictEqual(opened.shapes[0].hotY, -5);
+assert.strictEqual(opened.shapes[0].xOffset, 3);
+assert.strictEqual(opened.shapes[0].quads, 1);
+assert.strictEqual(opened.shapes[0].flags, 0x10);
 assert.deepStrictEqual(Array.from(opened.shapes[0].pixels), Array.from(pixels));
 assert.ok(opened.palette);
 assert.deepStrictEqual(opened.palette[1], [
@@ -57,6 +60,10 @@ assert.ok(decoded);
 assert.strictEqual(decoded.gameId, 'nhl94pc');
 assert.strictEqual(decoded.parsed.numFrames, 876);
 assert.deepStrictEqual(Array.from(decoded.parsed.renderFrame(1).pixels), Array.from(pixels));
+assert.strictEqual(decoded.parsed.renderFrame(1).hotX, 3);
+assert.strictEqual(decoded.parsed.renderFrame(1).xOffset, 3);
+assert.strictEqual(decoded.parsed.renderFrame(1).extra, 0);
+assert.strictEqual(decoded.parsed.renderFrame(1).flags, 0x10);
 
 const qfs = openAsset.classify('ARENA.QFS', packed);
 assert.strictEqual(openAsset.pcGameIdOf(qfs), 'nhl95pc');
@@ -95,6 +102,15 @@ if (retail) {
   const arena = pc95.openBytes(fs.readFileSync(path.join(retail, 'ARENA.QPP')));
   assert.ok(arena && arena.shapes.length >= 1, 'ARENA.QPP unpacks');
   assert.ok(arena.palette, 'ARENA.QPP carries !pal');
+  assert.strictEqual(arena.shapes[0].xOffset, 85, 'ARENA.QPP stores the SPIT-style image offset');
+  const arenaPic = pc95.openImage(fs.readFileSync(path.join(retail, 'ARENA.QPP')));
+  assert.strictEqual(arenaPic.renderFrame(1).xOffset, 85);
+  assert.strictEqual(arenaPic.renderFrame(1).yOffset, 42);
+  assert.strictEqual(arenaPic.renderFrame(1).hotspotX, 85);
+  assert.strictEqual(arenaPic.renderFrame(1).hotspotY, 42);
+  const playerPic = pc95.openImage(fs.readFileSync(path.join(retail, 'PLAYER.QPP')));
+  assert.strictEqual(playerPic.renderFrame(1).xOffset, -134);
+  assert.strictEqual(playerPic.renderFrame(1).xPos, 216);
   const cflag = pc95.openBytes(fs.readFileSync(path.join(retail, 'CFLAG.QPP')));
   assert.ok(cflag && cflag.shapes.length >= 1, 'CFLAG.QPP (46 FB) unpacks');
   const listed = pc95.catalogDirectory(retail);

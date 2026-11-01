@@ -821,6 +821,7 @@ const rleSpit = Buffer.concat([
 ]);
 const rle = pc95.decodeSpit(rleSpit);
 assert.deepStrictEqual(Array.from(rle.pixels), [9, 9, 9, 8]);
+assert.strictEqual(rle.type, 0);
 assert.strictEqual(rle.xPos, 5);
 assert.strictEqual(rle.yPos, 6);
 
@@ -830,8 +831,20 @@ const rawSpit = Buffer.concat([
 ]);
 const raw = pc95.decodeSpit(rawSpit);
 assert.deepStrictEqual(Array.from(raw.pixels), [1, 2, 3, 4]);
+assert.strictEqual(raw.type, 123);
 assert.strictEqual(raw.xOffset, -1);
 assert.strictEqual(raw.yOffset, 16);
+const spitPic = pc95.openImage(rawSpit);
+const spitFrame = spitPic.renderFrame(1);
+assert.strictEqual(spitFrame.xOffset, -1);
+assert.strictEqual(spitFrame.yOffset, 16);
+assert.strictEqual(spitFrame.xPos, 0);
+assert.strictEqual(spitFrame.type, 123);
+assert.strictEqual(spitFrame.hotspotX, -1);
+assert.strictEqual(spitFrame.hotspotY, 16);
+const viewerJs = fs.readFileSync(path.join(__dirname, '../public/viewer.js'), 'utf8');
+assert.ok(viewerJs.includes("['Offset'") && viewerJs.includes("['Position'") && viewerJs.includes("['Type'"),
+  'Images inspector lists SPIT/QPP offset, position, and type');
 
 const shortPack = Buffer.from([
   0x10, 0xFB, 0x00, 0x00, 0x06,

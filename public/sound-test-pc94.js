@@ -39,6 +39,8 @@
   let analyser = null;
   let panel = null;
   let vizRaf = 0;
+  const chMuted = [false, false, false, false, false, false, false, false, false];
+  let songCache = null;
   const OPL_COLORS = ['#f0b429', '#4cc9f0', '#8fd0a8', '#ff7a90', '#b69cff', '#ff9f5a', '#7ad0ff', '#e0c36e', '#c9a0dc'];
 
   function make(tag, cls, text) {
@@ -165,7 +167,9 @@
           const clip = root.NhlViv.decodeIff(buf);
           if (!clip || !clip.pcm.length) continue;
           const packName = String(rel).split(/[\\/]/).pop();
-          const kind = clip.kind === 'riff' ? 'IFF RIFF (XOR 80h, 16-bit)' : 'IFF FORM 8SVX';
+          const kind = clip.kind === 'riff'
+            ? 'IFF RIFF (XOR 80h, ' + (clip.depth || 8) + '-bit)'
+            : 'IFF FORM 8SVX';
           digital.push({
             id: 'iff-' + packName,
             group: 'Desk music',
@@ -206,6 +210,7 @@
     files = new Map();
     loading = null;
     error = '';
+    songCache = null;
   }
 
   function stop() {
@@ -234,21 +239,23 @@
 
   function playBuffer(id, float32, rate, viz) {
     const ac = audioCtx();
+    const offset = Math.max(0, (viz && viz.offset) || 0);
     const buf = ac.createBuffer(1, float32.length, rate);
     buf.getChannelData(0).set(float32);
     const src = ac.createBufferSource();
     src.buffer = buf;
     src.connect(analyser);
-    src.onended = () => { if (live && live.id === id) { live = null; if (onChange) onChange(); } };
-    src.start();
+    src.onended = () => { if (live && live.id === id && live.source === src) { live = null; if (onChange) onChange(); } };
+    src.start(0, offset);
     live = {
       id: id,
       source: src,
-      started: ac.currentTime,
+      started: ac.currentTime - offset,
       duration: float32.length / rate,
       events: (viz && viz.events) || [],
       ticks: (viz && viz.ticks) || 0,
-      tickHz: 100
+      tickHz: 100,
+      names: (viz && viz.names) || []
     };
     if (onChange) onChange();
     drawViz();
@@ -257,6 +264,30 @@
   function voiceOf(midiCh) {
     if (midiCh === 9) return 8;
     return midiCh % 9;
+  }
+
+  function laneNamesOf(parsed) {
+    const names = ['', '', '', '', '', '', '', '', ''];
+    (parsed.tracks || []).forEach((t) => {
+      if (!t.name) return;
+      const v = voiceOf(t.chan);
+      names[v] = names[v] ? names[v] + ' · ' + t.name : t.name;
+    });
+    return names;
+  }
+
+  function fitName(s, small) {
+    const max = small ? 8 : 12;
+    if (!s) return '';
+    return s.length <= max ? s : s.slice(0, max - 1) + '…';
+  }
+
+  function rollGeom(canvas) {
+    const cssW = Math.max(240, Math.floor(canvas.clientWidth || 520));
+    const laneH = cssW < 460 ? 26 : 30;
+    const axis = 16;
+    const lanes = 9;
+    return { cssW, laneH, axis, lanes, gutter: cssW < 460 ? 56 : 78 };
   }
 
   function theme() {
@@ -335,14 +366,12 @@
   }
 
   function drawRoll(canvas, C) {
-    const lanes = 9;
-    const cssWGuess = canvas.clientWidth || 520;
-    const laneH = cssWGuess < 460 ? 26 : 30;
-    const axis = 16;
+    const { cssW: cssWGuess, laneH, axis, lanes, gutter } = rollGeom(canvas);
     const { g, cssW, cssH } = sizeCanvas(canvas, axis + lanes * (laneH + 2) + 2);
-    const gutter = cssW < 460 ? 48 : 62;
     const x0 = gutter;
     const x1 = cssW - 4;
+    const names = (live && live.names) || (songCache && songCache.names) || [];
+    const small = cssW < 460;
     g.fillStyle = C.bg;
     g.fillRect(0, 0, cssW, cssH);
     g.fillStyle = C.muted;
@@ -350,6 +379,7 @@
     g.fillText('now →', x1 - 36, 11);
     for (let i = 0; i < lanes; i++) {
       const top = axis + i * (laneH + 2);
+      g.globalAlpha = chMuted[i] ? 0.38 : 1;
       g.fillStyle = C.panel;
       g.fillRect(x0, top, x1 - x0, laneH);
       g.strokeStyle = C.line;
@@ -357,14 +387,15 @@
       g.strokeRect(x0 + 0.5, top + 0.5, x1 - x0 - 1, laneH - 1);
       g.font = '600 11px ' + C.mono;
       g.fillStyle = OPL_COLORS[i];
-      g.fillText('OPL' + (i + 1), 6, top + 13);
+      g.fillText(fitName(names[i] || ('OPL' + (i + 1)), small), 6, top + 13);
       g.beginPath();
       g.arc(gutter - 9, top + 9, 3, 0, Math.PI * 2);
       g.strokeStyle = C.line;
       g.stroke();
       g.font = '11px ' + C.mono;
       g.fillStyle = C.muted;
-      g.fillText('—', 6, top + laneH - 5);
+      g.fillText(chMuted[i] ? 'muted' : '—', 6, top + laneH - 5);
+      g.globalAlpha = 1;
     }
     const playing = !!(live && live.events && live.events.length && live.id === panel.dataset.item);
     if (!playing) {
@@ -389,12 +420,14 @@
       const nn = Math.max(24, Math.min(96, n.note));
       const top = axis + n.ch * (laneH + 2);
       const ny = top + 4 + (1 - (nn - 24) / 72) * (laneH - 10);
+      g.globalAlpha = chMuted[n.ch] ? 0.28 : 1;
       g.fillStyle = OPL_COLORS[n.ch];
       g.fillRect(Math.max(x0, xA), ny, Math.max(2, xB - xA), 4);
+      g.globalAlpha = 1;
       if (n.start <= atTick && n.end > atTick) sounding[n.ch] = n.note;
     }
     for (let i = 0; i < lanes; i++) {
-      if (sounding[i] == null) continue;
+      if (sounding[i] == null || chMuted[i]) continue;
       const top = axis + i * (laneH + 2);
       g.fillStyle = C.text;
       g.font = '11px ' + C.mono;
@@ -482,15 +515,50 @@
       timMap[bank] = loaded.timbres;
     }
     const pat = patRel ? await readRel(patRel) : null;
+    const names = laneNamesOf(parsed);
+    songCache = { id: id, parsed: parsed, pat: pat, timMap: timMap, names: names };
+    const seconds = Math.min(180, Math.max(0.5, root.NhlPc94Player.songSeconds(parsed, { loops: 1 })));
     const pcm = root.NhlPc94Player.renderSong(parsed, {
-      seconds: 12,
+      seconds: seconds,
       loops: 1,
       pat: pat,
-      timbres: timMap
+      timbres: timMap,
+      muted: chMuted.slice()
     });
     const f32 = new Float32Array(pcm.length / 2);
     for (let i = 0; i < f32.length; i++) f32[i] = pcm[i * 2] / 32768;
-    playBuffer(id, f32, root.NhlPc94Player.RATE, { events: pcm.events || [], ticks: pcm.ticks || 0 });
+    playBuffer(id, f32, root.NhlPc94Player.RATE, { events: pcm.events || [], ticks: pcm.ticks || 0, names: names });
+  }
+
+  function pcmToFloat(pcm) {
+    const f32 = new Float32Array(pcm.length / 2);
+    for (let i = 0; i < f32.length; i++) f32[i] = pcm[i * 2] / 32768;
+    return f32;
+  }
+
+  function toggleMute(i) {
+    if (i < 0 || i > 8) return;
+    chMuted[i] = !chMuted[i];
+    if (live && live.id && live.id.indexOf('song-') === 0 && songCache && songCache.id === live.id && ctx) {
+      const elapsed = Math.max(0, ctx.currentTime - live.started);
+      const offset = Math.min(elapsed, live.duration || elapsed);
+      try { live.source.onended = null; live.source.stop(); } catch (err) { /* already stopped */ }
+      const pcm = root.NhlPc94Player.renderSong(songCache.parsed, {
+        seconds: Math.min(180, Math.max(0.5, root.NhlPc94Player.songSeconds(songCache.parsed, { loops: 1 }))),
+        loops: 1,
+        pat: songCache.pat,
+        timbres: songCache.timMap,
+        muted: chMuted.slice()
+      });
+      playBuffer(live.id, pcmToFloat(pcm), root.NhlPc94Player.RATE, {
+        events: pcm.events || [],
+        ticks: pcm.ticks || 0,
+        names: songCache.names,
+        offset: offset
+      });
+      return;
+    }
+    drawViz();
   }
 
   async function toggle(id) {
@@ -521,11 +589,11 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', id.startsWith('iff-')
-      ? 'NHL95PC sub_8F98F load + sub_8FB8E 16-bit play. FORM 8SVX (VHDR rate, BODY, no XOR; Fibonacci-delta when sCompression is 1) or RIFF WAVE (rate at +0x18, XOR 80h, then 16-bit). 94 PC has no IFF. Desk music, not announcer speech.'
+      ? 'NHL95PC sub_8F98F load. FORM 8SVX is signed 8-bit at the VHDR rate (Fibonacci-delta when sCompression is 1). RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
           ? 'OpenSpeechBank directory (count then offset/size/name). Packed clips start with G (47 FB); ReadSpeechSample unpacks then delta-decodes, dropping a 5-byte header. Played at 11025 Hz. XBRUCE2.VIV is Bruce.'
-          : 'C0 FB directory, each clip BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
+          : 'C0 FB directory (count at +4, then offset/size/name from byte 6). Each clip is BTree 47 FB then a 72 FB signed 8-bit PCM body. Names keep their suffixes (.BRU Bruce, .BAR Barr, .CTY city, .RNK rank). Played at 11025 Hz.')
         : id.startsWith('sfx-')
           ? 'Signed 8-bit PCM from PCFF001.DIG. Index FF is not used; the driver XOR-flips for the Sound Blaster DAC.'
           : 'EACSNDF sequencer from NHL95PC sub_990CB / sub_99925 (same library as NHL 94 PC). MIDI send adds 24 (HOCKEY.EXE 1844:022E). YM30 fnum table (block = note/12); PAT rec[7] transposes at note-on. FM patches from PCFF004.PAT + PCFF000/002.TIM through the MIT OPL3 core. Not a YM30.BGP unicorn capture — ear match is still open.'));
@@ -568,9 +636,19 @@
       ? 'Piano roll of the nine YM3812 AdLib voices, newest at the right edge'
       : 'Waveform of the playing sample');
     wrap.appendChild(canvas);
+    if (id.startsWith('song-')) {
+      canvas.style.cursor = 'pointer';
+      canvas.addEventListener('click', (ev) => {
+        const r = canvas.getBoundingClientRect();
+        const y = ev.clientY - r.top;
+        const G = rollGeom(canvas);
+        const i = Math.floor((y - G.axis) / (G.laneH + 2));
+        if (i >= 0 && i < G.lanes) toggleMute(i);
+      });
+    }
     seq.appendChild(wrap);
     seq.appendChild(make('p', 'st-seq-note', id.startsWith('song-')
-      ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). PCM clips show the waveform only.'
+      ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). Lane labels are the $E7 track names. Click a lane to mute or unmute that voice.'
       : 'Live waveform from the playing PCM (speech, IFF, or digital SFX).'));
     box.appendChild(seq);
     box.appendChild(make('p', 'st-status', catalog.note || ''));
@@ -585,7 +663,7 @@
       rows.push(['Rate', rec.clip.rate + ' Hz']);
       rows.push(['Length', rec.clip.length + ' bytes']);
       rows.push(['Path', id.startsWith('iff-') || /\.iff$/i.test(rec.clip.name)
-        ? 'sub_8F98F FORM 8SVX / RIFF XOR 80h'
+        ? 'sub_8F98F FORM 8SVX 8-bit / RIFF XOR 80h'
         : (is95()
           ? '.VIV OpenSpeechBank → 47/10 FB → ReadSpeechSample DPCM'
           : '.VIV C0 FB → BTree 47 FB → 72 FB signed PCM')]);

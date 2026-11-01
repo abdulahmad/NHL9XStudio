@@ -100,11 +100,10 @@ const riffClip = Viv.decodeIff(riff);
 assert.ok(riffClip);
 assert.strictEqual(riffClip.kind, 'riff');
 assert.strictEqual(riffClip.rate, 11025);
-assert.strictEqual(riffClip.depth, 16, 'sub_8FB8E plays RIFF as 16-bit after XOR 80h');
-assert.strictEqual(riffClip.pcm.length, riffPcm.length >> 1);
-const x0 = riffPcm[0] ^ 0x80, x1 = riffPcm[1] ^ 0x80;
-const word0 = (x0 | (x1 << 8));
-assert.strictEqual(riffClip.pcm[0], word0 > 32767 ? word0 - 65536 : word0);
+assert.strictEqual(riffClip.depth, 8, '8-bit WAVE stays 8-bit after XOR 80h');
+assert.strictEqual(riffClip.pcm.length, riffPcm.length);
+assert.strictEqual(riffClip.pcm[0], riffPcm[0] ^ 0x80);
+assert.strictEqual(iffClip.depth, 8, 'FORM 8SVX is signed 8-bit');
 
 const tone = new Int16Array(8);
 for (let i = 0; i < 8; i++) tone[i] = (i - 4) * 4000;
