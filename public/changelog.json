@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.17.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94 PC MAP 0x800 is a true 8-pixel reverse (VgaStamp8 reads plane p, writes plane 3-p, and swaps the two bytes — 7-px, not a 4-pixel group swap). BUF / HFD / CHI 0x1800 logo halves face the right way",
+        "NHL 94 PC jersey and centre ice use RINKPAL.QPP (LoadTeamPalette !pal), not the bundled NHL 95 PC rinkpal.act",
+        "NHL 95 PC Audio: Play intro + loop sits next to Play intro / Play loop / Play once for FORM 8SVX songs (desk mixer: one-shot head, then the repeating tail)"
+      ]
+    },
+    {
       "version": "1.16.0",
       "date": "2026-11-01",
       "changes": [

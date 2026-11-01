@@ -12,7 +12,9 @@
   const code = () => R.ARENAS[I.team];
 
   function palette() {
-    const S = st(); const rink = S.base && S.base.rinkPlain;
+    const S = st();
+    // NHL 94 PC LoadTeamPalette uses RINKPAL.QPP !pal (S.rink), not the bundled 95 PC rinkpal.act.
+    const rink = (S.game === '94' && S.rink && Nhl95Pc.colorsToAct(S.rink)) || (S.base && S.base.rinkPlain);
     if (!rink) return null;
     return R.gamePalette(rink, I.float ? I.float.colors : X.homeColors(I.team), X.awayColors(I.away));
   }

@@ -773,9 +773,10 @@
     vol.appendChild(range);
     controls.append(btn, vol);
     if (id.startsWith('iff-') && rec && rec.clip && rec.clip.repeat) {
-      [['intro', 'Play intro'], ['loop', 'Play loop'], ['once', 'Play once']].forEach(([part, label]) => {
+      [['song', 'Play intro + loop'], ['intro', 'Play intro'], ['loop', 'Play loop'], ['once', 'Play once']].forEach(([part, label]) => {
         const b = make('button', 'ghost-btn', label);
         b.type = 'button';
+        b.title = part === 'song' ? 'One-shot head, then the repeating tail (the desk mixer path)' : '';
         b.addEventListener('click', () => toggle(id, { part: part }).catch(fail('Playback failed')));
         controls.appendChild(b);
       });

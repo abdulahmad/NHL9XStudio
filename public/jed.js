@@ -112,6 +112,7 @@
   function gameId() { return S.game === '94' ? 'nhl94pc' : 'nhl95pc'; }
 
   function afterLoad() {
+    applyGameRink();
     if (!S.files[S.side]) S.side = S.files.home ? 'home' : 'away';
     S.team = Math.min(S.team, J.teamCount(cur().file) - 1);
     S.frames = [];
@@ -451,11 +452,29 @@
     if (S.base) return J.spritePalette(cur().file, S.team, S.base, S.side);
     return Nhl95Pc.buildTeamPalette(J.getRecord(cur().file, S.team), S.rink);
   }
+  let bundledBase = null;
+  function applyGameRink() {
+    if (!S.base || !bundledBase) return;
+    if (S.game === '94' && S.rink) {
+      const act = Nhl95Pc.colorsToAct(S.rink);
+      S.base.rinkPlain = act;
+      S.base.rink = J.overlayRink(bundledBase.rink, act);
+    } else {
+      S.base.rink = Uint8Array.from(bundledBase.rink);
+      S.base.rinkPlain = bundledBase.rinkPlain ? Uint8Array.from(bundledBase.rinkPlain) : bundledBase.rinkPlain;
+    }
+  }
   async function loadBase() {
     const get = async (n) => { try { return await fetchBytes('jed-pals/' + n); } catch (err) { return null; } };
     const [rink, jersey, rinkPlain] = await Promise.all(['rinkpalShadowfixed.act', 'createjerseyShadowfixed.act', 'rinkpal.act'].map(get));
     S.base = rink && jersey ? { rink, jersey, rinkPlain } : null;
+    bundledBase = S.base ? {
+      rink: Uint8Array.from(S.base.rink),
+      jersey: S.base.jersey,
+      rinkPlain: S.base.rinkPlain ? Uint8Array.from(S.base.rinkPlain) : S.base.rinkPlain
+    } : null;
     if (!S.base) status('Could not load jed-pals/*.act; the preview falls back to the Studio palette and .ACT export is off', true);
+    applyGameRink();
     if (cur()) renderAll();
   }
   function hasPixels(n) { const f = S.sprites && S.sprites.renderFrame(n); return Boolean(f && f.width && f.height); }
