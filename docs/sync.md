@@ -17,6 +17,7 @@ Clone or update these on your machine (paths below are **conventions** — set e
 | **NHLPA93Genesis** | `/tmp/disasm/NHLPA93Genesis` | `src/frames93.asm` → `data/frames93.asm`; `src/sound93.asm` + `tools/extractAssets93.js` → `lib/audio/data/nhlpa93-streams.json`; built `output/retail/nhl93.bin` (`node tools/build.js retail`) for optional ROM tests |
 | **NHL94Genesis** | `/tmp/disasm/NHL94Genesis` | `src/frames94.asm` → `data/frames94.asm`; `src/sound94.asm`, `title94.asm`, `docs/HANDOFF.md` for audio/naming; the retail ROM in the repo folder |
 | **NHL95Genesis** | `/tmp/disasm/NHL95Genesis` | `src/frames95.asm` → `data/frames95.asm`; the retail ROM in the repo folder |
+| **NHL96Genesis** | `/tmp/disasm/NHL96Genesis` or sibling `../nhl96genesis` | `src/frames96.asm` → `data/frames96.asm`; `tools/extractAssets96.js` → `lib/genesis-images.js` (`nhl96`); the retail ROM in the repo folder |
 | **NHLPA93SNES** | `$SNES93` or `/tmp/snes/93` | `src/data/frames93s.asm` (SPA/SPF equates), `src/ram93s.asm` → `tools/build-snes-frames.js`; team palettes `Extracted/Graphics/Pals/*.pal` (run `npm run assets` in NHLPA93SNES first; the ROM is `nhlpa93retail.sfc` in that folder) → `data/pals/snes/*.snespal` (same bytes, renamed) |
 | **NHL94 SNES disasm** | `/tmp/snes/94` | The retail ROM in the repo folder → `tools/build-snes-frames.js` (94 SPA names); `src/data/name_map`-style docs → `tools/extract-nhl94s-sound.js` |
 | **NHL95PC** (optional) | install folder or `pc95/` locally | Not in git; used for manual QA and `test.js` live paths under `/tmp/nhl95all` |
@@ -43,10 +44,11 @@ Retail ROMs and PC installs **must not** be committed. Use `roms/`, `pc95/`, `pc
 | `data/frames93.asm` | NHLPA93Genesis | Same |
 | `data/frames94.asm` | NHL94Genesis | Same |
 | `data/frames95.asm` | NHL95Genesis | Same |
+| `data/frames96.asm` | NHL96Genesis | Same |
 | `data/frames95pc.asm` | EA-NHL-Tools `Docs/Sprites/Readme.md` | Manual edit when DOS index changes |
 | `data/frames94pc.asm` | 94 PC `HOCKEY.EXE` @ `0x358A4` + Readme SPF | `node tools/extract-pc94-spa.js --write path/to/HOCKEY.EXE`. `build-pc94-spa.js` is superseded. |
 | `data/frames93snes.asm`, `data/frames94snes.asm` | SNES disasm + ROM | `node tools/build-snes-frames.js` |
-| `lib/genesis-images.js` | Retail ROM offsets from **Asset-Extractor** + disasm names | **Manual** sync: compare `extractAssets93.js` / `94` / `95.js` asset lists with `module.exports` slices; prefer **retail** offsets (see `test.js` `EXTRACT93_SLICES`, `EXTRACT95_RETAIL`) |
+| `lib/genesis-images.js` | Retail ROM offsets from **Asset-Extractor** + disasm names | **Manual** sync: compare `extractAssets93.js` / `94` / `95.js` / `96.js` asset lists with `module.exports` slices; prefer **retail** offsets (see `test.js` `EXTRACT93_SLICES`, `EXTRACT95_RETAIL`, `EXTRACT96_RETAIL`) |
 | `data/audio/*.json` | `lib/audio/genesis-constants.js` + optional ROM scan | `node tools/build-audio-catalog.js` and/or `--rom path --game id` |
 | `data/pals/snes/*.snespal` | NHLPA93SNES (and 94 SNES where shared) | Copy palette files when disasm updates |
 | `test/fixtures/ANIM-To-BMP/*` | EA-NHL-Tools | Copy small golden `.anim` + regenerate BMPs (CI does this in Pages workflow) |

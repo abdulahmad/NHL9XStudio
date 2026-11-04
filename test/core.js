@@ -189,6 +189,17 @@ assert.strictEqual(holdVblanks(4, true), 5);
 assert.strictEqual(holdVblanks(0x1000, true), null);
 assert.strictEqual(holdVblanks(10, false), 11);
 
+{
+  const frames96 = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames96.asm'), 'utf8'));
+  assert.ok(frames96.anims.length > 50, 'frames96 spa');
+  assert.strictEqual(frames96.spfs.length, 0, 'frames96 has SPA only');
+  for (const name of ['SPAgglover', 'SPAhook', 'SPAfight']) {
+    assert.ok(frames96.anims.find((anim) => anim.name === name), 'frames96 ' + name);
+  }
+  const names96 = frames96.anims.map((anim) => anim.name);
+  assert.deepStrictEqual(names96.slice().sort(), [...new Set(names96)].sort(), 'frames96 unique spa names');
+}
+
 for (const file of ['frames93.asm', 'frames94.asm', 'frames95.asm']) {
   const later = parseFrames(fs.readFileSync(path.join(root, 'data', file), 'utf8'));
   assert.ok(later.spfs.length > 29, file + ' spf');
@@ -394,13 +405,13 @@ assert.strictEqual(snes94frame.pixels[0], 1);
 
 assert.strictEqual(APP_NAME, 'NHL9X Studio');
 
-assert.strictEqual(GAMES.length, 8);
+assert.strictEqual(GAMES.length, 9);
 const staticManifest = buildManifest();
-assert.strictEqual(staticManifest.length, 8);
+assert.strictEqual(staticManifest.length, 9);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
 // The static site has no sibling ANIM-To-BMP checkouts: every Genesis game lists its team palettes from data/pals, each a 32-byte CRAM line.
-for (const id of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95']) {
+for (const id of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95', 'nhl96']) {
   const game = staticManifest.find((item) => item.id === id);
   assert.ok(game.paletteFiles && game.paletteFiles.length >= 8, id + ' lists bundled team palettes');
   for (const file of game.paletteFiles) assert.strictEqual(fs.statSync(path.join(root, 'data', 'pals', game.paletteDir, file)).size, 32, id + ' ' + file);
@@ -435,9 +446,14 @@ assert.strictEqual(snes94game.images.find((image) => image.id === 'title').palet
 const pa93 = GAMES.find((game) => game.id === 'nhlpa93');
 const g94 = GAMES.find((game) => game.id === 'nhl94');
 const g95 = GAMES.find((game) => game.id === 'nhl95');
+const g96 = GAMES.find((game) => game.id === 'nhl96');
 assert.strictEqual(pa93.images.length, 25);
 assert.strictEqual(g94.images.length, 215);
 assert.strictEqual(g95.images.length, 302);
+assert.ok(g96 && g96.kind === 'sheet' && g96.sheet.record === '95');
+assert.strictEqual(g96.images.length, 207);
+assert.ok(GAMES.findIndex((game) => game.id === 'nhl95') < GAMES.findIndex((game) => game.id === 'nhl96'));
+assert.ok(GAMES.findIndex((game) => game.id === 'nhl96') < GAMES.findIndex((game) => game.id === 'nhlpa93snes'));
 assert.ok(pa93.images.some((image) => image.id === 'IceRink.map.jim' && image.kind === 'jim'));
 assert.ok(pa93.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
 assert.strictEqual(pa93.banks.length, sheetGameBanks(pa93.images).length);
@@ -468,6 +484,22 @@ for (const slice of EXTRACT95_RETAIL) {
   assert.strictEqual(img.start, slice.start, slice.id + ' start');
   assert.strictEqual(img.end, slice.end, slice.id + ' end');
 }
+const EXTRACT96_RETAIL = [
+  { id: 'Crowd.anim', start: 1288854, end: 1293488 },
+  { id: 'FaceOff.anim', start: 1293488, end: 1299088 },
+  { id: 'TitleScreenImg.map.jim', start: 559640, end: 586438 },
+  { id: 'TeamLogoANH.map.jim', start: 1374624, end: 1378958 }
+];
+for (const slice of EXTRACT96_RETAIL) {
+  const img = g96.images.find((image) => image.id === slice.id);
+  assert.ok(img, slice.id);
+  assert.strictEqual(img.start, slice.start, slice.id + ' start');
+  assert.strictEqual(img.end, slice.end, slice.id + ' end');
+}
+assert.ok(g96.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
+assert.ok(g96.banks.some((bank) => bank.id === 'Crowd.anim' && bank.kind === 'frames'));
+assert.strictEqual(g96.sheet.sprites, 0x9aa9e);
+assert.strictEqual(g96.palettes, '95');
 assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
 assert.ok(g94.banks.some((bank) => bank.id === 'StanleyCup.anim'));
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
@@ -625,6 +657,31 @@ if (genesis95) {
     assert.ok(frame.width >= 32 && frame.height >= 16, spec.id + ' decodes to a frame');
     assert.ok(inkCount(frame) > 80, spec.id + ' has rink art pixels');
   });
+}
+const genesis96 = upstreamRom('/tmp/disasm/NHL96Genesis', 'nhl96', '/tmp/disasm/NHL96Genesis/lst/nhl96.bin')
+  || upstreamRom(path.join(root, '..', 'nhl96genesis'), 'nhl96');
+if (genesis96) {
+  const logo = g96.images.find((image) => image.id === 'TeamLogoANH.map.jim');
+  const drawn = decodeJim(genesis96.subarray(logo.start, logo.end));
+  assert.ok(inkCount(drawn.renderFrame(1)) > 20);
+  const crowdSpec = g96.images.find((image) => image.id === 'Crowd.anim');
+  const crowd = openFrames(
+    genesis96.subarray(crowdSpec.start, crowdSpec.end),
+    { decompressBytecode },
+    null,
+    { record: '95' }
+  );
+  assert.ok(crowd.numFrames >= 2);
+  assert.ok(inkCount(crowd.renderFrame(1)) > 50);
+  const faceSpec = g96.images.find((image) => image.id === 'FaceOff.anim');
+  const face = openFrames(
+    genesis96.subarray(faceSpec.start, faceSpec.end),
+    { decompressBytecode },
+    null,
+    { record: '95' }
+  );
+  assert.ok(face.numFrames >= 2);
+  assert.ok(inkCount(face.renderFrame(1)) > 20);
 }
 const revA93 = romIf(path.join(toolsRoot, 'JIM-Tools', 'nhlpa93retailRevA.bin'));
 if (revA93) {
@@ -880,6 +937,16 @@ const romDetectBuf93 = Buffer.alloc(0x80000, 0);
 romDetectBuf93.write('SEGA', 0x100);
 assert.strictEqual(romDetect.detect('NHLPA93.bin', romDetectBuf93).id, 'nhlpa93');
 assert.strictEqual(romDetect.detect('NHL94.sfc', Buffer.alloc(0x100000, 0)).id, 'nhl94snes');
+const romDetectBuf95 = Buffer.alloc(0x200000, 0);
+romDetectBuf95.write('SEGA', 0x100);
+romDetectBuf95.write('1994.JUL', 0x118);
+assert.strictEqual(romDetect.detect('nhl95.bin', romDetectBuf95).id, 'nhl95');
+assert.strictEqual(romDetect.detect('game.bin', romDetectBuf95).id, 'nhl95');
+const romDetectBuf96 = Buffer.alloc(0x200000, 0);
+romDetectBuf96.write('SEGA', 0x100);
+romDetectBuf96.write('1995.JUL', 0x118);
+assert.strictEqual(romDetect.detect('nhl96.bin', romDetectBuf96).id, 'nhl96');
+assert.strictEqual(romDetect.detect('game.bin', romDetectBuf96).id, 'nhl96');
 
 const sizedPack = Buffer.from([
   0x11, 0xFB, 0x00, 0x00, 0x00,
@@ -1230,6 +1297,16 @@ assert.strictEqual(nhl94Audio.streamDriver, 'event-94');
 assert.strictEqual(nhl94Audio.entries.filter((e) => e.type === 'fm-stream').length, 123);
 assert.ok(nhl94Audio.entries.some((e) => e.group === 'Music — Team'));
 assert.ok(nhl94Audio.entries.some((e) => e.group === 'Music — Shared'));
+const nhl96Audio = audio.loadCatalog('nhl96');
+assert.strictEqual(nhl96Audio.gameId, 'nhl96');
+assert.strictEqual(nhl96Audio.playback, false);
+assert.ok(nhl96Audio.entries.some((e) => e.id === 'hockey-snd' && e.start === 0x25500 && e.end === 0x88a18));
+assert.ok(nhl96Audio.entries.filter((e) => e.type === 'sfx').length >= 40);
+const harness95 = require('../lib/audio/nhl95-68k-harness');
+assert.strictEqual(harness95.ADDR.SoundCmd, 0x676d8);
+assert.strictEqual(harness95.nhl96.ADDR.SoundCmd, 0x8839e);
+assert.strictEqual(harness95.nhl96.SEGMENT[0], 0x25500);
+assert.strictEqual(harness95.nhl96.ADDR.SoundBanks, 0x27026);
 const catalogPath = audio.catalogPath('nhl92');
 assert.ok(fs.existsSync(catalogPath));
 const onDisk = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));

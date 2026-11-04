@@ -28,10 +28,11 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | 2 | **93G** | `nhlpa93` | Genesis sheet + image catalog hardening |
 | 3 | **94G** | `nhl94` | Genesis sheet + auxiliary banks / celebrate discoverability (§1.8) |
 | 4 | **95G** | `nhl95` | Genesis sheet + image catalog (e.g. arena gfx) |
-| 5 | **93S** | `nhlpa93snes` | SNES sprites + pictures |
-| 6 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
-| 7 | **95PC** | `nhl95pc` | DOS graphics + AdLib/SFX/VIV audio; remaining catalog/palette edge cases |
-| 8 | **94PC** | `nhl94pc` | Planar PPV/QPP + AdLib/SFX + VIV speech; SPA from retail `HOCKEY.EXE` |
+| 5 | **96G** | `nhl96` | Genesis sheet + image catalog (extractAssets96.js pictures; SPA-only frames96.asm) |
+| 6 | **93S** | `nhlpa93snes` | SNES sprites + pictures |
+| 7 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
+| 8 | **95PC** | `nhl95pc` | DOS graphics + AdLib/SFX/VIV audio; remaining catalog/palette edge cases |
+| 9 | **94PC** | `nhl94pc` | Planar PPV/QPP + AdLib/SFX + VIV speech; SPA from retail `HOCKEY.EXE` |
 
 ---
 
@@ -45,7 +46,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | `public/viewer.js` | Single-page UI: catalog, stage, transport, filmstrip, compass, jersey palette, URL hash state. |
 | `lib/games.js` | **Game profiles**: frames file, platform, banks, image catalog, ROM hints, sheet/SNES/PC options. |
 | `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). `indexed-image.js` writes 8-bit PNG (PLTE + tRNS) and BMP for frame / ice / crest export. |
-| `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames95pc.asm` / `frames94pc.asm` for DOS. |
+| `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames96.asm` (SPA only) and `frames95pc.asm` / `frames94pc.asm` for DOS. |
 | `test.js` | Parser tests, PC95 tests, NHL 92 frame BMP cross-check when ROM present. |
 
 There is **no database** and **no audio pipeline** in the viewer yet. All state is in-memory plus `#hash` in the browser.
@@ -58,6 +59,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `nhlpa93` | **93G** | NHLPA 93 | Genesis | `sheet` | `roms/nhlpa93.bin`; Rev A date shifts offsets |
 | `nhl94` | **94G** | NHL 94 | Genesis | `sheet` | `roms/nhl94.bin` |
 | `nhl95` | **95G** | NHL 95 | Genesis | `sheet` | `roms/nhl95.bin` |
+| `nhl96` | **96G** | NHL 96 | Genesis | `sheet` | `roms/nhl96.bin` |
 | `nhlpa93snes` | **93S** | NHLPA 93 | SNES | `snes93` | `roms/nhlpa93snes.sfc` |
 | `nhl94snes` | **94S** | NHL 94 | SNES | `snes94` | `roms/nhl94snes.sfc` |
 | `nhl95pc` | **95PC** | NHL 95 | DOS | `pc95` | `Sprite-Viewer/pc95/` (PPV, QFS, palette BINs); not in git |
@@ -65,7 +67,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 
 *(Table follows **implementation priority** § above; not chronological release order.)*
 
-**Not in viewer:** NHL 96 Genesis (extract script only), Sega CD branches.
+**Not in viewer:** Sega CD branches. NHL 96 Genesis Sound test waits on `data/fixtures/nhl96-sound-slice.bin` (`node tools/extract-nhl9x-sound-fixture.js 96`).
 
 ### 1.3 UI modes (all games except PC use the same four tabs)
 

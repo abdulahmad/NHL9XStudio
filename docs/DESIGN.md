@@ -20,7 +20,7 @@ NHL9X Studio is a **modding studio for EA’s 16-bit and DOS NHL games**. One ap
 
 | Audience | What they need |
 |----------|----------------|
-| **Modders** of 92–95 Genesis, 93–94 SNES, and 94–95 PC | See retail frames, palettes, screens, and songs; export and re-import graphics they can drop into a disassembly or a PC folder |
+| **Modders** of 92–96 Genesis, 93–94 SNES, and 94–95 PC | See retail frames, palettes, screens, and songs; export and re-import graphics they can drop into a disassembly or a PC folder |
 | **Researchers / disassembly contributors** | The same pixels and names the game uses, labeled from `frames.asm` and image catalogs |
 | **Curious fans** | A browser they can open on GitHub Pages, drop a ROM, and look around without installing Node |
 
@@ -56,12 +56,13 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 2 | **93G** | NHLPA 93 | Genesis | Frames, images, Sound test |
 | 3 | **94G** | NHL 94 | Genesis | Frames, images, Sound test |
 | 4 | **95G** | NHL 95 | Genesis | Frames, images, Sound test |
-| 5 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
-| 6 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
-| 7 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
-| 8 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
+| 5 | **96G** | NHL 96 | Genesis | Frames, images; Sound test when the sound fixture is extracted |
+| 6 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
+| 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
+| 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
+| 9 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
 
-**Not in the game list:** NHL 96 Genesis, Sega CD, later EA NHL. Extract scripts or folders may exist; they are not a studio profile.
+**Not in the game list:** Sega CD, later EA NHL.
 
 Each profile must expose, as the data exists:
 
