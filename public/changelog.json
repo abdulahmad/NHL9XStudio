@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.22.0",
+      "date": "2026-11-04",
+      "changes": [
+        "NHL 96 PC is in the Game menu: copy the install into pc96/ or drop the folder. Pictures are SHPI .FSH (and .VIV BIGF art packs) named from NHL96PC HOCKEY.EXE, not 94/95 PPV sheets. Songs are EA 1SN .ASF. Frame / SPF / SPA stay empty — the EXE has no updateanim table"
+      ]
+    },
+    {
       "version": "1.21.0",
       "date": "2026-11-04",
       "changes": [

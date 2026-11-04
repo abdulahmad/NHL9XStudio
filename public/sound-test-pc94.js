@@ -1,6 +1,6 @@
 /**
- * NHL 94 / 95 PC Audio tab: AdLib .KMS/.CFG songs, PCFF digital samples,
- * VIV speech, and (95) IFF desk music (FORM 8SVX or RIFF XOR 0x80).
+ * NHL 94 / 95 / 96 PC Audio tab: AdLib .KMS/.CFG songs (94/95), PCFF digital
+ * samples, VIV speech, (95) IFF desk music, and (96) EA 1SN .ASF PCM.
  */
 (function (root) {
   const CAT = () => (root.NhlAudioCategories && root.NhlAudioCategories.CATEGORY) || {
@@ -24,7 +24,12 @@
     ROCKDITI: 'Rock ditty', SBROCKU: 'Sound Blaster rock', SLAPSHOT: 'Slapshot',
     CANADA: 'Canada', USA: 'USA', MTTITLE: 'Title (MT-32)', MTAWARDS: 'Awards (MT-32)',
     MTSUM: 'Summary (MT-32)', MTAFAN: 'Fanfare (MT-32)', MTROCKU: 'Rock (MT-32)',
-    MT32HOCK: 'MT-32 hockey sysex'
+    MT32HOCK: 'MT-32 hockey sysex',
+    MENU1: 'Menu 1', MENU2: 'Menu 2', INTRO: 'Intro', AIRRAID: 'Air raid',
+    ANTHCAN: 'Anthem (Canada)', ANTHUS: 'Anthem (US)', CREDITS: 'Credits',
+    FERRY: 'Ferry', FIREWORK: 'Firework', HIGHLITE: 'Highlight', INTER: 'Intermission',
+    INTRVIEW: 'Interview', LICENCE: 'Licence', PERIOD: 'Period', PIONEER: 'Pioneer',
+    SUMMARY: 'Summary', WIN: 'Win'
   };
 
   let gameId = 'nhl94pc';
@@ -53,6 +58,8 @@
 
   function labelOf(stem) {
     if (CUES[stem]) return CUES[stem];
+    const dit = /^DIT(\d+)$/.exec(stem);
+    if (dit) return 'Ditty ' + dit[1];
     const m = /^([A-Z]+)(\d+)$/.exec(stem);
     if (m && TEAM[m[1]]) return TEAM[m[1]] + ' ' + m[2];
     return stem;
@@ -77,6 +84,10 @@
 
   function is95() {
     return gameOf() === 'nhl95pc';
+  }
+
+  function is96() {
+    return gameOf() === 'nhl96pc';
   }
 
   async function readRel(rel) {
@@ -114,9 +125,11 @@
         }
       }
       if (!audio || !audio.songs) {
-        catalog = { songs: [], samples: [], speech: [], note: is95()
-          ? 'Open a 95 PC folder (pc95/) to load .KMS / PCFF / .VIV / .IFF files.'
-          : 'Open a 94 PC folder (pc94/) to load .KMS / PCFF / .VIV files.' };
+        catalog = { songs: [], samples: [], speech: [], note: is96()
+          ? 'Open a 96 PC folder (pc96/) to load .ASF / .BNK files.'
+          : (is95()
+            ? 'Open a 95 PC folder (pc95/) to load .KMS / PCFF / .VIV / .IFF files.'
+            : 'Open a 94 PC folder (pc94/) to load .KMS / PCFF / .VIV files.') };
         return true;
       }
       const songs = (Groups && Groups.sortSongs ? Groups.sortSongs : function (rows) { return rows; })(audio.songs.map((s) => ({
@@ -124,9 +137,12 @@
         stem: s.stem,
         kms: s.kms,
         cfg: s.cfg,
+        asf: s.asf,
         group: groupOf(s.stem),
         label: labelOf(s.stem),
-        sub: s.stem + '.KMS' + (/^MT/.test(s.stem) ? ' · MT-32' : ' · AdLib')
+        sub: s.asf
+          ? s.stem + '.ASF · 1SN PCM'
+          : s.stem + '.KMS' + (/^MT/.test(s.stem) ? ' · MT-32' : ' · AdLib')
       })), CAT().songs);
       let samples = [];
       if (audio.dig && audio.tim && audio.tim.length) {
@@ -549,7 +565,8 @@
     if (!canvas) return;
     const C = theme();
     const item = panel.dataset.item || '';
-    if (item.indexOf('song-') === 0) drawRoll(canvas, C);
+    const rec = catalog && catalog.songs ? catalog.songs.find((s) => s.id === item) : null;
+    if (item.indexOf('song-') === 0 && !(rec && rec.asf)) drawRoll(canvas, C);
     else drawWave(canvas, C);
     if (live) vizRaf = requestAnimationFrame(drawViz);
   }
@@ -583,6 +600,18 @@
     if (!id.startsWith('song-')) return;
     const rec = catalog.songs.find((s) => s.id === id);
     if (!rec) throw new Error('Unknown song');
+    if (rec.asf) {
+      const buf = await readRel(rec.asf);
+      if (!buf) throw new Error(rec.stem + '.ASF not found');
+      if (!root.NhlPc96Asf) throw new Error('ASF decoder missing');
+      const parsed = root.NhlPc96Asf.parse(buf);
+      if (!parsed || !parsed.playable) {
+        throw new Error(rec.stem + '.ASF codec ' + ((parsed && parsed.codec) != null ? parsed.codec : '?') + ' is listed, not playable yet');
+      }
+      const viz = parsed.loop ? { loop: true, loopStart: (parsed.loopStart || 0) / parsed.rate } : {};
+      playBuffer(id, root.NhlPc96Asf.toFloat32(parsed.pcm), parsed.rate, viz);
+      return;
+    }
     const kms = await readRel(rec.kms);
     const cfg = rec.cfg ? await readRel(rec.cfg) : null;
     if (!kms) throw new Error(rec.stem + '.KMS not found');
@@ -702,6 +731,20 @@
     await ensure();
     const rec = catalog.songs.find((s) => s.id === id);
     if (!rec) throw new Error('Unknown song');
+    if (rec.asf) {
+      const buf = await readRel(rec.asf);
+      if (!buf) throw new Error(rec.stem + '.ASF not found');
+      const parsed = root.NhlPc96Asf.parse(buf);
+      if (!parsed || !parsed.playable) throw new Error(rec.stem + '.ASF not playable');
+      const pcm = new Int16Array(parsed.pcm.length);
+      const f = root.NhlPc96Asf.toFloat32(parsed.pcm);
+      for (let i = 0; i < f.length; i++) {
+        const s = Math.max(-1, Math.min(1, f[i]));
+        pcm[i] = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+      }
+      downloadBytes(safeName(rec.stem) + '.wav', root.NhlWav.encode16(pcm, parsed.rate, 1), 'audio/wav');
+      return;
+    }
     const kms = await readRel(rec.kms);
     const cfg = rec.cfg ? await readRel(rec.cfg) : null;
     if (!kms) throw new Error(rec.stem + '.KMS not found');
@@ -739,19 +782,23 @@
       return;
     }
     const rec = entries().find((e) => e.id === id);
-    const title = is95() ? 'NHL 95 PC' : 'NHL 94 PC';
+    const title = is96() ? 'NHL 96 PC' : (is95() ? 'NHL 95 PC' : 'NHL 94 PC');
     const kind = id.startsWith('iff-')
       ? title + ' desk music (IFF)'
       : id.startsWith('speech-')
         ? title + ' announcer speech'
-        : id.startsWith('sfx-') ? title + ' digital SFX' : title + ' AdLib song';
+        : id.startsWith('sfx-')
+          ? title + ' digital SFX'
+          : (rec && rec.asf ? title + ' 1SN song' : title + ' AdLib song');
     box.appendChild(make('p', 'st-kind', kind));
     box.appendChild(make('h3', null, rec ? rec.label : id));
     if (rec && rec.sub) box.appendChild(make('p', 'st-note mono', rec.sub));
     if (id.startsWith('song-') && rec && /^MT/.test(rec.stem)) {
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
-    box.appendChild(make('p', 'st-note', id.startsWith('iff-')
+    box.appendChild(make('p', 'st-note', rec && rec.asf
+      ? 'NHL96PC locateshape music: EA 1SNh / 1SNd chunks (HOCKEY.EXE four-byte ids). Codec 0 is signed 8-bit PCM. Other codecs stay listed until a retail file names them. Not the 94/95 EACSNDF .KMS path. .BNK banks stay listed, not played.'
+      : id.startsWith('iff-')
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
         ? (is95()
@@ -827,6 +874,8 @@
         }
         return exportClip(rec, 'once', 'wav');
       });
+    } else if (id.startsWith('song-') && rec && rec.asf) {
+      addEx('Export WAV', '1SN signed 8-bit PCM as 16-bit WAV', () => exportSongWav(id).then(() => safeName(rec.stem) + '.wav'));
     } else if (id.startsWith('song-') && rec) {
       addEx('Export WAV', 'AdLib render as 16-bit stereo WAV at the OPL2 rate', () => exportSongWav(id).then(() => safeName(rec.stem) + '.wav'));
     }
@@ -837,16 +886,17 @@
     box.appendChild(make('p', 'st-time mono', '0:00.00 / 0:00.00'));
     const seq = make('div', 'st-seq');
     const head = make('div', 'st-seq-head');
-    head.appendChild(make('span', 'st-seq-title', id.startsWith('song-') ? 'Channels' : 'Waveform'));
+    const asfSong = !!(rec && rec.asf);
+    head.appendChild(make('span', 'st-seq-title', id.startsWith('song-') && !asfSong ? 'Channels' : 'Waveform'));
     seq.appendChild(head);
     const wrap = make('div', 'st-roll');
     const canvas = make('canvas', 'st-viz-canvas');
     canvas.setAttribute('role', 'img');
-    canvas.setAttribute('aria-label', id.startsWith('song-')
+    canvas.setAttribute('aria-label', id.startsWith('song-') && !asfSong
       ? 'Piano roll of the nine YM3812 AdLib voices, newest at the right edge'
       : 'Waveform of the playing sample');
     wrap.appendChild(canvas);
-    if (id.startsWith('song-')) {
+    if (id.startsWith('song-') && !asfSong) {
       canvas.style.cursor = 'pointer';
       canvas.addEventListener('click', (ev) => {
         const r = canvas.getBoundingClientRect();
@@ -857,9 +907,9 @@
       });
     }
     seq.appendChild(wrap);
-    seq.appendChild(make('p', 'st-seq-note', id.startsWith('song-')
+    seq.appendChild(make('p', 'st-seq-note', id.startsWith('song-') && !(rec && rec.asf)
       ? 'Nine YM3812 (AdLib) voices from the EACSNDF sequencer, same piano roll as the Genesis Audio tab (right edge is now). OPL1–OPL9 sit in the gutter; $E7 track names are tags at the left of each lane. Click a lane to mute or unmute that voice.'
-      : 'Live waveform from the playing PCM (speech, IFF, or digital SFX).'));
+      : 'Live waveform from the playing PCM (speech, IFF, digital SFX, or 96 PC ASF).'));
     box.appendChild(seq);
     box.appendChild(make('p', 'st-status', catalog.note || ''));
     drawViz();
@@ -889,6 +939,9 @@
       rows.push(['Rate', rec.sample.rate + ' Hz']);
       rows.push(['Length', rec.sample.length + ' bytes']);
       rows.push(['Path', 'PCFF001.TIM / .DIG → signed 8-bit PCM']);
+    } else if (rec && rec.asf) {
+      rows.push(['Path', '.ASF 1SNh → signed 8-bit PCM']);
+      rows.push(['Source', 'NHL96PC HOCKEY.EXE locateshape music']);
     } else {
       rows.push(['Path', '.KMS + .CFG sequencer → OPL2 (AdLib)']);
       rows.push(['Source', 'NHL95PC sub_990CB / sub_99925']);

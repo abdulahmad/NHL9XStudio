@@ -38,7 +38,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - See also the 93 SNES section below.
 
 ### PC and long-term
-- **PC audio:** [x] wiki `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). [x] NHL 94/95 PC EACSNDF `.KMS`/`.CFG` AdLib playback and PCFF digital SFX from the EXE (`lib/audio/pc94-*.js`, Audio tab). [x] NHL 94 PC VIV speech with suffix labels (`XBRUCE2.VIV` / `XRBARR2.VIV`). [x] NHL 95 PC OpenSpeechBank VIV (`ReadSpeechSample` DPCM for 47 FB; `.NUM`/`.COR` mixer flag 1 D7414) and IFF FORM 8SVX / RIFF XOR `80h` (`sub_8F98F`). Still open: MT-32 playback, YM30.BGP ear-match.
+- **PC audio:** [x] wiki `.KMS` parser + MIT `opl3` feasibility player; `.VIV` BNK/IFF sniffers (`docs/PC-AUDIO-KMS-VIV.md`, `test/pc-audio-kms.js`). [x] NHL 94/95 PC EACSNDF `.KMS`/`.CFG` AdLib playback and PCFF digital SFX from the EXE (`lib/audio/pc94-*.js`, Audio tab). [x] NHL 94 PC VIV speech with suffix labels (`XBRUCE2.VIV` / `XRBARR2.VIV`). [x] NHL 95 PC OpenSpeechBank VIV (`ReadSpeechSample` DPCM for 47 FB; `.NUM`/`.COR` mixer flag 1 D7414) and IFF FORM 8SVX / RIFF XOR `80h` (`sub_8F98F`). [x] NHL 96 PC 1SN `.ASF` PCM (`lib/audio/pc96-asf.js`). Still open: MT-32 playback, YM30.BGP ear-match, 96 PC `.BNK` banks.
 - Longer-term goals: a full FM patch editor, SPC disassembly upload, importing back to ROM, tracker editing, and MT-32/GUS parity. (`docs/DESIGN.md` §6, `docs/IMPLEMENTATION.md` §3)
 - `MID94-Tools` (cmdstream ↔ MIDI) is "experimental / unfinished, not reliable". (`docs/IMPLEMENTATION.md`)
 
@@ -49,6 +49,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
 - GAP-5/6 (93S/94S): [x] 94S framer, energy bar, playoff arrows, crowd sprite strip (658–720), scouting backdrop (94S `scout` = `MenuBackMap` / `LoadScoutingScreen.asm`), 93S NHLPA logo (`$8C8000` / `NHLPALogo.map.sjim`), 93S playoff bracket (`PlayoffBracketMap` `$8AF880`), and 93S scouting backdrop (`scout` = `EASNBG` per `ScoutingReport.asm`). No separate ROM for the full 93S scouting layout (composite of EASNBG, team blocks, framer, Ron Barr). Genesis JIM scouting maps stay on 93G/94G only.
 - GAP-7 (95PC): DOS polish: goalie palette edge cases, QFS/PPV catalog holes, hotspot and dynamic rules. Audio tab is in (EACSNDF KMS/PCFF, OpenSpeechBank VIV, IFF). (`docs/IMPLEMENTATION.md`)
 - GAP-8 (94PC): [x] planar PPV/QPP decode, AdLib/SFX Audio tab, retail `HOCKEY.EXE` SPA at `0x358A4`, VIV speech, bank `hotX`/`hotY` and 94 `frameIsDynamic` ranges. Still open: MT-32 playback, YM30.BGP ear-match. (`docs/AGENT-HANDOFF.md`)
+- GAP-9 (96PC): [x] studio profile `nhl96pc`, SHPI `.FSH` / BIGF `.VIV` catalog from NHL96PC `HOCKEY.EXE`, 1SN `.ASF` playback. Still open: name GAMEART.VIV player shapes so Frame / SPF / SPA are not empty; `.BNK` playback.
 - Open visual issues (`docs/AGENT-HANDOFF.md`, Status 2026-10-20):
   - The 93S framer art is a two-shade ring, while 93G's is a four-shade bevel. Unresolved.
   - The 93G/93S Stanley Cup palette was reported wrong but has not been reproduced. We need to know what colour is expected.
