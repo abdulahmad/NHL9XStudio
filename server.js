@@ -152,6 +152,22 @@ function pcPath(game, rel) {
   return full;
 }
 
+function pcRead(game, rel) {
+  const packed = pc95.splitVivPath && pc95.splitVivPath(rel);
+  if (packed) {
+    const packFile = pcPath(game, packed.pack);
+    if (!packFile || !fs.existsSync(packFile) || !fs.statSync(packFile).isFile()) return null;
+    return pc95.readPacked(rel, (name) => {
+      const file = pcPath(game, name);
+      if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) return null;
+      return fs.readFileSync(file);
+    });
+  }
+  const file = pcPath(game, rel);
+  if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) return null;
+  return fs.readFileSync(file);
+}
+
 function loadRinkColors(game) {
   const catalog = pcFiles(game);
   if (!catalog.rinkFile) return null;
@@ -166,12 +182,11 @@ function pcPaletteBytes(game, name) {
   if (!parsed) return null;
   const catalog = pcFiles(game);
   const rel = parsed.side === 'away' ? catalog.awayFile : catalog.homeFile;
-  const file = rel && pcPath(game, rel);
-  if (!file || !fs.existsSync(file)) return null;
-  const bin = fs.readFileSync(file);
-  const start = parsed.index * pc95.TEAM_BYTES;
-  if (start + pc95.TEAM_BYTES > bin.length) return null;
-  const colors = pc95.buildTeamPalette(bin.subarray(start, start + pc95.TEAM_BYTES), loadRinkColors(game));
+  const bin = rel && pcRead(game, rel);
+  if (!bin) return null;
+  const colors = pc95.teamPaletteColors
+    ? pc95.teamPaletteColors(name, bin, loadRinkColors(game))
+    : null;
   if (!colors) return null;
   return Buffer.concat([
     Buffer.from(pc95.colorsToAct(colors)),
@@ -325,7 +340,19 @@ const server = http.createServer((req, res) => {
   const pcFile = /^\/api\/games\/([a-z0-9]+)\/file$/.exec(pathname);
   if (pcFile) {
     const game = gameById(pcFile[1]);
-    const file = game && isPcKind(game.kind) ? pcPath(game, url.searchParams.get('path')) : null;
+    const rel = url.searchParams.get('path');
+    if (!game || !isPcKind(game.kind) || !rel) {
+      send(res, 404, 'Not found', 'text/plain; charset=utf-8');
+      return;
+    }
+    const packed = pc95.splitVivPath && pc95.splitVivPath(rel);
+    if (packed) {
+      const body = pcRead(game, rel);
+      if (!body) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+      send(res, 200, Buffer.from(body), 'application/octet-stream');
+      return;
+    }
+    const file = pcPath(game, rel);
     if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
       send(res, 404, 'Not found', 'text/plain; charset=utf-8');
       return;

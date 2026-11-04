@@ -61,7 +61,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
 | 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
 | 9 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
-| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, BIGF `.VIV` art packs, 1SN `.ASF` songs; Frame / SPF / SPA empty until GAMEART shapes are named |
+| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, locatebig C0 FB `.VIV` art packs, EACS `.ASF` songs, `teampal.qda` jerseys; Frame / SPF / SPA empty until GAMEART shapes are named |
 
 **Not in the game list:** Sega CD, later EA NHL.
 

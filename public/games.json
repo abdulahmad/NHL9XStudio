@@ -8157,7 +8157,7 @@
     "jerseyRow": 9,
     "paletteLabel": "Team colors",
     "tagline": "DOS install under pc96/ — SHPI FSH pictures, ASF songs, VIV art packs",
-    "hint": "Copy the NHL 96 PC install into pc96/ (FSH, VIV, ASF, BNK, optional QFS). Names come from NHL96PC HOCKEY.EXE (SHA-1 426fb8c0c80088c6a2c56a9dac50509cb9c24540): locateshape opens .FSH / .vsh / .qfs / .qvs SHPI banks, not 94/95 PPV sheets. Team pictures are ANA.FSH … WPG.FSH (DAL, no MIN). Ice is ice.fsh; rink palette is RINKPAL.FSH or rinkpal.qfs. Art packs are GAMEART.VIV, ARENAART.VIV, and the other .VIV names in the EXE (BIGF). Songs are EA 1SNh .ASF (MENU1, DIT00–DIT47, INTRO, …) plus FRONT1.BNK / GAME11.BNK sound banks — not the 94/95 .KMS path. The EXE has no updateanim SPA table, so Frame / SPF / SPA stay empty until GAMEART.VIV shapes are named. Restart the server after adding files.",
+    "hint": "Copy the NHL 96 PC install into pc96/ (FSH, VIV, ASF, BNK, optional QFS). Names come from NHL96PC HOCKEY.EXE (SHA-1 426fb8c0c80088c6a2c56a9dac50509cb9c24540): locateshape opens .FSH / .vsh / .qfs / .qvs SHPI banks, not 94/95 PPV sheets. Team pictures are ANA.FSH … WPG.FSH (DAL, no MIN). Ice is ice.fsh; rink palette is RINKPAL.FSH or rinkpal.qfs. Art packs are GAMEART.VIV, ARENAART.VIV, and the other .VIV names in the EXE — locatebig C0 FB (or BI/BIGF) unit files, not 94/95 speech VIV. Songs are EA 1SNh .ASF wrapping an EACS header (MENU1, DIT00–DIT47, INTRO, …) plus FRONT1.BNK / GAME11.BNK sound banks — not the 94/95 .KMS path. Jersey colors come from teampal.qda. The EXE has no updateanim SPA table, so Frame / SPF / SPA stay empty until GAMEART.VIV shapes are named. Restart the server after adding files.",
     "frames": "frames96pc.asm",
     "banks": [
       {

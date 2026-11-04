@@ -609,7 +609,7 @@
         throw new Error(rec.stem + '.ASF codec ' + ((parsed && parsed.codec) != null ? parsed.codec : '?') + ' is listed, not playable yet');
       }
       const viz = parsed.loop ? { loop: true, loopStart: (parsed.loopStart || 0) / parsed.rate } : {};
-      playBuffer(id, root.NhlPc96Asf.toFloat32(parsed.pcm), parsed.rate, viz);
+      playBuffer(id, root.NhlPc96Asf.toFloat32(parsed.pcm, 1, parsed.bytesPerSample), parsed.rate, viz);
       return;
     }
     const kms = await readRel(rec.kms);
@@ -737,7 +737,7 @@
       const parsed = root.NhlPc96Asf.parse(buf);
       if (!parsed || !parsed.playable) throw new Error(rec.stem + '.ASF not playable');
       const pcm = new Int16Array(parsed.pcm.length);
-      const f = root.NhlPc96Asf.toFloat32(parsed.pcm);
+      const f = root.NhlPc96Asf.toFloat32(parsed.pcm, 1, parsed.bytesPerSample);
       for (let i = 0; i < f.length; i++) {
         const s = Math.max(-1, Math.min(1, f[i]));
         pcm[i] = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
