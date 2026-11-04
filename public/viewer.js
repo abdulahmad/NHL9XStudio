@@ -2584,6 +2584,17 @@ async function ensureImage(id) {
     }
     if (image.forceIce) donor = await icePaletteBytes();
     parsed = Nhl92Jim.decodeJim(bytes, donor, image.remap ? { remap: image.remap, forceDonor: Boolean(image.forceIce) } : null);
+  } else if (image.kind === 'jim-overlay') {
+    const layers = [];
+    for (const layer of image.layers || []) {
+      const spec = ((gameInfo && gameInfo.images) || []).find((item) => item.id === layer.id);
+      if (!spec) continue;
+      const bytes = await bytesFor(spec);
+      if (!bytes) continue;
+      layers.push({ picture: Nhl92Jim.decodeJim(bytes), x: layer.x, y: layer.y });
+    }
+    if (!layers.length) return null;
+    parsed = Nhl92Jim.overlayPictures(layers, image.width, image.height);
   } else if (image.kind === 'frames') {
     const bytes = await bytesFor(image);
     if (!bytes) return null;
