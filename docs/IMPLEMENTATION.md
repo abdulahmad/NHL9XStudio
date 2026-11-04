@@ -33,7 +33,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | 7 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
 | 8 | **95PC** | `nhl95pc` | DOS graphics + AdLib/SFX/VIV audio; remaining catalog/palette edge cases |
 | 9 | **94PC** | `nhl94pc` | Planar PPV/QPP + AdLib/SFX + VIV speech; SPA from retail `HOCKEY.EXE` |
-| 10 | **96PC** | `nhl96pc` | SHPI `.FSH` + BIGF `.VIV` pictures, 1SN `.ASF` songs; no updateanim SPA table |
+| 10 | **96PC** | `nhl96pc` | SHPI `.FSH` + locatebig C0 FB `.VIV` pictures, EACS `.ASF` songs; no updateanim SPA table |
 
 ---
 
@@ -63,9 +63,9 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `nhl96` | **96G** | NHL 96 | Genesis | `sheet` | `roms/nhl96.bin` |
 | `nhlpa93snes` | **93S** | NHLPA 93 | SNES | `snes93` | `roms/nhlpa93snes.sfc` |
 | `nhl94snes` | **94S** | NHL 94 | SNES | `snes94` | `roms/nhl94snes.sfc` |
-| `nhl95pc` | **95PC** | NHL 95 | DOS | `pc95` | `Sprite-Viewer/pc95/` (PPV, QFS, palette BINs); not in git |
+| `nhl95pc` | **95PC** | NHL 95 | DOS | `pc95` | `pc95/` or `roms/nhl95.iso`; not in git |
 | `nhl94pc` | **94PC** | NHL 94 | DOS | `pc94` | `pc94/` (PPV, QPP, palette BINs, KMS/CFG, PCFF); not in git |
-| `nhl96pc` | **96PC** | NHL 96 | DOS | `pc96` | `pc96/` (FSH, VIV, ASF, BNK); not in git |
+| `nhl96pc` | **96PC** | NHL 96 | DOS | `pc96` | `pc96/` or `roms/nhl96.iso`; not in git |
 
 *(Table follows **implementation priority** § above; not chronological release order.)*
 
@@ -95,7 +95,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 | `sjim` | `lib/sjim.js` | NHLPA 93 SNES packed screens (map + pal + planar tiles) |
 | `snes94-screen` | `lib/sscr.js`, `snespak.js` | NHL 94 SNES tiles + map + pal (LZ / Huffman / RLE) |
 | `pc95` | `lib/pc95.js` | RefPack QFS → SHPI → SPIT; PPV SHPI banks; team/rink palettes |
-| `pc96` | `lib/pc95.js` | SHPI `.FSH` (locateshape); BIGF `.VIV` art packs; 1SN `.ASF` via `lib/audio/pc96-asf.js` |
+| `pc96` | `lib/pc95.js` | SHPI `.FSH` (locateshape); locatebig C0 FB (or BI/BIGF) `.VIV` art packs; EACS `.ASF` via `lib/audio/pc96-asf.js`; jerseys from `teampal.qda` |
 
 **Catalog data:** SPF/SPA from `data/frames*.asm` via `lib/parse-frames.js` (including ascending SPF range fix). Genesis image lists from `lib/genesis-images.js` (generated from disassembly extracts). SNES 94 frames partly generated (`tools/build-snes-frames.js`).
 
@@ -125,7 +125,7 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 - **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
 - **94PC:** Profile `nhl94pc` decodes planar PPV/QPP (`lib/pc94-shape.js`, `lib/pc94-pack.js`), SPA from `HOCKEY.EXE` @ `0x358A4`, and VIV speech. Remaining: MT-32 / YM30 ear-match.
 - **96G:** In the Game menu (`nhl96`). Sound test waits on `data/fixtures/nhl96-sound-slice.bin`.
-- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / BIGF `.VIV` pictures and 1SN `.ASF` songs from NHL96PC `HOCKEY.EXE`. Remaining: name GAMEART.VIV player shapes so Frame / SPF / SPA are not empty; `.BNK` playback.
+- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / locatebig C0 FB `.VIV` pictures and EACS `.ASF` songs from NHL96PC `HOCKEY.EXE` (`teampal.qda` jerseys). `roms/nhl96.iso` is enough — no need to unpack. Remaining: name GAMEART.VIV player shapes so Frame / SPF / SPA are not empty; `.BNK` playback.
 - **Editing / export / build:** View-only today; no write path to ROM or extracted bins. Planned: Genesis `.map.jim` editor (`docs/nhl9x-studio-requirements.md`).
 
 ### 1.8 Goal celebrations, “bench” sprites, and missing banks (94G focus)
@@ -421,7 +421,7 @@ NHL9X Studio should run in **two complementary setups**. Both use the same decod
 | Extracted graphic | `.anim`, `.jim`, crowd/faceoff `.anim` slice, `StanleyCup.anim` | Sniff header → `parseAnim` / `openFrames` / `decodeJim` → Frame or Images view |
 | NHL 95 PC file | `.PPV`, `.QFS`, `HOMEPALS.BIN`, `HOCKEY.EXE` (for SPA table) | Route to `pc95.js`; multi-shape PPV/QFS as today |
 | NHL 94 PC file | `.PPV`, `.QPP`, palette BINs, `.KMS` | `pc94-pack` / `pc94-shape` / `pc94-kms` via `pc95.js` `openBytes` |
-| NHL 95 PC **ISO** | `.iso` / `.bin rip | **Future:** client-side ISO9660 (or pre-extracted folder); mount and read paths like local `pc95/` |
+| NHL 95/96 PC **ISO** | `.iso` / `.img` | ISO 9660 (`lib/iso9660.js`): `roms/nhl95.iso`, `roms/nhl96.iso`, or Open file / drop. Same catalog as `pc95/` / `pc96/` |
 | Folder drop | Whole `pc95` or `pc94` install, or `NHL94/Graphics` extract | File System Access API or zip unpack → virtual catalog |
 
 Principle: **never upload ROMs to the server** on Pages; on Local Node, still read user paths only (no cloud storage).
@@ -435,7 +435,7 @@ Principle: **never upload ROMs to the server** on Pages; on Local Node, still re
 | **HOST-2** | ✅ Drag-and-drop overlay; client ROM + PC folder (`catalogFromPaths`); static `games.json` boot |
 | **HOST-3** | Partial — folder drop for PC95; ROM session map; no persistent OPFS yet |
 | **HOST-4** | ✅ `.github/workflows/pages.yml` (deploy on `main` after tests) |
-| **HOST-5** | ISO shows guidance message; mount not implemented |
+| **HOST-5** | ✅ NHL 95/96 PC ISO 9660 in `roms/` and Open file |
 
 Local Node keeps `/api/games` for convenience; Studio Web implements the same `gameStatus` shape in a client module.
 

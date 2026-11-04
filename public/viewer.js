@@ -1675,7 +1675,9 @@ function renderCaption() {
   if (!step) {
     cap.textContent = loadError || (state.mode === 'spa'
       ? (catalog && !catalog.anims.length
-        ? 'No SPA table for this game. The frame ranges are under SPF.'
+        ? (catalog.spfs.length
+          ? 'No SPA table for this game. The frame ranges are under SPF.'
+          : 'No SPA table for this game. Pictures are under Images.')
         : 'This facing has no sequence of its own. The table runs off the end of the animation.')
       : state.mode === 'image'
         ? romHint()
@@ -2597,6 +2599,7 @@ async function ensureImage(id) {
     for (const rel of paths) {
       let data = null;
       if (clientPc && clientPc.map.has(rel)) data = clientPc.map.get(rel);
+      else if (clientPc && Nhl95Pc.readPacked) data = Nhl95Pc.readPacked(rel, (name) => clientPc.map.get(name));
       else if (useApi) {
         const response = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/file?path=' + encodeURIComponent(rel)));
         if (!response.ok) continue;
@@ -2664,9 +2667,9 @@ function clientPcPaletteBytes(name) {
   const rel = parsed.side === 'away' ? clientPc.catalog.awayFile : clientPc.catalog.homeFile;
   if (!rel || !clientPc.map.has(rel)) return null;
   const bin = clientPc.map.get(rel);
-  const start = parsed.index * Nhl95Pc.TEAM_BYTES;
-  if (start + Nhl95Pc.TEAM_BYTES > bin.length) return null;
-  const colors = Nhl95Pc.buildTeamPalette(bin.subarray(start, start + Nhl95Pc.TEAM_BYTES), clientPcRinkColors());
+  const colors = Nhl95Pc.teamPaletteColors
+    ? Nhl95Pc.teamPaletteColors(name, bin, clientPcRinkColors())
+    : null;
   if (!colors) return null;
   const out = new Uint8Array(1536);
   out.set(Nhl95Pc.colorsToAct(colors), 0);
@@ -2843,7 +2846,11 @@ async function loadGame(id, keepSelection) {
   const spfMatch = named(catalog.spfs, previous.spf) || catalog.spfs[0];
   state.spa = spaMatch ? spaMatch.name : '';
   state.spf = spfMatch ? spfMatch.name : '';
-  if (!catalog.anims.length && state.mode === 'spa' && catalog.spfs.length) state.mode = 'spf';
+  if (!catalog.anims.length && state.mode === 'spa') {
+    if (catalog.spfs.length) state.mode = 'spf';
+    else if (images.length) state.mode = 'image';
+    else if (hasSoundTest(info)) state.mode = 'soundtest';
+  }
   const remembered = imageMemory.get(info.id);
   const imageMatch = images.find((image) => image.id === previous.image)
     || images.find((image) => previous.imageLabel && image.label.toLowerCase() === previous.imageLabel.toLowerCase())
@@ -2974,14 +2981,13 @@ async function ingestDroppedFiles(fileList) {
     bytes: new Uint8Array(await file.arrayBuffer())
   })));
   const isFolder = entries.some((entry) => entry.rel.includes('/'));
-  const hasPc = entries.some((entry) => /\.(ppv|qfs|qpp|fsh|asf|vsh|qvs)$/i.test(entry.rel));
+  const hasPc = entries.some((entry) => /\.(ppv|qfs|qpp|fsh|asf|vsh|qvs|viv|bnk)$/i.test(entry.rel));
   if (isFolder && hasPc) {
     const map = new Map(entries.map((entry) => [entry.rel, entry.bytes]));
     const paths = [...map.keys()];
     clientPc = { map, catalog: Nhl95Pc.catalogFromPaths(paths, (rel) => map.get(rel)) };
-    const pcId = paths.some((rel) => /\.qpp$/i.test(rel))
-      ? 'nhl94pc'
-      : (paths.some((rel) => /\.(fsh|asf|vsh|qvs)$/i.test(rel)) ? 'nhl96pc' : 'nhl95pc');
+    const year = Nhl95Pc.pcYearOf ? Nhl95Pc.pcYearOf(paths) : 95;
+    const pcId = year === 94 ? 'nhl94pc' : (year === 96 ? 'nhl96pc' : 'nhl95pc');
     const pcKind = pcId === 'nhl94pc' ? 'pc94' : (pcId === 'nhl96pc' ? 'pc96' : 'pc95');
     let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
     entry = Object.assign({}, entry, {
@@ -3007,8 +3013,36 @@ async function ingestDroppedFiles(fileList) {
   const { file, bytes } = entries[0];
   const classified = NhlOpenAsset.classify(file.name, bytes);
   if (classified.kind === 'iso') {
-    loadError = classified.message;
-    refreshAll();
+    if (typeof NhlIso9660 === 'undefined' || !NhlIso9660.isIso(bytes)) {
+      loadError = classified.message || 'That ISO is not a 95/96 PC disc image.';
+      refreshAll();
+      return;
+    }
+    const iso = NhlIso9660.open(bytes);
+    const names = iso ? iso.names() : [];
+    if (!iso || !names.length) {
+      loadError = 'That ISO has no files.';
+      refreshAll();
+      return;
+    }
+    const map = {
+      has: function (rel) { return iso.has(rel); },
+      get: function (rel) { return iso.read(rel); }
+    };
+    clientPc = { map, catalog: Nhl95Pc.catalogFromPaths(names, (rel) => iso.read(rel)) };
+    const year = Nhl95Pc.pcYearOf ? Nhl95Pc.pcYearOf(names) : 95;
+    const pcId = year === 94 ? 'nhl94pc' : (year === 96 ? 'nhl96pc' : 'nhl95pc');
+    const pcKind = pcId === 'nhl94pc' ? 'pc94' : (pcId === 'nhl96pc' ? 'pc96' : 'pc95');
+    let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
+    entry = Object.assign({}, entry, {
+      pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,
+      rom: Nhl95Pc.installReady ? Nhl95Pc.installReady(clientPc.catalog) : true,
+      images: clientPc.catalog.images,
+      paletteFiles: clientPc.catalog.paletteNames
+    });
+    games = games.map((game) => (game.id === pcId ? entry : game));
+    await loadGame(pcId);
+    await loadClientPcPalettes();
     return;
   }
   const rom = romOf(file.name, bytes, classified);

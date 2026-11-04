@@ -26,8 +26,8 @@
           <a href="jim.html" class="ghost-btn" title="Genesis .map.jim and SNES .map.sjim editor">Image Editor</a>
           <a href="jed.html" class="ghost-btn" title="JED-style jersey palette editor for NHL 94 PC and NHL 95 PC (HOMEPALS / AWAYPALS)">Jerseys</a>
           <button type="button" id="open-rom" class="ghost-btn" title="Load a Genesis or SNES ROM, or a single ANIM/JIM/PPV file">Open file…</button>
-          <button type="button" id="open-folder" class="ghost-btn" title="Load a folder of ROMs, or an NHL 95/94 PC install folder (PPV, QFS, QPP)">Open folder…</button>
-          <input type="file" id="file-open" class="sr" hidden accept=".bin,.md,.gen,.sfc,.smc,.anim,.jim,.map.jim,.sjim,.map.sjim,.ppv,.qfs,.qpp,.iso,.img">
+          <button type="button" id="open-folder" class="ghost-btn" title="Load a folder of ROMs, or an NHL 94/95/96 PC install folder (PPV, QFS, QPP, FSH, VIV, ASF)">Open folder…</button>
+          <input type="file" id="file-open" class="sr" hidden accept=".bin,.md,.gen,.sfc,.smc,.anim,.jim,.map.jim,.sjim,.map.sjim,.ppv,.qfs,.qpp,.fsh,.vsh,.qvs,.asf,.viv,.bnk,.iso,.img">
           <input type="file" id="folder-open" class="sr" hidden multiple webkitdirectory>
         </div>
         <label class="field">
@@ -154,7 +154,7 @@
         <p><b>Frame</b> is the picture number: 1-based in the Genesis and SNES ANIM files, 0-based on PC like the game's own index. The index is always 0-based.</p>
         <p><b>SPF</b> names a run of those pictures in <span class="mono">frames.asm</span>. When the run is eight facings side by side, the compass steps through them.</p>
         <p><b>SPA</b> is an animation. Each of the eight facings has its own list of frame and vblank pairs. A negative time is the last step. The picture stays up for one extra vblank, the one that expires the counter, and never changes faster than every 4 vblanks. Bit 0 of the flags word loops it. <b>Groups</b> follows the sidebar categories. <b>File</b> is the order in frames.asm. Switching games stays on an SPA or SPF of the same name when the new game has one.</p>
-        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code>, <code>pc95/</code>, <code>pc94/</code>, or <code>pc96/</code>.</p>
+        <p><b>Images</b> is the rest of the pictures in the ROM: titles, the rink, fonts, and the other animation banks. On GitHub Pages, use <b>Open file…</b> or drag a ROM onto the page. With <code>node server.js</code> locally you can also place files under <code>roms/</code>, <code>pc95/</code>, <code>pc94/</code>, or <code>pc96/</code>. NHL 95/96 PC also take <code>roms/nhl95.iso</code> and <code>roms/nhl96.iso</code>.</p>
         <p>Facing 0 is north on a vertical rink, then clockwise. A horizontal rink subtracts 2 from the facing before this lookup.</p>
         <p>The dashed box is the frame's canvas. <b>Pin</b> chooses the point held in the middle of the stage. <b>0, 0</b> is the player's position, at the skates, and <b>Hotspot</b> is where the puck sits. The amber mark is 0, 0. The red cross is the hotspot.</p>
       </section>
@@ -166,6 +166,7 @@
   <script src="lib/rev-a.js"></script>
   <script src="lib/rev-b.js"></script>
   <script src="lib/revisions.js"></script>
+  <script src="lib/iso9660.js"></script>
   <script src="lib/open-asset.js"></script>
   <script src="lib/parse-frames.js"></script>
   <script src="lib/anim.js"></script>

@@ -6,6 +6,7 @@ const Revisions = require('./lib/revisions');
 const { APP_NAME } = require('./lib/studio');
 const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
+const iso9660 = require('./lib/iso9660');
 const audio = require('./lib/audio');
 const httpCache = require('./lib/http-cache');
 
@@ -113,6 +114,69 @@ function readRom(file, game) {
 
 const pcCatalogCache = { pc95: null, pc94: null, pc96: null };
 const pcStampCache = { pc95: '', pc94: '', pc96: '' };
+const pcIsoCache = { pc95: null, pc96: null };
+const pcIsoStamp = { pc95: '', pc96: '' };
+const PC_ISO_NAMES = {
+  pc96: ['nhl96pc.iso', 'nhl96pc.img', 'nhl96.iso', 'nhl96.img'],
+  pc95: ['nhl95pc.iso', 'nhl95pc.img', 'nhl95.iso', 'nhl95.img']
+};
+
+function dirHasFiles(dir) {
+  if (!dir || !fs.existsSync(dir)) return false;
+  try {
+    return fs.readdirSync(dir).some((name) => name.charAt(0) !== '.');
+  } catch (err) {
+    return false;
+  }
+}
+
+function isoYear(iso) {
+  if (!iso || !pc95.pcYearOf) return 0;
+  const names = iso.names();
+  const year = pc95.pcYearOf(names);
+  if (year === 96 && names.some((rel) => /\.(fsh|asf|vsh|qvs|viv)$/i.test(rel))) return 96;
+  if (year === 95 && names.some((rel) => /\.(ppv|qfs|kms)$/i.test(rel) || /homepals/i.test(rel))) return 95;
+  if (year === 94 && names.some((rel) => /\.qpp$/i.test(rel))) return 94;
+  return 0;
+}
+
+function findPcIso(kind) {
+  if (!fs.existsSync(ROM_DIR)) return null;
+  const names = fs.readdirSync(ROM_DIR);
+  const preferred = PC_ISO_NAMES[kind] || [];
+  for (const want of preferred) {
+    const hit = names.find((name) => name.toLowerCase() === want);
+    if (hit) return path.join(ROM_DIR, hit);
+  }
+  const wantYear = kind === 'pc96' ? 96 : (kind === 'pc95' ? 95 : 0);
+  if (!wantYear) return null;
+  for (const name of names) {
+    if (!/\.(iso|img)$/i.test(name)) continue;
+    const full = path.join(ROM_DIR, name);
+    let iso = null;
+    try { iso = iso9660.openFile(full); } catch (err) { iso = null; }
+    if (!iso) continue;
+    const year = isoYear(iso);
+    if (iso.close) iso.close();
+    if (year === wantYear) return full;
+  }
+  return null;
+}
+
+function openPcIso(kind) {
+  if (kind !== 'pc95' && kind !== 'pc96') return null;
+  const file = findPcIso(kind);
+  if (!file) return null;
+  const stat = fs.statSync(file);
+  const stamp = file + ':' + stat.size + ':' + stat.mtimeMs;
+  if (pcIsoCache[kind] && pcIsoStamp[kind] === stamp) return pcIsoCache[kind];
+  if (pcIsoCache[kind] && pcIsoCache[kind].close) pcIsoCache[kind].close();
+  let iso = null;
+  try { iso = iso9660.openFile(file); } catch (err) { iso = null; }
+  pcIsoCache[kind] = iso;
+  pcIsoStamp[kind] = iso ? stamp : '';
+  return iso;
+}
 
 function treeStamp(dir) {
   if (!fs.existsSync(dir)) return 'missing';
@@ -133,9 +197,20 @@ function treeStamp(dir) {
 function pcFiles(game) {
   const kind = game && isPcKind(game.kind) ? game.kind : 'pc95';
   const dir = PC_DIRS[kind];
-  const stamp = treeStamp(dir);
+  if (dirHasFiles(dir)) {
+    const stamp = 'dir:' + treeStamp(dir);
+    if (!pcCatalogCache[kind] || pcStampCache[kind] !== stamp) {
+      pcCatalogCache[kind] = pc95.catalogDirectory(dir);
+      pcStampCache[kind] = stamp;
+    }
+    return pcCatalogCache[kind];
+  }
+  const iso = openPcIso(kind);
+  const stamp = iso ? 'iso:' + pcIsoStamp[kind] : 'missing';
   if (!pcCatalogCache[kind] || pcStampCache[kind] !== stamp) {
-    pcCatalogCache[kind] = pc95.catalogDirectory(dir);
+    pcCatalogCache[kind] = iso
+      ? pc95.catalogFromPaths(iso.names(), (rel) => iso.read(rel))
+      : pc95.catalogDirectory(dir);
     pcStampCache[kind] = stamp;
   }
   return pcCatalogCache[kind];
@@ -152,12 +227,26 @@ function pcPath(game, rel) {
   return full;
 }
 
+function pcRead(game, rel) {
+  const kind = game && isPcKind(game.kind) ? game.kind : 'pc95';
+  const readBytes = (name) => {
+    if (dirHasFiles(PC_DIRS[kind])) {
+      const file = pcPath(game, name);
+      if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) return null;
+      return fs.readFileSync(file);
+    }
+    const iso = openPcIso(kind);
+    return iso ? iso.read(name) : null;
+  };
+  if (pc95.readPacked) return pc95.readPacked(rel, readBytes);
+  return readBytes(rel);
+}
+
 function loadRinkColors(game) {
   const catalog = pcFiles(game);
   if (!catalog.rinkFile) return null;
-  const file = pcPath(game, catalog.rinkFile);
-  if (!file || !fs.existsSync(file)) return null;
-  const bytes = fs.readFileSync(file);
+  const bytes = pcRead(game, catalog.rinkFile);
+  if (!bytes) return null;
   return pc95.paletteFrom(bytes) || pc95.decodeRinkFile(bytes);
 }
 
@@ -166,12 +255,11 @@ function pcPaletteBytes(game, name) {
   if (!parsed) return null;
   const catalog = pcFiles(game);
   const rel = parsed.side === 'away' ? catalog.awayFile : catalog.homeFile;
-  const file = rel && pcPath(game, rel);
-  if (!file || !fs.existsSync(file)) return null;
-  const bin = fs.readFileSync(file);
-  const start = parsed.index * pc95.TEAM_BYTES;
-  if (start + pc95.TEAM_BYTES > bin.length) return null;
-  const colors = pc95.buildTeamPalette(bin.subarray(start, start + pc95.TEAM_BYTES), loadRinkColors(game));
+  const bin = rel && pcRead(game, rel);
+  if (!bin) return null;
+  const colors = pc95.teamPaletteColors
+    ? pc95.teamPaletteColors(name, bin, loadRinkColors(game))
+    : null;
   if (!colors) return null;
   return Buffer.concat([
     Buffer.from(pc95.colorsToAct(colors)),
@@ -182,9 +270,9 @@ function pcPaletteBytes(game, name) {
 function pcBundle(game, rels) {
   const files = [];
   for (const rel of rels) {
-    const file = pcPath(game, rel);
-    if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) continue;
-    files.push({ name: rel, data: fs.readFileSync(file) });
+    const data = pcRead(game, rel);
+    if (!data || !data.length) continue;
+    files.push({ name: rel, data });
   }
   return Buffer.from(pc95.encodeBundle(files));
 }
@@ -253,7 +341,7 @@ function gameStatus(game) {
       ? { images: game.images || [], sheet: game.sheet || null, banks: game.kind === 'sheet' ? sheetGameBanks(game.images || []) : game.banks }
       : null,
     snes: game.snes || null,
-    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.kind === 'pc96' ? 'pc96/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))),
+    romHint: game.kind === 'pc95' ? 'pc95/ or roms/nhl95.iso' : (game.kind === 'pc94' ? 'pc94/' : (game.kind === 'pc96' ? 'pc96/ or roms/nhl96.iso' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))),
     pcAudio: pc && pc.audio ? pc.audio : undefined
   };
 }
@@ -325,12 +413,14 @@ const server = http.createServer((req, res) => {
   const pcFile = /^\/api\/games\/([a-z0-9]+)\/file$/.exec(pathname);
   if (pcFile) {
     const game = gameById(pcFile[1]);
-    const file = game && isPcKind(game.kind) ? pcPath(game, url.searchParams.get('path')) : null;
-    if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+    const rel = url.searchParams.get('path');
+    if (!game || !isPcKind(game.kind) || !rel) {
       send(res, 404, 'Not found', 'text/plain; charset=utf-8');
       return;
     }
-    serveFile(res, file, req);
+    const body = pcRead(game, rel);
+    if (!body) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+    send(res, 200, Buffer.from(body), 'application/octet-stream');
     return;
   }
 
