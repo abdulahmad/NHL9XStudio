@@ -430,6 +430,7 @@ for (const id of ['title', 'titlegoalie', 'titlepuck', 'easports', 'eabackdrop',
 }
 const snes94game = GAMES.find((game) => game.id === 'nhl94snes');
 assert.ok(snes94game.images.some((image) => image.id === 'scout' && image.map === snes94game.images.find((image) => image.id === 'eabackdrop').map));
+assert.strictEqual(snes94game.images.find((image) => image.id === 'title').palette, 0x9AE0D5);
 
 const pa93 = GAMES.find((game) => game.id === 'nhlpa93');
 const g94 = GAMES.find((game) => game.id === 'nhl94');
@@ -733,6 +734,10 @@ if (retail94) {
   const title = openImage(retail94, game.images.find((image) => image.id === 'title'), game.snes, null);
   assert.strictEqual(title.numFrames, 13);
   assert.ok(title.renderFrame(1).pixels.some((pixel) => pixel));
+  const titleGold = title.renderFrame(1).colors[15];
+  assert.ok(titleGold[0] > 140 && titleGold[1] > 40 && titleGold[1] < 120 && titleGold[2] < 40, 'TitleSpritePalette gold, not greyscale');
+  const titleShield = title.renderFrame(10);
+  assert.ok(titleShield.colors[17][0] > 120 && titleShield.colors[17][1] < 40 && titleShield.colors[17][2] < 40, 'NHL shield uses TitleSpritePalette red');
   const easports = openImage(retail94, game.images.find((image) => image.id === 'easports'), game.snes, null);
   assert.strictEqual(easports.renderFrame(1).width, 256);
   assert.strictEqual(easports.renderFrame(1).height, 224);

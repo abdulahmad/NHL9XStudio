@@ -5916,9 +5916,10 @@
         "kind": "snes94-sprites",
         "addr": 9548168,
         "packed": true,
-        "palRows": 2,
+        "palette": 10150101,
         "fileNames": [
-          "TitleSprites.spr.huf"
+          "TitleSprites.spr.huf",
+          "TitleSpritePalette.pal.lz"
         ]
       },
       {
