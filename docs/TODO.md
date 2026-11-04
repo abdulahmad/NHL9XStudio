@@ -56,7 +56,7 @@ This list was compiled on 2026-10-20 from the docs and PR bodies on `main` (`7bc
   - [x] 94S crowd frames on the Images tab (sprite frames 658–720).
 
 ## Host / product
-- HOST-3: OPFS storage is not implemented. HOST-5: the 95 ISO shows a guidance message; mounting is not implemented. (`docs/AGENT-HANDOFF.md`; `docs/IMPLEMENTATION.md` §5)
+- HOST-3: OPFS storage is not implemented. HOST-5: NHL 95/96 PC ISO 9660 from `roms/nhl95.iso` / `roms/nhl96.iso` or a dropped `.iso` (`lib/iso9660.js`). Pages still cannot see a local disc.
 - Teams, schedules, ROM build and patches are not implemented. (`docs/DESIGN.md` §6)
 
 ## Stale docs

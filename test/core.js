@@ -1290,6 +1290,34 @@ const bosQda = pc95.teamPaletteColors('bosh.pal', qda, rink);
 assert.ok(bosQda);
 assert.deepStrictEqual(bosQda[128], [44, 80, 120], '96 QDA uses TEAMS_96 order, not 94/95');
 
+const iso9660 = require('../lib/iso9660');
+const iso96 = iso9660.encode([
+  { name: 'GAMEART.VIV', data: c0fb },
+  { name: 'MENU1.ASF', data: asfBytes },
+  { name: 'ANA.FSH', data: shpiBank }
+]);
+assert.ok(iso9660.isIso(iso96));
+assert.strictEqual(openAsset.classify('nhl96.iso', iso96).kind, 'iso');
+const opened96 = iso9660.open(iso96);
+assert.ok(opened96);
+assert.ok(opened96.names().some((name) => /GAMEART\.VIV$/i.test(name)));
+assert.strictEqual(pc95.pcYearOf(opened96.names()), 96);
+assert.ok(opened96.has('ana.fsh'));
+assert.deepStrictEqual(Array.from(opened96.read('ANA.FSH').subarray(0, 4)), Array.from(shpiBank.subarray(0, 4)));
+const listedIso96 = pc95.catalogFromPaths(opened96.names(), (rel) => opened96.read(rel));
+assert.ok(listedIso96.images.some((image) => /ANA\.FSH$/i.test(image.id)));
+assert.ok(listedIso96.audio.songs.some((s) => s.stem === 'MENU1' && s.asf));
+const iso95 = iso9660.encode([
+  { name: 'HOMEPALS.BIN', data: Buffer.alloc(448) },
+  { name: '000_049.PPV', data: shpiBank },
+  { name: 'ADTITLE.KMS', data: Buffer.from('kms') }
+]);
+const opened95 = iso9660.open(iso95);
+assert.ok(opened95);
+assert.strictEqual(pc95.pcYearOf(opened95.names()), 95);
+assert.ok(opened95.has('000_049.PPV'));
+assert.ok(opened95.read('adtitle.kms'));
+
 const gfx94 = gfxPakBank(0, 3, rawSpit);
 assert.ok(pc95.isGfxPakPack(gfx94));
 const gfx94opened = pc95.openBytes(gfx94);

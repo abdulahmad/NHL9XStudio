@@ -39,7 +39,7 @@ It is **not** a general sprite editor, a Photoshop replacement, or an emulator.
 
 | Mode | Where | How files arrive |
 |------|--------|------------------|
-| **Studio Local** | `node server.js` (default port 8732) | `roms/`, `pc95/`, `pc94/`, `pc96/`, optional ANIM drops |
+| **Studio Local** | `node server.js` (default port 8732) | `roms/` (including `nhl95.iso` / `nhl96.iso`), `pc95/`, `pc94/`, `pc96/`, optional ANIM drops |
 | **Studio Web** | GitHub Pages or any static host | Drag-and-drop or Open file / Open folder; bytes stay in the tab |
 
 Both modes show the same catalog, viewer, and editors. Pages never receives a ROM on a server.
@@ -59,9 +59,9 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 5 | **96G** | NHL 96 | Genesis | Frames, images; Sound test when the sound fixture is extracted |
 | 6 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
 | 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
-| 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
+| 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech; `roms/nhl95.iso` |
 | 9 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
-| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, locatebig C0 FB `.VIV` art packs, EACS `.ASF` songs, `teampal.qda` jerseys; Frame / SPF / SPA empty until GAMEART shapes are named |
+| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, locatebig C0 FB `.VIV` art packs, EACS `.ASF` songs, `teampal.qda` jerseys; `roms/nhl96.iso`; Frame / SPF / SPA empty until GAMEART shapes are named |
 
 **Not in the game list:** Sega CD, later EA NHL.
 
@@ -234,7 +234,7 @@ These remain future studio goals, not current requirements:
 - ANIM / SHPI sprite editing
 - Team rosters, songs-per-team editors, schedules, `NumTeams` mods
 - SRAM/ROM size validation and stock-ROM MATCH as a studio feature
-- Persistent OPFS workspace; mounting a 95 PC ISO in the browser
+- Persistent OPFS workspace. NHL 95/96 PC ISO 9660 is in (`roms/nhl95.iso`, `roms/nhl96.iso`, Open file).
 - NHL 96, Sega CD, and later NHL titles as profiles
 
 ---
@@ -243,7 +243,7 @@ These remain future studio goals, not current requirements:
 
 1. Keep the multi-game graphics shell correct (catalog gaps in priority order 92G → … → 94PC).
 2. Image Editor: the requirements in §3.2; hide Chip Lab in chrome.
-3. Studio Web completeness (folder drop, Pages). ISO mount is later.
+3. Studio Web completeness (folder drop, Pages). 95/96 PC ISO drop is in.
 4. Audio playback across the same game order.
 5. Teams / rosters / build — after graphics and audio are trustworthy.
 

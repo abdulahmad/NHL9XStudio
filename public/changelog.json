@@ -4,7 +4,8 @@
       "version": "1.23.0",
       "date": "2026-11-04",
       "changes": [
-        "NHL 96 PC actually opens: GAMEART.VIV and the other art packs are locatebig C0 FB (not BIGF), so the pictures inside list and load. Songs are 1SNh wrapping an EACS header. Jersey colors come from teampal.qda. With no SPA table the Game menu opens Images"
+        "NHL 96 PC actually opens: GAMEART.VIV and the other art packs are locatebig C0 FB (not BIGF), so the pictures inside list and load. Songs are 1SNh wrapping an EACS header. Jersey colors come from teampal.qda. With no SPA table the Game menu opens Images",
+        "NHL 95 PC and NHL 96 PC accept the CD image in roms/ (nhl95.iso / nhl96.iso) or as a dropped ISO, so you do not have to unpack the install folder"
       ]
     },
     {

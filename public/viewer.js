@@ -3013,8 +3013,36 @@ async function ingestDroppedFiles(fileList) {
   const { file, bytes } = entries[0];
   const classified = NhlOpenAsset.classify(file.name, bytes);
   if (classified.kind === 'iso') {
-    loadError = classified.message;
-    refreshAll();
+    if (typeof NhlIso9660 === 'undefined' || !NhlIso9660.isIso(bytes)) {
+      loadError = classified.message || 'That ISO is not a 95/96 PC disc image.';
+      refreshAll();
+      return;
+    }
+    const iso = NhlIso9660.open(bytes);
+    const names = iso ? iso.names() : [];
+    if (!iso || !names.length) {
+      loadError = 'That ISO has no files.';
+      refreshAll();
+      return;
+    }
+    const map = {
+      has: function (rel) { return iso.has(rel); },
+      get: function (rel) { return iso.read(rel); }
+    };
+    clientPc = { map, catalog: Nhl95Pc.catalogFromPaths(names, (rel) => iso.read(rel)) };
+    const year = Nhl95Pc.pcYearOf ? Nhl95Pc.pcYearOf(names) : 95;
+    const pcId = year === 94 ? 'nhl94pc' : (year === 96 ? 'nhl96pc' : 'nhl95pc');
+    const pcKind = pcId === 'nhl94pc' ? 'pc94' : (pcId === 'nhl96pc' ? 'pc96' : 'pc95');
+    let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
+    entry = Object.assign({}, entry, {
+      pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,
+      rom: Nhl95Pc.installReady ? Nhl95Pc.installReady(clientPc.catalog) : true,
+      images: clientPc.catalog.images,
+      paletteFiles: clientPc.catalog.paletteNames
+    });
+    games = games.map((game) => (game.id === pcId ? entry : game));
+    await loadGame(pcId);
+    await loadClientPcPalettes();
     return;
   }
   const rom = romOf(file.name, bytes, classified);
