@@ -52,6 +52,8 @@ const RULES = [
   { re: /^tools\/fingerprint-site\.js$/, tests: ['fingerprint-site'], why: 'fingerprint tool' },
   { re: /^tools\/build-manifest\.js$/, tests: ['core'], why: 'manifest tool' },
   { re: /^tools\/(extract|build)-pc94-spa\.js$/, tests: ['core'], why: '94 PC SPA catalog' },
+  { re: /^tools\/extract-pc96-files\.js$/, tests: ['core'], why: '96 PC EXE file list' },
+  { re: /^lib\/audio\/pc96-asf\.js$/, tests: ['core'], why: '96 PC ASF 1SN decoder' },
   { re: /^lib\/audio\/viv\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio', 'pc-audio-kms'], why: 'PC VIV speech' },
   { re: /^lib\/audio\/pc94-(kms|player|sfx)\.js$/, tests: ['core', 'pc94-audio', 'pc95-audio'], why: '94/95 PC EACSNDF' },
   { re: /^lib\/audio\/pc-audio-groups\.js$/, tests: ['pc-audio-groups', 'pc94-audio', 'pc95-audio', 'browser:audio-list'], why: '94/95 PC Audio list groups' },

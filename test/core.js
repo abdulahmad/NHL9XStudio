@@ -405,9 +405,9 @@ assert.strictEqual(snes94frame.pixels[0], 1);
 
 assert.strictEqual(APP_NAME, 'NHL9X Studio');
 
-assert.strictEqual(GAMES.length, 9);
+assert.strictEqual(GAMES.length, 10);
 const staticManifest = buildManifest();
-assert.strictEqual(staticManifest.length, 9);
+assert.strictEqual(staticManifest.length, 10);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl92').pixels, true);
 assert.strictEqual(staticManifest.find((game) => game.id === 'nhl94').pixels, false);
 // The static site has no sibling ANIM-To-BMP checkouts: every Genesis game lists its team palettes from data/pals, each a 32-byte CRAM line.
@@ -1137,6 +1137,7 @@ assert.strictEqual(pcCatalog.spfs.find((spf) => spf.name === 'SPFref').group, 'O
 assert.ok(pcCatalog.spfs.find((spf) => spf.name === 'SPFskaters').blurb.includes('000-351'));
 
 assert.ok(GAMES.findIndex((game) => game.id === 'nhl94pc') < GAMES.findIndex((game) => game.id === 'nhl95pc'), '94 PC before 95 PC');
+assert.ok(GAMES.findIndex((game) => game.id === 'nhl95pc') < GAMES.findIndex((game) => game.id === 'nhl96pc'), '95 PC before 96 PC');
 const pcGame = GAMES.find((game) => game.id === 'nhl95pc');
 assert.strictEqual(pcGame.kind, 'pc95');
 assert.strictEqual(pcGame.paletteKind, 'pc');
@@ -1172,6 +1173,63 @@ const pc94empty = pc95.openSpriteBundle(Buffer.alloc(0), 'nhl94pc');
 assert.strictEqual(pc94empty.numFrames, 876);
 assert.strictEqual(pc95.playerFrameCount('nhl94pc'), 876);
 
+const pc96Game = GAMES.find((game) => game.id === 'nhl96pc');
+assert.ok(pc96Game);
+assert.strictEqual(pc96Game.kind, 'pc96');
+assert.strictEqual(pc96Game.platform, 'pc');
+assert.strictEqual(pc96Game.frames, 'frames96pc.asm');
+assert.strictEqual(pc96Game.source, 'NHL96PC');
+const pc96Catalog = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames96pc.asm'), 'utf8'));
+assert.strictEqual(pc96Catalog.spfs.length, 0);
+assert.strictEqual(pc96Catalog.anims.length, 0);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: 'dbox' }] }, 'ANA.FSH'), false, '96 PC FSH is a picture');
+assert.strictEqual(pc95.pcYearOf(['ANA.FSH', 'MENU1.ASF']), 96);
+const pc96Files = JSON.parse(fs.readFileSync(path.join(root, 'data', 'pc96-files.json'), 'utf8'));
+assert.strictEqual(pc96Files.gameId, 'nhl96pc');
+assert.strictEqual(pc96Files.exeSha1, '426fb8c0c80088c6a2c56a9dac50509cb9c24540');
+assert.ok(pc96Files.pictures.includes('ANA.FSH'));
+assert.ok(pc96Files.pictures.includes('ICE.FSH'));
+assert.ok(!pc96Files.pictures.includes('MIN.FSH'));
+assert.ok(pc96Files.songs.includes('MENU1.ASF'));
+assert.ok(pc96Files.viv.includes('GAMEART.VIV'));
+assert.ok(pc96Files.banks.includes('FRONT1.BNK'));
+assert.strictEqual(pc96Files.pictures.length, 180);
+assert.strictEqual(pc96Files.songs.length, 65);
+const pc96Asf = require('../lib/audio/pc96-asf');
+const asfPcm = Buffer.from([0x00, 0x40, 0x7f, 0x80, 0xc0]);
+const asfBytes = pc96Asf.encodePcm8(asfPcm, 22050);
+assert.ok(pc96Asf.isAsf(asfBytes));
+const asfParsed = pc96Asf.parse(asfBytes);
+assert.strictEqual(asfParsed.kind, '1sn');
+assert.strictEqual(asfParsed.codec, 0);
+assert.strictEqual(asfParsed.playable, true);
+assert.strictEqual(asfParsed.rate, 22050);
+assert.deepStrictEqual(Array.from(asfParsed.pcm), [0x00, 0x40, 0x7f, 0x80, 0xc0]);
+const bigf = pc95.encodeBigf([{ name: 'ice.fsh', data: shpiBank }]);
+const bigfFiles = pc95.parseBigf(bigf);
+assert.ok(bigfFiles);
+assert.strictEqual(bigfFiles[0].name, 'ice.fsh');
+const pc96Dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc96-'));
+fs.writeFileSync(path.join(pc96Dir, 'ANA.FSH'), shpiBank);
+fs.writeFileSync(path.join(pc96Dir, 'ICE.FSH'), shpiBank);
+fs.writeFileSync(path.join(pc96Dir, 'MENU1.ASF'), Buffer.from(asfBytes));
+fs.writeFileSync(path.join(pc96Dir, 'GAMEART.VIV'), bigf);
+const listed96 = pc95.catalogDirectory(pc96Dir);
+assert.ok(listed96.images.some((image) => image.id === 'ANA.FSH' && image.group === 'Teams'));
+assert.ok(listed96.images.some((image) => /ice/i.test(image.id)));
+assert.ok(listed96.images.some((image) => /ice\.fsh$/i.test(image.id) && /GAMEART/i.test(image.id)));
+assert.ok(listed96.audio.songs.some((s) => s.stem === 'MENU1' && s.asf));
+assert.ok(pc95.installReady(listed96));
+assert.strictEqual(listed96.spriteFiles.length, 0);
+assert.strictEqual(openAsset.pcGameIdOf({ ext: 'fsh' }), 'nhl96pc');
+assert.strictEqual(openAsset.classify('ANA.FSH', shpiBank).kind, 'pc');
+const decoded96 = openAsset.decodeLoose(openAsset.classify('ANA.FSH', shpiBank), { pc95: pc95 });
+assert.ok(decoded96);
+assert.strictEqual(decoded96.mode, 'image');
+assert.strictEqual(decoded96.gameId, 'nhl96pc');
+assert.ok(decoded96.parsed.numFrames >= 1);
+
 const gfx94 = gfxPakBank(0, 3, rawSpit);
 assert.ok(pc95.isGfxPakPack(gfx94));
 const gfx94opened = pc95.openBytes(gfx94);
@@ -1194,6 +1252,7 @@ if (retail94Dirs.length) {
   assert.strictEqual(retailOpened.shapes[0].height, 32);
 }
 assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
 const pcDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc95-'));

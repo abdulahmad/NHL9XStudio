@@ -21,7 +21,7 @@ const WIDTHS = [1280, 390];
 // Text an uncaught JavaScript error leaves in the page (Safari, Chrome and Firefox wordings).
 const ERROR_TEXT = /Can't find variable|is not defined|is not a function|\bundefined\b|\bNaN\b|Cannot read propert|null is not an object|undefined is not an object|Unexpected token|\[object Object\]/;
 // Files the page asks for that a checkout without ROMs or PC game files does not have.
-const OPTIONAL = /Failed to load resource.*\((?:[^)]*\/api\/games\/\w+\/(?:rom|pc|folder)|[^)]*\/anim\/\w+\.anim|[^)]*\/(?:pc95|pc94|roms)\/)/;
+const OPTIONAL = /Failed to load resource.*\((?:[^)]*\/api\/games\/\w+\/(?:rom|pc|folder)|[^)]*\/anim\/\w+\.anim|[^)]*\/(?:pc95|pc94|pc96|roms)\/)/;
 
 /** The page's visible text, plus the caption and status lines even when they are hidden by the layout. */
 const pageText = (page) => page.evaluate(() => {

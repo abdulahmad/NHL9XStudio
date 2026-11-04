@@ -10,23 +10,23 @@ const AUDIO_ORDER = ['Music', 'Music — Team', 'Music — Shared', 'SFX', 'Samp
 
 const el = (id) => document.getElementById(id);
 function isPcGame(kind) {
-  return kind === 'pc95' || kind === 'pc94';
+  return kind === 'pc95' || kind === 'pc94' || kind === 'pc96';
 }
 /** The frame number shown to the user: PC sprite frames are 0-based like the game's own index (GetHot), others 1-based. */
 function shownFrame(n) {
   return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
 }
-/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, and NHL 94/95 PC AdLib/SFX. */
+/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, NHL 94/95 PC AdLib/SFX, and NHL 96 PC 1SN .ASF. */
 function hasSoundTest(info) {
   if (!info) return false;
-  if (info.id === 'nhl94pc' || info.id === 'nhl95pc') return typeof NhlSoundTestPc94 !== 'undefined';
+  if (info.id === 'nhl94pc' || info.id === 'nhl95pc' || info.id === 'nhl96pc') return typeof NhlSoundTestPc94 !== 'undefined';
   // nhl96 stays off until data/fixtures/nhl96-sound-slice.bin exists (extract-nhl9x-sound-fixture.js 96).
   return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
 }
 
 function soundTestViewFor(info) {
   const id = (info || gameInfo || {}).id;
-  if ((id === 'nhl94pc' || id === 'nhl95pc') && typeof NhlSoundTestPc94 !== 'undefined') return NhlSoundTestPc94;
+  if ((id === 'nhl94pc' || id === 'nhl95pc' || id === 'nhl96pc') && typeof NhlSoundTestPc94 !== 'undefined') return NhlSoundTestPc94;
   return typeof NhlSoundTestView !== 'undefined' ? NhlSoundTestView : null;
 }
 
@@ -948,7 +948,7 @@ function renderImageList(box, q) {
     const note = document.createElement('p');
     note.className = 'empty-note';
     note.textContent = gameInfo && gameInfo.hint
-      ? (isPcGame(gameInfo.kind) ? 'No picture files in the pc95/ or pc94/ folder yet.' : gameInfo.hint)
+      ? (isPcGame(gameInfo.kind) ? 'No picture files in the pc95/, pc94/, or pc96/ folder yet.' : gameInfo.hint)
       : 'This game has no extra pictures in the viewer yet.';
     box.appendChild(note);
     return;
@@ -2777,14 +2777,14 @@ async function loadGame(id, keepSelection) {
   if (useApi) {
     pals = await fetch(resolveUrl('/api/games/' + info.id + '/palettes')).then((response) => response.json());
   } else if (clientPc && clientPc.catalog && clientPc.catalog.paletteNames && clientPc.catalog.paletteNames.length
-    && (info.id === 'nhl94pc' || info.id === 'nhl95pc')) {
+    && (info.id === 'nhl94pc' || info.id === 'nhl95pc' || info.id === 'nhl96pc')) {
     pals = clientPc.catalog.paletteNames;
     await loadClientPcPalettes();
   } else if (info.paletteFiles) {
     pals = info.paletteFiles;
   }
   if (typeof NhlSoundTestPc94 !== 'undefined') {
-    if (info.id === 'nhl94pc' || info.id === 'nhl95pc') {
+    if (info.id === 'nhl94pc' || info.id === 'nhl95pc' || info.id === 'nhl96pc') {
       window.NhlPcAudioFiles = window.NhlPc94Files = clientPc
         ? { map: clientPc.map, catalog: clientPc.catalog, baseUrl: pathPrefix || '', gameId: info.id }
         : { map: null, catalog: info.pcAudio ? { audio: info.pcAudio } : null, baseUrl: pathPrefix || '', gameId: info.id };
@@ -2974,13 +2974,15 @@ async function ingestDroppedFiles(fileList) {
     bytes: new Uint8Array(await file.arrayBuffer())
   })));
   const isFolder = entries.some((entry) => entry.rel.includes('/'));
-  const hasPc = entries.some((entry) => /\.(ppv|qfs|qpp)$/i.test(entry.rel));
+  const hasPc = entries.some((entry) => /\.(ppv|qfs|qpp|fsh|asf|vsh|qvs)$/i.test(entry.rel));
   if (isFolder && hasPc) {
     const map = new Map(entries.map((entry) => [entry.rel, entry.bytes]));
     const paths = [...map.keys()];
     clientPc = { map, catalog: Nhl95Pc.catalogFromPaths(paths, (rel) => map.get(rel)) };
-    const pcId = paths.some((rel) => /\.qpp$/i.test(rel)) ? 'nhl94pc' : 'nhl95pc';
-    const pcKind = pcId === 'nhl94pc' ? 'pc94' : 'pc95';
+    const pcId = paths.some((rel) => /\.qpp$/i.test(rel))
+      ? 'nhl94pc'
+      : (paths.some((rel) => /\.(fsh|asf|vsh|qvs)$/i.test(rel)) ? 'nhl96pc' : 'nhl95pc');
+    const pcKind = pcId === 'nhl94pc' ? 'pc94' : (pcId === 'nhl96pc' ? 'pc96' : 'pc95');
     let entry = games.find((game) => game.id === pcId) || { id: pcId, kind: pcKind };
     entry = Object.assign({}, entry, {
       pixels: clientPc.catalog.spriteFiles.length > 0 || clientPc.catalog.images.length > 0,

@@ -14,13 +14,13 @@ This is the product document. It describes what the studio is, who it is for, an
 
 NHL9X Studio is a **modding studio for EA’s 16-bit and DOS NHL games**. One app, one chrome, a **game profile** per title. People open a ROM or a PC install on their machine, browse what the game actually draws and plays, and edit the assets they are allowed to export. Nothing is uploaded. Nothing is written back into a ROM.
 
-**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 and 95 PC frames, pictures, AdLib/SFX, and announcer VIV speech are in the product. **Next** it fills remaining picture catalogs and ear-match. **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
+**Today** the studio is a graphics browser plus three editors (images, jerseys/ice, sound) and hidden Chip Lab. NHL 94 and 95 PC frames, pictures, AdLib/SFX, and announcer VIV speech are in the product. NHL 96 PC lists SHPI `.FSH` pictures, `.VIV` art packs, and 1SN `.ASF` songs. **Next** it fills remaining picture catalogs and ear-match. **Later** it grows into teams, schedules, and ROM build — those are not in the product yet.
 
 ### 1.1 Who it is for
 
 | Audience | What they need |
 |----------|----------------|
-| **Modders** of 92–96 Genesis, 93–94 SNES, and 94–95 PC | See retail frames, palettes, screens, and songs; export and re-import graphics they can drop into a disassembly or a PC folder |
+| **Modders** of 92–96 Genesis, 93–94 SNES, and 94–96 PC | See retail frames, palettes, screens, and songs; export and re-import graphics they can drop into a disassembly or a PC folder |
 | **Researchers / disassembly contributors** | The same pixels and names the game uses, labeled from `frames.asm` and image catalogs |
 | **Curious fans** | A browser they can open on GitHub Pages, drop a ROM, and look around without installing Node |
 
@@ -39,7 +39,7 @@ It is **not** a general sprite editor, a Photoshop replacement, or an emulator.
 
 | Mode | Where | How files arrive |
 |------|--------|------------------|
-| **Studio Local** | `node server.js` (default port 8732) | `roms/`, `pc95/`, `pc94/`, optional ANIM drops |
+| **Studio Local** | `node server.js` (default port 8732) | `roms/`, `pc95/`, `pc94/`, `pc96/`, optional ANIM drops |
 | **Studio Web** | GitHub Pages or any static host | Drag-and-drop or Open file / Open folder; bytes stay in the tab |
 
 Both modes show the same catalog, viewer, and editors. Pages never receives a ROM on a server.
@@ -61,6 +61,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
 | 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech |
 | 9 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
+| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, BIGF `.VIV` art packs, 1SN `.ASF` songs; Frame / SPF / SPA empty until GAMEART shapes are named |
 
 **Not in the game list:** Sega CD, later EA NHL.
 
@@ -208,6 +209,7 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | NHL 94 PC `.PPV` / `.QPP` | Mode X planar PackBits banks; QPP is Huffman `30 FB` or BTree `46 FB` (not 95 PC SHPI / RefPack `10 FB`) |
 | NHL 94/95 PC `.KMS` / `.CFG` / `PCFF*` / `.VIV` | AdLib songs, digital SFX, and announcer speech |
+| NHL 96 PC `.ASF` / `.BNK` | EA 1SN PCM songs (codec 0); `.BNK` banks listed, not played |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 
 If an export would be illegal for that picture (SNES→Genesis is lossy; SNES indexes above 1024 tiles), **tell the person and stop**. Do not write a file they cannot use. Explicit format picks that fit (Genesis→sjim or Genesis→94S zip at ≤1024 tiles) are conversions, not errors.

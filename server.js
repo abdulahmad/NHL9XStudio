@@ -27,13 +27,14 @@ const PAL_DIRS = {
 const PAL_DIR = PAL_DIRS['92'];
 const ROM_DIR = path.join(ROOT, 'roms');
 const PC_DIRS = {
-  // NHL_PC95_DIR / NHL_PC94_DIR point at an installed game folder instead of pc95/ or pc94/ here.
+  // NHL_PC95_DIR / NHL_PC94_DIR / NHL_PC96_DIR point at an installed game folder instead of pc95/ / pc94/ / pc96/ here.
   pc95: process.env.NHL_PC95_DIR ? path.resolve(process.env.NHL_PC95_DIR) : path.join(ROOT, 'pc95'),
-  pc94: process.env.NHL_PC94_DIR ? path.resolve(process.env.NHL_PC94_DIR) : path.join(ROOT, 'pc94')
+  pc94: process.env.NHL_PC94_DIR ? path.resolve(process.env.NHL_PC94_DIR) : path.join(ROOT, 'pc94'),
+  pc96: process.env.NHL_PC96_DIR ? path.resolve(process.env.NHL_PC96_DIR) : path.join(ROOT, 'pc96')
 };
 
 function isPcKind(kind) {
-  return kind === 'pc95' || kind === 'pc94';
+  return kind === 'pc95' || kind === 'pc94' || kind === 'pc96';
 }
 const BANKS = new Set(['Sprites.anim', 'Puck.anim', 'Crowd.anim', 'Zam.anim']);
 
@@ -110,8 +111,8 @@ function readRom(file, game) {
   return buf;
 }
 
-const pcCatalogCache = { pc95: null, pc94: null };
-const pcStampCache = { pc95: '', pc94: '' };
+const pcCatalogCache = { pc95: null, pc94: null, pc96: null };
+const pcStampCache = { pc95: '', pc94: '', pc96: '' };
 
 function treeStamp(dir) {
   if (!fs.existsSync(dir)) return 'missing';
@@ -252,7 +253,7 @@ function gameStatus(game) {
       ? { images: game.images || [], sheet: game.sheet || null, banks: game.kind === 'sheet' ? sheetGameBanks(game.images || []) : game.banks }
       : null,
     snes: game.snes || null,
-    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null)),
+    romHint: game.kind === 'pc95' ? 'pc95/' : (game.kind === 'pc94' ? 'pc94/' : (game.kind === 'pc96' ? 'pc96/' : (game.romNames.length ? 'roms/' + game.romNames[0] : null))),
     pcAudio: pc && pc.audio ? pc.audio : undefined
   };
 }

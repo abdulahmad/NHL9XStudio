@@ -28,6 +28,10 @@ assert.strictEqual(Groups.songGroup('MTTITLE'), Groups.MT32);
 assert.strictEqual(Groups.songGroup('MT32HOCK'), Groups.MT32);
 assert.strictEqual(Groups.songGroup('adtitle'), Groups.SONGS);
 assert.strictEqual(Groups.songGroup('bos1', 'Songs'), Groups.TEAM_SONGS);
+assert.strictEqual(Groups.songGroup('MENU1'), Groups.SONGS);
+assert.strictEqual(Groups.songGroup('DIT00'), Groups.SONGS);
+assert.strictEqual(Groups.songGroup('INTRO'), Groups.SONGS);
+assert.strictEqual(Groups.songGroup('ANTHCAN'), Groups.SONGS);
 
 const mixed = [
   { stem: 'WINN2', group: Groups.songGroup('WINN2') },
