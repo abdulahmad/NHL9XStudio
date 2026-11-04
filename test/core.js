@@ -7,7 +7,7 @@ const { parseAnim, renderFrame } = require('../lib/anim');
 const { holdVblanks } = require('../lib/playback');
 const { parseSheet, openFrames } = require('../lib/sheet');
 const { paletteParts, paletteLabel, defaultPaletteFile, matchPaletteFile } = require('../lib/labels');
-const { decodeJim, decompressBytecode, picturePixelHidden, openJimOverlay } = require('../lib/jim');
+const { decodeJim, decompressBytecode, picturePixelHidden } = require('../lib/jim');
 const { unpack93 } = require('../lib/snespak');
 const { parse93, parse94, openImage } = require('../lib/snes');
 const { GAMES, revAAdjust, revBAdjust, sheetGameBanks } = require('../lib/games');
@@ -436,7 +436,7 @@ const pa93 = GAMES.find((game) => game.id === 'nhlpa93');
 const g94 = GAMES.find((game) => game.id === 'nhl94');
 const g95 = GAMES.find((game) => game.id === 'nhl95');
 assert.strictEqual(pa93.images.length, 25);
-assert.strictEqual(g94.images.length, 217);
+assert.strictEqual(g94.images.length, 215);
 assert.strictEqual(g95.images.length, 302);
 assert.ok(pa93.images.some((image) => image.id === 'IceRink.map.jim' && image.kind === 'jim'));
 assert.ok(pa93.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
@@ -470,9 +470,6 @@ for (const slice of EXTRACT95_RETAIL) {
 }
 assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
 assert.ok(g94.banks.some((bank) => bank.id === 'StanleyCup.anim'));
-assert.ok(g94.images.some((image) => image.id === 'HiScoreImg.map.jim' && image.start === 1000312 && image.end === 1004344));
-assert.ok(g94.images.some((image) => image.id === 'HiScoreScreen' && image.kind === 'jim-overlay'));
-assert.strictEqual(g94.images.find((image) => image.id === 'StanleyCup.anim').end, 1000312);
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
 assert.ok(g94.images.some((image) => image.id === 'logoBOS.map.jim' && image.paletteAt === 0xFF482));
 assert.ok(g94.images.some((image) => image.id === 'CardMarioLemieux.map.jim' && image.paletteAt === 0xC6762));
@@ -589,21 +586,6 @@ if (genesis94) {
   const crowd = openFrames(genesis94.subarray(crowdSpec.start, crowdSpec.end), { decompressBytecode });
   assert.ok(crowd.numFrames >= 2);
   assert.ok(inkCount(crowd.renderFrame(1)) > 100);
-  const cupSpec = g94.images.find((image) => image.id === 'StanleyCup.anim');
-  assert.strictEqual(cupSpec.end, 1000312);
-  const cubeSpec = g94.images.find((image) => image.id === 'HiScoreImg.map.jim');
-  assert.strictEqual(cubeSpec.start, 1000312);
-  assert.strictEqual(cubeSpec.end, 1004344);
-  const cube = decodeJim(genesis94.subarray(cubeSpec.start, cubeSpec.end));
-  assert.strictEqual(cube.renderFrame(1).width, 104);
-  assert.strictEqual(cube.renderFrame(1).height, 104);
-  assert.ok(inkCount(cube.renderFrame(1)) > 200);
-  assert.ok(cube.combined.some((color) => color[2] > 180 && color[0] < 180), 'Hi Score cube has blue');
-  const splashSpec = g94.images.find((image) => image.id === 'HiScoreScreen');
-  const splash = openJimOverlay(genesis94, splashSpec, g94.images);
-  assert.strictEqual(splash.renderFrame(1).width, 320);
-  assert.strictEqual(splash.renderFrame(1).height, 224);
-  assert.ok(inkCount(splash.renderFrame(1)) > inkCount(cube.renderFrame(1)));
 }
 const genesis95 = upstreamRom('/tmp/disasm/NHL95Genesis', 'nhl95', '/tmp/disasm/NHL95Genesis/lst/nhl95.bin');
 if (genesis95) {
