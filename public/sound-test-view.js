@@ -28,7 +28,8 @@
   const NX = {
     nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
     nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' },
-    nhl95: { label: 'NHL 95', short: '95', slice: 'nhl95-sound-slice.bin', start: 0xaf44, size: 0x7a000, catalog: 'nhl95.json', driver: 'Nhl95M68kHarness' }
+    nhl95: { label: 'NHL 95', short: '95', slice: 'nhl95-sound-slice.bin', start: 0xaf44, size: 0x7a000, catalog: 'nhl95.json', driver: 'Nhl95M68kHarness' },
+    nhl96: { label: 'NHL 96', short: '96', slice: 'nhl96-sound-slice.bin', start: 0x25500, size: 0x88a18, catalog: 'nhl96.json', driver: 'Nhl96M68kHarness' }
   };
   const SNES94 = 'nhl94snes';
   const SNES93 = 'nhlpa93snes';
@@ -41,7 +42,7 @@
   const snesApi = () => (isSnes93() ? root.NhlSoundTestSnes93 : root.NhlSoundTestSnes);
   const isNx = () => !!NX[game];
   const assetsReady = () => (isSnes() ? !!(snesData && snesApi()) : !!(rom && Ym));
-  const nxNumber = () => (game === 'nhlpa93' ? 93 : game === 'nhl95' ? 95 : 94);
+  const nxNumber = () => (game === 'nhlpa93' ? 93 : game === 'nhl95' ? 95 : game === 'nhl96' ? 96 : 94);
   const toolName = (id) => (isSnes() ? (id === TOOL_EDITOR ? 'Sequencer · new ' + (isSnes93() ? 'NHLPA 93' : 'NHL 94') + ' (SNES) song' : 'MIDI import → ' + (isSnes93() ? 'NHLPA 93' : 'NHL 94') + ' (SNES)') : isNx()
     ? (id === TOOL_EDITOR ? 'Sequencer · new ' + NX[game].label + ' song' : 'MIDI import → ' + NX[game].label)
     : (id === TOOL_EDITOR ? 'Sequencer · new NHL 92 song' : 'MIDI import → NHL 92'));
@@ -135,8 +136,11 @@
     const cat = await res.json();
     let map = null;
     try {
-      const m = await fetch(new URL('data/audio/' + (game === 'nhl95' ? 'nhl95-gm-map.json' : 'nhl9x-gm-map.json'), document.baseURI).href);
-      map = m.ok ? await m.json() : null;
+      const mapFile = game === 'nhl95' ? 'nhl95-gm-map.json' : game === 'nhl96' ? null : 'nhl9x-gm-map.json';
+      if (mapFile) {
+        const m = await fetch(new URL('data/audio/' + mapFile, document.baseURI).href);
+        map = m.ok ? await m.json() : null;
+      }
     } catch (err) { map = null; }
     const sounds = cat.entries.filter((e) => e.soundId != null && e.playable);
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
@@ -145,12 +149,13 @@
     const N93 = (c.short === '93' || c.short === '94' || c.short === '95') && root.Nhl93Names ? root.Nhl93Names : null;
     const songRec = (e) => (N93 && c.short === '95' && e.soundId <= 3 ? { id: e.soundId, name: N93.SONGS95[e.soundId][0], desc: N93.SONGS95[e.soundId][2], group: 'Music', blurb: 'NHL95Genesis song() callers' } : N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), desc: e.musicDesc, group: e.group, blurb: e.blurb });
     const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
+    const startSong = c.short === '95' || c.short === '96';
     return {
       rom: image,
       slice: image.subarray(c.start),
       map,
       data: {
-        songs: sounds.filter((e) => e.soundId >= 0x30 || (c.short === '95' && e.soundId <= 3)).map(songRec),
+        songs: sounds.filter((e) => e.soundId >= 0x30 || (startSong && e.soundId <= 3)).map(songRec),
         sfx: sounds.filter((e) => e.soundId < 0x30).map(sfxRec)
       }
     };
@@ -312,12 +317,13 @@
   }
 
   const CROWD = () => root.Nhl93Crowd;
-  // Every Genesis game runs the same updatesound / KillCrowd PSG writes (byte-identical routines), so one renderer serves all four.
+  // Every Genesis game runs the same updatesound / KillCrowd PSG writes (byte-identical routines), so one renderer serves them all.
   const CROWD_SRC = {
     nhl92: ['NHL92Genesis src/video.asm:783-808', 'NHL92Genesis src/video.asm:810-816'],
     nhlpa93: ['NHLPA93Genesis src/video93.asm:921-946', 'NHLPA93Genesis src/video93.asm:948-954'],
     nhl94: ['NHL94Genesis src/display94.asm:1014-1041', 'NHL94Genesis src/display94.asm:1042-1049'],
-    nhl95: ['NHL95Genesis src/sound95.asm:1508-1535', 'NHL95Genesis src/sound95.asm:1705-1711']
+    nhl95: ['NHL95Genesis src/sound95.asm:1508-1535', 'NHL95Genesis src/sound95.asm:1705-1711'],
+    nhl96: ['NHL96Genesis src/sound/sound96.asm:977-1005', 'NHL96Genesis src/display96.asm:894-900']
   };
   const hasCrowd = () => !!CROWD_SRC[game] && !!CROWD();
   const crowdEntries = () => (hasCrowd() ? CROWD().LEVELS.concat([CROWD().OFF]).map((l) => ({ id: 'crowd-' + l.n, group: 'Crowd noise', label: l.name, sub: crowdSub(l) })) : []);

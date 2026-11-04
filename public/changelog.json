@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.21.0",
+      "date": "2026-11-04",
+      "changes": [
+        "NHL 96 Genesis is in the Game menu: player sheet (95-style records), SPA names from frames96.asm, and the pictures extractAssets96.js names. Drop roms/nhl96.bin or Open file. Sound test waits on a bundled sound slice"
+      ]
+    },
+    {
       "version": "1.20.0",
       "date": "2026-11-01",
       "changes": [

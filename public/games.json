@@ -5335,6 +5335,1723 @@
   },
   {
     "app": "NHL9X Studio",
+    "id": "nhl96",
+    "title": "NHL 96",
+    "source": "NHL96Genesis",
+    "platform": "genesis",
+    "kind": "sheet",
+    "paletteKind": "genesis",
+    "jerseyRow": 2,
+    "paletteLabel": null,
+    "tagline": null,
+    "hint": null,
+    "frames": "frames96.asm",
+    "banks": [
+      {
+        "id": "sprites",
+        "label": "Sprites"
+      },
+      {
+        "id": "Crowd.anim",
+        "label": "Crowd",
+        "kind": "frames",
+        "start": 1288854,
+        "end": 1293488
+      },
+      {
+        "id": "FaceOff.anim",
+        "label": "Face Off sprites",
+        "kind": "frames",
+        "start": 1293488,
+        "end": 1299088
+      }
+    ],
+    "images": [
+      {
+        "id": "TitleScreenImg.map.jim",
+        "label": "Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 559640,
+        "end": 586438
+      },
+      {
+        "id": "NHLShieldMap.map.jim",
+        "label": "NHL Shield",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 586438,
+        "end": 591494
+      },
+      {
+        "id": "NHLPALogoMap.map.jim",
+        "label": "NHLPA Logo",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 591494,
+        "end": 594360
+      },
+      {
+        "id": "CreditsBgMap.map.jim",
+        "label": "Credits",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 594360,
+        "end": 596870
+      },
+      {
+        "id": "Framermap.map.jim",
+        "label": "Framer",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 596870,
+        "end": 597318
+      },
+      {
+        "id": "FaceOffMap.map.jim",
+        "label": "Face Off",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 597318,
+        "end": 599012
+      },
+      {
+        "id": "Rinktilelist.map.jim",
+        "label": "Ice Rink",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 599012,
+        "end": 622194
+      },
+      {
+        "id": "RefTiles.map.jim",
+        "label": "Refs",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 622194,
+        "end": 626480
+      },
+      {
+        "id": "RefTilesHor.map.jim",
+        "label": "Refs 2",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 626480,
+        "end": 633502
+      },
+      {
+        "id": "Crowd.anim",
+        "label": "Crowd",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 1288854,
+        "end": 1293488
+      },
+      {
+        "id": "FaceOff.anim",
+        "label": "Face Off sprites",
+        "group": "Sprites",
+        "kind": "frames",
+        "start": 1293488,
+        "end": 1299088,
+        "teamPalette": true
+      },
+      {
+        "id": "EnergyBarMap.map.jim",
+        "label": "Energy Bar",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1299088,
+        "end": 1299870
+      },
+      {
+        "id": "EASNmap.map.jim",
+        "label": "EASN",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1299870,
+        "end": 1301108
+      },
+      {
+        "id": "EASportsMap.map.jim",
+        "label": "EA Sports",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1301108,
+        "end": 1304986
+      },
+      {
+        "id": "RevRinkTilelist.bin",
+        "label": "Ice Rink Reverse",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 1304986,
+        "end": 1313534
+      },
+      {
+        "id": "ReplayIconMap.map.jim",
+        "label": "Replay Icon",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1313534,
+        "end": 1315368
+      },
+      {
+        "id": "ReplayBannerMap.map.jim",
+        "label": "Replay Banner",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1315368,
+        "end": 1316790
+      },
+      {
+        "id": "unk_1417B6.map.jim",
+        "label": "unk_1417B6",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1316790,
+        "end": 1337558
+      },
+      {
+        "id": "HiScoreBgMap.map.jim",
+        "label": "Hi Score Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1337558,
+        "end": 1341590
+      },
+      {
+        "id": "HiScoreImg.map.jim",
+        "label": "Hi Score Img",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1341590,
+        "end": 1343572
+      },
+      {
+        "id": "TeamBlockANH.map.jim",
+        "label": "Anaheim block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1343572,
+        "end": 1344770
+      },
+      {
+        "id": "TeamBlockBOS.map.jim",
+        "label": "Boston block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1344770,
+        "end": 1345904
+      },
+      {
+        "id": "TeamBlockBUF.map.jim",
+        "label": "Buffalo block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1345904,
+        "end": 1347038
+      },
+      {
+        "id": "TeamBlockCGY.map.jim",
+        "label": "Calgary block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1347038,
+        "end": 1348236
+      },
+      {
+        "id": "TeamBlockCHI.map.jim",
+        "label": "Chicago block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1348236,
+        "end": 1349434
+      },
+      {
+        "id": "TeamBlockDAL.map.jim",
+        "label": "Dallas block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1349434,
+        "end": 1350568
+      },
+      {
+        "id": "TeamBlockDET.map.jim",
+        "label": "Detroit block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1350568,
+        "end": 1351702
+      },
+      {
+        "id": "TeamBlockEDM.map.jim",
+        "label": "Edmonton block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1351702,
+        "end": 1352932
+      },
+      {
+        "id": "TeamBlockFLA.map.jim",
+        "label": "Florida block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1352932,
+        "end": 1354066
+      },
+      {
+        "id": "TeamBlockHFD.map.jim",
+        "label": "Hartford block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1354066,
+        "end": 1355296
+      },
+      {
+        "id": "TeamBlockLA.map.jim",
+        "label": "Los Angeles block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1355296,
+        "end": 1356526
+      },
+      {
+        "id": "TeamBlockMTL.map.jim",
+        "label": "Montreal block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1356526,
+        "end": 1357756
+      },
+      {
+        "id": "TeamBlockNJ.map.jim",
+        "label": "New Jersey block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1357756,
+        "end": 1358986
+      },
+      {
+        "id": "TeamBlockNYI.map.jim",
+        "label": "Long Island block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1358986,
+        "end": 1360216
+      },
+      {
+        "id": "TeamBlockNYR.map.jim",
+        "label": "New York block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1360216,
+        "end": 1361446
+      },
+      {
+        "id": "TeamBlockOTW.map.jim",
+        "label": "Ottawa block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1361446,
+        "end": 1362644
+      },
+      {
+        "id": "TeamBlockPHI.map.jim",
+        "label": "Philadelphia block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1362644,
+        "end": 1363874
+      },
+      {
+        "id": "TeamBlockPIT.map.jim",
+        "label": "Pittsburgh block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1363874,
+        "end": 1365104
+      },
+      {
+        "id": "TeamBlockQUE.map.jim",
+        "label": "Quebec block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1365104,
+        "end": 1366238
+      },
+      {
+        "id": "TeamBlockSJ.map.jim",
+        "label": "San Jose block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1366238,
+        "end": 1367404
+      },
+      {
+        "id": "TeamBlockSTL.map.jim",
+        "label": "St. Louis block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1367404,
+        "end": 1368538
+      },
+      {
+        "id": "TeamBlockTB.map.jim",
+        "label": "Tampa Bay block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1368538,
+        "end": 1369768
+      },
+      {
+        "id": "TeamBlockTOR.map.jim",
+        "label": "Toronto block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1369768,
+        "end": 1370966
+      },
+      {
+        "id": "TeamBlockVAN.map.jim",
+        "label": "Vancouver block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1370966,
+        "end": 1372196
+      },
+      {
+        "id": "TeamBlockWSH.map.jim",
+        "label": "Washington block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1372196,
+        "end": 1373426
+      },
+      {
+        "id": "TeamBlockWPG.map.jim",
+        "label": "Winnipeg block",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1373426,
+        "end": 1374624
+      },
+      {
+        "id": "TeamLogoANH.map.jim",
+        "label": "Anaheim",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1374624,
+        "end": 1378958
+      },
+      {
+        "id": "TeamLogoBOS.map.jim",
+        "label": "Boston",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1378958,
+        "end": 1383196
+      },
+      {
+        "id": "TeamLogoBUF.map.jim",
+        "label": "Buffalo",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1383196,
+        "end": 1387498
+      },
+      {
+        "id": "TeamLogoCGY.map.jim",
+        "label": "Calgary",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1387498,
+        "end": 1391832
+      },
+      {
+        "id": "TeamLogoCHI.map.jim",
+        "label": "Chicago",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1391832,
+        "end": 1396198
+      },
+      {
+        "id": "TeamLogoDAL.map.jim",
+        "label": "Dallas",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1396198,
+        "end": 1400532
+      },
+      {
+        "id": "TeamLogoDET.map.jim",
+        "label": "Detroit",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1400532,
+        "end": 1404834
+      },
+      {
+        "id": "TeamLogoEDM.map.jim",
+        "label": "Edmonton",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1404834,
+        "end": 1409200
+      },
+      {
+        "id": "TeamLogoFLA.map.jim",
+        "label": "Florida",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1409200,
+        "end": 1413534
+      },
+      {
+        "id": "TeamLogoHFD.map.jim",
+        "label": "Hartford",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1413534,
+        "end": 1417900
+      },
+      {
+        "id": "TeamLogoLA.map.jim",
+        "label": "Los Angeles",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1417900,
+        "end": 1422298
+      },
+      {
+        "id": "TeamLogoMTL.map.jim",
+        "label": "Montreal",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1422298,
+        "end": 1426696
+      },
+      {
+        "id": "TeamLogoNJ.map.jim",
+        "label": "New Jersey",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1426696,
+        "end": 1431094
+      },
+      {
+        "id": "TeamLogoNYI.map.jim",
+        "label": "Long Island",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1431094,
+        "end": 1435492
+      },
+      {
+        "id": "TeamLogoNYR.map.jim",
+        "label": "New York",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1435492,
+        "end": 1439858
+      },
+      {
+        "id": "TeamLogoOTW.map.jim",
+        "label": "Ottawa",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1439858,
+        "end": 1444224
+      },
+      {
+        "id": "TeamLogoPHI.map.jim",
+        "label": "Philadelphia",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1444224,
+        "end": 1448622
+      },
+      {
+        "id": "TeamLogoPIT.map.jim",
+        "label": "Pittsburgh",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1448622,
+        "end": 1453020
+      },
+      {
+        "id": "TeamLogoQUE.map.jim",
+        "label": "Quebec",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1453020,
+        "end": 1457322
+      },
+      {
+        "id": "TeamLogoSJ.map.jim",
+        "label": "San Jose",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1457322,
+        "end": 1461688
+      },
+      {
+        "id": "TeamLogoSTL.map.jim",
+        "label": "St. Louis",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1461688,
+        "end": 1466022
+      },
+      {
+        "id": "TeamLogoTB.map.jim",
+        "label": "Tampa Bay",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1466022,
+        "end": 1470388
+      },
+      {
+        "id": "TeamLogoTOR.map.jim",
+        "label": "Toronto",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1470388,
+        "end": 1474722
+      },
+      {
+        "id": "TeamLogoVAN.map.jim",
+        "label": "Vancouver",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1474722,
+        "end": 1479120
+      },
+      {
+        "id": "TeamLogoWSH.map.jim",
+        "label": "Washington",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1479120,
+        "end": 1483518
+      },
+      {
+        "id": "TeamLogoWPG.map.jim",
+        "label": "Winnipeg",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1483518,
+        "end": 1487884
+      },
+      {
+        "id": "SmallLogoFLA.map.jim",
+        "label": "Florida small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1487884,
+        "end": 1488780
+      },
+      {
+        "id": "SmallLogoBUF.map.jim",
+        "label": "Buffalo small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1488780,
+        "end": 1489580
+      },
+      {
+        "id": "SmallLogoANH.map.jim",
+        "label": "Anaheim small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1489580,
+        "end": 1490412
+      },
+      {
+        "id": "SmallLogoBOS.map.jim",
+        "label": "Boston small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1490412,
+        "end": 1491276
+      },
+      {
+        "id": "SmallLogoCGY.map.jim",
+        "label": "Calgary small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1491276,
+        "end": 1492268
+      },
+      {
+        "id": "SmallLogoCHI.map.jim",
+        "label": "Chicago small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1492268,
+        "end": 1493196
+      },
+      {
+        "id": "SmallLogoDAL.map.jim",
+        "label": "Dallas small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1493196,
+        "end": 1493932
+      },
+      {
+        "id": "SmallLogoDET.map.jim",
+        "label": "Detroit small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1493932,
+        "end": 1494764
+      },
+      {
+        "id": "SmallLogoEDM.map.jim",
+        "label": "Edmonton small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1494764,
+        "end": 1495756
+      },
+      {
+        "id": "SmallLogoHFD.map.jim",
+        "label": "Hartford small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1495756,
+        "end": 1496428
+      },
+      {
+        "id": "SmallLogoLA.map.jim",
+        "label": "Los Angeles small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1496428,
+        "end": 1497196
+      },
+      {
+        "id": "SmallLogoMTL.map.jim",
+        "label": "Montreal small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1497196,
+        "end": 1498028
+      },
+      {
+        "id": "SmallLogoNJ.map.jim",
+        "label": "New Jersey small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1498028,
+        "end": 1498956
+      },
+      {
+        "id": "SmallLogoNYI.map.jim",
+        "label": "Long Island small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1498956,
+        "end": 1499756
+      },
+      {
+        "id": "SmallLogoNYR.map.jim",
+        "label": "New York small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1499756,
+        "end": 1500748
+      },
+      {
+        "id": "SmallLogoOTW.map.jim",
+        "label": "Ottawa small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1500748,
+        "end": 1501644
+      },
+      {
+        "id": "SmallLogoPHI.map.jim",
+        "label": "Philadelphia small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1501644,
+        "end": 1502444
+      },
+      {
+        "id": "SmallLogoPIT.map.jim",
+        "label": "Pittsburgh small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1502444,
+        "end": 1503244
+      },
+      {
+        "id": "SmallLogoQUE.map.jim",
+        "label": "Quebec small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1503244,
+        "end": 1504044
+      },
+      {
+        "id": "SmallLogoSJ.map.jim",
+        "label": "San Jose small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1504044,
+        "end": 1504940
+      },
+      {
+        "id": "SmallLogoSTL.map.jim",
+        "label": "St. Louis small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1504940,
+        "end": 1505804
+      },
+      {
+        "id": "SmallLogoTB.map.jim",
+        "label": "Tampa Bay small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1505804,
+        "end": 1506796
+      },
+      {
+        "id": "SmallLogoTOR.map.jim",
+        "label": "Toronto small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1506796,
+        "end": 1507564
+      },
+      {
+        "id": "SmallLogoVAN.map.jim",
+        "label": "Vancouver small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1507564,
+        "end": 1508364
+      },
+      {
+        "id": "SmallLogoWSH.map.jim",
+        "label": "Washington small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1508364,
+        "end": 1509196
+      },
+      {
+        "id": "SmallLogoWPG.map.jim",
+        "label": "Winnipeg small",
+        "group": "Logos",
+        "kind": "jim",
+        "start": 1509196,
+        "end": 1510156
+      },
+      {
+        "id": "IceBgMap.map.jim",
+        "label": "Ice Bg",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 1510156,
+        "end": 1522810
+      },
+      {
+        "id": "ControllerBgMap.map.jim",
+        "label": "Controller Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1522810,
+        "end": 1544552
+      },
+      {
+        "id": "RosterFont.bin",
+        "label": "Roster Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1544552,
+        "end": 1546870
+      },
+      {
+        "id": "SmallFontMap.map.jim",
+        "label": "Small Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1546870,
+        "end": 1548644
+      },
+      {
+        "id": "SmallFontMap2.map.jim",
+        "label": "Small Font 2",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1548644,
+        "end": 1550962
+      },
+      {
+        "id": "BigFontMap2.map.jim",
+        "label": "Big Font 2",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1550962,
+        "end": 1554048
+      },
+      {
+        "id": "BigFontMap4.map.jim",
+        "label": "Big Font 4",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1554048,
+        "end": 1557166
+      },
+      {
+        "id": "LeagueOptionsBgMap.map.jim",
+        "label": "League Options Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1557198,
+        "end": 1563612
+      },
+      {
+        "id": "LeagueOptionsTitleMap.map.jim",
+        "label": "League Options Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1563612,
+        "end": 1565692
+      },
+      {
+        "id": "LeagueOptionsSprites.map.jim",
+        "label": "League Options Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1565692,
+        "end": 1567978
+      },
+      {
+        "id": "SelectTeamSeasonBgMap.map.jim",
+        "label": "Select Team Season Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1567978,
+        "end": 1575096
+      },
+      {
+        "id": "SelectTeamSeasonSprites.map.jim",
+        "label": "Select Team Season Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1575096,
+        "end": 1575990
+      },
+      {
+        "id": "StandingsTitleMap.map.jim",
+        "label": "Standings Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1575990,
+        "end": 1578070
+      },
+      {
+        "id": "StandingsBgMap.map.jim",
+        "label": "Standings Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1578070,
+        "end": 1585188
+      },
+      {
+        "id": "StandingsSprites.map.jim",
+        "label": "Standings Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1585188,
+        "end": 1586082
+      },
+      {
+        "id": "GameOptionsBgMap.map.jim",
+        "label": "Game Options Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1586082,
+        "end": 1595248
+      },
+      {
+        "id": "GameOptionsTitleMap.map.jim",
+        "label": "Game Options Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1595248,
+        "end": 1597328
+      },
+      {
+        "id": "GameOptionsSprites.map.jim",
+        "label": "Game Options Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1597328,
+        "end": 1598270
+      },
+      {
+        "id": "LeadersBgMap.map.jim",
+        "label": "Leaders Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1598270,
+        "end": 1605644
+      },
+      {
+        "id": "LeagueLeadersTitleMap.map.jim",
+        "label": "League Leaders Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1605644,
+        "end": 1607724
+      },
+      {
+        "id": "LeadersSprites.map.jim",
+        "label": "Leaders Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1607724,
+        "end": 1608778
+      },
+      {
+        "id": "PlayoffLeadersTitleMap.map.jim",
+        "label": "Playoff Leaders Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1608778,
+        "end": 1610890
+      },
+      {
+        "id": "PlayerStatsBgMap.map.jim",
+        "label": "Player Stats Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1610890,
+        "end": 1617112
+      },
+      {
+        "id": "SeasonStatsTitleMap.map.jim",
+        "label": "Season Stats Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1617112,
+        "end": 1619192
+      },
+      {
+        "id": "PlayerStatsSprites.map.jim",
+        "label": "Player Stats Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1619192,
+        "end": 1620246
+      },
+      {
+        "id": "PlayoffStatsTitleMap.map.jim",
+        "label": "Playoff Stats Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1620246,
+        "end": 1622326
+      },
+      {
+        "id": "SelectTeamTitleMap.map.jim",
+        "label": "Select Team Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1622326,
+        "end": 1624374
+      },
+      {
+        "id": "SelectTeamBgMap.map.jim",
+        "label": "Select Team Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1624374,
+        "end": 1629700
+      },
+      {
+        "id": "SelectTeamSprites.map.jim",
+        "label": "Select Team Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1629700,
+        "end": 1630546
+      },
+      {
+        "id": "TransactionsTitleMap.map.jim",
+        "label": "Transactions Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1630546,
+        "end": 1632562
+      },
+      {
+        "id": "TransactionsBgMap.map.jim",
+        "label": "Transactions Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1632562,
+        "end": 1639296
+      },
+      {
+        "id": "TransactionsSprites.map.jim",
+        "label": "Transactions Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1639296,
+        "end": 1640190
+      },
+      {
+        "id": "TradeTitleMap.map.jim",
+        "label": "Trade Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1640190,
+        "end": 1642238
+      },
+      {
+        "id": "TradeBgMap.map.jim",
+        "label": "Trade Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1642238,
+        "end": 1648172
+      },
+      {
+        "id": "TradeSprites.map.jim",
+        "label": "Trade Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1648172,
+        "end": 1649146
+      },
+      {
+        "id": "CreateTitleMap.map.jim",
+        "label": "Create Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1649146,
+        "end": 1651226
+      },
+      {
+        "id": "CreateBgMap.map.jim",
+        "label": "Create Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1651226,
+        "end": 1657928
+      },
+      {
+        "id": "CreateSprites.map.jim",
+        "label": "Create Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1657928,
+        "end": 1659014
+      },
+      {
+        "id": "CreateRatingsBgMap.map.jim",
+        "label": "Create Ratings Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1659014,
+        "end": 1665460
+      },
+      {
+        "id": "CreateRatingsSprites.map.jim",
+        "label": "Create Ratings Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1665460,
+        "end": 1666570
+      },
+      {
+        "id": "SignPlayersTitleMap.map.jim",
+        "label": "Sign Players Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1666570,
+        "end": 1668650
+      },
+      {
+        "id": "SignPlayersSprites.map.jim",
+        "label": "Sign Players Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1668650,
+        "end": 1669728
+      },
+      {
+        "id": "ReleasePlayersTitleMap.map.jim",
+        "label": "Release Players Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1669728,
+        "end": 1671776
+      },
+      {
+        "id": "SignReleaseBgMap.map.jim",
+        "label": "Sign Release Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1671776,
+        "end": 1677230
+      },
+      {
+        "id": "ReleasePlayersSprites.map.jim",
+        "label": "Release Players Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1677230,
+        "end": 1678308
+      },
+      {
+        "id": "MainMenuTitleMap.map.jim",
+        "label": "Main Menu Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1678308,
+        "end": 1680356
+      },
+      {
+        "id": "MainMenuBgMap.map.jim",
+        "label": "Main Menu Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1680356,
+        "end": 1688114
+      },
+      {
+        "id": "MainMenuSprites.map.jim",
+        "label": "Main Menu Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1688114,
+        "end": 1689128
+      },
+      {
+        "id": "EditLinesTitleMap.map.jim",
+        "label": "Edit Lines Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1689128,
+        "end": 1691144
+      },
+      {
+        "id": "LineEditorBgMap2.map.jim",
+        "label": "Line Editor Bg 2",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1691144,
+        "end": 1697782
+      },
+      {
+        "id": "LineEditorBgMap.map.jim",
+        "label": "Line Editor Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1697782,
+        "end": 1704516
+      },
+      {
+        "id": "LineEditorSprites2.map.jim",
+        "label": "Line Editor Sprites2",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1704516,
+        "end": 1705522
+      },
+      {
+        "id": "LineEditorSprites.map.jim",
+        "label": "Line Editor Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1705522,
+        "end": 1706584
+      },
+      {
+        "id": "TeamRosterBgMap.map.jim",
+        "label": "Team Roster Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1706584,
+        "end": 1711814
+      },
+      {
+        "id": "TeamRosterSprites.map.jim",
+        "label": "Team Roster Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1711814,
+        "end": 1712892
+      },
+      {
+        "id": "TeamRosterTitleMap.map.jim",
+        "label": "Team Roster Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1712892,
+        "end": 1714972
+      },
+      {
+        "id": "SummaryBgMap.map.jim",
+        "label": "Summary Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1714972,
+        "end": 1721674
+      },
+      {
+        "id": "SummarySprites.map.jim",
+        "label": "Summary Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1721674,
+        "end": 1722728
+      },
+      {
+        "id": "ScoringTitleMap.map.jim",
+        "label": "Scoring Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1722728,
+        "end": 1724744
+      },
+      {
+        "id": "PenaltiesTitleMap.map.jim",
+        "label": "Penalties Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1724744,
+        "end": 1726760
+      },
+      {
+        "id": "PeriodStatsTitleMap.map.jim",
+        "label": "Period Stats Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1726760,
+        "end": 1728840
+      },
+      {
+        "id": "PeriodStatsMap.map.jim",
+        "label": "Period Stats",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1728840,
+        "end": 1734326
+      },
+      {
+        "id": "GameStatsTitleMap.map.jim",
+        "label": "Game Stats Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1734326,
+        "end": 1736406
+      },
+      {
+        "id": "GameStatsBgMap.map.jim",
+        "label": "Game Stats Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1736406,
+        "end": 1743012
+      },
+      {
+        "id": "GameStatsSprites.map.jim",
+        "label": "Game Stats Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1743012,
+        "end": 1743986
+      },
+      {
+        "id": "ShootoutSetupTitleMap.map.jim",
+        "label": "Shootout Setup Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1743986,
+        "end": 1746002
+      },
+      {
+        "id": "RecordHoldersTitleMap.map.jim",
+        "label": "Record Holders Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1746002,
+        "end": 1748082
+      },
+      {
+        "id": "RecordHoldersBgMap.map.jim",
+        "label": "Record Holders Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1748082,
+        "end": 1754016
+      },
+      {
+        "id": "RecordHoldersSprites.map.jim",
+        "label": "Record Holders Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1754016,
+        "end": 1755078
+      },
+      {
+        "id": "PlayerStatsTitleMap.map.jim",
+        "label": "Player Stats Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1755078,
+        "end": 1757158
+      },
+      {
+        "id": "NameEntryTitleMap.map.jim",
+        "label": "Name Entry Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1757158,
+        "end": 1759174
+      },
+      {
+        "id": "NameEntryBgMap.map.jim",
+        "label": "Name Entry Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1759174,
+        "end": 1764244
+      },
+      {
+        "id": "NameEntrySprites.map.jim",
+        "label": "Name Entry Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1764244,
+        "end": 1765218
+      },
+      {
+        "id": "AwardsTitleMap.map.jim",
+        "label": "Awards Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1765218,
+        "end": 1767298
+      },
+      {
+        "id": "AwardsBgMap.map.jim",
+        "label": "Awards Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1767298,
+        "end": 1774000
+      },
+      {
+        "id": "AwardsSprites.map.jim",
+        "label": "Awards Sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1774000,
+        "end": 1774814
+      },
+      {
+        "id": "PresidentsPic.map.jim",
+        "label": "Presidents Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1774814,
+        "end": 1776436
+      },
+      {
+        "id": "ArtRossPic.map.jim",
+        "label": "Art Ross Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1776436,
+        "end": 1778762
+      },
+      {
+        "id": "NorrisPic.map.jim",
+        "label": "Norris Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1778762,
+        "end": 1780672
+      },
+      {
+        "id": "VezinaPic.map.jim",
+        "label": "Vezina Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1780672,
+        "end": 1782454
+      },
+      {
+        "id": "CampbellPic.map.jim",
+        "label": "Campbell Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1782454,
+        "end": 1784332
+      },
+      {
+        "id": "WalesPic.map.jim",
+        "label": "Wales Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1784332,
+        "end": 1785730
+      },
+      {
+        "id": "HartPic.map.jim",
+        "label": "Hart Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1785730,
+        "end": 1787192
+      },
+      {
+        "id": "ConnSmythePic.map.jim",
+        "label": "Conn Smythe Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1787192,
+        "end": 1789262
+      },
+      {
+        "id": "PearsonPic.map.jim",
+        "label": "Pearson Pic",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1789262,
+        "end": 1790916
+      },
+      {
+        "id": "PadIconMap1.map.jim",
+        "label": "Pad Icon Map1",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1790916,
+        "end": 1792322
+      },
+      {
+        "id": "PadIconMap2.map.jim",
+        "label": "Pad Icon 2",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1792322,
+        "end": 1793728
+      },
+      {
+        "id": "PadIconMap3.map.jim",
+        "label": "Pad Icon 3",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1793728,
+        "end": 1795134
+      },
+      {
+        "id": "PadIconMap4.map.jim",
+        "label": "Pad Icon 4",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1795134,
+        "end": 1796540
+      },
+      {
+        "id": "PadCursorMap.map.jim",
+        "label": "Pad Cursor",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1796540,
+        "end": 1797946
+      },
+      {
+        "id": "ControllerTitleMap.map.jim",
+        "label": "Controller Title",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1797946,
+        "end": 1799994
+      },
+      {
+        "id": "ControllerFrameMap.map.jim",
+        "label": "Controller Frame",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1799994,
+        "end": 1804744
+      },
+      {
+        "id": "BigFontMap.map.jim",
+        "label": "Big Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1804744,
+        "end": 1807382
+      },
+      {
+        "id": "BigFontMap3.map.jim",
+        "label": "Big Font 3",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1807382,
+        "end": 1810136
+      },
+      {
+        "id": "DigitFontMap.map.jim",
+        "label": "Digit Font",
+        "group": "Fonts",
+        "kind": "jim",
+        "start": 1810136,
+        "end": 1811646
+      },
+      {
+        "id": "PauseRinkMap.map.jim",
+        "label": "Pause Rink",
+        "group": "Ice",
+        "kind": "jim",
+        "start": 1811646,
+        "end": 1817580
+      },
+      {
+        "id": "PauseBgBitmap.map.jim",
+        "label": "Pause Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1817580,
+        "end": 1821690
+      },
+      {
+        "id": "PauseSprites.map.jim",
+        "label": "Pause sprites",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1821690,
+        "end": 1822584
+      },
+      {
+        "id": "FoxBannerMap.map.jim",
+        "label": "Fox Banner",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1822584,
+        "end": 1824230
+      },
+      {
+        "id": "HockeyNewsBannerMap.map.jim",
+        "label": "Hockey News Banner",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1824230,
+        "end": 1826004
+      },
+      {
+        "id": "PlayoffTreeMap.map.jim",
+        "label": "Playoff Tree",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1826004,
+        "end": 1835778
+      },
+      {
+        "id": "PlayoffTreeBgMap.map.jim",
+        "label": "Playoff Tree Bg",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1835778,
+        "end": 1853456
+      },
+      {
+        "id": "PlayoffTeamFrameMap.map.jim",
+        "label": "Playoff Team Frame",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1853456,
+        "end": 1854542
+      },
+      {
+        "id": "PuckAnimMap.map.jim",
+        "label": "Puck anim",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1854542,
+        "end": 1862732
+      },
+      {
+        "id": "CupChampsMap.map.jim",
+        "label": "Cup Champs",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1862732,
+        "end": 1879802
+      },
+      {
+        "id": "CupChampsMap2.map.jim",
+        "label": "Cup Champs 2",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1879802,
+        "end": 1887144
+      },
+      {
+        "id": "unk_1CCEE8.map.jim",
+        "label": "unk_1CCEE8",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1887976,
+        "end": 1922080
+      },
+      {
+        "id": "unk_1D5420.map.jim",
+        "label": "unk_1D5420",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1922080,
+        "end": 1922974
+      },
+      {
+        "id": "revframetbl.map.jim",
+        "label": "Reverse frame table",
+        "group": "Screens",
+        "kind": "jim",
+        "start": 1922974,
+        "end": 1926690
+      }
+    ],
+    "pixels": false,
+    "rom": false,
+    "revisions": [],
+    "revision": "",
+    "sheet": {
+      "record": "95",
+      "boundsAt": 0,
+      "sprites": 633502,
+      "hotlist": 1282958,
+      "palette": 1242504
+    },
+    "snes": null,
+    "romHint": "Drop ROM or use roms/",
+    "paletteDir": "genesis95",
+    "paletteFiles": [
+      "Bruinsh.pal",
+      "Bruinsv.pal",
+      "anah.pal",
+      "anav.pal",
+      "flamesh.pal",
+      "flamesv.pal",
+      "sabresh.pal",
+      "sabresv.pal"
+    ]
+  },
+  {
+    "app": "NHL9X Studio",
     "id": "nhlpa93snes",
     "title": "NHLPA 93 (SNES)",
     "source": "NHLPA93SNES",
@@ -6373,7 +8090,7 @@
     "jerseyRow": 9,
     "paletteLabel": "Team colors",
     "tagline": "DOS install under pc94/ — planar PPV sprite sheets, QPP pictures, AdLib songs, announcer speech, 876 player frames",
-    "hint": "Copy the NHL 94 PC install into pc94/ (PPV, QPP, HOMEPALS.BIN, AWAYPALS.BIN, RINK.TIL, RINK.MAP, *.KMS/*.CFG, PCFF*.TIM/*.DIG/*.PAT, XBRUCE2.VIV / XRBARR2.VIV). Player sheets are 000_049.PPV … 850_875.PPV; rink/crowd use F000_049.PPV and siblings. The Images tab Ice rink is RINK.TIL + RINK.MAP (no RINK.QFS). QPP pictures are Huffman 30 FB or BTree 46 FB wrapping a Mode X planar bank — not 95 PC SHPI/RefPack. SPA scripts come from HOCKEY.EXE at 0x358A4. Restart the server after adding files.",
+    "hint": "Copy the NHL 94 PC install into pc94/ (PPV, QPP, HOMEPALS.BIN, AWAYPALS.BIN, RINK.TIL, RINK.MAP, RINKPAL.QPP, *.KMS/*.CFG, PCFF*.TIM/*.DIG/*.PAT, XBRUCE2.VIV / XRBARR2.VIV). Player sheets are 000_049.PPV … 850_875.PPV; rink/crowd use F000_049.PPV and siblings. The Images tab Ice rink is RINK.TIL + RINK.MAP (no RINK.QFS): four concatenated Mode X planes (VgaStorePlanes), not 64-byte linear tiles. MAP 0x800 is a true 8-pixel reverse (VgaStamp8 plane 3-p). Jersey and centre ice use RINKPAL.QPP, not the bundled 95 rinkpal.act. QPP pictures are Huffman 30 FB or BTree 46 FB wrapping a Mode X planar bank — not 95 PC SHPI/RefPack. SPA scripts come from HOCKEY.EXE at 0x358A4. Restart the server after adding files.",
     "frames": "frames94pc.asm",
     "banks": [
       {
@@ -6406,7 +8123,7 @@
     "jerseyRow": 9,
     "paletteLabel": "Team colors",
     "tagline": "DOS install under pc95/ — SHPI PPV sheets, QFS pictures, AdLib songs, announcer speech",
-    "hint": "Copy the NHL 95 PC install into pc95/ (PPV, QFS, HOMEPALS.BIN, AWAYPALS.BIN, *.KMS/*.CFG, PCFF*.TIM/*.DIG/*.PAT, XBRUCE2.VIV, optional .IFF). Player frames are the 000_049.PPV … 11001149.PPV series. On the Frame tab, Bank → Rink and crowd opens F000_049.PPV and siblings. Every other QFS is a picture. Songs are EACSNDF .KMS/.CFG from the EXE (not wiki Kris). VIV is OpenSpeechBank; IFF FORM 8SVX is signed 8-bit at half of a ≥16 kHz VHDR rate (AFAN.IFF ≥ 7 s). RIFF WAVE XOR 80h, then 8-bit unless fmt bits is 16. Restart the server after adding files.",
+    "hint": "Copy the NHL 95 PC install into pc95/ (PPV, QFS, HOMEPALS.BIN, AWAYPALS.BIN, *.KMS/*.CFG, PCFF*.TIM/*.DIG/*.PAT, XBRUCE2.VIV, optional .IFF). Player frames are the 000_049.PPV … 11001149.PPV series. On the Frame tab, Bank → Rink and crowd opens F000_049.PPV and siblings. Every other QFS is a picture. Songs are EACSNDF .KMS/.CFG from the EXE (not wiki Kris). VIV is C0 FB like 94; OpenSpeechBank splits per clip: 47 FB (G) is ReadSpeechSample DPCM; .NUM / .COR rink calls are mixer flag 1 D7414 (same expander as desk IFF). IFF FORM 8SVX BODY is word_D7414 Fibonacci-delta at the VHDR rate, volume 0x4C (AFAN.IFF ≥ 7 s), with VHDR oneShot/repeat as intro then looping tail. RIFF WAVE XOR 80h, then 8-bit unless fmt bits is 16. Restart the server after adding files.",
     "frames": "frames95pc.asm",
     "banks": [
       {

@@ -3,7 +3,7 @@
  * Extract the NHLPA 93 or NHL 94 Genesis sound segment (68k driver, Z80 program, FM patches, event
  * streams, PCM samples) for the bundled Sound test fixture.
  *
- *   node tools/extract-nhl9x-sound-fixture.js [93|94]     (default: both, whichever ROMs are found)
+ *   node tools/extract-nhl9x-sound-fixture.js [93|94|95|96]     (default: all, whichever ROMs are found)
  *
  * Source: your own retail ROM (roms/nhlpa93.bin / roms/nhl94.bin, or NHL93_ROM / NHL94_ROM). The ROM is
  * checked by SHA-1 and size. Only the sound segment is written; not a full game ROM.
@@ -31,6 +31,12 @@ const GAMES = {
     start: 0xaf44, end: 0x7a000, // sound95 (NHL95Genesis segmap95); driver, bank, PCM, FM patches
     env: 'NHL95_ROM', files: ['roms/nhl95.bin', '/tmp/disasm/NHL95Genesis/lst/nhl95.bin'],
     out: 'nhl95-sound', repos: ['/tmp/disasm/NHL95Genesis', '../NHL95Genesis', '../nhl95genesis']
+  },
+  96: {
+    name: 'NHL 96 (Genesis, retail)', sha1: '7204633fbb9966ac637e7966d02ba15c5acdee6b', size: 0x200000,
+    start: 0x25500, end: 0x88a18, // sound96 (Z80Program through end of SoundOff / before TitleScreenImg)
+    env: 'NHL96_ROM', files: ['roms/nhl96.bin', '/tmp/disasm/NHL96Genesis/lst/nhl96.bin'],
+    out: 'nhl96-sound', repos: ['/tmp/disasm/NHL96Genesis', '../NHL96Genesis', '../nhl96genesis']
   }
 };
 
@@ -38,7 +44,7 @@ const want = process.argv[2] ? [process.argv[2]] : Object.keys(GAMES);
 let failed = false;
 for (const key of want) {
   const g = GAMES[key];
-  if (!g) { console.error('unknown game ' + key + ' (93 or 94)'); process.exit(1); }
+  if (!g) { console.error('unknown game ' + key + ' (93, 94, 95 or 96)'); process.exit(1); }
   const candidates = [process.env[g.env]].concat(g.files.map((f) => path.join(root, f))).filter(Boolean);
   const file = candidates.find((f) => fs.existsSync(f))
     || require('../lib/upstream-rom').findRomIn(g.repos.concat(path.join(root, 'roms')), { sha1: g.sha1, size: g.size });   // any file name in a disassembly folder

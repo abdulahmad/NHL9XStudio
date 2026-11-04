@@ -20,6 +20,7 @@ function shownFrame(n) {
 function hasSoundTest(info) {
   if (!info) return false;
   if (info.id === 'nhl94pc' || info.id === 'nhl95pc') return typeof NhlSoundTestPc94 !== 'undefined';
+  // nhl96 stays off until data/fixtures/nhl96-sound-slice.bin exists (extract-nhl9x-sound-fixture.js 96).
   return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
 }
 
@@ -34,7 +35,7 @@ function soundTestViewFor(info) {
  * games. NHL 92's audio is the Sound test (the retail driver chain).
  */
 function hasAudioTab(info) {
-  return !!(info && info.platform === 'genesis' && info.id !== 'nhl92' && info.id !== 'nhlpa93' && info.id !== 'nhl94' && info.id !== 'nhl95');
+  return !!(info && info.platform === 'genesis' && info.id !== 'nhl92' && info.id !== 'nhlpa93' && info.id !== 'nhl94' && info.id !== 'nhl95' && info.id !== 'nhl96');
 }
 
 /** The Sound test panel replaces the sprite stage: its view module and selection key in state. */
