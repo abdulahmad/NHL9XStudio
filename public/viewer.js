@@ -105,6 +105,7 @@ const state = {
   audioId: '',
   soundTestItem: 'song-0',
   openGroups: new Set(), // list groups the listener flipped from their default (Audio: Songs / SFX open, DAC samples / Instruments closed; Player cards closed)
+  imagePackAuto: '',
   groupsInit: false,
   acc: 0,
   holdKey: '',
@@ -358,7 +359,11 @@ function buildSequence(anim) {
     const image = ((gameInfo && gameInfo.images) || []).find((item) => item.id === state.image);
     const steps = [];
     const count = anim ? anim.numFrames : 0;
-    for (let f = 1; f <= count; f++) steps.push({ frame: f, ticks: 8 });
+    const frames = anim && anim.frames;
+    for (let f = 1; f <= count; f++) {
+      const tag = frames && frames[f - 1] && frames[f - 1].tag;
+      steps.push({ frame: f, ticks: 8, tag: tag || '' });
+    }
     return {
       key: 'image:' + state.image,
       steps,
@@ -963,7 +968,7 @@ function renderImageList(box, q) {
   const visible = [];
   for (const image of images) {
     const extra = IMAGE_SEARCH_EXTRA[image.id.toLowerCase()] || '';
-    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + (image.pack || '') + ' ' + (image.shapeTag || '') + ' ' + extra).toLowerCase();
+    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + (image.pack || '') + ' ' + (image.shapeTag || '') + ' ' + ((image.shapeTags || []).join(' ')) + ' ' + extra).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(image);
     const group = isPlayerCard(image) ? 'Player cards' : image.group || 'Other';
@@ -986,7 +991,13 @@ function renderImageList(box, q) {
   const packKeyOf = (image) => (image.group || '') + '\x1f' + (image.pack || '');
   if (nested96) {
     const sel = visible.find((image) => image.id === state.image);
-    if (sel && sel.pack) state.openGroups.add(packKeyOf(sel));
+    if (sel && sel.pack) {
+      const key = packKeyOf(sel);
+      if (state.imagePackAuto !== key) {
+        state.imagePackAuto = key;
+        state.openGroups.add(key);
+      }
+    }
   }
   for (const section of sections) {
     if (section.label) {
@@ -1385,7 +1396,7 @@ function renderFilmstrip() {
     button.dataset.step = String(item.index);
     const canvas = document.createElement('canvas');
     const label = document.createElement('span');
-    label.textContent = String(shownFrame(item.step.frame));
+    label.textContent = (state.mode === 'image' && item.step.tag) ? item.step.tag : String(shownFrame(item.step.frame));
     button.append(canvas, label);
     if (lazyPaint) filmstripPaintQueue.push({ canvas, frameNumber: item.step.frame });
     else {
@@ -1467,6 +1478,7 @@ function renderMeta() {
       if (image.folder) rows.push(['Folder', image.folder]);
       if (image.pack) rows.push(['Pack', image.pack]);
       if (image.shapeTag) rows.push(['SHPI tag', image.shapeTag]);
+      else if (image.shapeTags && image.shapeTags.length) rows.push(['SHPI tags', image.shapeTags.join(', ')]);
       if (image.paletteTag) rows.push(['Palette tag', image.paletteTag]);
     }
   }
@@ -2809,6 +2821,7 @@ async function loadGame(id, keepSelection) {
   };
   const info = games.find((game) => game.id === id) || games[0];
   state.game = info.id;
+  state.imagePackAuto = '';
   gameInfo = info;
   NhlAudioEngine.stopAll();
   state.playing = false;
