@@ -314,8 +314,12 @@ function gameStatus(game) {
     banks = sheetGameBanks(placed.images);
   } else if (isPcKind(game.kind)) {
     banks = [];
-    if (pc.spriteFiles.length || !pc.rinkFiles.length) banks.push({ id: 'sprites', label: 'Players' });
-    if (pc.rinkFiles.length) banks.push({ id: 'rink', label: 'Rink and crowd' });
+    if (game.id === 'nhl96pc' && pc95.pc96Banks) {
+      banks = pc95.pc96Banks(pc);
+    } else {
+      if (pc.spriteFiles.length || !pc.rinkFiles.length) banks.push({ id: 'sprites', label: 'Players' });
+      if (pc.rinkFiles.length) banks.push({ id: 'rink', label: 'Rink and crowd' });
+    }
   }
   return {
     app: APP_NAME,
@@ -405,7 +409,9 @@ const server = http.createServer((req, res) => {
     if (!game || !isPcKind(game.kind)) { send(res, 404, 'Unknown game', 'text/plain; charset=utf-8'); return; }
     const catalog = pcFiles(game);
     const bank = url.searchParams.get('bank') || 'sprites';
-    const files = bank === 'rink' ? catalog.rinkFiles : catalog.spriteFiles;
+    const files = pc95.spriteBankFiles
+      ? pc95.spriteBankFiles(catalog, bank)
+      : (bank === 'rink' ? catalog.rinkFiles : catalog.spriteFiles);
     if (!files.length) { send(res, 404, 'No PC sprites', 'text/plain; charset=utf-8'); return; }
     send(res, 200, pcBundle(game, files), 'application/octet-stream');
     return;

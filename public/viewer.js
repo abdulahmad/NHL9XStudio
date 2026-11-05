@@ -2566,7 +2566,9 @@ async function ensureBank(name) {
     if (!gameInfo.pixels) return null;
     let bundle;
     if (clientPc) {
-      const files = name === 'rink' ? clientPc.catalog.rinkFiles : clientPc.catalog.spriteFiles;
+      const files = Nhl95Pc.spriteBankFiles
+        ? Nhl95Pc.spriteBankFiles(clientPc.catalog, name)
+        : (name === 'rink' ? clientPc.catalog.rinkFiles : clientPc.catalog.spriteFiles);
       const parts = files.map((rel) => ({ name: rel, data: clientPc.map.get(rel) })).filter((part) => part.data);
       if (!parts.length) return null;
       bundle = Nhl95Pc.encodeBundle(parts);

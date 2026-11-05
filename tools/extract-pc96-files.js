@@ -93,7 +93,7 @@ function main() {
     source: 'NHL96PC',
     exeSha1: sha1,
     playback: false,
-    notes: 'File names from the retail HOCKEY.EXE. Pictures are SHPI .FSH (locateshape); music is EA 1SN .ASF; art packs are .VIV. No 94/95 updateanim SPA table and no .KMS path.',
+    notes: 'File names from the retail HOCKEY.EXE. Pictures are SHPI .FSH (locateshape); player sprites are GAMEART .REF; music is EA 1SN .ASF; art packs are .VIV. SPA is unk_117A9C, not the 94/95 updateanim table. No .KMS path.',
     pictures: files.fsh,
     qfs: files.qfs,
     viv: files.viv,

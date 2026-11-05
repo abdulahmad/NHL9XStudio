@@ -33,7 +33,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | 7 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
 | 8 | **95PC** | `nhl95pc` | DOS graphics + AdLib/SFX/VIV audio; remaining catalog/palette edge cases |
 | 9 | **94PC** | `nhl94pc` | Planar PPV/QPP + AdLib/SFX + VIV speech; SPA from retail `HOCKEY.EXE` |
-| 10 | **96PC** | `nhl96pc` | SHPI `.FSH` + locatebig C0 FB `.VIV` pictures, EACS `.ASF` songs; no updateanim SPA table |
+| 10 | **96PC** | `nhl96pc` | SHPI `.FSH` + locatebig C0 FB `.VIV` pictures, GAMEART REF player sheets, EACS `.ASF` songs, SPA from `unk_117A9C` |
 
 ---
 
@@ -47,7 +47,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | `public/viewer.js` | Single-page UI: catalog, stage, transport, filmstrip, compass, jersey palette, URL hash state. |
 | `lib/games.js` | **Game profiles**: frames file, platform, banks, image catalog, ROM hints, sheet/SNES/PC options. |
 | `lib/*` | Decoders: `parse-frames.js`, `anim.js`, `sheet.js`, `jim.js`, `sjim.js`, `snes.js`, `snespak.js`, `pc95.js`, `playback.js`, `labels.js`, `genesis-images.js` (generated lists). `indexed-image.js` writes 8-bit PNG (PLTE + tRNS) and BMP for frame / ice / crest export. |
-| `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames96.asm` (SPA only), `frames95pc.asm` / `frames94pc.asm` for DOS, and empty `frames96pc.asm` (no updateanim table). File names for 96 PC: `pc96-files.json`. |
+| `data/` | `frames*.asm` catalogs (SPF/SPA), including `frames96.asm` (SPA only), `frames95pc.asm` / `frames94pc.asm` for DOS, and `frames96pc.asm` from `HOCKEY.EXE` `unk_117A9C`. File names for 96 PC: `pc96-files.json`. |
 | `test.js` | Parser tests, PC95 tests, NHL 92 frame BMP cross-check when ROM present. |
 
 There is **no database** and **no audio pipeline** in the viewer yet. All state is in-memory plus `#hash` in the browser.
@@ -125,7 +125,7 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 - **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
 - **94PC:** Profile `nhl94pc` decodes planar PPV/QPP (`lib/pc94-shape.js`, `lib/pc94-pack.js`), SPA from `HOCKEY.EXE` @ `0x358A4`, and VIV speech. Remaining: MT-32 / YM30 ear-match.
 - **96G:** In the Game menu (`nhl96`). SetSframe menus, ArenaAnim, and Cup celebration sprites show as frames; logos stamp TeamLogoPalettes; jersey pals are `data/pals/genesis96`. Sound test waits on `data/fixtures/nhl96-sound-slice.bin`.
-- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / locatebig C0 FB `.VIV` pictures and EACS `.ASF` songs from NHL96PC `HOCKEY.EXE` (`teampal.qda` jerseys; ice uses `rinkpal.qfs`; Images are DATA/GERMAN → VIV → SHPI tags; player sheet is `oldshp.qfs`). `roms/nhl96.iso` is enough — no need to unpack. Remaining: SPF / SPA names (no updateanim table); `.BNK` playback.
+- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / locatebig C0 FB `.VIV` pictures and EACS `.ASF` songs from NHL96PC `HOCKEY.EXE` (`newpal.qfs` jerseys; ice uses `rinkpal.qfs`; Images are DATA/GERMAN → VIV → SHPI tags; player sheets are GAMEART `total.ref` / `fight.ref` / `cup.ref`; SPA is `unk_117A9C`). `roms/nhl96.iso` is enough — no need to unpack. Remaining: `.BNK` playback.
 - **Editing / export / build:** View-only today; no write path to ROM or extracted bins. Planned: Genesis `.map.jim` editor (`docs/nhl9x-studio-requirements.md`).
 
 ### 1.8 Goal celebrations, “bench” sprites, and missing banks (94G focus)

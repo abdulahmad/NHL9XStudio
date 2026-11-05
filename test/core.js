@@ -1230,11 +1230,19 @@ assert.strictEqual(pc96Game.platform, 'pc');
 assert.strictEqual(pc96Game.frames, 'frames96pc.asm');
 assert.strictEqual(pc96Game.source, 'NHL96PC');
 const pc96Catalog = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames96pc.asm'), 'utf8'));
-assert.strictEqual(pc96Catalog.spfs.length, 0);
-assert.strictEqual(pc96Catalog.anims.length, 0);
-assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
+assert.ok(pc96Catalog.spfs.length >= 1);
+assert.ok(pc96Catalog.anims.length >= 200, '96 PC unk_117A9C SPA table');
+assert.ok(pc96Catalog.anims.some((anim) => anim.name === 'SPA0009'));
+const spa0009 = pc96Catalog.anims.find((anim) => anim.name === 'SPA0009');
+assert.strictEqual(spa0009.directions.length, 8);
+assert.strictEqual(spa0009.directions[0].steps[0].frame, 17);
+assert.strictEqual(spa0009.uniqueDirections, 8);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 3680);
 assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: 'dbox' }] }, 'ANA.FSH'), false, '96 PC FSH is a picture');
-assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'oldshp.qfs'), true, 'oldshp.qfs is the 96 PC player sheet');
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'total.ref'), true, 'GAMEART total.ref is the 96 PC player sheet');
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'fight.ref'), true);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'cup.ref'), true);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'oldshp.qfs'), true, 'oldshp.qfs is a fallback sheet');
 assert.strictEqual(pc95.pcYearOf(['ANA.FSH', 'MENU1.ASF']), 96);
 const pc96Files = JSON.parse(fs.readFileSync(path.join(root, 'data', 'pc96-files.json'), 'utf8'));
 assert.strictEqual(pc96Files.gameId, 'nhl96pc');
@@ -1458,19 +1466,66 @@ fs.writeFileSync(path.join(pc96Tree, 'DATA', 'AWARDS.VIV'), pc95.encodeC0fb([{ n
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'CALENDAR.VIV'), pc95.encodeC0fb([{ name: 'CALND00.FSH', data: calnd00 }]));
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'BASEFILE.VIV'), pc95.encodeC0fb([{ name: 'intro.fsh', data: introFsh }]));
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'INTRO.VIV'), pc95.encodeC0fb([{ name: 'intro.fsh', data: introFsh }]));
+const totalRef = shapeBankMany([
+  { tag: '0000', data: rawPic([1, 2, 3, 4]) },
+  { tag: '0001', data: rawPic([5, 6, 7, 8]) }
+]);
+const fightRef = shapeBankMany([
+  { tag: '0000', data: rawPic([9, 10, 11, 12]) }
+]);
+const cupRef = shapeBankMany([
+  { tag: '0000', data: rawPic([13, 14, 15, 16]) }
+]);
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'GAMEART.VIV'), pc95.encodeC0fb([
   { name: 'a0000000.fsh', data: bannerFsh },
-  { name: 'h0000000.fsh', data: bannerFsh }
+  { name: 'h0000000.fsh', data: bannerFsh },
+  { name: 'total.ref', data: totalRef },
+  { name: 'fight.ref', data: fightRef },
+  { name: 'cup.ref', data: cupRef },
+  { name: 'newpal.qfs', data: newpalQfs }
 ]));
-fs.writeFileSync(path.join(pc96Tree, 'GERMAN', 'GAMEART.VIV'), pc95.encodeC0fb([{ name: 'ice.fsh', data: shpiBank }]));
+fs.writeFileSync(path.join(pc96Tree, 'GERMAN', 'GAMEART.VIV'), pc95.encodeC0fb([
+  { name: 'ice.fsh', data: shpiBank },
+  { name: 'total.ref', data: shapeBankMany([{ tag: '0000', data: rawPic([99, 99, 99, 99]) }]) }
+]));
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'MENU1.ASF'), Buffer.from(asfBytes));
 const listedTree = pc95.catalogDirectory(pc96Tree);
-assert.ok(listedTree.spriteFiles.some((rel) => /oldshp/i.test(rel)));
-const oldSheet = pc95.openSpriteBundle(pc95.encodeBundle(
-  listedTree.spriteFiles.map((rel) => ({ name: rel, data: fs.readFileSync(path.join(pc96Tree, rel)) }))
-), 'nhl96pc');
-assert.ok(oldSheet.numFrames >= 2);
-assert.deepStrictEqual(Array.from(oldSheet.renderFrame(1).pixels), [1, 2, 3, 4]);
+assert.ok(listedTree.spriteFiles.every((rel) => !/oldshp/i.test(rel)), 'refs replace oldshp as the player sheet');
+assert.ok(listedTree.spriteFiles.some((rel) => /total\.ref$/i.test(rel) && /DATA/i.test(rel)));
+assert.ok(!listedTree.spriteFiles.some((rel) => /GERMAN/i.test(rel)), 'DATA total.ref wins over GERMAN');
+assert.ok(listedTree.spriteFiles.some((rel) => /fight\.ref$/i.test(rel)));
+assert.ok(listedTree.spriteFiles.some((rel) => /cup\.ref$/i.test(rel)));
+assert.ok(/newpal/i.test(listedTree.homeFile) && /GAMEART\.VIV/i.test(listedTree.homeFile), 'jersey pals are GAMEART.VIV/newpal.qfs');
+assert.ok(/newpal/i.test(listedTree.awayFile));
+const jersey = pc95.teamPaletteColors('anah.pal', pc95.readPacked(listedTree.homeFile, (p) => fs.readFileSync(path.join(pc96Tree, p))));
+assert.ok(jersey);
+assert.deepStrictEqual(jersey[0], [0, 200, 0]);
+const pc96Parts = pc95.spriteBankFiles(listedTree, 'sprites').map((rel) => ({
+  name: rel,
+  data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+})).filter((part) => part.data);
+const pc96Sheet = pc95.openSpriteBundle(pc95.encodeBundle(pc96Parts), 'nhl96pc');
+assert.ok(pc96Sheet.numFrames >= 2);
+assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(1).pixels), [1, 2, 3, 4]);
+assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(3).pixels), [9, 10, 11, 12], 'fight.ref follows total.ref');
+const fightSheet = pc95.buildSpriteBank(
+  pc95.spriteBankFiles(listedTree, 'fight').map((rel) => ({
+    name: rel,
+    data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+  })).filter((part) => part.data),
+  'players',
+  'nhl96pc'
+);
+assert.deepStrictEqual(Array.from(fightSheet.renderFrame(1).pixels), [9, 10, 11, 12]);
+const cupSheet = pc95.buildSpriteBank(
+  pc95.spriteBankFiles(listedTree, 'cup').map((rel) => ({
+    name: rel,
+    data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+  })).filter((part) => part.data),
+  'players',
+  'nhl96pc'
+);
+assert.deepStrictEqual(Array.from(cupSheet.renderFrame(1).pixels), [13, 14, 15, 16]);
 const folders = new Set(listedTree.images.map((image) => image.group));
 assert.ok(folders.has('DATA') && folders.has('GERMAN'));
 assert.ok(listedTree.images.every((image) => image.group === 'DATA' || image.group === 'GERMAN'));
@@ -1577,7 +1632,7 @@ if (retail94Dirs.length) {
   assert.strictEqual(retailOpened.shapes[0].height, 32);
 }
 assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
-assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 3680);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
 const pcDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc95-'));

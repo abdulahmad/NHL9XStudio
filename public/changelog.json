@@ -4,8 +4,9 @@
       "version": "1.25.0",
       "date": "2026-11-05",
       "changes": [
-        "NHL 96 PC Images list DATA then GERMAN, each VIV as a folder, and name each picture from its SHPI tag. Player sprites are oldshp.qfs",
-        "The last global 96 PC palette pass is reverted (type 0x22 is not a palette unless the tag is ! or pal*). ICELOGO, AWARDS team logos, and calendar box icons use newpal.qfs. Banners keep the palette in the banner file. BASEFILE.VIV/intro.fsh nhlp uses !pl1; other intro.fsh images are left alone"
+        "NHL 96 PC Images list DATA then GERMAN, each VIV as a folder, and name each picture from its SHPI tag. Player sprites are GAMEART.VIV total.ref, fight.ref, and cup.ref with team colors from GAMEART.VIV/newpal.qfs",
+        "The last global 96 PC palette pass is reverted (type 0x22 is not a palette unless the tag is ! or pal*). ICELOGO, AWARDS team logos, and calendar box icons use newpal.qfs. Banners keep the palette in the banner file. BASEFILE.VIV/intro.fsh nhlp uses !pl1; other intro.fsh images are left alone",
+        "SPA scripts are HOCKEY.EXE unk_117A9C (file 0x1502f0): flags, pair count, (frame, time) pairs, facing added to the frame. Studio plays them with the GAMEART REF sheets"
       ]
     },
     {
