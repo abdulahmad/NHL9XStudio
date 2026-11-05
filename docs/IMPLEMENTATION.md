@@ -28,7 +28,7 @@ Unless a task is **blocked** by a dependency (e.g. shared `lib/pc*.js` for DOS),
 | 2 | **93G** | `nhlpa93` | Genesis sheet + image catalog hardening |
 | 3 | **94G** | `nhl94` | Genesis sheet + auxiliary banks / celebrate discoverability (§1.8) |
 | 4 | **95G** | `nhl95` | Genesis sheet + image catalog (e.g. arena gfx) |
-| 5 | **96G** | `nhl96` | Genesis sheet + image catalog (extractAssets96.js pictures; SPA-only frames96.asm) |
+| 5 | **96G** | `nhl96` | Genesis sheet + image catalog (SetSframe `*Sprites` as frame banks; TeamLogoPalettes; `data/pals/genesis96`; SPA-only frames96.asm) |
 | 6 | **93S** | `nhlpa93snes` | SNES sprites + pictures |
 | 7 | **94S** | `nhl94snes` | SNES parity vs Genesis catalogs |
 | 8 | **95PC** | `nhl95pc` | DOS graphics + AdLib/SFX/VIV audio; remaining catalog/palette edge cases |
@@ -124,8 +124,8 @@ Static: `/viewer.js`, `/lib/*.js`, `/data/*`.
 
 - **93S/94S:** Remaining unpinned screens (no single incbin for the full 93S scouting UI; player-card-only tiles without a dedicated map label in the SNES tree) are documented in `docs/TODO.md` (GAP-5/6).
 - **94PC:** Profile `nhl94pc` decodes planar PPV/QPP (`lib/pc94-shape.js`, `lib/pc94-pack.js`), SPA from `HOCKEY.EXE` @ `0x358A4`, and VIV speech. Remaining: MT-32 / YM30 ear-match.
-- **96G:** In the Game menu (`nhl96`). Sound test waits on `data/fixtures/nhl96-sound-slice.bin`.
-- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / locatebig C0 FB `.VIV` pictures and EACS `.ASF` songs from NHL96PC `HOCKEY.EXE` (`teampal.qda` jerseys). `roms/nhl96.iso` is enough — no need to unpack. Remaining: name GAMEART.VIV player shapes so Frame / SPF / SPA are not empty; `.BNK` playback.
+- **96G:** In the Game menu (`nhl96`). SetSframe menus, ArenaAnim, and Cup celebration sprites show as frames; logos stamp TeamLogoPalettes; jersey pals are `data/pals/genesis96`. Sound test waits on `data/fixtures/nhl96-sound-slice.bin`.
+- **96PC:** Profile `nhl96pc` catalogs SHPI `.FSH` / locatebig C0 FB `.VIV` pictures and EACS `.ASF` songs from NHL96PC `HOCKEY.EXE` (`teampal.qda` jerseys; SHPI `0x22`/`0x24` palettes; ice uses `rinkpal.qfs`). `roms/nhl96.iso` is enough — no need to unpack. Remaining: name GAMEART.VIV player shapes so Frame / SPF / SPA are not empty; `.BNK` playback.
 - **Editing / export / build:** View-only today; no write path to ROM or extracted bins. Planned: Genesis `.map.jim` editor (`docs/nhl9x-studio-requirements.md`).
 
 ### 1.8 Goal celebrations, “bench” sprites, and missing banks (94G focus)

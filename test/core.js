@@ -7,7 +7,7 @@ const { parseAnim, renderFrame } = require('../lib/anim');
 const { holdVblanks } = require('../lib/playback');
 const { parseSheet, openFrames } = require('../lib/sheet');
 const { paletteParts, paletteLabel, defaultPaletteFile, matchPaletteFile } = require('../lib/labels');
-const { decodeJim, decompressBytecode, picturePixelHidden } = require('../lib/jim');
+const { decodeJim, decodeTileMap, decompressBytecode, picturePixelHidden } = require('../lib/jim');
 const { unpack93 } = require('../lib/snespak');
 const { parse93, parse94, openImage } = require('../lib/snes');
 const { GAMES, revAAdjust, revBAdjust, sheetGameBanks } = require('../lib/games');
@@ -451,7 +451,7 @@ assert.strictEqual(pa93.images.length, 25);
 assert.strictEqual(g94.images.length, 215);
 assert.strictEqual(g95.images.length, 302);
 assert.ok(g96 && g96.kind === 'sheet' && g96.sheet.record === '95');
-assert.strictEqual(g96.images.length, 207);
+assert.strictEqual(g96.images.length, 206);
 assert.ok(GAMES.findIndex((game) => game.id === 'nhl95') < GAMES.findIndex((game) => game.id === 'nhl96'));
 assert.ok(GAMES.findIndex((game) => game.id === 'nhl96') < GAMES.findIndex((game) => game.id === 'nhlpa93snes'));
 assert.ok(pa93.images.some((image) => image.id === 'IceRink.map.jim' && image.kind === 'jim'));
@@ -498,8 +498,17 @@ for (const slice of EXTRACT96_RETAIL) {
 }
 assert.ok(g96.images.some((image) => image.id === 'Crowd.anim' && image.kind === 'frames'));
 assert.ok(g96.banks.some((bank) => bank.id === 'Crowd.anim' && bank.kind === 'frames'));
+assert.ok(g96.banks.some((bank) => bank.id === 'ArenaAnimGfx.anim' && bank.kind === 'frames'));
+assert.ok(g96.banks.some((bank) => bank.id === 'CupCelebrationSpr.anim' && bank.kind === 'frames'));
+assert.strictEqual(g96.banks.filter((bank) => bank.kind === 'frames').length, 4);
+assert.ok(g96.images.some((image) => image.id === 'MainMenuSprites.map.jim' && image.kind === 'frames'));
+assert.ok(g96.images.some((image) => image.id === 'TeamLogoANH.map.jim' && image.paletteAt === 0x1D93C8));
+assert.ok(g96.images.some((image) => image.id === 'SmallLogoANH.map.jim' && image.paletteAt === 0x1D93C8));
+assert.ok(g96.images.some((image) => image.id === 'PuckAnimMap.map.jim' && image.stripHeight === 56));
+assert.ok(g96.images.some((image) => image.id === 'RevRinkTilelist.bin' && image.tilesFrom === 'Rinktilelist.map.jim'));
+assert.ok(!g96.images.some((image) => /revframetbl/i.test(image.id)));
 assert.strictEqual(g96.sheet.sprites, 0x9aa9e);
-assert.strictEqual(g96.palettes, '95');
+assert.strictEqual(g96.palettes, '96');
 assert.strictEqual(pa93.sheet.sprites, 0x03a37c - 4);
 assert.ok(g94.banks.some((bank) => bank.id === 'StanleyCup.anim'));
 assert.strictEqual(g94.banks.filter((bank) => bank.kind === 'frames').length, 4);
@@ -659,11 +668,17 @@ if (genesis95) {
   });
 }
 const genesis96 = upstreamRom('/tmp/disasm/NHL96Genesis', 'nhl96', '/tmp/disasm/NHL96Genesis/lst/nhl96.bin')
-  || upstreamRom(path.join(root, '..', 'nhl96genesis'), 'nhl96');
+  || upstreamRom(path.join(root, '..', 'nhl96genesis'), 'nhl96')
+  || upstreamRom(path.join(root, '..', 'EA-NHL-Disassembly-Project', 'NHL96-Genesis'), 'nhl96');
 if (genesis96) {
   const logo = g96.images.find((image) => image.id === 'TeamLogoANH.map.jim');
-  const drawn = decodeJim(genesis96.subarray(logo.start, logo.end));
+  const drawn = decodeJim(
+    genesis96.subarray(logo.start, logo.end),
+    genesis96.subarray(logo.paletteAt, logo.paletteAt + 128)
+  );
   assert.ok(inkCount(drawn.renderFrame(1)) > 20);
+  const unstamped = decodeJim(genesis96.subarray(logo.start, logo.end));
+  assert.notDeepStrictEqual(drawn.combined.slice(0, 16), unstamped.combined.slice(0, 16), 'TeamLogoPalettes overrides the dummy JIM palette');
   const crowdSpec = g96.images.find((image) => image.id === 'Crowd.anim');
   const crowd = openFrames(
     genesis96.subarray(crowdSpec.start, crowdSpec.end),
@@ -682,6 +697,41 @@ if (genesis96) {
   );
   assert.ok(face.numFrames >= 2);
   assert.ok(inkCount(face.renderFrame(1)) > 20);
+  const menuSpec = g96.images.find((image) => image.id === 'MainMenuSprites.map.jim');
+  const menu = openFrames(
+    genesis96.subarray(menuSpec.start, menuSpec.end),
+    { decompressBytecode },
+    null,
+    { record: '95' }
+  );
+  assert.ok(menu.numFrames >= 1, '96 SetSframe menus store the chrome in frame 0');
+  assert.ok(inkCount(menu.renderFrame(1)) > 10);
+  const puckSpec = g96.images.find((image) => image.id === 'PuckAnimMap.map.jim');
+  const puck = decodeJim(
+    genesis96.subarray(puckSpec.start, puckSpec.end),
+    null,
+    { stripHeight: puckSpec.stripHeight }
+  );
+  assert.strictEqual(puck.numFrames, 8);
+  assert.strictEqual(puck.renderFrame(1).width, 56);
+  assert.strictEqual(puck.renderFrame(1).height, 56);
+  const revSpec = g96.images.find((image) => image.id === 'RevRinkTilelist.bin');
+  const iceSpec = g96.images.find((image) => image.id === 'Rinktilelist.map.jim');
+  const rev = decodeTileMap(
+    genesis96.subarray(revSpec.start, revSpec.end),
+    genesis96.subarray(iceSpec.start, iceSpec.end)
+  );
+  assert.ok(rev.renderFrame(1).width >= 320);
+  assert.ok(inkCount(rev.renderFrame(1)) > 100);
+  const arenaSpec = g96.images.find((image) => image.id === 'ArenaAnimGfx.anim');
+  const arena = openFrames(
+    genesis96.subarray(arenaSpec.start, arenaSpec.end),
+    { decompressBytecode },
+    null,
+    { record: '95' }
+  );
+  assert.ok(arena.numFrames >= 2);
+  assert.ok(inkCount(arena.renderFrame(1)) > 10);
 }
 const revA93 = romIf(path.join(toolsRoot, 'JIM-Tools', 'nhlpa93retailRevA.bin'));
 if (revA93) {
@@ -1289,6 +1339,46 @@ assert.deepStrictEqual(qdaColors[128], [40, 80, 120]);
 const bosQda = pc95.teamPaletteColors('bosh.pal', qda, rink);
 assert.ok(bosQda);
 assert.deepStrictEqual(bosQda[128], [44, 80, 120], '96 QDA uses TEAMS_96 order, not 94/95');
+
+function paletteShape(type, count, fill, extra) {
+  const elem = type === 0x24 ? 2 : 3;
+  const buf = Buffer.alloc(16 + count * elem + (extra || 0));
+  buf[0] = type;
+  buf.writeUInt16LE(count, 2);
+  buf.writeUInt16LE(1, 6);
+  for (let i = 0; i < count; i++) {
+    if (type === 0x24) buf.writeUInt16LE(fill, 16 + i * 2);
+    else {
+      buf[16 + i * 3] = fill[0];
+      buf[16 + i * 3 + 1] = fill[1];
+      buf[16 + i * 3 + 2] = fill[2];
+    }
+  }
+  if (extra) buf.fill(0xff, 16 + count * elem);
+  return buf;
+}
+const pal22 = paletteShape(0x22, 32, [10, 20, 30], 90);
+const pal22Colors = pc95.decodeEaPalette(pal22);
+assert.deepStrictEqual(pal22Colors[0], [40, 80, 120], 'type 0x22 uses declared count, not trailing garbage');
+const pal24 = paletteShape(0x24, 4, (31 << 10) | (31 << 5));
+const pal24Colors = pc95.decodeEaPalette(pal24);
+assert.deepStrictEqual(pal24Colors[0], [248, 248, 0]);
+const palTagBank = Buffer.from(shapeBank('0000', pal22));
+palTagBank.write('SHPI', 0);
+const palOpened = pc95.parseShapeBank(palTagBank);
+assert.ok(palOpened.palette, 'type 0x22 is a palette even without a !pal tag');
+assert.strictEqual(palOpened.shapes.length, 0);
+assert.deepStrictEqual(palOpened.palette[0], [40, 80, 120]);
+assert.strictEqual(pc95.PAL_DONOR_96.ICE, 'RINKPAL');
+const pc96PalDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc96-pal-'));
+fs.writeFileSync(path.join(pc96PalDir, 'ANA.FSH'), shpiBank);
+fs.writeFileSync(path.join(pc96PalDir, 'ICE.FSH'), shpiBank);
+fs.writeFileSync(path.join(pc96PalDir, 'PAL.FSH'), palTagBank);
+fs.writeFileSync(path.join(pc96PalDir, 'rinkpal.qfs'), palTagBank);
+const listedPal = pc95.catalogDirectory(pc96PalDir);
+assert.match(listedPal.rinkFile, /rinkpal/i, 'EXE loads rinkpal.qfs, not PAL.FSH');
+const iceImg = listedPal.images.find((image) => /^ICE\.FSH$/i.test(image.id));
+assert.ok(iceImg && /rinkpal/i.test(iceImg.palette), 'ICE.FSH borrows rinkpal');
 
 const iso9660 = require('../lib/iso9660');
 const iso96 = iso9660.encode([
