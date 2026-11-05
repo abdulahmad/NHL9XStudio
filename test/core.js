@@ -1230,10 +1230,19 @@ assert.strictEqual(pc96Game.platform, 'pc');
 assert.strictEqual(pc96Game.frames, 'frames96pc.asm');
 assert.strictEqual(pc96Game.source, 'NHL96PC');
 const pc96Catalog = parseFrames(fs.readFileSync(path.join(root, 'data', 'frames96pc.asm'), 'utf8'));
-assert.strictEqual(pc96Catalog.spfs.length, 0);
-assert.strictEqual(pc96Catalog.anims.length, 0);
-assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
+assert.ok(pc96Catalog.spfs.length >= 1);
+assert.ok(pc96Catalog.anims.length >= 200, '96 PC unk_117A9C SPA table');
+assert.ok(pc96Catalog.anims.some((anim) => anim.name === 'SPA0009'));
+const spa0009 = pc96Catalog.anims.find((anim) => anim.name === 'SPA0009');
+assert.strictEqual(spa0009.directions.length, 8);
+assert.strictEqual(spa0009.directions[0].steps[0].frame, 17);
+assert.strictEqual(spa0009.uniqueDirections, 8);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 3680);
 assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: 'dbox' }] }, 'ANA.FSH'), false, '96 PC FSH is a picture');
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'total.ref'), true, 'GAMEART total.ref is the 96 PC player sheet');
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'fight.ref'), true);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'cup.ref'), true);
+assert.strictEqual(pc95.isSpriteBank({ shapes: [{ tag: '0000' }] }, 'oldshp.qfs'), true, 'oldshp.qfs is a fallback sheet');
 assert.strictEqual(pc95.pcYearOf(['ANA.FSH', 'MENU1.ASF']), 96);
 const pc96Files = JSON.parse(fs.readFileSync(path.join(root, 'data', 'pc96-files.json'), 'utf8'));
 assert.strictEqual(pc96Files.gameId, 'nhl96pc');
@@ -1266,9 +1275,9 @@ fs.writeFileSync(path.join(pc96Dir, 'ICE.FSH'), shpiBank);
 fs.writeFileSync(path.join(pc96Dir, 'MENU1.ASF'), Buffer.from(asfBytes));
 fs.writeFileSync(path.join(pc96Dir, 'GAMEART.VIV'), bigf);
 const listed96 = pc95.catalogDirectory(pc96Dir);
-assert.ok(listed96.images.some((image) => image.id === 'ANA.FSH' && image.group === 'Teams'));
+assert.ok(listed96.images.some((image) => /ANA\.FSH/i.test(image.id) && image.group === 'DATA' && image.shapeTag));
 assert.ok(listed96.images.some((image) => /ice/i.test(image.id)));
-assert.ok(listed96.images.some((image) => /ice\.fsh$/i.test(image.id) && /GAMEART/i.test(image.id)));
+assert.ok(listed96.images.some((image) => /ice\.fsh/i.test(image.id) && /GAMEART/i.test(image.id) && /GAMEART/i.test(image.pack || '')));
 assert.ok(listed96.audio.songs.some((s) => s.stem === 'MENU1' && s.asf));
 assert.ok(pc95.installReady(listed96));
 assert.strictEqual(listed96.spriteFiles.length, 0);
@@ -1291,8 +1300,8 @@ const pc96C0 = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc96-c0-'));
 fs.writeFileSync(path.join(pc96C0, 'GAMEART.VIV'), c0fb);
 fs.writeFileSync(path.join(pc96C0, 'MENU1.ASF'), Buffer.from(asfBytes));
 const listedC0 = pc95.catalogDirectory(pc96C0);
-assert.ok(listedC0.images.some((image) => /ice\.fsh$/i.test(image.id) && /GAMEART/i.test(image.id)));
-assert.ok(listedC0.images.some((image) => /ANA\.FSH$/i.test(image.id) && /GAMEART/i.test(image.id)));
+assert.ok(listedC0.images.some((image) => /ice\.fsh/i.test(image.id) && /GAMEART/i.test(image.id)));
+assert.ok(listedC0.images.some((image) => /ANA\.FSH/i.test(image.id) && /GAMEART/i.test(image.id)));
 assert.ok(!listedC0.audio.extra.some((rel) => /\.viv$/i.test(rel)), '96 art VIV is not speech');
 assert.ok(pc95.installReady(listedC0));
 const innerIce = pc95.readPacked('GAMEART.VIV/ice.fsh', (rel) => fs.readFileSync(path.join(pc96C0, rel)));
@@ -1366,10 +1375,18 @@ assert.deepStrictEqual(pal24Colors[0], [248, 248, 0]);
 const palTagBank = Buffer.from(shapeBank('0000', pal22));
 palTagBank.write('SHPI', 0);
 const palOpened = pc95.parseShapeBank(palTagBank);
-assert.ok(palOpened.palette, 'type 0x22 is a palette even without a !pal tag');
-assert.strictEqual(palOpened.shapes.length, 0);
-assert.deepStrictEqual(palOpened.palette[0], [40, 80, 120]);
+assert.ok(!palOpened.palette, 'type 0x22 without a pal* / ! tag is not a palette');
+const taggedPalBank = Buffer.from(shapeBank('!pal', pal22));
+taggedPalBank.write('SHPI', 0);
+const taggedPalOpened = pc95.parseShapeBank(taggedPalBank);
+assert.ok(taggedPalOpened.palette, '!pal tag is a palette');
+assert.strictEqual(taggedPalOpened.shapes.length, 0);
+assert.deepStrictEqual(taggedPalOpened.palette[0], [40, 80, 120]);
 assert.strictEqual(pc95.PAL_DONOR_96.ICE, 'RINKPAL');
+assert.ok(pc95.isPaletteTag('!pal'));
+assert.ok(pc95.isPaletteTag('!anh'));
+assert.ok(!pc95.isPaletteTag('0000'));
+assert.ok(!pc95.isPaletteTag('a000'));
 const pc96PalDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc96-pal-'));
 fs.writeFileSync(path.join(pc96PalDir, 'ANA.FSH'), shpiBank);
 fs.writeFileSync(path.join(pc96PalDir, 'ICE.FSH'), shpiBank);
@@ -1377,8 +1394,193 @@ fs.writeFileSync(path.join(pc96PalDir, 'PAL.FSH'), palTagBank);
 fs.writeFileSync(path.join(pc96PalDir, 'rinkpal.qfs'), palTagBank);
 const listedPal = pc95.catalogDirectory(pc96PalDir);
 assert.match(listedPal.rinkFile, /rinkpal/i, 'EXE loads rinkpal.qfs, not PAL.FSH');
-const iceImg = listedPal.images.find((image) => /^ICE\.FSH$/i.test(image.id));
+const iceImg = listedPal.images.find((image) => /^ICE\.FSH/i.test(String(image.id).split('#')[0]));
 assert.ok(iceImg && /rinkpal/i.test(iceImg.palette), 'ICE.FSH borrows rinkpal');
+
+function shapeBankMany(entries) {
+  const header = 16 + entries.length * 8;
+  let size = header;
+  for (const entry of entries) size += entry.data.length;
+  const bank = Buffer.alloc(size);
+  bank.write('SHPI', 0);
+  bank.writeUInt32LE(size, 4);
+  bank.writeUInt32LE(entries.length, 8);
+  bank.write('G354', 12);
+  let off = header;
+  for (let i = 0; i < entries.length; i++) {
+    const tag = String(entries[i].tag || '').slice(0, 4).padEnd(4, '\0');
+    bank.write(tag, 16 + i * 8, 4, 'ascii');
+    bank.writeUInt32LE(off, 20 + i * 8);
+    entries[i].data.copy(bank, off);
+    off += entries[i].data.length;
+  }
+  return bank;
+}
+function rgbPal(tag, rgb) {
+  return { tag: tag, data: paletteShape(0x22, 32, rgb) };
+}
+function rawPic(pixels) {
+  return Buffer.concat([spitHeader(123, 2, 2, 0, 0, 0, 0), Buffer.from(pixels)]);
+}
+const wrongPal = paletteShape(0x22, 32, [60, 0, 0]);
+const bannerPal = paletteShape(0x22, 32, [50, 40, 0]);
+const newpalQfs = shapeBankMany([
+  rgbPal('!anh', [0, 50, 0]),
+  rgbPal('!bsh', [0, 0, 50])
+]);
+const iceLogoFsh = shapeBankMany([
+  { tag: '!pal', data: wrongPal },
+  { tag: 'logo', data: rawPic([0, 0, 0, 0]) }
+]);
+const awardsBos = shapeBankMany([
+  { tag: '!pal', data: wrongPal },
+  { tag: 'BOS', data: rawPic([0, 0, 0, 0]) }
+]);
+const calnd00 = shapeBankMany([
+  { tag: 'bkgd', data: rawPic([1, 1, 1, 1]) },
+  { tag: 'ANA', data: rawPic([0, 0, 0, 0]) }
+]);
+const introFsh = shapeBankMany([
+  rgbPal('!pl0', [10, 20, 40]),
+  rgbPal('!pl1', [40, 10, 0]),
+  { tag: 'bkgd', data: rawPic([0, 0, 0, 0]) },
+  { tag: 'nhll', data: rawPic([0, 0, 0, 0]) },
+  { tag: 'nhlp', data: rawPic([0, 0, 0, 0]) }
+]);
+const bannerFsh = shapeBankMany([
+  { tag: '!pal', data: bannerPal },
+  { tag: 'a000', data: rawPic([0, 0, 0, 0]) }
+]);
+const oldshp = shapeBankMany([
+  { tag: '0000', data: rawPic([1, 2, 3, 4]) },
+  { tag: '0001', data: rawPic([5, 6, 7, 8]) }
+]);
+const pc96Tree = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc96-tree-'));
+fs.mkdirSync(path.join(pc96Tree, 'DATA'));
+fs.mkdirSync(path.join(pc96Tree, 'GERMAN'));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'newpal.qfs'), newpalQfs);
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'rinkpal.qfs'), taggedPalBank);
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'oldshp.qfs'), oldshp);
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'ICELOGO.VIV'), pc95.encodeC0fb([{ name: 'ANA.FSH', data: iceLogoFsh }]));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'AWARDS.VIV'), pc95.encodeC0fb([{ name: 'BOS.FSH', data: awardsBos }]));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'CALENDAR.VIV'), pc95.encodeC0fb([{ name: 'CALND00.FSH', data: calnd00 }]));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'BASEFILE.VIV'), pc95.encodeC0fb([{ name: 'intro.fsh', data: introFsh }]));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'INTRO.VIV'), pc95.encodeC0fb([{ name: 'intro.fsh', data: introFsh }]));
+const totalRef = shapeBankMany([
+  { tag: '0000', data: rawPic([1, 2, 3, 4]) },
+  { tag: '0001', data: rawPic([5, 6, 7, 8]) }
+]);
+const fightRef = shapeBankMany([
+  { tag: '0000', data: rawPic([9, 10, 11, 12]) }
+]);
+const cupRef = shapeBankMany([
+  { tag: '0000', data: rawPic([13, 14, 15, 16]) }
+]);
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'GAMEART.VIV'), pc95.encodeC0fb([
+  { name: 'a0000000.fsh', data: bannerFsh },
+  { name: 'h0000000.fsh', data: bannerFsh },
+  { name: 'total.ref', data: totalRef },
+  { name: 'fight.ref', data: fightRef },
+  { name: 'cup.ref', data: cupRef },
+  { name: 'newpal.qfs', data: newpalQfs }
+]));
+fs.writeFileSync(path.join(pc96Tree, 'GERMAN', 'GAMEART.VIV'), pc95.encodeC0fb([
+  { name: 'ice.fsh', data: shpiBank },
+  { name: 'total.ref', data: shapeBankMany([{ tag: '0000', data: rawPic([99, 99, 99, 99]) }]) }
+]));
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'MENU1.ASF'), Buffer.from(asfBytes));
+const listedTree = pc95.catalogDirectory(pc96Tree);
+assert.ok(listedTree.spriteFiles.every((rel) => !/oldshp/i.test(rel)), 'refs replace oldshp as the player sheet');
+assert.ok(listedTree.spriteFiles.some((rel) => /total\.ref$/i.test(rel) && /DATA/i.test(rel)));
+assert.ok(!listedTree.spriteFiles.some((rel) => /GERMAN/i.test(rel)), 'DATA total.ref wins over GERMAN');
+assert.ok(listedTree.spriteFiles.some((rel) => /fight\.ref$/i.test(rel)));
+assert.ok(listedTree.spriteFiles.some((rel) => /cup\.ref$/i.test(rel)));
+assert.ok(/newpal/i.test(listedTree.homeFile) && /GAMEART\.VIV/i.test(listedTree.homeFile), 'jersey pals are GAMEART.VIV/newpal.qfs');
+assert.ok(/newpal/i.test(listedTree.awayFile));
+const jersey = pc95.teamPaletteColors('anah.pal', pc95.readPacked(listedTree.homeFile, (p) => fs.readFileSync(path.join(pc96Tree, p))));
+assert.ok(jersey);
+assert.deepStrictEqual(jersey[0], [0, 200, 0]);
+const pc96Parts = pc95.spriteBankFiles(listedTree, 'sprites').map((rel) => ({
+  name: rel,
+  data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+})).filter((part) => part.data);
+const pc96Sheet = pc95.openSpriteBundle(pc95.encodeBundle(pc96Parts), 'nhl96pc');
+assert.ok(pc96Sheet.numFrames >= 2);
+assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(1).pixels), [1, 2, 3, 4]);
+assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(3).pixels), [9, 10, 11, 12], 'fight.ref follows total.ref');
+const fightSheet = pc95.buildSpriteBank(
+  pc95.spriteBankFiles(listedTree, 'fight').map((rel) => ({
+    name: rel,
+    data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+  })).filter((part) => part.data),
+  'players',
+  'nhl96pc'
+);
+assert.deepStrictEqual(Array.from(fightSheet.renderFrame(1).pixels), [9, 10, 11, 12]);
+const cupSheet = pc95.buildSpriteBank(
+  pc95.spriteBankFiles(listedTree, 'cup').map((rel) => ({
+    name: rel,
+    data: pc95.readPacked(rel, (p) => fs.readFileSync(path.join(pc96Tree, p)))
+  })).filter((part) => part.data),
+  'players',
+  'nhl96pc'
+);
+assert.deepStrictEqual(Array.from(cupSheet.renderFrame(1).pixels), [13, 14, 15, 16]);
+const folders = new Set(listedTree.images.map((image) => image.group));
+assert.ok(folders.has('DATA') && folders.has('GERMAN'));
+assert.ok(listedTree.images.every((image) => image.group === 'DATA' || image.group === 'GERMAN'));
+assert.ok(listedTree.images.some((image) => image.pack === 'ICELOGO.VIV' && image.shapeTag === 'logo'));
+assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'ANA'));
+assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'bkgd'));
+assert.ok(listedTree.images.some((image) => image.pack === 'GAMEART.VIV' && image.folder === 'GERMAN'));
+assert.ok(listedTree.images.some((image) => image.shapeTag === 'a000' && /a0000000/i.test(image.id)));
+const nhlpa = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && image.shapeTag === 'nhlp');
+assert.ok(nhlpa);
+assert.strictEqual(nhlpa.paletteTag, '!pl1');
+assert.match(nhlpa.label, /NHLPA/i);
+const introOther = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && image.shapeTag === 'bkgd');
+assert.ok(introOther);
+assert.strictEqual(introOther.paletteTag, '!pl0');
+const introVivNhlp = listedTree.images.find((image) => /INTRO\.VIV/i.test(image.id) && image.shapeTag === 'nhlp');
+assert.ok(introVivNhlp);
+assert.notStrictEqual(introVivNhlp.paletteTag, '!pl1');
+const iceLogo = listedTree.images.find((image) => image.pack === 'ICELOGO.VIV' && image.shapeTag === 'logo');
+assert.ok(iceLogo && /newpal/i.test(iceLogo.palette));
+assert.strictEqual(iceLogo.paletteTag, '!anh');
+const awardsLogo = listedTree.images.find((image) => image.pack === 'AWARDS.VIV' && image.shapeTag === 'BOS');
+assert.ok(awardsLogo && /newpal/i.test(awardsLogo.palette));
+assert.strictEqual(awardsLogo.paletteTag, '!bsh');
+const calIcon = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'ANA');
+assert.ok(calIcon && /newpal/i.test(calIcon.palette));
+const calBg = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'bkgd');
+assert.ok(calBg);
+assert.ok(!/newpal/i.test(calBg.palette || ''), 'calendar BG does not take newpal');
+const bannerImg = listedTree.images.find((image) => image.shapeTag === 'a000');
+assert.ok(bannerImg);
+assert.ok(!/newpal/i.test(bannerImg.palette || ''), 'banners keep in-file pal');
+function readTree(rel) {
+  const packed = pc95.splitVivPath(rel);
+  if (packed) return pc95.readPacked(rel, (name) => fs.readFileSync(path.join(pc96Tree, name)));
+  return fs.readFileSync(path.join(pc96Tree, rel));
+}
+function color0(image) {
+  const bytes = readTree(image.files[0]);
+  const donor = image.palette ? fs.readFileSync(path.join(pc96Tree, image.palette)) : null;
+  const opened = pc95.openImageParts([{ name: image.files[0], data: bytes }], donor, {
+    shapeTag: image.shapeTag,
+    paletteTag: image.paletteTag,
+    rel: image.files[0]
+  });
+  return opened.renderFrame(1).colors[0];
+}
+assert.deepStrictEqual(color0(iceLogo), [0, 200, 0], 'ICELOGO uses newpal !anh, not the in-file !pal');
+assert.deepStrictEqual(color0(awardsLogo), [0, 0, 200], 'AWARDS team logo uses newpal !bsh');
+assert.deepStrictEqual(color0(calIcon), [0, 200, 0], 'calendar icon uses newpal');
+assert.deepStrictEqual(color0(nhlpa), [160, 40, 0], 'BASEFILE intro nhlp uses !pl1');
+assert.deepStrictEqual(color0(introOther), [40, 80, 160], 'BASEFILE intro bkgd uses !pl0');
+assert.deepStrictEqual(color0(bannerImg), [200, 160, 0], 'banner uses in-file !pal');
+assert.ok(viewerJs.includes("['SHPI tag'"));
+assert.ok(viewerJs.includes('shapeTag: image.shapeTag'));
 
 const iso9660 = require('../lib/iso9660');
 const iso96 = iso9660.encode([
@@ -1395,7 +1597,7 @@ assert.strictEqual(pc95.pcYearOf(opened96.names()), 96);
 assert.ok(opened96.has('ana.fsh'));
 assert.deepStrictEqual(Array.from(opened96.read('ANA.FSH').subarray(0, 4)), Array.from(shpiBank.subarray(0, 4)));
 const listedIso96 = pc95.catalogFromPaths(opened96.names(), (rel) => opened96.read(rel));
-assert.ok(listedIso96.images.some((image) => /ANA\.FSH$/i.test(image.id)));
+assert.ok(listedIso96.images.some((image) => /ANA\.FSH/i.test(image.id)));
 assert.ok(listedIso96.audio.songs.some((s) => s.stem === 'MENU1' && s.asf));
 const iso95 = iso9660.encode([
   { name: 'HOMEPALS.BIN', data: Buffer.alloc(448) },
@@ -1430,7 +1632,7 @@ if (retail94Dirs.length) {
   assert.strictEqual(retailOpened.shapes[0].height, 32);
 }
 assert.strictEqual(pc95.playerFrameCount('nhl95pc'), 1134);
-assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 0);
+assert.strictEqual(pc95.playerFrameCount('nhl96pc'), 3680);
 assert.strictEqual(defaultPaletteFile(['bosh.pal', 'bufh.pal', 'bufv.pal']), 'bufh.pal');
 
 const pcDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pc95-'));

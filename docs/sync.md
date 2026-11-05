@@ -48,6 +48,7 @@ Retail ROMs and PC installs **must not** be committed. Use `roms/`, `pc95/`, `pc
 | `data/frames96.asm` | NHL96Genesis | Same |
 | `data/frames95pc.asm` | EA-NHL-Tools `Docs/Sprites/Readme.md` | Manual edit when DOS index changes |
 | `data/frames94pc.asm` | 94 PC `HOCKEY.EXE` @ `0x358A4` + Readme SPF | `node tools/extract-pc94-spa.js --write path/to/HOCKEY.EXE`. `build-pc94-spa.js` is superseded. |
+| `data/frames96pc.asm` | 96 PC `HOCKEY.EXE` `unk_117A9C` @ file `0x1502f0` | `node tools/extract-pc96-spa.js --write path/to/HOCKEY.EXE` |
 | `data/frames93snes.asm`, `data/frames94snes.asm` | SNES disasm + ROM | `node tools/build-snes-frames.js` |
 | `lib/genesis-images.js` | Retail ROM offsets from **Asset-Extractor** + disasm names | **Manual** sync: compare `extractAssets93.js` / `94` / `95.js` / `96.js` asset lists with `module.exports` slices; prefer **retail** offsets (see `test.js` `EXTRACT93_SLICES`, `EXTRACT95_RETAIL`, `EXTRACT96_RETAIL`) |
 | `data/audio/*.json` | `lib/audio/genesis-constants.js` + optional ROM scan | `node tools/build-audio-catalog.js` and/or `--rom path --game id` |
