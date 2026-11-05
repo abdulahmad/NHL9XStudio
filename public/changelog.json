@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.27.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF click: 1SNh size includes the header (sample frames = (size-0x28)/(ch*bps), dword_123BEC=4 for ADPCM), 1SNd size includes its 8-byte id, predictor/index carry across chunks, and trailing padding is not decoded. PCM stays signed",
+        "GAMEART total.ref / fight.ref / cup.ref: packed 10 FB after the 16-byte SHPI header is the raw pixel buffer (not SPIT RLE). A Copyright prefix is skipped (sub_AF85C). Frames are placed in SHPI directory order (sub_BF034)",
+        "ICELOGO keeps each FSH in-file !pal (sub_25E4D locateshape icelogo — not newpal). Calendar day-box logos are SETLOGO.REF team tags (sub_1B05E) with PNT.FSH !lgo (sub_1B6BC). CALNDxx.FSH is the month background; CALBUTT.FSH holds DK%02d chrome"
+      ]
+    },
+    {
       "version": "1.26.0",
       "date": "2026-11-05",
       "changes": [
