@@ -1275,7 +1275,8 @@ fs.writeFileSync(path.join(pc96Dir, 'ICE.FSH'), shpiBank);
 fs.writeFileSync(path.join(pc96Dir, 'MENU1.ASF'), Buffer.from(asfBytes));
 fs.writeFileSync(path.join(pc96Dir, 'GAMEART.VIV'), bigf);
 const listed96 = pc95.catalogDirectory(pc96Dir);
-assert.ok(listed96.images.some((image) => /ANA\.FSH/i.test(image.id) && image.group === 'DATA' && image.shapeTag));
+assert.ok(listed96.images.some((image) => /ANA\.FSH/i.test(image.id) && image.group === 'DATA' && (image.shapeTags || []).length));
+assert.ok(!listed96.images.some((image) => /#/.test(image.id)), '96 PC left-nav is one item per FSH, not per SHPI tag');
 assert.ok(listed96.images.some((image) => /ice/i.test(image.id)));
 assert.ok(listed96.images.some((image) => /ice\.fsh/i.test(image.id) && /GAMEART/i.test(image.id) && /GAMEART/i.test(image.pack || '')));
 assert.ok(listed96.audio.songs.some((s) => s.stem === 'MENU1' && s.asf));
@@ -1318,6 +1319,35 @@ assert.strictEqual(eacsParsed.codec, 0);
 assert.strictEqual(eacsParsed.playable, true);
 assert.strictEqual(eacsParsed.rate, 22050);
 assert.deepStrictEqual(Array.from(eacsParsed.pcm), [0x00, 0x40, 0x7f, 0x80, 0xc0]);
+const voiceSlot = pc96Asf.encodeEacsPcm8(asfPcm, 22050, { voice: 7 });
+const voiceParsed = pc96Asf.parse(voiceSlot);
+assert.strictEqual(voiceParsed.voice, 7);
+assert.strictEqual(voiceParsed.compressed, 0);
+assert.strictEqual(voiceParsed.playable, true, 'EACS+0x0B is the voice slot, not a codec');
+assert.deepStrictEqual(Array.from(voiceParsed.pcm), [0x00, 0x40, 0x7f, 0x80, 0xc0]);
+const adpcmSrc = [];
+for (let i = 0; i < 64; i++) adpcmSrc.push(i < 32 ? 12000 : -8000);
+const adpcmBytes = pc96Asf.encodeEacsAdpcm(adpcmSrc, 22050, { voice: 3 });
+const adpcmParsed = pc96Asf.parse(adpcmBytes);
+assert.strictEqual(adpcmParsed.compressed, 2);
+assert.strictEqual(adpcmParsed.voice, 3);
+assert.strictEqual(adpcmParsed.playable, true, 'EACS+0x0A==2 is EA IMA ADPCM');
+assert.strictEqual(adpcmParsed.bytesPerSample, 2);
+const adpcmFloat = pc96Asf.toPlaybackFloat32(adpcmParsed, 1);
+assert.strictEqual(adpcmFloat.length, adpcmSrc.length);
+const adpcmPeak = Math.max.apply(null, Array.from(adpcmFloat).map((s) => Math.abs(s)));
+assert.ok(adpcmPeak > 0.2, 'ADPCM decoder produces audible PCM, peak ' + adpcmPeak);
+const roundtrip = pc96Asf.decodeAdpcmMono(pc96Asf.encodeAdpcmMono(adpcmSrc));
+assert.strictEqual(roundtrip.length, adpcmSrc.length * 2);
+const zeroAdpcm = pc96Asf.parse(pc96Asf.encodeEacsAdpcm([0, 0, 0, 0], 22050));
+assert.ok(Array.from(zeroAdpcm.pcm).every((b) => b === 0), 'silent ADPCM decodes to zero');
+const stereoSrc = [1000, -1000, 2000, -2000, 500, -500, 0, 0];
+const stereoBytes = pc96Asf.encodeEacsAdpcm(stereoSrc, 22050, { channels: 2, voice: 1 });
+const stereoParsed = pc96Asf.parse(stereoBytes);
+assert.strictEqual(stereoParsed.channels, 2);
+assert.strictEqual(stereoParsed.playable, true);
+const stereoMono = pc96Asf.toPlaybackFloat32(stereoParsed, 1);
+assert.strictEqual(stereoMono.length, stereoSrc.length / 2);
 
 const qda = Buffer.alloc(4 * 26 + 26 * 4);
 for (let i = 0; i < 26; i++) {
@@ -1476,17 +1506,29 @@ const fightRef = shapeBankMany([
 const cupRef = shapeBankMany([
   { tag: '0000', data: rawPic([13, 14, 15, 16]) }
 ]);
+const setlogoRef = shapeBankMany([
+  { tag: 'ANA', data: rawPic([2, 2, 2, 2]) },
+  { tag: 'BOS', data: rawPic([3, 3, 3, 3]) }
+]);
+fs.writeFileSync(path.join(pc96Tree, 'GERMAN', 'GAMEART.VIV'), pc95.encodeC0fb([
+  { name: 'ice.fsh', data: shpiBank },
+  { name: 'total.ref', data: shapeBankMany([{ tag: '0000', data: rawPic([99, 99, 99, 99]) }]) }
+]));
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'GAMEART.VIV'), pc95.encodeC0fb([
   { name: 'a0000000.fsh', data: bannerFsh },
   { name: 'h0000000.fsh', data: bannerFsh },
   { name: 'total.ref', data: totalRef },
   { name: 'fight.ref', data: fightRef },
   { name: 'cup.ref', data: cupRef },
-  { name: 'newpal.qfs', data: newpalQfs }
+  { name: 'newpal.qfs', data: newpalQfs },
+  { name: 'setlogo.ref', data: setlogoRef }
 ]));
-fs.writeFileSync(path.join(pc96Tree, 'GERMAN', 'GAMEART.VIV'), pc95.encodeC0fb([
-  { name: 'ice.fsh', data: shpiBank },
-  { name: 'total.ref', data: shapeBankMany([{ tag: '0000', data: rawPic([99, 99, 99, 99]) }]) }
+const arenaIce = shapeBankMany([
+  { tag: '!pal', data: wrongPal },
+  { tag: 'ice', data: rawPic([4, 4, 4, 4]) }
+]);
+fs.writeFileSync(path.join(pc96Tree, 'DATA', 'ARENAART.VIV'), pc95.encodeC0fb([
+  { name: 'board.fsh', data: arenaIce }
 ]));
 fs.writeFileSync(path.join(pc96Tree, 'DATA', 'MENU1.ASF'), Buffer.from(asfBytes));
 const listedTree = pc95.catalogDirectory(pc96Tree);
@@ -1508,6 +1550,7 @@ const pc96Sheet = pc95.openSpriteBundle(pc95.encodeBundle(pc96Parts), 'nhl96pc')
 assert.ok(pc96Sheet.numFrames >= 2);
 assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(1).pixels), [1, 2, 3, 4]);
 assert.deepStrictEqual(Array.from(pc96Sheet.renderFrame(3).pixels), [9, 10, 11, 12], 'fight.ref follows total.ref');
+assert.strictEqual(pc96Sheet.numFrames, 3, '96 PC player sheet is total+fight, not 3680 empty frames');
 const fightSheet = pc95.buildSpriteBank(
   pc95.spriteBankFiles(listedTree, 'fight').map((rel) => ({
     name: rel,
@@ -1529,33 +1572,32 @@ assert.deepStrictEqual(Array.from(cupSheet.renderFrame(1).pixels), [13, 14, 15, 
 const folders = new Set(listedTree.images.map((image) => image.group));
 assert.ok(folders.has('DATA') && folders.has('GERMAN'));
 assert.ok(listedTree.images.every((image) => image.group === 'DATA' || image.group === 'GERMAN'));
-assert.ok(listedTree.images.some((image) => image.pack === 'ICELOGO.VIV' && image.shapeTag === 'logo'));
-assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'ANA'));
-assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'bkgd'));
+assert.ok(listedTree.images.some((image) => image.pack === 'ICELOGO.VIV' && (image.shapeTags || []).includes('logo')));
+assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && (image.shapeTags || []).includes('ANA')));
+assert.ok(listedTree.images.some((image) => image.pack === 'CALENDAR.VIV' && (image.shapeTags || []).includes('bkgd')));
 assert.ok(listedTree.images.some((image) => image.pack === 'GAMEART.VIV' && image.folder === 'GERMAN'));
-assert.ok(listedTree.images.some((image) => image.shapeTag === 'a000' && /a0000000/i.test(image.id)));
-const nhlpa = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && image.shapeTag === 'nhlp');
+assert.ok(listedTree.images.some((image) => (image.shapeTags || []).includes('a000') && /a0000000/i.test(image.id)));
+const nhlpa = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && (image.shapeTags || []).includes('nhlp'));
 assert.ok(nhlpa);
-assert.strictEqual(nhlpa.paletteTag, '!pl1');
-assert.match(nhlpa.label, /NHLPA/i);
-const introOther = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && image.shapeTag === 'bkgd');
+assert.match(nhlpa.label, /intro/i);
+const introOther = listedTree.images.find((image) => /BASEFILE/i.test(image.id) && (image.shapeTags || []).includes('bkgd'));
 assert.ok(introOther);
-assert.strictEqual(introOther.paletteTag, '!pl0');
-const introVivNhlp = listedTree.images.find((image) => /INTRO\.VIV/i.test(image.id) && image.shapeTag === 'nhlp');
+assert.strictEqual(introOther.id, nhlpa.id, 'intro.fsh tags share one left-nav item');
+const introVivNhlp = listedTree.images.find((image) => /INTRO\.VIV/i.test(image.id) && (image.shapeTags || []).includes('nhlp'));
 assert.ok(introVivNhlp);
 assert.notStrictEqual(introVivNhlp.paletteTag, '!pl1');
-const iceLogo = listedTree.images.find((image) => image.pack === 'ICELOGO.VIV' && image.shapeTag === 'logo');
+const iceLogo = listedTree.images.find((image) => image.pack === 'ICELOGO.VIV' && (image.shapeTags || []).includes('logo'));
 assert.ok(iceLogo && /newpal/i.test(iceLogo.palette));
 assert.strictEqual(iceLogo.paletteTag, '!anh');
-const awardsLogo = listedTree.images.find((image) => image.pack === 'AWARDS.VIV' && image.shapeTag === 'BOS');
+const awardsLogo = listedTree.images.find((image) => image.pack === 'AWARDS.VIV' && (image.shapeTags || []).includes('BOS'));
 assert.ok(awardsLogo && /newpal/i.test(awardsLogo.palette));
 assert.strictEqual(awardsLogo.paletteTag, '!bsh');
-const calIcon = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'ANA');
+const calIcon = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && (image.shapeTags || []).includes('ANA'));
 assert.ok(calIcon && /newpal/i.test(calIcon.palette));
-const calBg = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && image.shapeTag === 'bkgd');
+const calBg = listedTree.images.find((image) => image.pack === 'CALENDAR.VIV' && (image.shapeTags || []).includes('bkgd'));
 assert.ok(calBg);
-assert.ok(!/newpal/i.test(calBg.palette || ''), 'calendar BG does not take newpal');
-const bannerImg = listedTree.images.find((image) => image.shapeTag === 'a000');
+assert.strictEqual(calBg.id, calIcon.id, 'calendar tags share one left-nav item');
+const bannerImg = listedTree.images.find((image) => (image.shapeTags || []).includes('a000'));
 assert.ok(bannerImg);
 assert.ok(!/newpal/i.test(bannerImg.palette || ''), 'banners keep in-file pal');
 function readTree(rel) {
@@ -1563,24 +1605,45 @@ function readTree(rel) {
   if (packed) return pc95.readPacked(rel, (name) => fs.readFileSync(path.join(pc96Tree, name)));
   return fs.readFileSync(path.join(pc96Tree, rel));
 }
-function color0(image) {
+function color0(image, tag) {
   const bytes = readTree(image.files[0]);
   const donor = image.palette ? fs.readFileSync(path.join(pc96Tree, image.palette)) : null;
   const opened = pc95.openImageParts([{ name: image.files[0], data: bytes }], donor, {
-    shapeTag: image.shapeTag,
+    shapeTag: tag || image.shapeTag || '',
     paletteTag: image.paletteTag,
     rel: image.files[0]
   });
   return opened.renderFrame(1).colors[0];
 }
-assert.deepStrictEqual(color0(iceLogo), [0, 200, 0], 'ICELOGO uses newpal !anh, not the in-file !pal');
-assert.deepStrictEqual(color0(awardsLogo), [0, 0, 200], 'AWARDS team logo uses newpal !bsh');
-assert.deepStrictEqual(color0(calIcon), [0, 200, 0], 'calendar icon uses newpal');
-assert.deepStrictEqual(color0(nhlpa), [160, 40, 0], 'BASEFILE intro nhlp uses !pl1');
-assert.deepStrictEqual(color0(introOther), [40, 80, 160], 'BASEFILE intro bkgd uses !pl0');
-assert.deepStrictEqual(color0(bannerImg), [200, 160, 0], 'banner uses in-file !pal');
-assert.ok(viewerJs.includes("['SHPI tag'"));
-assert.ok(viewerJs.includes('shapeTag: image.shapeTag'));
+assert.deepStrictEqual(color0(iceLogo, 'logo'), [0, 200, 0], 'ICELOGO uses newpal !anh, not the in-file !pal');
+assert.deepStrictEqual(color0(awardsLogo, 'BOS'), [0, 0, 200], 'AWARDS team logo uses newpal !bsh');
+assert.deepStrictEqual(color0(calIcon, 'ANA'), [0, 200, 0], 'calendar icon uses newpal');
+assert.notDeepStrictEqual(color0(calBg, 'bkgd'), [0, 200, 0], 'calendar BG does not take newpal');
+assert.deepStrictEqual(color0(nhlpa, 'nhlp'), [160, 40, 0], 'BASEFILE intro nhlp uses !pl1');
+assert.deepStrictEqual(color0(introOther, 'bkgd'), [40, 80, 160], 'BASEFILE intro bkgd uses !pl0');
+assert.deepStrictEqual(color0(bannerImg, 'a000'), [200, 160, 0], 'banner uses in-file !pal');
+const setlogo = listedTree.images.find((image) => /setlogo\.ref$/i.test(image.id));
+assert.ok(setlogo);
+assert.strictEqual(setlogo.label, 'setlogo.ref');
+assert.deepStrictEqual(setlogo.shapeTags.slice().sort(), ['ANA', 'BOS']);
+assert.ok(listedTree.images.filter((image) => /setlogo/i.test(image.id)).length === 1, 'setlogo.ref is one left-nav item');
+const arenaBoard = listedTree.images.find((image) => /ARENAART/i.test(image.pack || '') && /board/i.test(image.id));
+assert.ok(arenaBoard && /rinkpal/i.test(arenaBoard.palette || ''), 'ARENAART borrows rinkpal.qfs');
+assert.deepStrictEqual(color0(arenaBoard, 'ice'), [40, 80, 120], 'ARENAART uses rinkpal, not in-file !pal');
+const packedPic = pc95.encodeRefPack(rawPic([7, 8, 9, 10]));
+assert.ok(pc95.isRefPack(packedPic));
+assert.deepStrictEqual(Array.from(pc95.decompressRefPack(packedPic)), Array.from(rawPic([7, 8, 9, 10])));
+const packedRef = shapeBankMany([{ tag: '0000', data: Buffer.from(packedPic) }]);
+const packedOpened = pc95.openBytes(packedRef);
+assert.ok(packedOpened && packedOpened.shapes.length === 1);
+assert.deepStrictEqual(Array.from(packedOpened.shapes[0].pixels), [7, 8, 9, 10]);
+const packedRefBank = pc95.buildSpriteBank([{ name: 'DATA/GAMEART.VIV/total.ref', data: packedRef }], 'players', 'nhl96pc');
+assert.strictEqual(packedRefBank.numFrames, 1, '96 PC REF bank grows from decoded shapes');
+assert.deepStrictEqual(Array.from(packedRefBank.renderFrame(1).pixels), [7, 8, 9, 10]);
+assert.ok(viewerJs.includes("['SHPI tags'"));
+assert.ok(viewerJs.includes('item.step.tag'));
+assert.ok(viewerJs.includes('imagePackAuto'));
+assert.ok(!/if \(sel && sel\.pack\) state\.openGroups\.add\(packKeyOf\(sel\)\);/.test(viewerJs));
 
 const iso9660 = require('../lib/iso9660');
 const iso96 = iso9660.encode([

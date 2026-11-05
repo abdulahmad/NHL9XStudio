@@ -1,6 +1,15 @@
 {
   "releases": [
     {
+      "version": "1.26.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF songs play: EACS+0x0B is the voice slot (not a codec), EACS+0x0A==2 is EA IMA ADPCM from HOCKEY.EXE sub_D57B4 / sub_D585C, and PCM is signed",
+        "GAMEART total.ref / fight.ref / cup.ref decode packed 10 FB shapes and grow the player sheet instead of 3680 empty frames. setlogo.ref is one Images item. ARENAART.VIV uses rinkpal.qfs",
+        "96 PC Images list DATA then GERMAN, each VIV as a folder, each FSH or REF as one item, and SHPI tags in the filmstrip. Selecting a VIV subfile still lets you collapse that VIV"
+      ]
+    },
+    {
       "version": "1.25.0",
       "date": "2026-11-05",
       "changes": [

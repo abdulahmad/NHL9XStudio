@@ -61,7 +61,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
 | 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech; `roms/nhl95.iso` |
 | 9 | **94PC** | NHL 94 | DOS | Frames, QPP pictures, AdLib songs, digital SFX, VIV speech; SPA from retail `HOCKEY.EXE` |
-| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, locatebig C0 FB `.VIV` art packs, EACS `.ASF` songs, `teampal.qda` jerseys; `roms/nhl96.iso`; Frame / SPF / SPA empty until GAMEART shapes are named |
+| 10 | **96PC** | NHL 96 | DOS | SHPI `.FSH` pictures, locatebig C0 FB `.VIV` art packs, EACS `.ASF` PCM/ADPCM songs, GAMEART REF sprites, `newpal.qfs` jerseys; `roms/nhl96.iso`; SPA from `unk_117A9C` |
 
 **Not in the game list:** Sega CD, later EA NHL.
 
@@ -209,7 +209,7 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | NHL 94 PC `.PPV` / `.QPP` | Mode X planar PackBits banks; QPP is Huffman `30 FB` or BTree `46 FB` (not 95 PC SHPI / RefPack `10 FB`) |
 | NHL 94/95 PC `.KMS` / `.CFG` / `PCFF*` / `.VIV` | AdLib songs, digital SFX, and announcer speech |
-| NHL 96 PC `.ASF` / `.BNK` | EA 1SN PCM songs (codec 0); `.BNK` banks listed, not played |
+| NHL 96 PC `.ASF` / `.BNK` | EA 1SNh/EACS songs (PCM or EA IMA ADPCM); `.BNK` banks listed, not played |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 
 If an export would be illegal for that picture (SNES→Genesis is lossy; SNES indexes above 1024 tiles), **tell the person and stop**. Do not write a file they cannot use. Explicit format picks that fit (Genesis→sjim or Genesis→94S zip at ≤1024 tiles) are conversions, not errors.
