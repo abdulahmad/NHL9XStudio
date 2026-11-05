@@ -5364,6 +5364,20 @@
         "kind": "frames",
         "start": 1293488,
         "end": 1299088
+      },
+      {
+        "id": "ArenaAnimGfx.anim",
+        "label": "Arena anim",
+        "kind": "frames",
+        "start": 1316790,
+        "end": 1337558
+      },
+      {
+        "id": "CupCelebrationSpr.anim",
+        "label": "Cup celebration sprites",
+        "kind": "frames",
+        "start": 1887976,
+        "end": 1922080
       }
     ],
     "images": [
@@ -5486,7 +5500,8 @@
         "group": "Ice",
         "kind": "jim",
         "start": 1304986,
-        "end": 1313534
+        "end": 1313534,
+        "tilesFrom": "Rinktilelist.map.jim"
       },
       {
         "id": "ReplayIconMap.map.jim",
@@ -5505,10 +5520,10 @@
         "end": 1316790
       },
       {
-        "id": "unk_1417B6.map.jim",
-        "label": "unk_1417B6",
-        "group": "Screens",
-        "kind": "jim",
+        "id": "ArenaAnimGfx.anim",
+        "label": "Arena anim",
+        "group": "Sprites",
+        "kind": "frames",
         "start": 1316790,
         "end": 1337558
       },
@@ -5742,7 +5757,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1374624,
-        "end": 1378958
+        "end": 1378958,
+        "paletteAt": 1938376
       },
       {
         "id": "TeamLogoBOS.map.jim",
@@ -5750,7 +5766,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1378958,
-        "end": 1383196
+        "end": 1383196,
+        "paletteAt": 1938408
       },
       {
         "id": "TeamLogoBUF.map.jim",
@@ -5758,7 +5775,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1383196,
-        "end": 1387498
+        "end": 1387498,
+        "paletteAt": 1938440
       },
       {
         "id": "TeamLogoCGY.map.jim",
@@ -5766,7 +5784,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1387498,
-        "end": 1391832
+        "end": 1391832,
+        "paletteAt": 1938472
       },
       {
         "id": "TeamLogoCHI.map.jim",
@@ -5774,7 +5793,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1391832,
-        "end": 1396198
+        "end": 1396198,
+        "paletteAt": 1938504
       },
       {
         "id": "TeamLogoDAL.map.jim",
@@ -5782,7 +5802,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1396198,
-        "end": 1400532
+        "end": 1400532,
+        "paletteAt": 1938536
       },
       {
         "id": "TeamLogoDET.map.jim",
@@ -5790,7 +5811,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1400532,
-        "end": 1404834
+        "end": 1404834,
+        "paletteAt": 1938568
       },
       {
         "id": "TeamLogoEDM.map.jim",
@@ -5798,7 +5820,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1404834,
-        "end": 1409200
+        "end": 1409200,
+        "paletteAt": 1938600
       },
       {
         "id": "TeamLogoFLA.map.jim",
@@ -5806,7 +5829,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1409200,
-        "end": 1413534
+        "end": 1413534,
+        "paletteAt": 1938632
       },
       {
         "id": "TeamLogoHFD.map.jim",
@@ -5814,7 +5838,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1413534,
-        "end": 1417900
+        "end": 1417900,
+        "paletteAt": 1938664
       },
       {
         "id": "TeamLogoLA.map.jim",
@@ -5822,7 +5847,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1417900,
-        "end": 1422298
+        "end": 1422298,
+        "paletteAt": 1938696
       },
       {
         "id": "TeamLogoMTL.map.jim",
@@ -5830,7 +5856,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1422298,
-        "end": 1426696
+        "end": 1426696,
+        "paletteAt": 1938728
       },
       {
         "id": "TeamLogoNJ.map.jim",
@@ -5838,7 +5865,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1426696,
-        "end": 1431094
+        "end": 1431094,
+        "paletteAt": 1938760
       },
       {
         "id": "TeamLogoNYI.map.jim",
@@ -5846,7 +5874,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1431094,
-        "end": 1435492
+        "end": 1435492,
+        "paletteAt": 1938792
       },
       {
         "id": "TeamLogoNYR.map.jim",
@@ -5854,7 +5883,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1435492,
-        "end": 1439858
+        "end": 1439858,
+        "paletteAt": 1938824
       },
       {
         "id": "TeamLogoOTW.map.jim",
@@ -5862,7 +5892,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1439858,
-        "end": 1444224
+        "end": 1444224,
+        "paletteAt": 1938856
       },
       {
         "id": "TeamLogoPHI.map.jim",
@@ -5870,7 +5901,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1444224,
-        "end": 1448622
+        "end": 1448622,
+        "paletteAt": 1938888
       },
       {
         "id": "TeamLogoPIT.map.jim",
@@ -5878,7 +5910,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1448622,
-        "end": 1453020
+        "end": 1453020,
+        "paletteAt": 1938920
       },
       {
         "id": "TeamLogoQUE.map.jim",
@@ -5886,7 +5919,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1453020,
-        "end": 1457322
+        "end": 1457322,
+        "paletteAt": 1938952
       },
       {
         "id": "TeamLogoSJ.map.jim",
@@ -5894,7 +5928,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1457322,
-        "end": 1461688
+        "end": 1461688,
+        "paletteAt": 1938984
       },
       {
         "id": "TeamLogoSTL.map.jim",
@@ -5902,7 +5937,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1461688,
-        "end": 1466022
+        "end": 1466022,
+        "paletteAt": 1939016
       },
       {
         "id": "TeamLogoTB.map.jim",
@@ -5910,7 +5946,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1466022,
-        "end": 1470388
+        "end": 1470388,
+        "paletteAt": 1939048
       },
       {
         "id": "TeamLogoTOR.map.jim",
@@ -5918,7 +5955,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1470388,
-        "end": 1474722
+        "end": 1474722,
+        "paletteAt": 1939080
       },
       {
         "id": "TeamLogoVAN.map.jim",
@@ -5926,7 +5964,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1474722,
-        "end": 1479120
+        "end": 1479120,
+        "paletteAt": 1939112
       },
       {
         "id": "TeamLogoWSH.map.jim",
@@ -5934,7 +5973,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1479120,
-        "end": 1483518
+        "end": 1483518,
+        "paletteAt": 1939144
       },
       {
         "id": "TeamLogoWPG.map.jim",
@@ -5942,7 +5982,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1483518,
-        "end": 1487884
+        "end": 1487884,
+        "paletteAt": 1939176
       },
       {
         "id": "SmallLogoFLA.map.jim",
@@ -5950,7 +5991,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1487884,
-        "end": 1488780
+        "end": 1488780,
+        "paletteAt": 1938632
       },
       {
         "id": "SmallLogoBUF.map.jim",
@@ -5958,7 +6000,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1488780,
-        "end": 1489580
+        "end": 1489580,
+        "paletteAt": 1938440
       },
       {
         "id": "SmallLogoANH.map.jim",
@@ -5966,7 +6009,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1489580,
-        "end": 1490412
+        "end": 1490412,
+        "paletteAt": 1938376
       },
       {
         "id": "SmallLogoBOS.map.jim",
@@ -5974,7 +6018,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1490412,
-        "end": 1491276
+        "end": 1491276,
+        "paletteAt": 1938408
       },
       {
         "id": "SmallLogoCGY.map.jim",
@@ -5982,7 +6027,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1491276,
-        "end": 1492268
+        "end": 1492268,
+        "paletteAt": 1938472
       },
       {
         "id": "SmallLogoCHI.map.jim",
@@ -5990,7 +6036,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1492268,
-        "end": 1493196
+        "end": 1493196,
+        "paletteAt": 1938504
       },
       {
         "id": "SmallLogoDAL.map.jim",
@@ -5998,7 +6045,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1493196,
-        "end": 1493932
+        "end": 1493932,
+        "paletteAt": 1938536
       },
       {
         "id": "SmallLogoDET.map.jim",
@@ -6006,7 +6054,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1493932,
-        "end": 1494764
+        "end": 1494764,
+        "paletteAt": 1938568
       },
       {
         "id": "SmallLogoEDM.map.jim",
@@ -6014,7 +6063,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1494764,
-        "end": 1495756
+        "end": 1495756,
+        "paletteAt": 1938600
       },
       {
         "id": "SmallLogoHFD.map.jim",
@@ -6022,7 +6072,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1495756,
-        "end": 1496428
+        "end": 1496428,
+        "paletteAt": 1938664
       },
       {
         "id": "SmallLogoLA.map.jim",
@@ -6030,7 +6081,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1496428,
-        "end": 1497196
+        "end": 1497196,
+        "paletteAt": 1938696
       },
       {
         "id": "SmallLogoMTL.map.jim",
@@ -6038,7 +6090,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1497196,
-        "end": 1498028
+        "end": 1498028,
+        "paletteAt": 1938728
       },
       {
         "id": "SmallLogoNJ.map.jim",
@@ -6046,7 +6099,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1498028,
-        "end": 1498956
+        "end": 1498956,
+        "paletteAt": 1938760
       },
       {
         "id": "SmallLogoNYI.map.jim",
@@ -6054,7 +6108,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1498956,
-        "end": 1499756
+        "end": 1499756,
+        "paletteAt": 1938792
       },
       {
         "id": "SmallLogoNYR.map.jim",
@@ -6062,7 +6117,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1499756,
-        "end": 1500748
+        "end": 1500748,
+        "paletteAt": 1938824
       },
       {
         "id": "SmallLogoOTW.map.jim",
@@ -6070,7 +6126,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1500748,
-        "end": 1501644
+        "end": 1501644,
+        "paletteAt": 1938856
       },
       {
         "id": "SmallLogoPHI.map.jim",
@@ -6078,7 +6135,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1501644,
-        "end": 1502444
+        "end": 1502444,
+        "paletteAt": 1938888
       },
       {
         "id": "SmallLogoPIT.map.jim",
@@ -6086,7 +6144,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1502444,
-        "end": 1503244
+        "end": 1503244,
+        "paletteAt": 1938920
       },
       {
         "id": "SmallLogoQUE.map.jim",
@@ -6094,7 +6153,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1503244,
-        "end": 1504044
+        "end": 1504044,
+        "paletteAt": 1938952
       },
       {
         "id": "SmallLogoSJ.map.jim",
@@ -6102,7 +6162,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1504044,
-        "end": 1504940
+        "end": 1504940,
+        "paletteAt": 1938984
       },
       {
         "id": "SmallLogoSTL.map.jim",
@@ -6110,7 +6171,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1504940,
-        "end": 1505804
+        "end": 1505804,
+        "paletteAt": 1939016
       },
       {
         "id": "SmallLogoTB.map.jim",
@@ -6118,7 +6180,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1505804,
-        "end": 1506796
+        "end": 1506796,
+        "paletteAt": 1939048
       },
       {
         "id": "SmallLogoTOR.map.jim",
@@ -6126,7 +6189,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1506796,
-        "end": 1507564
+        "end": 1507564,
+        "paletteAt": 1939080
       },
       {
         "id": "SmallLogoVAN.map.jim",
@@ -6134,7 +6198,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1507564,
-        "end": 1508364
+        "end": 1508364,
+        "paletteAt": 1939112
       },
       {
         "id": "SmallLogoWSH.map.jim",
@@ -6142,7 +6207,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1508364,
-        "end": 1509196
+        "end": 1509196,
+        "paletteAt": 1939144
       },
       {
         "id": "SmallLogoWPG.map.jim",
@@ -6150,7 +6216,8 @@
         "group": "Logos",
         "kind": "jim",
         "start": 1509196,
-        "end": 1510156
+        "end": 1510156,
+        "paletteAt": 1939176
       },
       {
         "id": "IceBgMap.map.jim",
@@ -6228,7 +6295,7 @@
         "id": "LeagueOptionsSprites.map.jim",
         "label": "League Options Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1565692,
         "end": 1567978
       },
@@ -6244,7 +6311,7 @@
         "id": "SelectTeamSeasonSprites.map.jim",
         "label": "Select Team Season Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1575096,
         "end": 1575990
       },
@@ -6268,7 +6335,7 @@
         "id": "StandingsSprites.map.jim",
         "label": "Standings Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1585188,
         "end": 1586082
       },
@@ -6292,7 +6359,7 @@
         "id": "GameOptionsSprites.map.jim",
         "label": "Game Options Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1597328,
         "end": 1598270
       },
@@ -6316,7 +6383,7 @@
         "id": "LeadersSprites.map.jim",
         "label": "Leaders Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1607724,
         "end": 1608778
       },
@@ -6348,7 +6415,7 @@
         "id": "PlayerStatsSprites.map.jim",
         "label": "Player Stats Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1619192,
         "end": 1620246
       },
@@ -6380,7 +6447,7 @@
         "id": "SelectTeamSprites.map.jim",
         "label": "Select Team Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1629700,
         "end": 1630546
       },
@@ -6404,7 +6471,7 @@
         "id": "TransactionsSprites.map.jim",
         "label": "Transactions Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1639296,
         "end": 1640190
       },
@@ -6428,7 +6495,7 @@
         "id": "TradeSprites.map.jim",
         "label": "Trade Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1648172,
         "end": 1649146
       },
@@ -6452,7 +6519,7 @@
         "id": "CreateSprites.map.jim",
         "label": "Create Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1657928,
         "end": 1659014
       },
@@ -6468,7 +6535,7 @@
         "id": "CreateRatingsSprites.map.jim",
         "label": "Create Ratings Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1665460,
         "end": 1666570
       },
@@ -6484,7 +6551,7 @@
         "id": "SignPlayersSprites.map.jim",
         "label": "Sign Players Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1668650,
         "end": 1669728
       },
@@ -6508,7 +6575,7 @@
         "id": "ReleasePlayersSprites.map.jim",
         "label": "Release Players Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1677230,
         "end": 1678308
       },
@@ -6532,7 +6599,7 @@
         "id": "MainMenuSprites.map.jim",
         "label": "Main Menu Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1688114,
         "end": 1689128
       },
@@ -6564,7 +6631,7 @@
         "id": "LineEditorSprites2.map.jim",
         "label": "Line Editor Sprites2",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1704516,
         "end": 1705522
       },
@@ -6572,7 +6639,7 @@
         "id": "LineEditorSprites.map.jim",
         "label": "Line Editor Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1705522,
         "end": 1706584
       },
@@ -6588,7 +6655,7 @@
         "id": "TeamRosterSprites.map.jim",
         "label": "Team Roster Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1711814,
         "end": 1712892
       },
@@ -6612,7 +6679,7 @@
         "id": "SummarySprites.map.jim",
         "label": "Summary Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1721674,
         "end": 1722728
       },
@@ -6668,7 +6735,7 @@
         "id": "GameStatsSprites.map.jim",
         "label": "Game Stats Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1743012,
         "end": 1743986
       },
@@ -6700,7 +6767,7 @@
         "id": "RecordHoldersSprites.map.jim",
         "label": "Record Holders Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1754016,
         "end": 1755078
       },
@@ -6732,7 +6799,7 @@
         "id": "NameEntrySprites.map.jim",
         "label": "Name Entry Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1764244,
         "end": 1765218
       },
@@ -6756,7 +6823,7 @@
         "id": "AwardsSprites.map.jim",
         "label": "Awards Sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1774000,
         "end": 1774814
       },
@@ -6932,7 +6999,7 @@
         "id": "PauseSprites.map.jim",
         "label": "Pause sprites",
         "group": "Screens",
-        "kind": "jim",
+        "kind": "frames",
         "start": 1821690,
         "end": 1822584
       },
@@ -6982,7 +7049,8 @@
         "group": "Screens",
         "kind": "jim",
         "start": 1854542,
-        "end": 1862732
+        "end": 1862732,
+        "stripHeight": 56
       },
       {
         "id": "CupChampsMap.map.jim",
@@ -6998,31 +7066,24 @@
         "group": "Screens",
         "kind": "jim",
         "start": 1879802,
-        "end": 1887144
+        "end": 1887144,
+        "paletteAt": 1887144
       },
       {
-        "id": "unk_1CCEE8.map.jim",
-        "label": "unk_1CCEE8",
-        "group": "Screens",
-        "kind": "jim",
+        "id": "CupCelebrationSpr.anim",
+        "label": "Cup celebration sprites",
+        "group": "Sprites",
+        "kind": "frames",
         "start": 1887976,
         "end": 1922080
       },
       {
-        "id": "unk_1D5420.map.jim",
-        "label": "unk_1D5420",
+        "id": "CupCelebrationMap.map.jim",
+        "label": "Cup celebration",
         "group": "Screens",
         "kind": "jim",
         "start": 1922080,
         "end": 1922974
-      },
-      {
-        "id": "revframetbl.map.jim",
-        "label": "Reverse frame table",
-        "group": "Screens",
-        "kind": "jim",
-        "start": 1922974,
-        "end": 1926690
       }
     ],
     "pixels": false,
@@ -7038,16 +7099,60 @@
     },
     "snes": null,
     "romHint": "Drop ROM or use roms/",
-    "paletteDir": "genesis95",
+    "paletteDir": "genesis96",
     "paletteFiles": [
-      "Bruinsh.pal",
-      "Bruinsv.pal",
       "anah.pal",
       "anav.pal",
-      "flamesh.pal",
-      "flamesv.pal",
-      "sabresh.pal",
-      "sabresv.pal"
+      "bosh.pal",
+      "bosv.pal",
+      "bufh.pal",
+      "bufv.pal",
+      "cgyh.pal",
+      "cgyv.pal",
+      "chih.pal",
+      "chiv.pal",
+      "dalh.pal",
+      "dalv.pal",
+      "deth.pal",
+      "detv.pal",
+      "edmh.pal",
+      "edmv.pal",
+      "flah.pal",
+      "flav.pal",
+      "hfdh.pal",
+      "hfdv.pal",
+      "lah.pal",
+      "lav.pal",
+      "mtlh.pal",
+      "mtlv.pal",
+      "njh.pal",
+      "njv.pal",
+      "nyih.pal",
+      "nyiv.pal",
+      "nyrh.pal",
+      "nyrv.pal",
+      "otwh.pal",
+      "otwv.pal",
+      "phih.pal",
+      "phiv.pal",
+      "pith.pal",
+      "pitv.pal",
+      "queh.pal",
+      "quev.pal",
+      "sjh.pal",
+      "sjv.pal",
+      "stlh.pal",
+      "stlv.pal",
+      "tbh.pal",
+      "tbv.pal",
+      "torh.pal",
+      "torv.pal",
+      "vanh.pal",
+      "vanv.pal",
+      "wpgh.pal",
+      "wpgv.pal",
+      "wshh.pal",
+      "wshv.pal"
     ]
   },
   {

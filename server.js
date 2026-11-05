@@ -23,6 +23,7 @@ const PAL_DIRS = {
   '92': palDir(path.join(ANIM_DIR, 'Palettes'), 'genesis'),
   '94': palDir(path.join(ROOT, '..', 'ANIM94-To-BMP', 'Palettes'), 'genesis'),
   '95': palDir(path.join(ROOT, '..', 'ANIM95-To-BMP', 'Palettes', 'NHL95'), 'genesis95'),
+  '96': palDir(path.join(ROOT, '..', 'ANIM96-To-BMP', 'Palettes', 'NHL96'), 'genesis96'),
   'snes': path.join(DATA, 'pals', 'snes')
 };
 const PAL_DIR = PAL_DIRS['92'];

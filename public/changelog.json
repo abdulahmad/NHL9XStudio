@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "version": "1.24.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 Genesis pictures actually show: SetSframe menu sprite lists (Main Menu, Pause, Line Editor, …) are 95-style frame banks, including frame 0. Arena anim and Cup celebration sprites play the same way. Team logos use TeamLogoPalettes instead of the dummy JIM line. The spinning puck is eight 56×56 frames. Jersey colors are the 26 retail CRAM pals from the ROM (not the four leftover 95 files)",
+        "NHL 96 PC palettes follow HOCKEY.EXE: SHPI types 0x22/0x24 are palettes even without a !pal tag, ice borrows rinkpal.qfs (not PAL.FSH), and teampal.qda sits on the rink colors from that file instead of the 95 Tools ACT"
+      ]
+    },
+    {
       "version": "1.23.0",
       "date": "2026-11-04",
       "changes": [

@@ -2586,7 +2586,21 @@ async function ensureImage(id) {
       if (palOff === 0xffffffff || (palOff === 0 && mapOff === 0)) donor = image.paletteFrom ? await framesDonor(image) : await icePaletteBytes();
     }
     if (image.forceIce) donor = await icePaletteBytes();
-    parsed = Nhl92Jim.decodeJim(bytes, donor, image.remap ? { remap: image.remap, forceDonor: Boolean(image.forceIce) } : null);
+    const jimOpts = {};
+    if (image.remap) {
+      jimOpts.remap = image.remap;
+      jimOpts.forceDonor = Boolean(image.forceIce);
+    }
+    if (image.stripHeight) jimOpts.stripHeight = image.stripHeight;
+    const jimOpt = Object.keys(jimOpts).length ? jimOpts : null;
+    if (image.tilesFrom && Nhl92Jim.decodeTileMap) {
+      const tileSpec = ((gameInfo && gameInfo.images) || []).find((item) => item.id === image.tilesFrom);
+      const tileBytes = tileSpec ? await bytesFor(tileSpec) : null;
+      if (!tileBytes) throw new Error('Could not load tiles for ' + image.id);
+      parsed = Nhl92Jim.decodeTileMap(bytes, tileBytes, donor, jimOpt);
+    } else {
+      parsed = Nhl92Jim.decodeJim(bytes, donor, jimOpt);
+    }
   } else if (image.kind === 'frames') {
     const bytes = await bytesFor(image);
     if (!bytes) return null;
