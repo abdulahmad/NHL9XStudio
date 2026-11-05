@@ -797,7 +797,7 @@
       box.appendChild(make('p', 'st-note', 'This file is the Roland MT-32 version. Play still uses the AdLib (YM3812) path, so it will not match the MT-32.'));
     }
     box.appendChild(make('p', 'st-note', rec && rec.asf
-      ? 'NHL96PC locateshape music: EA 1SNh / 1SNd chunks (HOCKEY.EXE four-byte ids). Codec 0 is signed 8-bit PCM. Other codecs stay listed until a retail file names them. Not the 94/95 EACSNDF .KMS path. .BNK banks stay listed, not played.'
+      ? 'NHL96PC locateshape music: EA 1SNh / 1SNd chunks (HOCKEY.EXE four-byte ids). EACS+0x0A==2 is EA IMA ADPCM with a 20-byte block header per chunk (idx/pred reset); EACS+8 is bits, EACS+9 is channels. Codec 0 is signed 8-bit PCM (no IMA header). 1SNl loops. Not the 94/95 EACSNDF .KMS path. .BNK banks stay listed, not played.'
       : id.startsWith('iff-')
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
@@ -940,7 +940,7 @@
       rows.push(['Length', rec.sample.length + ' bytes']);
       rows.push(['Path', 'PCFF001.TIM / .DIG → signed 8-bit PCM']);
     } else if (rec && rec.asf) {
-      rows.push(['Path', '.ASF 1SNh → signed 8-bit PCM']);
+      rows.push(['Path', '.ASF 1SNh/1SNd → EACS PCM or EA IMA ADPCM']);
       rows.push(['Source', 'NHL96PC HOCKEY.EXE locateshape music']);
     } else {
       rows.push(['Path', '.KMS + .CFG sequencer → OPL2 (AdLib)']);
