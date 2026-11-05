@@ -896,7 +896,13 @@ function bindSpfEnd() {
   }
 }
 
-const IMAGE_ORDER = ['Screens', 'Logos', 'Players', 'Player cards', 'Sprites', 'Ice', 'Jumbotron', 'Fonts', 'Other'];
+const IMAGE_ORDER = ['DATA', 'GERMAN', 'Screens', 'Logos', 'Players', 'Player cards', 'Sprites', 'Ice', 'Jumbotron', 'Fonts', 'Other'];
+function fileBaseName(rel) {
+  const text = String(rel || '').replace(/\\/g, '/');
+  const cut = text.lastIndexOf('/');
+  const base = (cut >= 0 ? text.slice(cut + 1) : text);
+  return base.split('#')[0];
+}
 const IMAGE_SEARCH_EXTRA = {
   'crowd.anim': 'crowd audience stands reaction',
   'faceoff.anim': 'faceoff face off referee',
@@ -957,7 +963,7 @@ function renderImageList(box, q) {
   const visible = [];
   for (const image of images) {
     const extra = IMAGE_SEARCH_EXTRA[image.id.toLowerCase()] || '';
-    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + extra).toLowerCase();
+    const hay = (image.label + ' ' + image.id + ' ' + (image.files || []).join(' ') + ' ' + (image.fileNames || []).join(' ') + ' ' + (image.group || '') + ' ' + (image.pack || '') + ' ' + (image.shapeTag || '') + ' ' + extra).toLowerCase();
     if (q && !hay.includes(q)) continue;
     visible.push(image);
     const group = isPlayerCard(image) ? 'Player cards' : image.group || 'Other';
@@ -976,13 +982,38 @@ function renderImageList(box, q) {
     ? [{ label: '', items: visible }]
     : IMAGE_ORDER.concat(extra).filter((group) => groups.has(group)).map((group) => ({ label: group, items: groups.get(group) }));
   openSelectedGroup(sections, (image) => image.id === state.image);
+  const nested96 = gameInfo && gameInfo.id === 'nhl96pc' && state.sort !== 'file';
+  const packKeyOf = (image) => (image.group || '') + '\x1f' + (image.pack || '');
+  if (nested96) {
+    const sel = visible.find((image) => image.id === state.image);
+    if (sel && sel.pack) state.openGroups.add(packKeyOf(sel));
+  }
   for (const section of sections) {
     if (section.label) {
       const open = groupOpen(section.label, q);
       groupToggle(box, section.label, section.items.length, open);
       if (!open) continue;
     }
+    let pack = null;
+    let packOpen = true;
     for (const image of section.items) {
+      if (nested96 && image.pack && image.pack !== pack) {
+        pack = image.pack;
+        const key = packKeyOf(image);
+        packOpen = !!q || state.openGroups.has(key);
+        const n = section.items.filter((item) => item.pack === pack).length;
+        const subLabel = document.createElement('button');
+        subLabel.type = 'button';
+        subLabel.className = 'group-label is-toggle is-sub';
+        subLabel.setAttribute('aria-expanded', packOpen ? 'true' : 'false');
+        subLabel.textContent = (packOpen ? '▾ ' : '▸ ') + pack + ' (' + n + ')';
+        subLabel.addEventListener('click', () => {
+          if (state.openGroups.has(key)) state.openGroups.delete(key); else state.openGroups.add(key);
+          renderList();
+        });
+        box.appendChild(subLabel);
+      }
+      if (nested96 && image.pack && !packOpen) continue;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'item';
@@ -995,7 +1026,9 @@ function renderImageList(box, q) {
       name.textContent = image.label;
       const sub = document.createElement('span');
       sub.className = 'sub';
-      sub.textContent = image.fileNames && image.fileNames.length ? image.fileNames.join(' + ') : image.files && image.files.length > 1 ? image.files.length + ' files' : image.id;
+      sub.textContent = image.shapeTag
+        ? (fileBaseName(image.files && image.files[0] || image.id) + ' · ' + image.shapeTag)
+        : image.fileNames && image.fileNames.length ? image.fileNames.join(' + ') : image.files && image.files.length > 1 ? image.files.length + ' files' : image.id;
       button.append(name, sub);
       button.addEventListener('click', () => {
         if (state.image !== image.id) state.transparentOverride = null;
@@ -1431,6 +1464,10 @@ function renderMeta() {
     if (image) {
       const files = image.files && image.files.length ? image.files : [image.id];
       rows.push(['File', image.fileNames && image.fileNames.length ? image.fileNames.join(' + ') : files.length > 1 ? files[0] + ' … ' + files[files.length - 1] : image.id]);
+      if (image.folder) rows.push(['Folder', image.folder]);
+      if (image.pack) rows.push(['Pack', image.pack]);
+      if (image.shapeTag) rows.push(['SHPI tag', image.shapeTag]);
+      if (image.paletteTag) rows.push(['Palette tag', image.paletteTag]);
     }
   }
   if (frame) {
@@ -2626,6 +2663,7 @@ async function ensureImage(id) {
     let donor = null;
     if (image.palette) {
       if (clientPc && clientPc.map.has(image.palette)) donor = clientPc.map.get(image.palette);
+      else if (clientPc && Nhl95Pc.readPacked) donor = Nhl95Pc.readPacked(image.palette, (name) => clientPc.map.get(name));
       else if (useApi) {
         const pal = await fetch(resolveUrl('/api/games/' + gameInfo.id + '/file?path=' + encodeURIComponent(image.palette)));
         if (pal.ok) donor = new Uint8Array(await pal.arrayBuffer());
@@ -2637,7 +2675,11 @@ async function ensureImage(id) {
       if (!til || !map) return null;
       parsed = Nhl95Pc.openRinkImage(til.data, map.data, donor, image.rinkGame || 94);
     } else {
-      parsed = Nhl95Pc.openImageParts(parts, donor);
+      parsed = Nhl95Pc.openImageParts(parts, donor, {
+        shapeTag: image.shapeTag || '',
+        paletteTag: image.paletteTag || '',
+        rel: paths[0] || image.id || ''
+      });
     }
   } else if (image.kind && image.kind.indexOf('snes') === 0) {
     const rom = await ensureRom();
