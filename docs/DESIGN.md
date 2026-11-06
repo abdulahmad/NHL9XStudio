@@ -209,7 +209,7 @@ Speak of these in the UI with the names below. Do not invent extra extensions (n
 | PC `HOMEPALS.BIN` / `AWAYPALS.BIN` | Team jersey palettes |
 | NHL 94 PC `.PPV` / `.QPP` | Mode X planar PackBits banks; QPP is Huffman `30 FB` or BTree `46 FB` (not 95 PC SHPI / RefPack `10 FB`) |
 | NHL 94/95 PC `.KMS` / `.CFG` / `PCFF*` / `.VIV` | AdLib songs, digital SFX, and announcer speech |
-| NHL 96 PC `.ASF` / `.BNK` | EA 1SNh/EACS songs (PCM or EA IMA ADPCM); `.BNK` banks listed, not played |
+| NHL 96 PC `.ASF` / `.BNK` | EA 1SNh/EACS songs (PCM or EA IMA ADPCM with a 20-byte block header); `.BNK` banks listed, not played |
 | ROM / `.sfc` / PC folder | Opens the matching game profile in the viewer |
 
 If an export would be illegal for that picture (SNES→Genesis is lossy; SNES indexes above 1024 tiles), **tell the person and stop**. Do not write a file they cannot use. Explicit format picks that fit (Genesis→sjim or Genesis→94S zip at ≤1024 tiles) are conversions, not errors.

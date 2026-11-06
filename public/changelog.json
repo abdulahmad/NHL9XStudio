@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.28.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF music: compressed 1SNh/1SNd payloads start with a 20-byte EA IMA block (dwOutSize, idxL, idxR, predL, predR; loc_CC55E / sub_CC048 add 14h). Each chunk reloads predictor/index; EACS+8 is bits and EACS+9 is channels; 1SNl+8 is the loop jump in samples. Voice PCM is unchanged"
+      ]
+    },
+    {
       "version": "1.27.0",
       "date": "2026-11-05",
       "changes": [
