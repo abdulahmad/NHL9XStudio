@@ -29,7 +29,7 @@
     nhlpa93: { label: 'NHLPA 93', short: '93', slice: 'nhl93-sound-slice.bin', start: 0x165d8, size: 0x2e1fc, catalog: 'nhlpa93.json', driver: 'Nhl93M68kHarness' },
     nhl94: { label: 'NHL 94', short: '94', slice: 'nhl94-sound-slice.bin', start: 0x1a264, size: 0x4b5c0, catalog: 'nhl94.json', driver: 'Nhl94M68kHarness' },
     nhl95: { label: 'NHL 95', short: '95', slice: 'nhl95-sound-slice.bin', start: 0xaf44, size: 0x7a000, catalog: 'nhl95.json', driver: 'Nhl95M68kHarness' },
-    nhl96: { label: 'NHL 96', short: '96', slice: 'nhl96-sound-slice.bin', start: 0x25500, size: 0x88a18, catalog: 'nhl96.json', driver: 'Nhl96M68kHarness' }
+    nhl96: { label: 'NHL 96', short: '96', slice: 'nhl96-sound-slice.bin', start: 0x24486, size: 0x88a18, catalog: 'nhl96.json', driver: 'Nhl96M68kHarness' }
   };
   const SNES94 = 'nhl94snes';
   const SNES93 = 'nhlpa93snes';
@@ -146,8 +146,8 @@
     const nice = (e) => e.label.replace(/^sfx /, '').replace(/^ChooseSong, /, '');
     // NHLPA 93: the 93 labels and ram93 equates, lined up with the NHL 92 names (lib/audio/nhl93-names.js).
     // NHL 94 Genesis shares the 93 effect table (sounds $00-$2F), and names its three shared songs by their equates.
-    const N93 = (c.short === '93' || c.short === '94' || c.short === '95') && root.Nhl93Names ? root.Nhl93Names : null;
-    const songRec = (e) => (N93 && c.short === '95' && e.soundId <= 3 ? { id: e.soundId, name: N93.SONGS95[e.soundId][0], desc: N93.SONGS95[e.soundId][2], group: 'Music', blurb: 'NHL95Genesis song() callers' } : N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), desc: e.musicDesc, group: e.group, blurb: e.blurb });
+    const N93 = (c.short === '93' || c.short === '94' || c.short === '95' || c.short === '96') && root.Nhl93Names ? root.Nhl93Names : null;
+    const songRec = (e) => (N93 && (c.short === '95' || c.short === '96') && e.soundId <= 3 ? { id: e.soundId, name: N93.SONGS95[e.soundId][0], desc: N93.SONGS95[e.soundId][2], group: 'Music', blurb: c.short === '96' ? 'NHL96Genesis song() callers' : 'NHL95Genesis song() callers' } : N93 && (c.short === '93' || e.soundId >= 0x78) ? { id: e.soundId, name: N93.songName(e.soundId), desc: N93.songDescribe(e.soundId), group: e.group, blurb: e.blurb } : { id: e.soundId, name: nice(e), desc: e.musicDesc, group: e.group, blurb: e.blurb });
     const sfxRec = (e) => (N93 ? { id: e.soundId, name: N93.sfxName(e.soundId), desc: N93.sfxDescribe(e.soundId), blurb: e.blurb } : { id: e.soundId, name: nice(e), blurb: e.blurb });
     const startSong = c.short === '95' || c.short === '96';
     return {

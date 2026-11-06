@@ -1,5 +1,5 @@
 /**
- * Browser: Sound test smoke for every game with playback (93G/94G/95G/93S/94S + NHL 92).
+ * Browser: Sound test smoke for every game with playback (93G/94G/95G/96G/93S/94S + NHL 92).
  * Opens Sound test, plays one catalog song (and one SNES effect when roll is set), expects "Playing".
  *
  *   node test/browser/sound-smoke.js
@@ -11,8 +11,9 @@ const OPTIONAL = /\/api\/games\/\w+\/rom/;
 const GAMES = [
   { id: 'nhl92', pick: 'SngTitle' },
   { id: 'nhlpa93', pick: 'SngGoal' },
-  { id: 'nhl94', pick: 'TeamSongs BOS' },
+  { id: 'nhl94', pick: 'NHL94_music_001' },
   { id: 'nhl95', pick: 'TeamSongs BOS' },
+  { id: 'nhl96', pick: 'TeamSongs BOS' },
   { id: 'nhlpa93snes', pick: 'SngGoal', roll: true },
   { id: 'nhl94snes', pick: 'SongBrassBonanza' }
 ];
@@ -71,5 +72,5 @@ async function playLabel(page, labelPart) {
     assert.deepStrictEqual(bad, [], bad.join('\n'));
     await page.close();
   });
-  if (ran) console.log('sound-smoke: 92/93/94/95 Genesis and 93S/94S Sound test play OK');
+  if (ran) console.log('sound-smoke: 92/93/94/95/96 Genesis and 93S/94S Sound test play OK');
 })().catch((err) => { console.error(err); process.exit(1); });

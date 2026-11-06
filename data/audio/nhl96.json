@@ -1,11 +1,11 @@
 {
   "gameId": "nhl96",
   "platform": "genesis",
-  "playback": false,
-  "note": "SFX $0\u2013$2F (SfxTable) + songs $0\u2013$3 (StartSong) + $32\u2013$55 (sound96.asm). Same TeamSongs as 95G. Playback waits on a bundled sound slice (tools/extract-nhl9x-sound-fixture.js 96).",
+  "playback": true,
+  "note": "SFX $0\u2013$2F (SfxTable) + songs $0\u2013$3 (StartSong) + $32\u2013$55 (sound96.asm). Same TeamSongs as 95G. Bundled slice $24486-$88A18.",
   "streamDriver": null,
   "previewMeta": {
-    "soundBase": 152832,
+    "soundBase": 148614,
     "streamDriver": null
   },
   "entries": [
@@ -14,10 +14,10 @@
       "label": "Hockey.snd (ROM)",
       "group": "Samples",
       "type": "region",
-      "start": 152832,
+      "start": 148614,
       "end": 559640,
       "playable": false,
-      "blurb": "96 sound driver segment (extract with tools/extract-nhl9x-sound-fixture.js 96; no bundled slice yet)"
+      "blurb": "96 sound driver segment (bundled slice $24486-$88A18; SndDriver through TitleScreenImg)"
     },
     {
       "id": "snd-00",

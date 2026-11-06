@@ -13,7 +13,7 @@ const SUITES = [
   'chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-data', 'nhl93-names', 'roll-snes-progressive',
   'nhl93-crowd', 'm68k-cpu', 'spc700-cpu', 'snes-dsp', 'snes-spc', 'nhl94s-sound-data', 'nhl94s-player', 'nhl94s-midi',
   'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'pc-audio-groups', 'pc94-audio', 'pc95-audio', 'pc94-shape', 'snes-gm-map',
-  'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain',
+  'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests',
   'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image'
@@ -22,7 +22,7 @@ const SUITES = [
 const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
 const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
-const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl92-sequencer'];
+const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
 const SPC = ['spc700-cpu', 'snes-dsp', 'snes-spc', 'nhl93s-player', 'nhl93s-sample-match', 'nhl93s-midi', 'nhl94s-player', 'nhl94s-midi', 'roll-snes-progressive'];
 const SOUND_BROWSER = ['audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer'];
@@ -46,7 +46,8 @@ const RULES = [
   // CPU cores.
   { re: /^lib\/audio\/(m68k-cpu|nhl9[2-5x]-68k-[\w-]+)\.js$/, tests: M68K, why: '68000 core / drivers' },
   // The Z80 harness clock is shared by every Genesis chain (92-95), so its long-run test and all chain suites run.
-  { re: /^lib\/audio\/nhl92-z80-harness\.js$/, tests: [...Z80, 'nhl9x-sound-chain', 'nhl95-sound-chain'], why: 'Z80 harness (all Genesis chains)' },
+  { re: /^lib\/audio\/nhl92-z80-harness\.js$/, tests: [...Z80, 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain'], why: 'Z80 harness (all Genesis chains)' },
+  { re: /^data\/fixtures\/nhl96-sound-/, tests: ['nhl96-sound-chain', 'core', 'browser:sound-smoke', 'browser:audio-list'], why: '96G sound fixture' },
   { re: /^lib\/audio\/(z80[\w-]*|nhl92-z80[\w-]*)\.js$/, tests: Z80, why: 'Z80 core / driver' },
   { re: /^lib\/audio\/(spc700-cpu|snes-dsp|snes-spc)\.js$/, tests: SPC, why: 'SPC700 / S-DSP' },
   { re: /^tools\/fingerprint-site\.js$/, tests: ['fingerprint-site'], why: 'fingerprint tool' },

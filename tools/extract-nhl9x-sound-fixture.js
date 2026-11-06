@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Extract the NHLPA 93 or NHL 94 Genesis sound segment (68k driver, Z80 program, FM patches, event
- * streams, PCM samples) for the bundled Sound test fixture.
+ * Extract the NHLPA 93, NHL 94, NHL 95, or NHL 96 Genesis sound segment (68k driver, Z80 program,
+ * FM patches, event streams, PCM samples) for the bundled Sound test fixture.
  *
  *   node tools/extract-nhl9x-sound-fixture.js [93|94|95|96]     (default: all, whichever ROMs are found)
  *
@@ -34,9 +34,9 @@ const GAMES = {
   },
   96: {
     name: 'NHL 96 (Genesis, retail)', sha1: '7204633fbb9966ac637e7966d02ba15c5acdee6b', size: 0x200000,
-    start: 0x25500, end: 0x88a18, // sound96 (Z80Program through end of SoundOff / before TitleScreenImg)
-    env: 'NHL96_ROM', files: ['roms/nhl96.bin', '/tmp/disasm/NHL96Genesis/lst/nhl96.bin'],
-    out: 'nhl96-sound', repos: ['/tmp/disasm/NHL96Genesis', '../NHL96Genesis', '../nhl96genesis']
+    start: 0x24486, end: 0x88a18, // sound96 (SndDriver at $24486 through TitleScreenImg; Z80Program is $25500)
+    env: 'NHL96_ROM', files: ['roms/nhl96.bin', '/tmp/disasm/NHL96Genesis/lst/nhl96.bin', '../EA-NHL-Disassembly-Project/NHL96-Genesis/nhl96retail.bin'],
+    out: 'nhl96-sound', repos: ['/tmp/disasm/NHL96Genesis', '../NHL96Genesis', '../nhl96genesis', '../EA-NHL-Disassembly-Project/NHL96-Genesis']
   }
 };
 
