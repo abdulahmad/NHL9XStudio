@@ -16,12 +16,11 @@ function isPcGame(kind) {
 function shownFrame(n) {
   return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
 }
-/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94 Genesis, NHL 95 Genesis, NHL 94 SNES, NHLPA 93 SNES, NHL 94/95 PC AdLib/SFX, and NHL 96 PC 1SN .ASF. */
+/** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94/95/96 Genesis, NHL 94 SNES, NHLPA 93 SNES, NHL 94/95 PC AdLib/SFX, and NHL 96 PC 1SN .ASF. */
 function hasSoundTest(info) {
   if (!info) return false;
   if (info.id === 'nhl94pc' || info.id === 'nhl95pc' || info.id === 'nhl96pc') return typeof NhlSoundTestPc94 !== 'undefined';
-  // nhl96 stays off until data/fixtures/nhl96-sound-slice.bin exists (extract-nhl9x-sound-fixture.js 96).
-  return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
+  return !!(info.id === 'nhl92' || info.id === 'nhlpa93' || info.id === 'nhl94' || info.id === 'nhl95' || info.id === 'nhl96' || info.id === 'nhl94snes' || info.id === 'nhlpa93snes') && typeof NhlSoundTestView !== 'undefined';
 }
 
 function soundTestViewFor(info) {

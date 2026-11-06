@@ -56,7 +56,7 @@ Implementation order (do earlier rows before later ones unless a task is blocked
 | 2 | **93G** | NHLPA 93 | Genesis | Frames, images, Sound test |
 | 3 | **94G** | NHL 94 | Genesis | Frames, images, Sound test |
 | 4 | **95G** | NHL 95 | Genesis | Frames, images, Sound test |
-| 5 | **96G** | NHL 96 | Genesis | Frames, images; Sound test when the sound fixture is extracted |
+| 5 | **96G** | NHL 96 | Genesis | Frames, images, Sound test |
 | 6 | **93S** | NHLPA 93 | SNES | Frames, pictures, Sound test |
 | 7 | **94S** | NHL 94 | SNES | Frames, pictures, Sound test |
 | 8 | **95PC** | NHL 95 | DOS | Frames, images, jersey & ice editor, AdLib songs, digital SFX, VIV speech; `roms/nhl95.iso` |

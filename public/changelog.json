@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.29.0",
+      "date": "2026-11-06",
+      "changes": [
+        "NHL 96 Genesis Sound test: the bundled slice $24486–$88A18 (SndDriver through TitleScreenImg) plays the 78 catalog songs and SFX through the 95 driver at 96 addresses. Sequencer and MIDI stay off"
+      ]
+    },
+    {
       "version": "1.28.0",
       "date": "2026-11-05",
       "changes": [

@@ -22,12 +22,13 @@ async function open(page, url, game) {
 (async () => {
   const ran = await withBrowser('audio-list', async ({ url, newPage }) => {
     const page = await newPage(1300);
-    for (const game of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95', 'nhlpa93snes', 'nhl94snes']) {
+    for (const game of ['nhl92', 'nhlpa93', 'nhl94', 'nhl95', 'nhl96', 'nhlpa93snes', 'nhl94snes']) {
       await open(page, url, game);
       let g = await groups(page);
       assert.ok(g.some((x) => /^▾ Songs/.test(x)) && g.some((x) => /^▾ SFX/.test(x)), game + ': Songs and SFX start open: ' + g.join(' | '));
       const isSnes = game.endsWith('snes');
-      if (!isSnes) assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
+      if (!isSnes && game !== 'nhl96') assert.ok(g.some((x) => /^▸ Instruments/.test(x)), game + ': Instruments start closed: ' + g.join(' | '));
+      if (game === 'nhl96') assert.ok(!g.some((x) => /Instruments|MIDI/.test(x)), 'nhl96: no Instruments or MIDI tools: ' + g.join(' | '));
       if (game === 'nhl95') assert.ok(g.some((x) => /MIDI/.test(x)), 'nhl95: MIDI tools listed: ' + g.join(' | '));
       const before = (await items(page)).length;
       // collapse SFX, then open it again
@@ -60,6 +61,11 @@ async function open(page, url, game) {
           await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 45000 });
           await page.click('#sound-test-toggle');
         }
+        await page.$$eval('#catalog .item', (n) => n.find((x) => /TeamSongs BOS/.test((x.querySelector('.name') || {}).textContent)).click());
+        await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
+        await page.click('#sound-test-toggle');
+        await page.waitForFunction(() => /Playing/.test((document.querySelector('.st-status') || {}).textContent || ''), null, { timeout: 45000 });
+      } else if (game === 'nhl96') {
         await page.$$eval('#catalog .item', (n) => n.find((x) => /TeamSongs BOS/.test((x.querySelector('.name') || {}).textContent)).click());
         await page.waitForSelector('#sound-test-toggle', { timeout: 20000 });
         await page.click('#sound-test-toggle');

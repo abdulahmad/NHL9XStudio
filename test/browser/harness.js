@@ -70,6 +70,8 @@ async function withBrowser(name, body) {
     const newPage = async (width) => {
       const phone = width < 500;
       const context = await browser.newContext({ viewport: { width, height: phone ? 844 : 900 }, hasTouch: phone, isMobile: phone, deviceScaleFactor: phone ? 3 : 1 });
+      // Version bumps reopen About; tests click the Audio tab and would hit the scrim.
+      await context.addInitScript((v) => { try { localStorage.setItem('nhl9x-about-seen', v); } catch (e) { /* private */ } }, require(path.join(ROOT, 'package.json')).version);
       const page = await context.newPage();
       page.problems = [];
       page.on('pageerror', (e) => page.problems.push('page error: ' + e.message));
