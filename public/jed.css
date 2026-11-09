@@ -113,3 +113,21 @@
 .jed-crest-tools .ghost-btn { padding: 2px 8px; font-size: 12px; }
 .jed-crest-opts { flex-basis: 100%; width: 100%; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; border: 1px solid var(--line, #444); padding: 4px 8px; margin: 0 0 8px; }
 .jed-crest-opts label[title]:not([title=""]) { opacity: .5; }
+
+/* Fight colours tab (fight.js) */
+.fight-main { display: grid; grid-template-columns: 230px minmax(320px, 430px) 1fr; gap: 12px; padding: 12px 16px; flex: 1 1 auto; min-height: 0; }
+.fight-main[hidden] { display: none; }
+.fight-row { margin: 6px 0; }
+.fight-strip { flex: 1 1 auto !important; height: auto; margin-top: 8px; }
+.fight-map { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 3px; margin-bottom: 8px; max-height: 40%; overflow: auto; }
+.fight-pairbtn { display: flex; align-items: center; gap: 3px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--raise-2); font: 11px var(--mono); color: inherit; }
+.fight-pairbtn i { width: 16px; height: 16px; border: 1px solid #000; border-radius: 2px; flex: none; }
+.fight-pairbtn[aria-selected="true"] { outline: 2px solid var(--amber); }
+.fight-pairbtn.changed b { color: var(--amber); }
+.fight-pair { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; overflow: auto; flex: 1 1 auto !important; min-height: 0; background: var(--ice-2); border-radius: 6px; padding: 12px; }
+.fight-pair figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #333; font-size: 12px; }
+.fight-pair canvas { image-rendering: pixelated; cursor: crosshair; }
+.fight-pair input { width: 60px; }
+.ice-sw.fight-hit { outline: 2px dashed var(--amber); outline-offset: 1px; z-index: 1; }
+@media (max-width: 900px) { .fight-main { grid-template-columns: 1fr; } }
+.fight-pair input { color: #111; background: #fff; border: 1px solid #888; border-radius: 4px; }

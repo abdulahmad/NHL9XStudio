@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.30.0",
+      "date": "2026-11-09",
+      "changes": [
+        "Jersey editor: new Fight colours tab. Match NHLPA 93's fight and injury frames to NHL 95 PC's colours side by side, pick colours from the 95 PC palette or a 95 PC skater frame, and export FIGHTPAL.TXT for the NHL 95 PC port"
+      ]
+    },
+    {
       "version": "1.29.0",
       "date": "2026-11-06",
       "changes": [

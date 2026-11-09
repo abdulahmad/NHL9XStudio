@@ -109,6 +109,10 @@ pc96/FRONT1.BNK
 
 Format (`lib/pc-jersey.js`): one 448-byte record per team, no header. NHL 95 PC: 28 records (12,544 bytes; 26 teams, then West and East All-Stars). NHL 94 PC: 26 records (11,648 bytes; no Anaheim or Florida). Record: bytes 0–191 are 64 colours (6-bit RGB, game palette 128–191); 192–319 map sprite indices 0–127 to the game palette (identity except blade side 8 → 16 and shadow 82 / 88 → 99); 320–447 map sprite indices 128–255 (skin 128–143, jersey zones 144–191, crest rows 192–255).
 
+### Fight colours (NHL 95 PC port)
+
+The **Fight colours** tab of `jed.html` picks the colours the NHL 95 PC port (NHL95PC `port/fight/`) draws NHLPA 93's fight frames with. Open the NHL 95 PC game folder and your NHLPA 93 Genesis ROM (Rev 0, A or B, any file name; a ROM in the opened folder is found by itself). The left column lists the fight frames (353–376: the gloves, the fight, the bloody fight injury) and the bloody check injury (633–644). The middle column lists every 93 colour those frames use, each with the 95 PC sprite colour it gets; click one, then click a 95 PC sprite colour (or, with the box ticked, a pixel of the 95 PC skater frame on the right) to change it. Sprite colours 144–191 are team colours, so each fighter keeps his own team's jersey. **Auto** fills in the nearest colours, which is what the port uses without a file. **93 colours** shows a frame in its own Genesis colours. **Export FIGHTPAL.TXT** writes `v = s` lines (93 colour: palette line × 16 + colour, 15 is the eye; 95 PC sprite colour 0–254); put it in the game folder. The 93 reader is `lib/rom93.js`, the same as the port's `rom93.c`.
+
 ## Credits and derivative works
 
 Thanks to chaos, StaticEck, McMarkis (Mhopkinsinc) and Drezz, with special thanks to smozoma and kingraph.

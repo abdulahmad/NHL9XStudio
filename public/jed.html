@@ -18,6 +18,7 @@
       <nav class="jed-tabs" role="tablist" aria-label="Editor">
         <button type="button" role="tab" id="tab-jerseys" aria-selected="true">Jerseys</button>
         <button type="button" role="tab" id="tab-ice" aria-selected="false">Centre ice</button>
+        <button type="button" role="tab" id="tab-fight" aria-selected="false" title="NHL 95 PC port: the colours of NHLPA 93's fight frames">Fight colours</button>
       </nav>
       <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
     </div>
@@ -196,6 +197,55 @@
       <input type="file" id="ice-mask-file" hidden accept="image/png,image/bmp,image/gif,.png,.bmp,.gif">
     </section>
   </main>
+  <main class="fight-main" id="fight-main" hidden>
+    <section class="jed-col" aria-label="NHLPA 93 fight frames">
+      <h2>NHLPA 93 fight frames <span class="muted" id="fight-rom-note"></span></h2>
+      <div class="fight-row">
+        <button type="button" id="fight-open-rom" class="ghost-btn" title="Your NHLPA Hockey 93 Genesis ROM (Rev 0, A or B, any file name). A ROM in the opened game folder is found by itself.">Open NHLPA 93 ROM…</button>
+        <input type="file" id="fight-rom-file" hidden>
+      </div>
+      <label class="ice-field">95 PC team (preview) <select id="fight-team"></select></label>
+      <div class="pin-options fight-row" role="group" aria-label="Side">
+        <button type="button" id="fight-home" aria-pressed="true">Home</button>
+        <button type="button" id="fight-away" aria-pressed="false">Away</button>
+      </div>
+      <label class="ice-field" title="Only for the 93 colours shown on the left of each row: the team whose 93 jersey fills palette line 2">93 jersey (original colours) <select id="fight-team93"></select></label>
+      <div id="fight-strip" class="jed-strip fight-strip" aria-label="Fight frames"></div>
+    </section>
+    <section class="jed-col" aria-label="Colours">
+      <h2>93 colours <span class="muted">used by the fight frames · click one, then a 95 PC colour</span></h2>
+      <div id="fight-map" class="fight-map" role="listbox" aria-label="93 colours"></div>
+      <h2>NHL 95 PC sprite colours <span class="muted" id="fight-pc-note">click to give the selected 93 colour</span></h2>
+      <div id="fight-pc" class="ice-swatches" role="listbox" aria-label="95 PC colours"></div>
+      <ul class="ice-legend">
+        <li><i class="src-home"></i>144–191 team colours: each fighter shows his own team's</li>
+        <li><i class="src-clear"></i>255 transparent (not allowed)</li>
+      </ul>
+      <p id="fight-sel" class="ice-colorline"></p>
+      <div class="jed-io">
+        <button type="button" id="fight-auto" class="ghost-btn" title="The nearest 95 PC colour to each 93 colour, as the game picks them without a FIGHTPAL.TXT">Auto (nearest)</button>
+        <button type="button" id="fight-undo" class="ghost-btn">Undo</button>
+        <button type="button" id="fight-import" class="ghost-btn" title="A FIGHTPAL.TXT made here">Import FIGHTPAL.TXT</button>
+        <button type="button" id="fight-export" class="ghost-btn" title="Put it in the NHL 95 PC game folder, beside the 93 ROM: the port uses these colours for the fighters">Export FIGHTPAL.TXT</button>
+        <input type="file" id="fight-txt-file" hidden accept=".txt">
+      </div>
+    </section>
+    <section class="jed-col fight-view" aria-label="Preview">
+      <div class="jed-frame-bar">
+        <label>Scale <input type="range" id="fight-scale" min="1" max="12" value="5"></label>
+        <label class="check" title="Show the 93 frame in its own Genesis colours"><input type="checkbox" id="fight-orig"> 93 colours</label>
+        <label class="check" title="Click a 95 PC pixel: give its colour to the selected 93 colour. Off: clicking only shows it."><input type="checkbox" id="fight-pick" checked> Click a 95 PC pixel to use its colour</label>
+      </div>
+      <div class="fight-pair">
+        <figure><canvas id="fight-93" title="Click a pixel to select its 93 colour"></canvas><figcaption id="fight-93-cap"></figcaption></figure>
+        <figure><canvas id="fight-pcf" title="A 95 PC skater frame"></canvas><figcaption>
+          <button type="button" id="fight-pc-prev" class="ghost-btn" aria-label="Previous 95 PC frame">◀</button>
+          95 PC frame <input type="number" id="fight-pc-frame" min="1" value="1">
+          <button type="button" id="fight-pc-next" class="ghost-btn" aria-label="Next 95 PC frame">▶</button></figcaption></figure>
+      </div>
+      <p id="fight-note" class="muted"></p>
+    </section>
+  </main>
   <script src="button-icons.js"></script>
   <script src="lib/snespak.js"></script>
   <script src="lib/pc95.js"></script>
@@ -209,5 +259,7 @@
   <script src="lib/indexed-image.js"></script>
   <script src="jed.js"></script>
   <script src="ice.js"></script>
+  <script src="lib/rom93.js"></script>
+  <script src="fight.js"></script>
 </body>
 </html>
