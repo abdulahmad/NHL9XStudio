@@ -209,7 +209,7 @@
         <button type="button" id="fight-home" aria-pressed="true">Home</button>
         <button type="button" id="fight-away" aria-pressed="false">Away</button>
       </div>
-      <label class="ice-field" title="Only for the 93 colours shown on the left of each row: the team whose 93 jersey fills palette line 2">93 jersey (original colours) <select id="fight-team93"></select></label>
+      <p class="ice-field" title="Each jersey has its own fight palette. Its default is this 93 jersey's colours matched to the nearest 95 PC colours.">93 jersey <b id="fight-team93"></b></p>
       <div id="fight-strip" class="jed-strip fight-strip" aria-label="Fight frames"></div>
     </section>
     <section class="jed-col" aria-label="Colours">
@@ -223,10 +223,10 @@
       </ul>
       <p id="fight-sel" class="ice-colorline"></p>
       <div class="jed-io">
-        <button type="button" id="fight-auto" class="ghost-btn" title="The nearest 95 PC colour to each 93 colour, as the game picks them without a FIGHTPAL.TXT">Auto (nearest)</button>
+        <button type="button" id="fight-auto" class="ghost-btn" title="Drop this jersey's changes: back to its 93 jersey's colours matched to the nearest 95 PC ones (what the game uses without a FIGHTPAL.TXT)">Reset jersey</button>
         <button type="button" id="fight-undo" class="ghost-btn">Undo</button>
         <button type="button" id="fight-import" class="ghost-btn" title="A FIGHTPAL.TXT made here">Import FIGHTPAL.TXT</button>
-        <button type="button" id="fight-export" class="ghost-btn" title="Put it in the NHL 95 PC game folder, beside the 93 ROM: the port uses these colours for the fighters">Export FIGHTPAL.TXT</button>
+        <button type="button" id="fight-export" class="ghost-btn" title="Every jersey (each team, home and away) in one file. Put it in the NHL 95 PC game folder, beside the 93 ROM.">Export FIGHTPAL.TXT</button>
         <input type="file" id="fight-txt-file" hidden accept=".txt">
       </div>
     </section>
