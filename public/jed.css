@@ -131,3 +131,7 @@
 .ice-sw.fight-hit { outline: 2px dashed var(--amber); outline-offset: 1px; z-index: 1; }
 @media (max-width: 900px) { .fight-main { grid-template-columns: 1fr; } }
 .fight-pair input { color: #111; background: #fff; border: 1px solid #888; border-radius: 4px; }
+.fight-tools { flex-wrap: wrap; gap: 10px; align-items: center; }
+.fight-brush { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.fight-brush i { width: 22px; height: 22px; border: 1px solid #000; border-radius: 3px; display: inline-block; }
+.fight-main.pick .fight-pair canvas { cursor: copy; }
