@@ -1,31 +1,49 @@
 /* Fight colours tab: the colours the NHL 95 PC port gives NHLPA 93's fight frames (NHL95PC port/fight/). The 93 frames
  * come from the player's own NHLPA 93 ROM (lib/rom93.js, the port's reader); the 95 PC skater frames and team
  * palettes from the opened game folder (JedShared, jed.js). Each 93 colour the fight frames use is given a 95 PC sprite
- * colour; the port reads the choice from FIGHTPAL.TXT in its game folder (without one it takes the nearest colours,
- * which is what Auto shows). Sprite colours 144-191 are team colours, so a fighter keeps his own team's jersey. */
+ * colour, separately for every jersey (team, home or away); the port reads them all from one FIGHTPAL.TXT in its game
+ * folder. A jersey's default is its own 93 jersey (the 93 ROM's team colours, with 95 PC's stick, skin, eyes, blade
+ * and shadow) matched to the nearest 95 PC colours, as the port does without a file. Anaheim and Florida were not in
+ * 93: theirs take 93 Boston's matched to their own 95 PC team colours. */
 (function () {
   'use strict';
   const R = NhlRom93, J = NhlPcJersey, X = window.JedShared;
   const $ = (id) => document.getElementById(id);
   const F = {
-    rom: null, frames: [], frame: R.FRAMES.fight + 5, team: 0, side: 'home', team93: 0,
-    map: new Array(64).fill(null), auto: null, used: new Set(), sel: null, undo: [], pcFrame: 1, hit: null, wired: false,
+    rom: null, frames: [], frame: R.FRAMES.fight + 5, team: 0, side: 'home',
+    maps: {}, all: new Array(64).fill(null), auto: null, used: new Set(), sel: null, undo: [], pcFrame: 1, hit: null, wired: false,
     tool: 'paint', brush: null, alt: false
   };
   const st = () => X.state;
   const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
   const rgb = (c) => 'rgb(' + c.join(',') + ')';
 
-  // ---- palettes ----
-  function pcPalette() { return X.paletteFor(F.team, F.side); }
-  function pal93() { return F.rom ? R.palette(F.rom, F.team93, true) : null; }
-  function pal93pc() { return F.rom ? R.pc95Colours(R.palette(F.rom, 0, true)) : null; }   // what the port matches from
-  /** v (0-63) -> the 95 PC sprite colour in use: the choice, else the port's nearest */
-  function mapped(v) {
-    const k = v >= 48 ? v - 16 : v;
-    return F.map[k] != null ? F.map[k] : (F.auto ? F.auto[k] : 0);
+  // ---- jerseys and palettes ----
+  const blank = () => new Array(64).fill(null);
+  function teams() { const f = st().files.home || st().files.away; return f ? f.file.teams : []; }
+  function codeOf(i) { const t = teams()[i]; return t ? t.code.toLowerCase() : 'bos'; }
+  function key(i = F.team, side = F.side) { return codeOf(i) + ' ' + side; }
+  /** the edits of the jersey on screen (64 entries, null: the default) */
+  Object.defineProperty(F, 'map', {
+    get() { const k = key(); return F.maps[k] || (F.maps[k] = blank()); },
+    set(m) { F.maps[key()] = m; }
+  });
+  function team93(i = F.team) { return R.teamFor(codeOf(i)); }
+  function pcPalette(i = F.team, side = F.side) { return X.paletteFor(i, side); }
+  /** the 93 jersey's own colours (Boston's for a team 93 did not have) */
+  function pal93(i = F.team, side = F.side) { const t = team93(i); return F.rom ? R.palette(F.rom, t < 0 ? 0 : t, side === 'home') : null; }
+  /** a jersey's default: what the port matches without a FIGHTPAL.TXT */
+  function autoFor(i, side) {
+    const pc = pcPalette(i, side);
+    return pc && F.rom ? R.autoMap(R.pc95Colours(pal93(i, side)), pc, team93(i) < 0) : null;
   }
-  function refreshAuto() { const pc = pcPalette(); F.auto = pc && F.rom ? R.autoMap(pal93pc(), pc) : null; }
+  /** v (0-63) -> the 95 PC sprite colour in use: this jersey's choice, a choice for every jersey, else the default */
+  function mappedIn(map, auto, v) {
+    const k = v >= 48 ? v - 16 : v;
+    return map[k] != null ? map[k] : F.all[k] != null ? F.all[k] : (auto ? auto[k] : 0);
+  }
+  function mapped(v) { return mappedIn(F.map, F.auto, v); }
+  function refreshAuto() { F.auto = autoFor(F.team, F.side); }
 
   // ---- loading ----
   async function tryRom(bytes, name) {
@@ -51,8 +69,9 @@
   }
   async function findText() {
     const b = await X.file('FIGHTPAL.TXT');
-    if (b) { F.map = R.readText(new TextDecoder().decode(b)); X.status('FIGHTPAL.TXT read from the game folder'); }
+    if (b) { setFile(R.readText(new TextDecoder().decode(b))); X.status('FIGHTPAL.TXT read from the game folder'); }
   }
+  function setFile(t) { F.maps = t.jerseys; F.all = t.all; }
   async function load() {
     await findRom(); await findText().catch(() => {});
     fillTeams(); refreshAuto(); renderAll();
@@ -64,9 +83,8 @@
     sel.innerHTML = '';
     if (f) f.file.teams.forEach((t, i) => sel.add(new Option((i + 1) + '. ' + t.name, String(i))));
     F.team = Math.min(F.team, Math.max(0, sel.options.length - 1)); sel.value = String(F.team);
-    const s93 = $('fight-team93');
-    if (!s93.options.length) R.TEAMS.forEach((t, i) => s93.add(new Option(t, String(i))));
-    s93.value = String(F.team93);
+    const t = team93();
+    $('fight-team93').textContent = t < 0 ? 'none in 93: Boston\'s, matched to this team\'s 95 PC colours' : R.TEAMS[t] + ' ' + F.side;
     $('fight-home').setAttribute('aria-pressed', String(F.side === 'home'));
     $('fight-away').setAttribute('aria-pressed', String(F.side === 'away'));
   }
@@ -110,13 +128,13 @@
     [...F.used].sort((a, b) => a - b).forEach((v) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'fight-pairbtn';
       b.setAttribute('aria-selected', String(v === F.sel));
-      if (F.map[v] != null && (!F.auto || F.map[v] !== F.auto[v])) b.classList.add('changed');
+      if (F.map[v] != null || F.all[v] != null) b.classList.add('changed');
       const a = document.createElement('i'); a.style.background = rgb((v === R.EYE ? shown : p93)[v]);
       const m = mapped(v), z = document.createElement('i'); z.style.background = pc ? rgb(pc[m]) : '#000';
       const lab = document.createElement('b'); lab.textContent = m;
       b.append(a, '→', z, lab);
       b.dataset.tip = '93 ' + name93(v) + ' ' + hex(p93[v]) + ' → 95 PC sprite colour ' + m + (pc ? ' ' + hex(pc[m]) : '') +
-        (m >= 144 && m < 192 ? ' (team colour)' : '') + (F.map[v] == null ? ' · nearest (Auto)' : '');
+        (m >= 144 && m < 192 ? ' (team colour)' : '') + (F.map[v] == null && F.all[v] == null ? ' · default (93 jersey, nearest)' : '');
       b.addEventListener('click', (e) => { F.sel = v; if (tool(e) === 'pick') setBrush(mapped(v)); else if (F.brush != null) assign(F.brush); renderAll(); });
       box.appendChild(b);
     });
@@ -144,7 +162,7 @@
     $('fight-brush-n').textContent = F.brush != null ? String(F.brush) : '—';
     if (F.sel == null) { p.textContent = 'Pick a brush colour (95 PC palette or Dropper), then Paint on the 93 frame.'; return; }
     const m = mapped(F.sel);
-    p.textContent = '93 ' + name93(F.sel) + ' → 95 PC sprite colour ' + m + (F.map[F.sel] == null ? ' (nearest)' : '');
+    p.textContent = '93 ' + name93(F.sel) + ' → 95 PC sprite colour ' + m + (F.map[F.sel] == null && F.all[F.sel] == null ? ' (default)' : '') + ' · jersey ' + key();
   }
   function renderView() {
     const scale = Number($('fight-scale').value);
@@ -167,8 +185,19 @@
   function assign(i) {
     if (F.sel == null) { X.status('Select a 93 colour first'); return; }
     if (mapped(F.sel) === i && F.map[F.sel] === i) return;
-    F.undo.push(F.map.slice()); if (F.undo.length > 200) F.undo.shift();
+    remember();
     F.map[F.sel] = i; renderAll();
+  }
+  function remember() { F.undo.push({ k: key(), m: F.map.slice() }); if (F.undo.length > 200) F.undo.shift(); }
+  /** every jersey of the game folder, home and away, with its colours in full (choices and defaults) */
+  function allJerseys() {
+    const out = [];
+    teams().forEach((t, i) => ['home', 'away'].forEach((side) => {
+      const auto = autoFor(i, side), m = F.maps[key(i, side)] || blank(), full = blank();
+      for (const v of F.used) full[v] = mappedIn(m, auto, v);
+      out.push({ code: t.code, side, map: full });
+    }));
+    return out;
   }
   function setBrush(i) { F.brush = i; renderSel(); X.status('Brush: 95 PC sprite colour ' + i); }
   /** the tool for this click: Alt (or the I key held) is the dropper */
@@ -211,7 +240,6 @@
       F.rom = null; await tryRom(new Uint8Array(await file.arrayBuffer()), file.name); refreshAuto(); renderAll();
     }));
     $('fight-team').addEventListener('change', (e) => { F.team = Number(e.target.value); refreshAuto(); renderAll(); });
-    $('fight-team93').addEventListener('change', (e) => { F.team93 = Number(e.target.value); renderAll(); });
     $('fight-home').addEventListener('click', () => { F.side = 'home'; fillTeams(); refreshAuto(); renderAll(); });
     $('fight-away').addEventListener('click', () => { F.side = 'away'; fillTeams(); refreshAuto(); renderAll(); });
     $('fight-orig').addEventListener('change', () => { renderStrip(); renderView(); });
@@ -235,19 +263,19 @@
       const p = pixelAt(e.target, e, f); if (p == null || p === 255) return;
       setBrush(p); renderPc();
     });
-    $('fight-auto').addEventListener('click', () => { if (!F.auto) return; F.undo.push(F.map.slice()); F.map = F.auto.slice(); renderAll(); });
-    $('fight-undo').addEventListener('click', () => { const m = F.undo.pop(); if (m) { F.map = m; renderAll(); } });
+    $('fight-auto').addEventListener('click', () => { remember(); F.map = blank(); renderAll(); X.status('Jersey ' + key() + ': back to its 93 colours'); });
+    $('fight-undo').addEventListener('click', () => { const u = F.undo.pop(); if (u) { F.maps[u.k] = u.m; renderAll(); } });
     $('fight-import').addEventListener('click', () => $('fight-txt-file').click());
     $('fight-txt-file').addEventListener('change', X.guard(async (e) => {
       const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-      F.undo.push(F.map.slice()); F.map = R.readText(await file.text()); renderAll(); X.status(file.name + ' imported');
+      F.undo = []; setFile(R.readText(await file.text())); renderAll(); X.status(file.name + ' imported (undo history cleared)');
     }));
     $('fight-export').addEventListener('click', X.guard(() => {
       if (!F.rom) throw new Error('Open your NHLPA 93 ROM first');
-      const full = new Array(64).fill(null);
-      for (const v of F.used) full[v] = mapped(v);
-      X.download(new TextEncoder().encode(R.writeText(full, F.used)), 'FIGHTPAL.TXT');
-      X.status('FIGHTPAL.TXT: put it in the NHL 95 PC game folder');
+      const all = allJerseys();
+      if (!all.length) throw new Error('Open an NHL 95 PC game folder first (its HOMEPALS.BIN / AWAYPALS.BIN)');
+      X.download(new TextEncoder().encode(R.writeText(all, F.used)), 'FIGHTPAL.TXT');
+      X.status('FIGHTPAL.TXT: ' + all.length + ' jerseys; put it in the NHL 95 PC game folder');
     }));
     X.loaded.push(() => { F.rom = F.rom || null; if (!$('fight-main').hidden) X.guard(load)(); else { fillTeams(); refreshAuto(); } });
   }
