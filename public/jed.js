@@ -756,6 +756,12 @@
   /** For the Centre ice tab (ice.js): the loaded game, its files by name, the base palettes. */
   const Shared = window.JedShared = {
     state: S, loaded: [], status, download, guard,
+    /** The sprite-colour palette (256 [r, g, b]) of a team and side, as the jersey preview draws it. */
+    paletteFor(team, side) {
+      const f = S.files[side] || S.files.home || S.files.away; if (!f) return null;
+      if (S.base) return J.spritePalette(f.file, team, S.base, side);
+      return Nhl95Pc.buildTeamPalette(J.getRecord(f.file, team), S.rink);
+    },
     async file(name) {
       const src = S.sources; if (!src) return null;
       if (src.kind === 'server') return fetchBytes('api/games/' + src.id + '/file?path=' + encodeURIComponent(name));
