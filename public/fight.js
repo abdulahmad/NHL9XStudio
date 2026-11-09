@@ -9,7 +9,8 @@
   const $ = (id) => document.getElementById(id);
   const F = {
     rom: null, frames: [], frame: R.FRAMES.fight + 5, team: 0, side: 'home', team93: 0,
-    map: new Array(64).fill(null), auto: null, used: new Set(), sel: null, undo: [], pcFrame: 1, hit: null, wired: false
+    map: new Array(64).fill(null), auto: null, used: new Set(), sel: null, undo: [], pcFrame: 1, hit: null, wired: false,
+    tool: 'paint', brush: null, alt: false
   };
   const st = () => X.state;
   const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
@@ -116,29 +117,32 @@
       b.append(a, '→', z, lab);
       b.dataset.tip = '93 ' + name93(v) + ' ' + hex(p93[v]) + ' → 95 PC sprite colour ' + m + (pc ? ' ' + hex(pc[m]) : '') +
         (m >= 144 && m < 192 ? ' (team colour)' : '') + (F.map[v] == null ? ' · nearest (Auto)' : '');
-      b.addEventListener('click', () => { F.sel = v; renderMap(); renderPc(); renderSel(); });
+      b.addEventListener('click', (e) => { F.sel = v; if (tool(e) === 'pick') setBrush(mapped(v)); else if (F.brush != null) assign(F.brush); renderAll(); });
       box.appendChild(b);
     });
   }
   function renderPc() {
     const box = $('fight-pc'); box.innerHTML = '';
     const pc = pcPalette(); if (!pc) { $('fight-pc-note').textContent = 'open an NHL 95 PC game folder'; return; }
-    $('fight-pc-note').textContent = 'click to give the selected 93 colour';
-    const cur = F.sel != null ? mapped(F.sel) : -1;
+    $('fight-pc-note').textContent = 'click to set the brush';
+    const cur = F.brush != null ? F.brush : -1;
     for (let i = 0; i < 256; i++) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'ice-sw';
       if (i === 255) b.classList.add('src-clear'); else b.style.background = rgb(pc[i]);
       if (i >= 144 && i < 192) b.classList.add('src-home');
       if (i === cur) b.setAttribute('aria-selected', 'true');
-      if (i === F.hit) b.classList.add('fight-hit');
+      if (F.sel != null && i === mapped(F.sel)) b.classList.add('fight-hit');
       b.dataset.tip = 'Sprite colour ' + i + (i < 255 ? ' ' + hex(pc[i]) : ' (transparent)') + (i >= 144 && i < 192 ? ' · team colour' : '');
-      if (i < 255) b.addEventListener('click', () => assign(i));
+      if (i < 255) b.addEventListener('click', () => { setBrush(i); renderPc(); });
       box.appendChild(b);
     }
   }
   function renderSel() {
     const p = $('fight-sel');
-    if (F.sel == null) { p.textContent = 'Select a 93 colour above, or click a pixel of the 93 frame.'; return; }
+    const pc = pcPalette();
+    $('fight-brush-sw').style.background = F.brush != null && pc ? rgb(pc[F.brush]) : 'transparent';
+    $('fight-brush-n').textContent = F.brush != null ? String(F.brush) : '—';
+    if (F.sel == null) { p.textContent = 'Pick a brush colour (95 PC palette or Dropper), then Paint on the 93 frame.'; return; }
     const m = mapped(F.sel);
     p.textContent = '93 ' + name93(F.sel) + ' → 95 PC sprite colour ' + m + (F.map[F.sel] == null ? ' (nearest)' : '');
   }
@@ -162,8 +166,26 @@
   // ---- editing ----
   function assign(i) {
     if (F.sel == null) { X.status('Select a 93 colour first'); return; }
+    if (mapped(F.sel) === i && F.map[F.sel] === i) return;
     F.undo.push(F.map.slice()); if (F.undo.length > 200) F.undo.shift();
     F.map[F.sel] = i; renderAll();
+  }
+  function setBrush(i) { F.brush = i; renderSel(); X.status('Brush: 95 PC sprite colour ' + i); }
+  /** the tool for this click: Alt (or the I key held) is the dropper */
+  function tool(e) { return e && e.altKey ? 'pick' : F.tool; }
+  function setTool(t) {
+    F.tool = t;
+    document.querySelectorAll('[data-ftool]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ftool === t)));
+    $('fight-main').classList.toggle('pick', t === 'pick');
+  }
+  /** a 93 pixel: Paint gives its 93 colour the brush, Dropper takes the colour it shows */
+  function on93(e) {
+    const x = F.frames.find((y) => y.n === F.frame); if (!x) return;
+    const v = pixelAt($('fight-93'), e, x.f); if (!v) return;
+    const k = v >= 48 ? v - 16 : v;
+    if (tool(e) === 'pick') { F.sel = k; setBrush(mapped(k)); renderMap(); renderPc(); renderSel(); return; }
+    if (F.brush == null) { X.status('Pick a brush colour first: click the 95 PC palette or use the Dropper'); return; }
+    F.sel = k; assign(F.brush);
   }
   function pixelAt(canvas, e, f) {
     const r = canvas.getBoundingClientRect();
@@ -198,17 +220,20 @@
     $('fight-pc-prev').addEventListener('click', () => step(-1));
     $('fight-pc-next').addEventListener('click', () => step(1));
     $('fight-pc-frame').addEventListener('change', (e) => { F.pcFrame = 1; step(Number(e.target.value) - 1); });
-    $('fight-93').addEventListener('click', (e) => {
-      const x = F.frames.find((y) => y.n === F.frame); if (!x) return;
-      const v = pixelAt(e.target, e, x.f); if (!v) return;
-      F.sel = v >= 48 ? v - 16 : v; renderMap(); renderPc(); renderSel();
+    let painting = false;
+    $('fight-93').addEventListener('pointerdown', (e) => { painting = tool(e) === 'paint'; on93(e); });
+    $('fight-93').addEventListener('pointermove', (e) => { if (painting && e.buttons & 1) on93(e); });
+    window.addEventListener('pointerup', () => { painting = false; });
+    document.querySelectorAll('[data-ftool]').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.ftool)));
+    document.addEventListener('keydown', (e) => {
+      if ($('fight-main').hidden || /input|select|textarea/i.test(e.target.tagName) || e.ctrlKey || e.metaKey) return;
+      const k = e.key.toLowerCase();
+      if (k === 'b') setTool('paint'); else if (k === 'i') setTool('pick');
     });
     $('fight-pcf').addEventListener('click', (e) => {
       const S = st(), f = S.sprites && S.sprites.renderFrame(F.pcFrame); if (!f) return;
       const p = pixelAt(e.target, e, f); if (p == null || p === 255) return;
-      F.hit = p;
-      if ($('fight-pick').checked && F.sel != null) assign(p); else renderPc();
-      X.status('95 PC pixel: sprite colour ' + p);
+      setBrush(p); renderPc();
     });
     $('fight-auto').addEventListener('click', () => { if (!F.auto) return; F.undo.push(F.map.slice()); F.map = F.auto.slice(); renderAll(); });
     $('fight-undo').addEventListener('click', () => { const m = F.undo.pop(); if (m) { F.map = m; renderAll(); } });

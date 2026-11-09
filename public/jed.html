@@ -213,9 +213,9 @@
       <div id="fight-strip" class="jed-strip fight-strip" aria-label="Fight frames"></div>
     </section>
     <section class="jed-col" aria-label="Colours">
-      <h2>93 colours <span class="muted">used by the fight frames · click one, then a 95 PC colour</span></h2>
+      <h2>93 colours <span class="muted">used by the fight frames · Paint: click to give it the brush · Dropper: take its colour</span></h2>
       <div id="fight-map" class="fight-map" role="listbox" aria-label="93 colours"></div>
-      <h2>NHL 95 PC sprite colours <span class="muted" id="fight-pc-note">click to give the selected 93 colour</span></h2>
+      <h2>NHL 95 PC sprite colours <span class="muted" id="fight-pc-note">click to set the brush</span></h2>
       <div id="fight-pc" class="ice-swatches" role="listbox" aria-label="95 PC colours"></div>
       <ul class="ice-legend">
         <li><i class="src-home"></i>144–191 team colours: each fighter shows his own team's</li>
@@ -231,10 +231,14 @@
       </div>
     </section>
     <section class="jed-col fight-view" aria-label="Preview">
-      <div class="jed-frame-bar">
+      <div class="jed-frame-bar fight-tools" role="toolbar" aria-label="Tools">
+        <div class="pin-options" role="group" aria-label="Tool">
+          <button type="button" data-ftool="paint" aria-pressed="true" title="Paint (B): click or drag on the 93 frame to give the brush colour to that 93 colour (every pixel of it changes, as in the game)">Paint</button>
+          <button type="button" data-ftool="pick" aria-pressed="false" title="Dropper (I, or hold Alt): click the 93 frame, the 95 PC frame, a 93 colour or the 95 PC palette to take its colour as the brush">Dropper</button>
+        </div>
+        <span class="fight-brush" title="Brush: the 95 PC sprite colour Paint uses. Clicking the 95 PC palette always sets it.">Brush <i id="fight-brush-sw"></i> <b id="fight-brush-n" class="mono"></b></span>
         <label>Scale <input type="range" id="fight-scale" min="1" max="12" value="5"></label>
         <label class="check" title="Show the 93 frame in its own Genesis colours"><input type="checkbox" id="fight-orig"> 93 colours</label>
-        <label class="check" title="Click a 95 PC pixel: give its colour to the selected 93 colour. Off: clicking only shows it."><input type="checkbox" id="fight-pick" checked> Click a 95 PC pixel to use its colour</label>
       </div>
       <div class="fight-pair">
         <figure><canvas id="fight-93" title="Click a pixel to select its 93 colour"></canvas><figcaption id="fight-93-cap"></figcaption></figure>
