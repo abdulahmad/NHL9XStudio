@@ -8,6 +8,7 @@ const { buildManifest } = require('./lib/manifest');
 const pc95 = require('./lib/pc95');
 const iso9660 = require('./lib/iso9660');
 const audio = require('./lib/audio');
+const genesis95Pals = require('./lib/genesis95-pals');
 const httpCache = require('./lib/http-cache');
 
 const ROOT = __dirname;
@@ -90,6 +91,19 @@ function serveFile(res, file, req) {
 function listPals(dir) {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((name) => /\.(pal|snespal)$/i.test(name)).sort();
+}
+
+/** Every NHL 95 team jersey from the retail ROM, or null when that ROM is not in roms/. */
+function nhl95RomPalettes() {
+  const game = gameById('nhl95');
+  const file = game && findRom(game);
+  if (!file) return null;
+  try {
+    const found = genesis95Pals.palettes(readRom(file, game));
+    return found && found.length ? found : null;
+  } catch (err) {
+    return null;
+  }
 }
 
 function findRom(game) {
@@ -381,6 +395,13 @@ const server = http.createServer((req, res) => {
       send(res, 200, JSON.stringify(pcFiles(game).paletteNames), MIME['.json']);
       return;
     }
+    if (game.id === 'nhl95') {
+      const fromRom = nhl95RomPalettes();
+      if (fromRom) {
+        send(res, 200, JSON.stringify(fromRom.map((p) => p.name)), MIME['.json']);
+        return;
+      }
+    }
     send(res, 200, JSON.stringify(listPals(PAL_DIRS[game.palettes])), MIME['.json']);
     return;
   }
@@ -393,6 +414,11 @@ const server = http.createServer((req, res) => {
       if (!body) { send(res, 404, 'Unknown palette', 'text/plain; charset=utf-8'); return; }
       send(res, 200, body, 'application/octet-stream');
       return;
+    }
+    if (game && game.id === 'nhl95') {
+      const hit = nhl95RomPalettes();
+      const pal = hit && hit.find((p) => p.name === gamePal[2].toLowerCase());
+      if (pal) { send(res, 200, Buffer.from(pal.bytes), 'application/octet-stream'); return; }
     }
     const file = game && safeFile(PAL_DIRS[game.palettes], gamePal[2]);
     if (!file || !/\.(pal|snespal)$/i.test(file)) {

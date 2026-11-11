@@ -2856,6 +2856,16 @@ async function loadGame(id, keepSelection) {
   } else if (info.paletteFiles) {
     pals = info.paletteFiles;
   }
+  // The bundled genesis95 folder stops at Calgary. The rest of the jerseys are in the ROM.
+  if (info.id === 'nhl95' && typeof NhlGenesis95Pals !== 'undefined') {
+    let rom95 = roms.get('nhl95');
+    if (!rom95 && useApi) rom95 = await ensureRom();
+    const fromRom = rom95 && NhlGenesis95Pals.palettes(rom95);
+    if (fromRom && fromRom.length) {
+      for (const p of fromRom) paletteFiles.set(p.name, Nhl92Anim.decodePaletteFile(p.bytes));
+      pals = fromRom.map((p) => p.name);
+    }
+  }
   if (typeof NhlSoundTestPc94 !== 'undefined') {
     if (info.id === 'nhl94pc' || info.id === 'nhl95pc' || info.id === 'nhl96pc') {
       window.NhlPcAudioFiles = window.NhlPc94Files = clientPc
