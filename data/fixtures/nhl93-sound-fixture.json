@@ -1,0 +1,10 @@
+{
+  "source": "NHLPA 93 (Genesis, retail v1.1) sound segment",
+  "romSha1": "8efc1cacb079ea223966dda065c16c49e584cac2",
+  "soundSlice": {
+    "romOffset": 91608,
+    "length": 100810
+  },
+  "syntheticRomSize": 192418,
+  "note": "Bundled for the Sound test only. Not a full game ROM."
+}
