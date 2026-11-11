@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.32.2",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 94 PC centre ice uses the VGA colours in RINKPAL.QPP. The editor was reading that !pal shape as a 95-style palette, so the rink came out black"
+      ]
+    },
+    {
       "version": "1.32.1",
       "date": "2026-11-11",
       "changes": [

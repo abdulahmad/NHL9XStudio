@@ -38,6 +38,55 @@ assert.deepStrictEqual(opened.palette[1], [
   Math.min(255, Math.round(3 * 255 / 63))
 ]);
 
+// The centre-ice editor used to hand this !pal shape to decodeEaPalette. Offset 2 is the height
+// (1), so that reader keeps colour 0 and fills the rest with black. paletteFrom is what the editor
+// uses now, and what the Images tab already used.
+function shpiReadOf94Pal(bankBytes) {
+  const count = bankBytes[4] | (bankBytes[5] << 8);
+  const base = 6 + count * 8;
+  for (let i = 0; i < count; i++) {
+    const name = String.fromCharCode(bankBytes[6 + i * 4], bankBytes[7 + i * 4], bankBytes[8 + i * 4], bankBytes[9 + i * 4]);
+    if (name !== '!pal') continue;
+    const o = 6 + count * 4 + i * 4;
+    const at = base + (bankBytes[o] | (bankBytes[o + 1] << 8) | (bankBytes[o + 2] << 16));
+    return pc95.decodeEaPalette(bankBytes.subarray(at));
+  }
+  return null;
+}
+const misread = shpiReadOf94Pal(bank);
+assert.ok(misread, 'the old reader still finds !pal');
+assert.deepStrictEqual(misread[106], [0, 0, 0], 'SHPI decode of a 94 !pal shape blacks out ice index 106');
+assert.notDeepStrictEqual(opened.palette[106], [0, 0, 0], 'vgaToRgb keeps ice index 106');
+const packedPal = Pack.wrapBtree(bank);
+assert.deepStrictEqual(pc95.paletteFrom(packedPal)[106], opened.palette[106], 'packed RINKPAL.QPP keeps the VGA colour');
+const Rink = require('../lib/pc-rink');
+const icePal = Rink.gamePalette(pc95.colorsToAct(pc95.paletteFrom(packedPal)), null, null);
+assert.deepStrictEqual(icePal[106], opened.palette[106], 'centre-ice game palette uses the 94 VGA colour');
+
+function shpiPalBank(rgb) {
+  const count = 8;
+  const shape = Buffer.alloc(16 + count * 3);
+  shape[0] = 0x22;
+  shape.writeUInt16LE(count, 2);
+  shape.writeUInt16LE(1, 6);
+  for (let i = 0; i < count; i++) {
+    shape[16 + i * 3] = rgb[0];
+    shape[16 + i * 3 + 1] = rgb[1];
+    shape[16 + i * 3 + 2] = rgb[2];
+  }
+  const header = 24;
+  const out = Buffer.alloc(header + shape.length);
+  out.write('SHPI', 0);
+  out.writeUInt32LE(out.length, 4);
+  out.writeUInt32LE(1, 8);
+  out.write('G354', 12);
+  out.write('!pal', 16);
+  out.writeUInt32LE(header, 20);
+  shape.copy(out, header);
+  return out;
+}
+assert.deepStrictEqual(pc95.paletteFrom(shpiPalBank([10, 20, 30]))[3], [40, 80, 120], '95 SHPI !pal still scales 6-bit RGB');
+
 const packed = Pack.wrapBtree(bank);
 assert.ok(Pack.isBtree(packed));
 assert.ok(Pack.isPacked(packed));

@@ -87,25 +87,13 @@
     afterLoad();
   }
 
-  /** Rink palette for the preview. NHL 94 PC RINKPAL.QPP unpacks (RefPack 30 FB) to a small directory: u32 size,
-   *  u16 count, count 4-char names (!bck !err !pal), count u32 offsets from the end of the table; !pal is an EA
-   *  palette (16-byte header, 6-bit RGB). Anything else goes through the Studio's own palette readers. */
+  /** Rink palette for the preview. NHL 94 PC RINKPAL.QPP is a planar bank (Huffman 30 FB or BTree 46 FB).
+   *  Its !pal entry is a shape header (quads 192, height 1, flags 0x0010) plus 768 bytes of 6-bit VGA RGB,
+   *  not an SHPI palette. decodeEaPalette reads that height as the colour count and returns one colour plus
+   *  black, which is what made the centre-ice editor look wrong. paletteFrom is the Images-tab reader:
+   *  vgaToRgb for a 94 bank, decodeEaPalette for a 95 SHPI/RefPack !pal. */
   function rinkPalette(bytes) {
     if (!bytes) return null;
-    try {
-      const d = Nhl95Pc.decompressEaContainer(bytes);
-      if (d && d.length > 6) {
-        const count = d[4] | (d[5] << 8);
-        const base = 6 + count * 8;
-        for (let i = 0; i < count && base < d.length; i++) {
-          if (String.fromCharCode(d[6 + i * 4], d[7 + i * 4], d[8 + i * 4], d[9 + i * 4]) !== '!pal') continue;
-          const o = 6 + count * 4 + i * 4;
-          const at = base + (d[o] | (d[o + 1] << 8) | (d[o + 2] << 16));
-          const pal = at < d.length ? Nhl95Pc.decodeEaPalette(d.subarray(at)) : null;
-          if (pal) return pal;
-        }
-      }
-    } catch (err) { /* fall through */ }
     return Nhl95Pc.paletteFrom(bytes) || Nhl95Pc.decodeRinkFile(bytes);
   }
 
