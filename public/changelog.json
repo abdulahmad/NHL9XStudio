@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.32.3",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 94 SNES: jersey colours come from the ROM's uniform palettes, in the order the game copies them, so each colour lands on the sprite index it was drawn for. Anaheim, Florida and both New York teams are in the menu once that ROM is open"
+      ]
+    },
+    {
       "version": "1.32.2",
       "date": "2026-11-11",
       "changes": [

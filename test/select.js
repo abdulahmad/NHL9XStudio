@@ -16,11 +16,11 @@ const SUITES = [
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'rom94', 'genesis95-pals', 'pc-rink', 'pc-palette', 'pc-crests',
-  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image'
+  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image', 'snes94-pals'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
 const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image', 'snes94-pals'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -85,6 +85,7 @@ const RULES = [
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/rom94\.js$/, tests: ['rom94'], why: 'NHL 94 ROM team colours' },
   { re: /^lib\/genesis95-pals\.js$/, tests: ['genesis95-pals'], why: 'NHL 95 Genesis team palettes' },
+  { re: /^lib\/snes\.js$/, tests: ['snes94-pals', 'core'], why: 'SNES drawing and 94 jersey colours' },
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.
   { re: /^public\/sound-test-snes93\.js$/, tests: ['nhl93s-samples', ...[...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b)], why: '93S Audio list' },
@@ -92,7 +93,7 @@ const RULES = [
   { re: /^public\/sound-editor-extras\.js$/, tests: ['editor-extras', 'browser:audio-list', 'browser:nhl95-sequencer'], why: 'editor extras' },
   { re: /^public\/(audio-engine|chip-lab|sound-[\w-]+)\.(js|css|html)$/, tests: [...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b), why: 'sound UI' },
   { re: /^public\/fight\.js$/, tests: ['rom94'].concat(BROWSER.map((b) => 'browser:' + b)), why: 'fight colours tab' },
-  { re: /^public\/viewer\.js$/, tests: ['genesis95-pals'].concat(BROWSER.map((b) => 'browser:' + b)), why: 'viewer' },
+  { re: /^public\/viewer\.js$/, tests: ['genesis95-pals', 'snes94-pals'].concat(BROWSER.map((b) => 'browser:' + b)), why: 'viewer' },
   { re: /^public\//, tests: BROWSER.map((b) => 'browser:' + b), why: 'viewer' },
 ];
 
