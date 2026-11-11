@@ -15,6 +15,11 @@ withBrowser('jed-server', async ({ url, newPage }) => {
   await page.goto(url + 'jed.html');
   assert.strictEqual(await page.locator('#jed-server, select[aria-label="Game on this server"]').count(), 0, 'no server menu');
   assert.ok(await page.isVisible('#jed-open-folder') && await page.isVisible('#jed-open-files'));
+  await page.click('#tab-fight');
+  await page.waitForFunction(() => /NHL 94 ROM/.test(document.getElementById('fight-note').textContent || ''));
+  assert.match(await page.textContent('#fight-map'), /Open your NHL 94 ROM/);
+  assert.match(await page.textContent('#fight-note'), /Open your NHL 94 ROM/);
+  assert.match(await page.textContent('#fight-team94'), /NHL 94 ROM needed/);
   const games = await page.evaluate(async () => (await (await fetch('api/games')).json()).filter((g) => /^pc9[45]$/.test(g.kind) && g.pixels).map((g) => g.id));
   if (!games.length) {
     await page.waitForTimeout(500);

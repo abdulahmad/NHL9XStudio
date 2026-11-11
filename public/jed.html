@@ -18,7 +18,7 @@
       <nav class="jed-tabs" role="tablist" aria-label="Editor">
         <button type="button" role="tab" id="tab-jerseys" aria-selected="true">Jerseys</button>
         <button type="button" role="tab" id="tab-ice" aria-selected="false">Centre ice</button>
-        <button type="button" role="tab" id="tab-fight" aria-selected="false" title="NHL 95 PC port: the colours of NHLPA 93's fight frames">Fight colours</button>
+        <button type="button" role="tab" id="tab-fight" aria-selected="false" title="NHL 95 PC port: NHL 94 team colours on NHLPA 93's fight frames">Fight colours</button>
       </nav>
       <p id="jed-status" class="jed-status">Open an NHL 94 PC or NHL 95 PC folder, or its HOMEPALS.BIN / AWAYPALS.BIN.</p>
     </div>
@@ -204,17 +204,22 @@
         <button type="button" id="fight-open-rom" class="ghost-btn" title="Your NHLPA Hockey 93 Genesis ROM (Rev 0, A or B, any file name). A ROM in the opened game folder is found by itself.">Open NHLPA 93 ROM…</button>
         <input type="file" id="fight-rom-file" hidden>
       </div>
+      <div class="fight-row">
+        <button type="button" id="fight-open-rom94" class="ghost-btn" title="Your NHL Hockey 94 Genesis ROM (the retail release, any file name). A 1 MB ROM in the opened game folder is found by itself.">Open NHL 94 ROM…</button>
+        <span class="muted" id="fight-rom94-note"></span>
+        <input type="file" id="fight-rom94-file" hidden>
+      </div>
       <label class="ice-field">95 PC team (preview) <select id="fight-team"></select></label>
       <div class="pin-options fight-row" role="group" aria-label="Side">
         <button type="button" id="fight-home" aria-pressed="true">Home</button>
         <button type="button" id="fight-away" aria-pressed="false">Away</button>
       </div>
-      <p class="ice-field" title="Each jersey has its own fight palette. Its default is this 93 jersey's colours matched to the nearest 95 PC colours.">93 jersey <b id="fight-team93"></b></p>
+      <p class="ice-field" title="Each jersey has its own fight palette. Its default is that team's NHL 94 colours for this side, with the 95 PC stick, skin, eyes, skate blade and shadow, matched to the nearest 95 PC sprite colours. A line in FIGHTPAL.TXT replaces that.">94 jersey <b id="fight-team94"></b></p>
       <div id="fight-strip" class="jed-strip fight-strip" aria-label="Fight frames"></div>
     </section>
     <section class="jed-col" aria-label="Colours">
-      <h2>93 colours <span class="muted">used by the fight frames · Paint: click to give it the brush · Dropper: take its colour</span></h2>
-      <div id="fight-map" class="fight-map" role="listbox" aria-label="93 colours"></div>
+      <h2>Fight colours <span class="muted">one per 93 colour the frames use · Paint: click to give it the brush · Dropper: take its colour</span></h2>
+      <div id="fight-map" class="fight-map" role="listbox" aria-label="Fight colours"></div>
       <h2>NHL 95 PC sprite colours <span class="muted" id="fight-pc-note">click to set the brush</span></h2>
       <div id="fight-pc" class="ice-swatches" role="listbox" aria-label="95 PC colours"></div>
       <ul class="ice-legend">
@@ -223,10 +228,10 @@
       </ul>
       <p id="fight-sel" class="ice-colorline"></p>
       <div class="jed-io">
-        <button type="button" id="fight-auto" class="ghost-btn" title="Drop this jersey's changes: back to its 93 jersey's colours matched to the nearest 95 PC ones (what the game uses without a FIGHTPAL.TXT)">Reset jersey</button>
+        <button type="button" id="fight-auto" class="ghost-btn" title="Drop this jersey's changes: back to its NHL 94 colours, with the 95 PC stick, skin, eyes, blade and shadow (what the game uses without a FIGHTPAL.TXT)">Reset jersey</button>
         <button type="button" id="fight-undo" class="ghost-btn">Undo</button>
         <button type="button" id="fight-import" class="ghost-btn" title="A FIGHTPAL.TXT made here">Import FIGHTPAL.TXT</button>
-        <button type="button" id="fight-export" class="ghost-btn" title="Every jersey (each team, home and away) in one file. Put it in the NHL 95 PC game folder, beside the 93 ROM.">Export FIGHTPAL.TXT</button>
+        <button type="button" id="fight-export" class="ghost-btn" title="Every jersey (each team, home and away) in one file. Put it in the NHL 95 PC game folder, beside the 93 and 94 ROMs.">Export FIGHTPAL.TXT</button>
         <input type="file" id="fight-txt-file" hidden accept=".txt">
       </div>
     </section>
@@ -264,6 +269,7 @@
   <script src="jed.js"></script>
   <script src="ice.js"></script>
   <script src="lib/rom93.js"></script>
+  <script src="lib/rom94.js"></script>
   <script src="fight.js"></script>
 </body>
 </html>
