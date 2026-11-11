@@ -312,12 +312,28 @@ function activeColors() {
   }
   const colors = anim.combined.map((c) => c.slice());
   if (override) {
-    const base = ((gameInfo && gameInfo.jerseyRow) || 2) * 16;
-    for (let i = 0; i < 16; i++) colors[base + i] = override[i].slice();
-    // NHLPA 93 SNES: the game fills BG palette row 3 with the visitor colors next to the home row 2 (benches, scoreboard), so a
-    // team picked here gets its other side in row 3.
-    const other = gameInfo && gameInfo.id === 'nhlpa93snes' ? paletteFiles.get(oppositeSide(state.paletteName)) : null;
-    if (other) for (let i = 0; i < 16; i++) colors[base + 16 + i] = other[i].slice();
+    const otherName = oppositeSide(state.paletteName);
+    const other = otherName ? paletteFiles.get(otherName) : null;
+    if (gameInfo && gameInfo.id === 'nhl94snes') {
+      // SetTeamColors writes the picked side to BG palette 2 and sprite palette 4,
+      // and the other side to palettes 3 and 5. Skaters are palette 4.
+      for (let i = 0; i < 16; i++) {
+        colors[2 * 16 + i] = override[i].slice();
+        colors[4 * 16 + i] = override[i].slice();
+        if (other) {
+          colors[3 * 16 + i] = other[i].slice();
+          colors[5 * 16 + i] = other[i].slice();
+        }
+      }
+    } else {
+      const base = ((gameInfo && gameInfo.jerseyRow) || 2) * 16;
+      for (let i = 0; i < 16; i++) colors[base + i] = override[i].slice();
+      // NHLPA 93 SNES: the game fills BG palette row 3 with the visitor colors next to the home row 2 (benches, scoreboard), so a
+      // team picked here gets its other side in row 3.
+      if (gameInfo && gameInfo.id === 'nhlpa93snes' && other) {
+        for (let i = 0; i < 16; i++) colors[base + 16 + i] = other[i].slice();
+      }
+    }
   }
   return colors;
 }
@@ -2760,7 +2776,7 @@ async function loadClientPcPalettes() {
 }
 
 async function ensurePalette(name) {
-  if (gameInfo && gameInfo.id === 'nhlpa93snes' && oppositeSide(name) && !paletteFiles.has(oppositeSide(name)) && !ensuringOpposite) {
+  if (gameInfo && (gameInfo.id === 'nhlpa93snes' || gameInfo.id === 'nhl94snes') && oppositeSide(name) && !paletteFiles.has(oppositeSide(name)) && !ensuringOpposite) {
     ensuringOpposite = true;
     try { await ensurePalette(oppositeSide(name)); } finally { ensuringOpposite = false; }
   }
@@ -2863,6 +2879,17 @@ async function loadGame(id, keepSelection) {
     const fromRom = rom95 && NhlGenesis95Pals.palettes(rom95);
     if (fromRom && fromRom.length) {
       for (const p of fromRom) paletteFiles.set(p.name, Nhl92Anim.decodePaletteFile(p.bytes));
+      pals = fromRom.map((p) => p.name);
+    }
+  }
+  // The bundled .snespal files are NHLPA 93 CRAM. 94 copies BGR555 uniform words
+  // straight into CGRAM, and the sprite indices follow that order.
+  if (info.id === 'nhl94snes' && typeof Nhl92Snes !== 'undefined' && Nhl92Snes.uniformPalettes) {
+    let rom94 = roms.get('nhl94snes');
+    if (!rom94 && useApi) rom94 = await ensureRom();
+    const fromRom = rom94 && Nhl92Snes.uniformPalettes(rom94);
+    if (fromRom && fromRom.length) {
+      for (const p of fromRom) paletteFiles.set(p.name, p.colors);
       pals = fromRom.map((p) => p.name);
     }
   }
