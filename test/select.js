@@ -15,7 +15,7 @@ const SUITES = [
   'nhl93s-sound-data', 'nhl93s-samples', 'nhl93s-sample-match', 'nhl93s-player', 'nhl93s-midi', 'pc-audio-kms', 'pc-audio-groups', 'pc94-audio', 'pc95-audio', 'pc94-shape', 'snes-gm-map',
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
-  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'rom94', 'pc-rink', 'pc-palette', 'pc-crests',
+  'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'rom94', 'genesis95-pals', 'pc-rink', 'pc-palette', 'pc-crests',
   'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
@@ -84,6 +84,7 @@ const RULES = [
   { re: /^lib\/indexed-image\.js$/, tests: ['indexed-image', 'core', 'browser:indexed-export'], why: 'indexed PNG/BMP export' },
   // Image / parser libraries and data: the core checks only.
   { re: /^lib\/rom94\.js$/, tests: ['rom94'], why: 'NHL 94 ROM team colours' },
+  { re: /^lib\/genesis95-pals\.js$/, tests: ['genesis95-pals'], why: 'NHL 95 Genesis team palettes' },
   { re: /^lib\/[\w-]+\.js$|^data\//, tests: ['core'], why: 'parser / image code or data' },
   // Sound pages in the viewer.
   { re: /^public\/sound-test-snes93\.js$/, tests: ['nhl93s-samples', ...[...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b)], why: '93S Audio list' },
@@ -91,6 +92,7 @@ const RULES = [
   { re: /^public\/sound-editor-extras\.js$/, tests: ['editor-extras', 'browser:audio-list', 'browser:nhl95-sequencer'], why: 'editor extras' },
   { re: /^public\/(audio-engine|chip-lab|sound-[\w-]+)\.(js|css|html)$/, tests: [...SOUND_BROWSER, 'load-errors'].map((b) => 'browser:' + b), why: 'sound UI' },
   { re: /^public\/fight\.js$/, tests: ['rom94'].concat(BROWSER.map((b) => 'browser:' + b)), why: 'fight colours tab' },
+  { re: /^public\/viewer\.js$/, tests: ['genesis95-pals'].concat(BROWSER.map((b) => 'browser:' + b)), why: 'viewer' },
   { re: /^public\//, tests: BROWSER.map((b) => 'browser:' + b), why: 'viewer' },
 ];
 

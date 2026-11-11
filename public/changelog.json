@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.32.1",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 95 Genesis: the palette menu lists every team once the ROM is open. It was stopping at Calgary because only Anaheim, Boston, Buffalo and Calgary had been copied into the bundled palette folder"
+      ]
+    },
+    {
       "version": "1.32.0",
       "date": "2026-11-11",
       "changes": [
