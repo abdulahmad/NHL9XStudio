@@ -241,6 +241,43 @@ withBrowser('jed-ice', async ({ url, newPage }) => {
     const names = await page.evaluate(() => window.JedShared.exportAll());
     for (const n of edited) assert.ok(names.includes(n + '.MAP') && names.includes(n + '.TIL') && names.includes(n + '-placement.json'), 'zip has ' + n + ': ' + names);
   } else console.log('jed-ice: nothing edited, Export all not checked');
+  // NHL 94 PC: RINKPAL.QPP !pal is a planar shape (768 bytes of 6-bit VGA), not an SHPI palette.
+  // A solid index-106 tile must show that VGA colour, not black.
+  {
+    const Shape = require('../../lib/pc94-shape');
+    const Pack = require('../../lib/pc94-pack');
+    const vga = new Uint8Array(768);
+    vga[106 * 3] = 10; vga[106 * 3 + 1] = 40; vga[106 * 3 + 2] = 63;
+    const qpp = Buffer.from(Pack.wrapBtree(Shape.encodeBank([{ name: '!pal', palette: vga }])));
+    const expect = Shape.vgaToRgb(vga)[106];
+    const til94 = Buffer.alloc(64, 106);
+    const map94 = Buffer.from([1, 0, 1, 0, 16, 0, 0, 0]);
+    await page.setInputFiles('#jed-files', [
+      buf('HOMEPALS.BIN', fs.readFileSync(path.join(FIX, 'HOMEPALS94.BIN'))),
+      buf('AWAYPALS.BIN', fs.readFileSync(path.join(FIX, 'AWAYPALS94.BIN'))),
+      buf('RINKPAL.QPP', qpp),
+      buf('BOS.TIL', til94),
+      buf('BOS.MAP', map94)
+    ]);
+    await page.waitForFunction(() => /NHL 94 PC/.test(document.getElementById('jed-status').textContent), null, { timeout: 15000 });
+    await page.click('#tab-ice');
+    await page.waitForSelector('#ice-team-list .item');
+    assert.strictEqual(await page.locator('#ice-team-list .item').count(), 24, '94 PC centre ice lists 24 teams');
+    await page.locator('#ice-team-list .item').first().click();
+    await page.waitForFunction(() => document.getElementById('ice-x').value === '21' && document.getElementById('ice-y').value === '38');
+    const swatch = await page.$eval('#ice-swatches .ice-sw[data-index="106"]', (el) => el.style.background);
+    assert.strictEqual(swatch, 'rgb(' + expect.join(', ') + ')', 'ice index 106 swatch is the VGA colour');
+    const pix = await page.evaluate(() => {
+      const c = document.getElementById('ice-rink');
+      const z = c.width / 384;
+      const x = Math.floor(21 * 8 * z + z / 2);
+      const y = Math.floor(38 * 8 * z + z / 2);
+      const d = c.getContext('2d').getImageData(x, y, 1, 1).data;
+      return [d[0], d[1], d[2], d[3]];
+    });
+    assert.deepStrictEqual(pix, expect.concat([255]), 'Boston centre-ice pixel uses RINKPAL.QPP colour 106');
+  }
+
   const problems = page.problems.filter((p) => !OPTIONAL.test(p));
   assert.deepStrictEqual(problems, []);
   console.log('jed-ice: ok');

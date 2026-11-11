@@ -185,18 +185,10 @@ if (DIR94 && fs.existsSync(path.join(DIR94, 'RINK.MAP'))) {
   const palPath = path.join(DIR94, 'RINKPAL.QPP');
   if (fs.existsSync(palPath)) {
     const P = require('../lib/pc95');
-    const d = P.decompressEaContainer(fs.readFileSync(palPath));
-    const count = d[4] | (d[5] << 8);
-    const base = 6 + count * 8;
-    let pal94 = null;
-    for (let i = 0; i < count; i++) {
-      if (String.fromCharCode(d[6 + i * 4], d[7 + i * 4], d[8 + i * 4], d[9 + i * 4]) !== '!pal') continue;
-      const o = 6 + count * 4 + i * 4;
-      const at = base + (d[o] | (d[o + 1] << 8) | (d[o + 2] << 16));
-      pal94 = P.decodeEaPalette(d.subarray(at));
-    }
+    const pal94 = P.paletteFrom(fs.readFileSync(palPath));
     const pal95 = fs.readFileSync(path.join(__dirname, '..', 'public', 'jed-pals', 'rinkpal.act'));
     assert.ok(pal94, '94 RINKPAL.QPP !pal');
+    assert.ok(pal94[106].some((v) => v > 16), '94 ice index 106 is a visible VGA colour, not the black SHPI misread');
     assert.notDeepStrictEqual(pal94[106], [pal95[318], pal95[319], pal95[320]],
       '94 ice (index 106) is not the bundled 95 rinkpal.act grey');
     const gp94 = R.gamePalette(P.colorsToAct(pal94), home, away);
