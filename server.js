@@ -177,6 +177,8 @@ function segaCdPcmRead(game, name) {
 }
 
 const pc97Asf = require('./lib/audio/pc96-asf');
+const eaHuff = require('./lib/audio/ea-huff');
+const bnkUnpacked = new Map();
 let ksfCache = { key: '', bytes: null };
 function ksfBytes(game, rel) {
   const key = game.id + '|' + rel;
@@ -563,11 +565,44 @@ const server = http.createServer((req, res) => {
       return;
     }
     const hdr = byName.get(bank.toLowerCase() + '.bkh');
-    const data = byName.get(bank.toLowerCase() + '.bkd');
+    let data = byName.get(bank.toLowerCase() + '.bkd');
+    if (data && eaHuff.isHuff(data)) {
+      const key = game.id + '|' + rel + '|' + bank;
+      if (!bnkUnpacked.has(key)) bnkUnpacked.set(key, eaHuff.unpack(data));
+      data = bnkUnpacked.get(key);
+    }
     const snd = hdr && data ? pc97Asf.bnkSounds(new Uint8Array(hdr))[Number(n)] : null;
     if (!snd) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
-    const size = snd.channels === 1 ? Math.ceil(snd.frames / 2) : snd.frames;
+    const size = snd.codec === 0 ? snd.frames * snd.channels : (snd.channels === 1 ? Math.ceil(snd.frames / 2) : snd.frames);
     send(res, 200, Buffer.from(new Uint8Array(data.buffer ? data.buffer : data, (data.byteOffset || 0) + snd.offset, Math.min(size + 1, data.length - snd.offset))), 'application/octet-stream');
+    return;
+  }
+
+  const pbpRoute = /^\/api\/games\/(nhl97pc)\/pbp$/.exec(pathname);
+  if (pbpRoute) {
+    const game = gameById(pbpRoute[1]);
+    const dir = game ? 'GAMEDATA/' : '';
+    const hdrFile = game ? pcRead(game, dir + 'AUDPBP1.VIV') : null;
+    if (!hdrFile) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+    const hb = new Uint8Array(hdrFile.buffer ? hdrFile.buffer : hdrFile, hdrFile.byteOffset || 0, hdrFile.length);
+    const bank = url.searchParams.get('bank');
+    const n = url.searchParams.get('n');
+    const hdrs = pc97Asf.bigfEntries(hb).filter((e) => /\.hdr$/i.test(e.name));
+    if (bank == null) {
+      const list = [];
+      for (const e of hdrs) {
+        const name = e.name.replace(/\.hdr$/i, '');
+        for (const snd of pc97Asf.pbpSamples(hb.subarray(e.offset, e.offset + e.size))) list.push({ bank: name, index: snd.index, size: snd.size });
+      }
+      send(res, 200, JSON.stringify(list), MIME['.json']);
+      return;
+    }
+    const he = hdrs.find((e) => e.name.toLowerCase() === bank.toLowerCase() + '.hdr');
+    const snd = he ? pc97Asf.pbpSamples(hb.subarray(he.offset, he.offset + he.size))[Number(n)] : null;
+    const datBytes = snd ? ksfBytes(game, dir + 'AUDPBP2.VIV') : null;
+    const de = datBytes ? pc97Asf.bigfEntries(datBytes).find((e) => e.name.toLowerCase() === bank.toLowerCase() + '.dat') : null;
+    if (!snd || !de || snd.offset + snd.size > de.size) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+    send(res, 200, Buffer.from(datBytes.subarray(de.offset + snd.offset, de.offset + snd.offset + snd.size)), 'application/octet-stream');
     return;
   }
 

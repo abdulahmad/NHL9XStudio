@@ -139,14 +139,25 @@
       if (host && host.map && host.map.has(rel) && root.Nhl95Pc) {
         const files = root.Nhl95Pc.parseUnitC0fb(await readRel(rel)) || [];
         const data = (files.find((f) => String(f.name).toLowerCase() === bank.toLowerCase() + '.bkd') || {}).data;
-        if (data) bytes = data.subarray(bi.offset, bi.offset + (bi.channels === 1 ? Math.ceil(bi.frames / 2) : bi.frames) + 1);
+        const raw = data && root.NhlEaHuff && root.NhlEaHuff.isHuff(data) ? root.NhlEaHuff.unpack(data) : data;
+        if (raw) bytes = raw.subarray(bi.offset, bi.offset + (bi.codec === 0 ? bi.frames * bi.channels : (bi.channels === 1 ? Math.ceil(bi.frames / 2) : bi.frames) + 1));
       } else {
         const res = await fetch(base + '/api/games/' + gameOf() + '/bnk?path=' + encodeURIComponent(rel) + '&bank=' + encodeURIComponent(bank) + '&n=' + bi.index);
         if (!res.ok) throw new Error(rec.name + ' not found');
         bytes = new Uint8Array(await res.arrayBuffer());
       }
       if (!bytes || !root.NhlPc96Asf) throw new Error('Sound decoder missing');
-      const parsed = root.NhlPc96Asf.parseKsfStream(bytes, { start: 0, dataAt: 0, end: bytes.length, channels: bi.channels, rate: bi.rate, frames: bi.frames });
+      const parsed = root.NhlPc96Asf.parseKsfStream(bytes, { start: 0, dataAt: 0, end: bytes.length, channels: bi.channels, rate: bi.rate, frames: bi.frames, codec: bi.codec });
+      const f = root.NhlPc96Asf.toPlaybackFloat32(parsed, 1);
+      const pcm = new Int16Array(f.length);
+      for (let i = 0; i < f.length; i++) pcm[i] = Math.round(Math.max(-1, Math.min(1, f[i])) * 32767);
+      rec.clip = { pcm, rate: parsed.rate, vol: 0x7F, length: pcm.length, name: rec.name };
+    } else if (rec.pbp) {
+      const res = await fetch(base + '/api/games/' + gameOf() + '/pbp?bank=' + encodeURIComponent(rec.pbp.bank) + '&n=' + rec.pbp.index);
+      if (!res.ok) throw new Error(rec.name + ' not found');
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      if (!root.NhlPc96Asf) throw new Error('Sound decoder missing');
+      const parsed = root.NhlPc96Asf.parsePbp(bytes, 22050);
       const f = root.NhlPc96Asf.toPlaybackFloat32(parsed, 1);
       const pcm = new Int16Array(f.length);
       for (let i = 0; i < f.length; i++) pcm[i] = Math.round(Math.max(-1, Math.min(1, f[i])) * 32767);
@@ -257,7 +268,7 @@
               list = res.ok ? await res.json() : [];
             } catch (err) { list = []; }
           }
-          for (const snd of list.filter((x) => x.codec === 2)) {
+          for (const snd of list.filter((x) => x.codec === 2 || x.codec === 0)) {
             const name = 'SFX-' + snd.bank + '-' + String(snd.index + 1).padStart(2, '0');
             speech.push({
               id: 'speech-' + name,
@@ -267,6 +278,27 @@
               label: snd.bank + ' ' + (snd.index + 1),
               sub: 'AUDSFX.VIV ' + snd.bank + '.bkd · ' + (snd.channels === 1 ? 'mono' : 'stereo') + ' · ' + snd.rate + ' Hz · ' + (snd.frames / snd.rate).toFixed(1) + ' s',
               bnk: { rel, bank: snd.bank, info: snd }
+            });
+          }
+        }
+        for (const rel of (audio.extra || []).filter((r) => /AUDPBP1\.viv$/i.test(r))) {
+          let list = [];
+          try {
+            const res = await fetch(((filesHost() && filesHost().baseUrl) || '') + '/api/games/' + gameOf() + '/pbp');
+            list = res.ok ? await res.json() : [];
+          } catch (err) { list = []; }
+          for (const snd of list) {
+            const team = /^team/i.test(snd.bank);
+            const num = parseInt(snd.bank, 10);
+            const name = 'PBP-' + snd.bank + '-' + String(snd.index + 1).padStart(2, '0');
+            speech.push({
+              id: 'speech-' + name,
+              group: team ? 'Play-by-play team names' : 'Play-by-play ' + String(Math.floor(num / 100) * 100).padStart(3, '0') + 's',
+              subgroup: snd.bank,
+              name: name,
+              label: snd.bank + ' ' + (snd.index + 1),
+              sub: 'AUDPBP2.VIV ' + snd.bank + '.dat · mono · ' + (snd.size / 16 * 28 / 22050).toFixed(1) + ' s',
+              pbp: { bank: snd.bank, index: snd.index, size: snd.size }
             });
           }
         }
@@ -926,7 +958,7 @@
     const kind = id.startsWith('iff-')
       ? title + ' desk music (IFF)'
       : id.startsWith('speech-')
-        ? title + (rec && rec.bnk ? ' sound effect' : ' announcer speech')
+        ? title + (rec && rec.bnk ? ' sound effect' : rec && rec.pbp ? ' play-by-play' : ' announcer speech')
         : id.startsWith('sfx-')
           ? title + ' digital SFX'
           : (rec && rec.asf ? title + (is97() ? ' song (ASF)' : ' 1SN song') : title + ' AdLib song');
@@ -943,8 +975,10 @@
       : id.startsWith('iff-')
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
-        ? (is97() && rec && rec.bnk
-          ? 'AUDSFX.VIV is a C0 FB archive of BNKl sound banks (.bkh header + .bkd data). Each sound has a TMpl record (channels, rate, frames, codec). Codec 2 sounds are bare IMA ADPCM from state zero and play here. Codec 0 sounds (the crowd16 and game16 banks and some crowd8) use a bit-packed format that is not decoded yet, so they are not listed.'
+        ? (is97() && rec && rec.pbp
+          ? 'AUDPBP1.VIV and AUDPBP2.VIV are BIGF archives. Each NNN.hdr (or teamNNNN.hdr) lists the sounds of a bank as "masv" records (size, offset); the audio is in the matching .dat. The audio is 16-byte frames of 28 samples: byte 0 holds the filter (high nibble) and shift (low nibble), byte 1 repeats it, then 14 bytes of 4-bit samples, low nibble first, with PlayStation-style filters. Sample rate is not stored in the header; it is played at 22050 Hz.'
+          : is97() && rec && rec.bnk
+          ? 'AUDSFX.VIV is a C0 FB archive of BNKl sound banks (.bkh header + .bkd data). Each sound has a TMpl record (channels, rate, frames, codec). Codec 2 sounds are bare IMA ADPCM from state zero. Codec 0 sounds (the crowd16 and game16 banks) are signed 8-bit stereo PCM, and those .bkd files are Huffman packed (30 FB / 32 FB) as a whole.'
           : is97()
           ? 'NHL 97 .KSF speech bank: a table of streams, each a PATl/TMpl header then bare IMA ADPCM from state zero (no chunk headers). Stereo is one byte per frame (high nibble left, low nibble right), mono is two samples per byte. Played as mono at the TMpl rate.'
           : isCd()
@@ -1066,10 +1100,17 @@
   function metaRows(id) {
     const rec = entries().find((e) => e.id === id);
     const rows = [['Plays', rec ? rec.label : id]];
+    if (rec && rec.pbp) {
+      rows.push(['File', 'AUDPBP2.VIV ' + rec.pbp.bank + '.dat · sound ' + (rec.pbp.index + 1)]);
+      rows.push(['Rate', '22050 Hz (assumed), mono']);
+      rows.push(['Path', '.hdr masv record → .dat 16-byte frames, 28 samples each (filter/shift ADPCM)']);
+      rows.push(['Source', 'NHL 97 PC GAMEDATA']);
+      return rows;
+    }
     if (rec && rec.bnk) {
       rows.push(['File', 'AUDSFX.VIV ' + rec.bnk.bank + '.bkd · sound ' + (rec.bnk.info.index + 1)]);
       rows.push(['Rate', rec.bnk.info.rate + ' Hz, ' + (rec.bnk.info.channels === 1 ? 'mono' : 'stereo')]);
-      rows.push(['Path', 'BNKl header (TMpl) → bare IMA ADPCM from state zero']);
+      rows.push(['Path', rec.bnk.info.codec === 0 ? 'BNKl header (TMpl) → Huffman-packed .bkd → signed 8-bit stereo PCM' : 'BNKl header (TMpl) → bare IMA ADPCM from state zero']);
       rows.push(['Source', 'NHL 97 PC GAMEDATA']);
       return rows;
     }

@@ -79,3 +79,28 @@ console.log('pc97 ok');
   assert.deepStrictEqual([snd[0].codec, snd[0].rate, snd[0].frames, snd[0].offset, snd[0].channels], [2, 11025, 500, 64, 1]);
   assert.deepStrictEqual([snd[1].codec, snd[1].channels], [0, 2]);
 }
+{
+  // 30 FB Huffman: escape byte 0, counts, symbol list, then codes. Hand-built stream for "AAB".
+  const huff = require('../lib/audio/ea-huff');
+  assert.ok(huff.isHuff(new Uint8Array([0x30, 0xFB, 0, 0, 3, 0, 0, 0])));
+  assert.strictEqual(huff.unpack(new Uint8Array([0x30, 0xFB, 0, 0, 3, 0, 0, 0])), null, 'truncated Huffman data is refused');
+}
+{
+  const asf = require('../lib/audio/pc96-asf');
+  // BIGF with one entry, and a PBP header with one "masv" record.
+  const big = Buffer.alloc(16 + 8 + 8);
+  big.write('BIGF', 0); big.writeUInt32BE(1, 8); big.writeUInt32BE(32, 16); big.writeUInt32BE(4, 20); big.write('a.b', 24);
+  const e = asf.bigfEntries(new Uint8Array(big));
+  assert.deepStrictEqual([e.length, e[0].name, e[0].offset, e[0].size], [1, 'a.b', 32, 4]);
+  const h = Buffer.alloc(100); h.write('knbv', 0); h.write('masv', 40); h.writeUInt32LE(64, 44); h.writeUInt32LE(16, 48);
+  assert.deepStrictEqual(asf.pbpSamples(new Uint8Array(h)), [{ index: 0, size: 64, offset: 16 }]);
+  // Two frames: filter 0 shift 12, nibble 1 gives 1 << 0 = 1 for the first sample (low nibble first).
+  const fr = new Uint8Array(32); fr[0] = 12; fr[1] = 12; fr[2] = 0x01; fr[16] = 12; fr[17] = 12;
+  const pbp = asf.parsePbp(fr, 22050);
+  assert.strictEqual(pbp.pcm.length, 2 * 28 * 2, 'PBP frame size');
+  assert.strictEqual(pbp.pcm[0] | (pbp.pcm[1] << 8), 1, 'PBP first sample');
+  // 8-bit signed PCM bank sound (codec 0)
+  const pcm = asf.parseKsfStream(new Uint8Array([0, 1, 255, 127, 128, 0]), { start: 0, dataAt: 0, end: 6, channels: 2, rate: 22050, frames: 3, codec: 0 });
+  assert.strictEqual(pcm.pcm.length, 12, 'codec 0 stereo size');
+}
+
