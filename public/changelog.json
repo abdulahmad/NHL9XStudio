@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.43.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) Audio tab now plays the rest of the sound effects (the crowd16 and game16 banks, which are Huffman packed 8-bit PCM) and the play-by-play packs (AUDPBP1 and AUDPBP2, grouped by bank and team). The play-by-play rate is not stored in the files and is assumed to be 22050 Hz"
+      ]
+    },
+    {
       "version": "1.42.0",
       "date": "2026-11-18",
       "changes": [
