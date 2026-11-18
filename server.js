@@ -541,6 +541,36 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // NHL 97 sound-effect banks (AUDSFX.VIV: NAME.bkh headers + NAME.bkd data).
+  const bnkRoute = /^\/api\/games\/(nhl97pc)\/bnk$/.exec(pathname);
+  if (bnkRoute) {
+    const game = gameById(bnkRoute[1]);
+    const rel = url.searchParams.get('path');
+    const bytes = game && rel && /\.viv$/i.test(rel) ? ksfBytes(game, rel) : null;
+    const files = bytes ? pc95.parseUnitC0fb(bytes) : null;
+    if (!files) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+    const byName = new Map(files.map((f) => [String(f.name).toLowerCase(), f.data]));
+    const bank = url.searchParams.get('bank');
+    const n = url.searchParams.get('n');
+    if (bank == null) {
+      const list = [];
+      for (const f of files) {
+        const m = /^(.*)\.bkh$/i.exec(f.name);
+        if (!m) continue;
+        for (const snd of pc97Asf.bnkSounds(new Uint8Array(f.data))) list.push(Object.assign({ bank: m[1] }, snd));
+      }
+      send(res, 200, JSON.stringify(list), MIME['.json']);
+      return;
+    }
+    const hdr = byName.get(bank.toLowerCase() + '.bkh');
+    const data = byName.get(bank.toLowerCase() + '.bkd');
+    const snd = hdr && data ? pc97Asf.bnkSounds(new Uint8Array(hdr))[Number(n)] : null;
+    if (!snd) { send(res, 404, 'Not found', 'text/plain; charset=utf-8'); return; }
+    const size = snd.channels === 1 ? Math.ceil(snd.frames / 2) : snd.frames;
+    send(res, 200, Buffer.from(new Uint8Array(data.buffer ? data.buffer : data, (data.byteOffset || 0) + snd.offset, Math.min(size + 1, data.length - snd.offset))), 'application/octet-stream');
+    return;
+  }
+
   const pcFile = /^\/api\/games\/([a-z0-9]+)\/file$/.exec(pathname);
   if (pcFile) {
     const game = gameById(pcFile[1]);

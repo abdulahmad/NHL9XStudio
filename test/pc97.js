@@ -70,4 +70,12 @@ console.log('pc97 ok');
   assert.deepStrictEqual([list[0].channels, list[1].channels, list[0].frames], [2, 1, 100]);
   assert.strictEqual(asf.parseKsfStream(file, list[0]).pcm.length, 400, 'stereo KSF stream');
   assert.strictEqual(asf.parseKsfStream(file, list[1]).pcm.length, 200, 'mono KSF stream');
+  const h = Buffer.alloc(80);
+  h.write('BNKl', 0);
+  h.write('TMpl', 8); h[13] = 8; h[14] = 1; h[15] = 2; h.writeUInt16LE(11025, 18); h.writeUInt32LE(500, 20); h.writeUInt32LE(64, 32);
+  h.write('TMpl', 44); h[49] = 16; h[50] = 2; h[51] = 0; h.writeUInt16LE(22050, 54); h.writeUInt32LE(900, 56); h.writeUInt32LE(900, 68);
+  const snd = asf.bnkSounds(new Uint8Array(h));
+  assert.strictEqual(snd.length, 2, 'BNK sound count');
+  assert.deepStrictEqual([snd[0].codec, snd[0].rate, snd[0].frames, snd[0].offset, snd[0].channels], [2, 11025, 500, 64, 1]);
+  assert.deepStrictEqual([snd[1].codec, snd[1].channels], [0, 2]);
 }

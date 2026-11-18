@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.42.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) Audio tab now plays the sound effects in AUDSFX.VIV (the IMA ADPCM sounds in each BNKl bank), listed by bank. The crowd16 and game16 banks and some crowd8 sounds use a bit-packed format that is not decoded yet, and the AUDPBP1 and AUDPBP2 play-by-play packs are not decoded yet either"
+      ]
+    },
+    {
       "version": "1.41.0",
       "date": "2026-11-18",
       "changes": [

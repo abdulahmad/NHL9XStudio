@@ -133,6 +133,24 @@
       const res = await fetch(base + '/api/games/' + gameOf() + '/pcm?name=' + encodeURIComponent(rec.pcmName));
       if (!res.ok) throw new Error(rec.pcmName + ' not on the disc');
       rec.clip = { pcm: new Uint8Array(await res.arrayBuffer()), rate: rec.rate, vol: 0x7F, length: 0, name: rec.pcmName };
+    } else if (rec.bnk) {
+      const { rel, bank, info: bi } = rec.bnk;
+      let bytes = null;
+      if (host && host.map && host.map.has(rel) && root.Nhl95Pc) {
+        const files = root.Nhl95Pc.parseUnitC0fb(await readRel(rel)) || [];
+        const data = (files.find((f) => String(f.name).toLowerCase() === bank.toLowerCase() + '.bkd') || {}).data;
+        if (data) bytes = data.subarray(bi.offset, bi.offset + (bi.channels === 1 ? Math.ceil(bi.frames / 2) : bi.frames) + 1);
+      } else {
+        const res = await fetch(base + '/api/games/' + gameOf() + '/bnk?path=' + encodeURIComponent(rel) + '&bank=' + encodeURIComponent(bank) + '&n=' + bi.index);
+        if (!res.ok) throw new Error(rec.name + ' not found');
+        bytes = new Uint8Array(await res.arrayBuffer());
+      }
+      if (!bytes || !root.NhlPc96Asf) throw new Error('Sound decoder missing');
+      const parsed = root.NhlPc96Asf.parseKsfStream(bytes, { start: 0, dataAt: 0, end: bytes.length, channels: bi.channels, rate: bi.rate, frames: bi.frames });
+      const f = root.NhlPc96Asf.toPlaybackFloat32(parsed, 1);
+      const pcm = new Int16Array(f.length);
+      for (let i = 0; i < f.length; i++) pcm[i] = Math.round(Math.max(-1, Math.min(1, f[i])) * 32767);
+      rec.clip = { pcm, rate: parsed.rate, vol: 0x7F, length: pcm.length, name: rec.name };
     } else if (rec.ksf) {
       let bytes = null;
       let info = rec.ksf.info;
@@ -225,6 +243,33 @@
       const speech = [];
       const digital = [];
       if (is97()) {
+        for (const rel of (audio.extra || []).filter((r) => /AUDSFX\.viv$/i.test(r))) {
+          let list = [];
+          const host97 = filesHost();
+          if (host97 && host97.map && host97.map.has(rel) && root.Nhl95Pc) {
+            for (const f of root.Nhl95Pc.parseUnitC0fb(await readRel(rel)) || []) {
+              const m = /^(.*)\.bkh$/i.exec(f.name);
+              if (m) for (const snd of root.NhlPc96Asf.bnkSounds(f.data)) list.push(Object.assign({ bank: m[1] }, snd));
+            }
+          } else {
+            try {
+              const res = await fetch(((host97 && host97.baseUrl) || '') + '/api/games/' + gameOf() + '/bnk?path=' + encodeURIComponent(rel));
+              list = res.ok ? await res.json() : [];
+            } catch (err) { list = []; }
+          }
+          for (const snd of list.filter((x) => x.codec === 2)) {
+            const name = 'SFX-' + snd.bank + '-' + String(snd.index + 1).padStart(2, '0');
+            speech.push({
+              id: 'speech-' + name,
+              group: 'Sound effects ' + snd.bank,
+              subgroup: '',
+              name: name,
+              label: snd.bank + ' ' + (snd.index + 1),
+              sub: 'AUDSFX.VIV ' + snd.bank + '.bkd · ' + (snd.channels === 1 ? 'mono' : 'stereo') + ' · ' + snd.rate + ' Hz · ' + (snd.frames / snd.rate).toFixed(1) + ' s',
+              bnk: { rel, bank: snd.bank, info: snd }
+            });
+          }
+        }
         for (const rel of (audio.extra || []).filter((r) => /\.ksf$/i.test(r))) {
           const bank = String(rel).split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
           const german = /G$/.test(bank);
@@ -881,7 +926,7 @@
     const kind = id.startsWith('iff-')
       ? title + ' desk music (IFF)'
       : id.startsWith('speech-')
-        ? title + ' announcer speech'
+        ? title + (rec && rec.bnk ? ' sound effect' : ' announcer speech')
         : id.startsWith('sfx-')
           ? title + ' digital SFX'
           : (rec && rec.asf ? title + (is97() ? ' song (ASF)' : ' 1SN song') : title + ' AdLib song');
@@ -898,7 +943,9 @@
       : id.startsWith('iff-')
       ? 'NHL95PC sub_8F98F load + sub_8FB8E play. FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (mixer loc_A92E6 when flag 1) — not verse/chorus branches. Play uses that loop the way the desk does. RIFF WAVE XOR 80h, then 8-bit unless the fmt bits field is 16. 94 PC has no IFF. Desk music, not announcer speech.'
       : id.startsWith('speech-')
-        ? (is97()
+        ? (is97() && rec && rec.bnk
+          ? 'AUDSFX.VIV is a C0 FB archive of BNKl sound banks (.bkh header + .bkd data). Each sound has a TMpl record (channels, rate, frames, codec). Codec 2 sounds are bare IMA ADPCM from state zero and play here. Codec 0 sounds (the crowd16 and game16 banks and some crowd8) use a bit-packed format that is not decoded yet, so they are not listed.'
+          : is97()
           ? 'NHL 97 .KSF speech bank: a table of streams, each a PATl/TMpl header then bare IMA ADPCM from state zero (no chunk headers). Stereo is one byte per frame (high nibble left, low nibble right), mono is two samples per byte. Played as mono at the TMpl rate.'
           : isCd()
           ? 'A .PCM file at the root of the disc: RF5C164 8-bit sign-magnitude (bit 7 set is positive, low 7 bits the size, FF ends the sample), mono, about 16.3 kHz. Team names, All-Star calls and Ron Barr speech. The CD music tracks are audio tracks and are not on the data track.'
@@ -1019,6 +1066,13 @@
   function metaRows(id) {
     const rec = entries().find((e) => e.id === id);
     const rows = [['Plays', rec ? rec.label : id]];
+    if (rec && rec.bnk) {
+      rows.push(['File', 'AUDSFX.VIV ' + rec.bnk.bank + '.bkd · sound ' + (rec.bnk.info.index + 1)]);
+      rows.push(['Rate', rec.bnk.info.rate + ' Hz, ' + (rec.bnk.info.channels === 1 ? 'mono' : 'stereo')]);
+      rows.push(['Path', 'BNKl header (TMpl) → bare IMA ADPCM from state zero']);
+      rows.push(['Source', 'NHL 97 PC GAMEDATA']);
+      return rows;
+    }
     if (rec && rec.ksf) {
       rows.push(['File', rec.ksf.rel.split('/').pop() + ' · stream ' + (rec.ksf.info.index + 1)]);
       rows.push(['Rate', rec.ksf.info.rate + ' Hz, ' + (rec.ksf.info.channels === 1 ? 'mono' : 'stereo')]);
