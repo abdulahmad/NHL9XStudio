@@ -3359,6 +3359,81 @@ function renderRevision(info) {
   })), info.revision || revs[0].id);
 }
 
+
+// ---- Skate demo (open Studio with #skatedemo): the SPAskatewp animation (skating with the puck) from every game that has it, in
+// different team jerseys, skating left to right. Frames come from the same sprite data and palettes the Sprites tab shows. ----
+// read before the page rewrites its own hash
+const WANT_SKATE_DEMO = /skatedemo/i.test(location.search + location.hash);
+const SKATE_GAMES = ['nhl92', 'nhlpa93', 'nhl94', 'nhl95', 'nhl96', 'nhlpa93snes', 'nhl94snes', 'nhl95snes'];
+
+/** For each game that has sprites loaded: `perGame` teams' SPAskatewp frames facing east. [{game, team, frames:[{canvas, ticks, hx, hy}]}] */
+async function captureSkaters(ids, perGame, progress) {
+  const sets = [];
+  for (const id of ids) {
+    const info = games.find((g) => g.id === id);
+    if (!info || !info.pixels) { if (progress) progress(id, 'no ROM'); continue; }
+    if (progress) progress(id, 'reading sprites');
+    await loadGame(id);
+    const named = (catalog && catalog.anims || []).find((a) => a.name === 'SPAskatewp');
+    if (!named) { if (progress) progress(id, 'no skate animation'); continue; }
+    state.mode = 'spa'; state.spa = 'SPAskatewp'; state.dir = 2; state.step = 0; // direction 2 is East
+    const all = [...el('palette').options].map((o) => o.value).filter((v) => v && !/^@/.test(v) && !/rink|allstar/i.test(v));
+    const homes = all.filter((v) => /h\.(pal|snespal)$/i.test(v));
+    const pool = homes.length >= perGame ? homes : all;
+    const picks = [];
+    for (let i = 0; i < perGame; i++) picks.push(pool[Math.floor(((i + 0.5) * pool.length) / perGame)]);
+    for (const team of picks) {
+      state.paletteName = team; state.paletteExplicit = true;
+      await ensurePalette(team);
+      const colors = activeColors();
+      const seq = buildSequence(currentAnim());
+      const frames = seq.steps.map((step) => {
+        const f = renderedFrame(step.frame);
+        const src = bitmapFor(f, colors);
+        const c = document.createElement('canvas');
+        c.width = src.width; c.height = src.height;
+        c.getContext('2d').drawImage(src, 0, 0);
+        return { canvas: c, ticks: step.ticks, hx: f.hotspotPxX, hy: f.hotspotPxY };
+      });
+      if (frames.length) sets.push({ game: id, team, frames });
+    }
+    if (progress) progress(id, 'ready');
+  }
+  return sets;
+}
+
+async function showSkateDemo() {
+  if (typeof NhlSkaters === 'undefined') return;
+  const back = state.game;
+  const box = document.createElement('div');
+  box.className = 'skate-demo';
+  box.innerHTML = '<div class="skate-card"><h2>Skate demo</h2><p class="skate-note">Reading sprites…</p><canvas class="skate-rink"></canvas>' +
+    '<p class="skate-teams"></p><div class="skate-buttons"><button type="button" data-scale="2">2×</button><button type="button" data-scale="3">3×</button><button type="button" data-scale="4">4×</button><button type="button" data-close>Close</button></div></div>';
+  document.body.appendChild(box);
+  const note = box.querySelector('.skate-note');
+  const canvas = box.querySelector('canvas');
+  const titleOf = (id) => (games.find((g) => g.id === id) || {}).title || id;
+  const sets = await captureSkaters(SKATE_GAMES, 2, (id, what) => { note.textContent = titleOf(id) + ': ' + what + '…'; });
+  if (back !== state.game) await loadGame(back, true);
+  if (!sets.length) { note.textContent = 'No sprites found: put the NHL ROMs in the roms folder, or open a ROM.'; box.querySelector('[data-close]').onclick = () => box.remove(); return; }
+  note.textContent = sets.length + ' skaters from ' + new Set(sets.map((s) => s.game)).size + ' games, SPAskatewp facing east.';
+  let rink = null;
+  const build = (scale) => {
+    if (rink) rink.stop();
+    rink = NhlSkaters.create(canvas, sets, { scale, lanes: 2, count: Math.max(sets.length, 16), speed: 62 });
+    rink.start();
+    box.querySelector('.skate-teams').textContent = sets.map((s) => titleOf(s.game) + ' ' + s.team.replace(/\.(pal|snespal)$/i, '')).join(' · ');
+  };
+  build(3);
+  box.addEventListener('click', (event) => {
+    const b = event.target.closest('button');
+    if (!b) return;
+    if (b.hasAttribute('data-close')) { rink.stop(); box.remove(); return; }
+    if (b.dataset.scale) build(Number(b.dataset.scale));
+  });
+  window.addEventListener('resize', () => { if (rink && box.isConnected) rink.resize(); });
+}
+
 async function boot() {
   const run = NhlLoader.start('Loading games', 'Looking for your games…');
   try {
@@ -3399,6 +3474,7 @@ async function bootInner(run) {
   await loadGame(state.game, true);
   run.mark(state.game, 'done');
   requestAnimationFrame(clock);
+  if (WANT_SKATE_DEMO) showSkateDemo();
 }
 
 boot().catch((err) => {
