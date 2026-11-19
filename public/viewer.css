@@ -636,3 +636,105 @@ select:focus, input:focus, button:focus-visible {
 .transport .field.slim select { padding: 4px 6px; font-size: 12px; }
 .transport .field.grow { justify-content: center; }
 .modes button[hidden], .transport button[hidden], .transport label.check[hidden] { display: none; }
+
+/* ---- Loading screen (public/loading.js): game list status while Studio starts or a folder opens ---- */
+.loading-screen[hidden] { display: none; }
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(16, 20, 24, 0.9);
+  backdrop-filter: blur(3px);
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+.loading-screen.is-leaving { opacity: 0; pointer-events: none; }
+.loading-card {
+  width: min(460px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 20px 22px 18px;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.loading-rink {
+  position: relative;
+  height: 26px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: repeating-linear-gradient(90deg, var(--ice) 0 18px, var(--ice-2) 18px 36px);
+}
+.loading-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  margin-left: -2px;
+  background: var(--red);
+  opacity: 0.85;
+}
+.loading-puck {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 26px;
+  height: 14px;
+  border-radius: 50%;
+  background: #14181c;
+  box-shadow: 0 5px 0 -1px #050607, 0 2px 4px rgba(0, 0, 0, 0.4);
+  animation: loading-slide 1.3s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+@keyframes loading-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(min(460px, 100vw - 32px) - 44px - 26px)); }
+}
+.loading-title { margin: 0 0 4px; font-size: 18px; font-weight: 650; }
+.loading-detail { margin: 0 0 12px; min-height: 1.3em; color: var(--muted); font-size: 13px; }
+.loading-games { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.loading-games:empty { display: none; }
+.loading-game {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) minmax(9ch, 58%);
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: transparent;
+}
+.loading-game.is-working { background: var(--raise-2); }
+.loading-mark {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+}
+.loading-game.is-working .loading-mark {
+  border-color: var(--line);
+  border-top-color: var(--amber);
+  animation: loading-spin 0.8s linear infinite;
+}
+.loading-game.is-ready .loading-mark { border-color: var(--good); color: var(--good); }
+.loading-game.is-skipped .loading-mark { border-color: var(--muted); color: var(--muted); }
+.loading-game.is-error .loading-mark { border-color: var(--red); color: var(--red); }
+.loading-game.is-waiting .loading-name { color: var(--muted); }
+.loading-note { color: var(--muted); font-size: 12px; text-align: right; overflow-wrap: anywhere; }
+@keyframes loading-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .loading-puck { animation: none; left: calc(50% - 13px); }
+  .loading-game.is-working .loading-mark { animation: none; border-top-color: var(--amber); border-right-color: var(--amber); }
+  .loading-screen { transition: none; }
+}

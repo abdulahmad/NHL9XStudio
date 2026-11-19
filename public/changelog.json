@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.55.0",
+      "date": "2026-11-19",
+      "changes": [
+        "Studio now shows a loading screen that names the games as it opens: each game is listed and marked as it is checked (ROM found, install found, disc loaded with its music tracks, or no ROM and retail layout only), then the first game's pictures and sounds load. Opening a folder or a file shows it too, with the files being read and the games found. The server sends the game list one game at a time (/api/games/stream), and the first request no longer computes the whole list twice"
+      ]
+    },
+    {
       "version": "1.54.0",
       "date": "2026-11-19",
       "changes": [

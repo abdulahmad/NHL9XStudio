@@ -16,11 +16,11 @@ const SUITES = [
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'rom94', 'genesis95-pals', 'pc-rink', 'pc-palette', 'pc-crests',
-  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips'
+  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips', 'games-stream'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips'];
+const BROWSER = ['load-errors', 'loading-screen', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips', 'games-stream'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -64,6 +64,7 @@ const RULES = [
   { re: /^(lib\/audio\/|data\/audio\/|tools\/(build|extract|render|run|scan|vendor)-)/, tests: ['core', ...SOUND, ...SOUND_BROWSER.map((b) => 'browser:' + b)], why: 'sound code / data' },
   // Jersey palette editor (NHL 94 / 95 PC HOMEPALS / AWAYPALS): its format module and page.
   { re: /^lib\/(segacd-film|audio\/segacd-cdda)\.js$/, tests: ['segacd-disc', 'browser:load-errors'], why: 'Sega CD disc pictures and CD tracks' },
+  { re: /^(public\/loading\.js|test\/games-stream\.js)$/, tests: ['games-stream', 'browser:loading-screen', 'browser:load-errors'], why: 'loading screen and the game stream behind it' },
   { re: /^lib\/(cue|segacd-find|iso9660)\.js$/, tests: ['segacd-disc', 'segacd-rips', 'browser:load-errors'], why: 'finding and reading the Sega CD disc rip' },
   { re: /^lib\/pc-jersey\.js$/, tests: ['pc-jersey', 'pc-rink', 'browser:jed', 'browser:jed-ice'], why: 'jersey palette format' },
   { re: /^(lib|test)\/pc-palette\.js$/, tests: ['pc-palette', 'browser:jed-ice'], why: 'team palette allocation for imports' },

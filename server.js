@@ -560,6 +560,30 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // The game names alone, instantly: the page names what it is loading before the slow part (looking for ROMs and discs) is done.
+  if (pathname === '/api/games/names') {
+    send(res, 200, JSON.stringify(GAMES.map((g) => ({ id: g.id, title: g.title }))), MIME['.json']);
+    return;
+  }
+
+  // /api/games as newline-delimited JSON, one game at a time, so the loading screen shows each game as it is checked:
+  // {"names":[...]}, then {"game":{...}} per game in order, then {"done":true} (or {"error":{id,message}} and the page falls back to /api/games).
+  if (pathname === '/api/games/stream') {
+    res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.write(JSON.stringify({ names: GAMES.map((g) => ({ id: g.id, title: g.title })) }) + '\n');
+    (async () => {
+      for (const g of GAMES) {
+        await new Promise((resolve) => setImmediate(resolve)); // let the previous line leave before the next game is read
+        if (res.destroyed) return;
+        let line;
+        try { line = { game: gameStatus(g) }; } catch (err) { line = { error: { id: g.id, message: String((err && err.message) || err) } }; }
+        res.write(JSON.stringify(line) + '\n');
+      }
+      res.end(JSON.stringify({ done: true }) + '\n');
+    })();
+    return;
+  }
+
   const gameFrames = /^\/api\/games\/([a-z0-9]+)\/frames$/.exec(pathname);
   if (gameFrames) {
     const game = gameById(gameFrames[1]);
@@ -841,7 +865,7 @@ const server = http.createServer((req, res) => {
     serveFile(res, file, req);
     return;
   }
-  if (pathname === '/viewer.js' || pathname === '/about.js' || pathname === '/button-icons.js' || pathname === '/changelog.json' || pathname === '/viewer.css' || pathname === '/jed.html' || pathname === '/jed.js' || pathname === '/ice.js' || pathname === '/fight.js' || pathname === '/jed.css' || pathname === '/jim.html' || pathname === '/jim.js' || pathname === '/jim.css' || /^\/jed-pals\/[a-zA-Z]+\.act$/.test(pathname) || pathname === '/audio-engine.js' ||
+  if (pathname === '/viewer.js' || pathname === '/loading.js' || pathname === '/about.js' || pathname === '/button-icons.js' || pathname === '/changelog.json' || pathname === '/viewer.css' || pathname === '/jed.html' || pathname === '/jed.js' || pathname === '/ice.js' || pathname === '/fight.js' || pathname === '/jed.css' || pathname === '/jim.html' || pathname === '/jim.js' || pathname === '/jim.css' || /^\/jed-pals\/[a-zA-Z]+\.act$/.test(pathname) || pathname === '/audio-engine.js' ||
       pathname === '/chip-lab.html' || pathname === '/chip-lab.js' || pathname === '/chip-lab.css' ||
       pathname === '/sound-test-view.js' || pathname === '/sound-test-pc94.js' || pathname === '/sound-instruments.js' || pathname === '/sound-roll-snes.js' || pathname === '/sound-test-snes.js' || pathname === '/sound-test-snes93.js' ||
       pathname === '/sound-roll.js' || pathname === '/sound-tools.js' || pathname === '/sound-tools-nx.js' || pathname === '/sound-editor-extras.js' || pathname === '/sound-patch-editor.js' || pathname === '/sound-tools-snes.js' || pathname === '/sound-snes-inst-editor.js') {

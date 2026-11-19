@@ -129,12 +129,17 @@ function resolveUrl(path) {
   return pathPrefix + p;
 }
 
+let quickNames = null; // the game names from the first, instant request
+
 async function detectApi() {
   try {
-    const response = await fetch(resolveUrl('/api/games'));
+    // The names-only endpoint answers at once; an older server only has /api/games.
+    let response = await fetch(resolveUrl('/api/games/names'));
+    if (!response.ok) response = await fetch(resolveUrl('/api/games'));
     if (response.ok) {
       useApi = true;
       pathPrefix = '';
+      try { quickNames = (await response.json()).map((g) => ({ id: g.id, title: g.title })); } catch (err) { quickNames = null; }
       return;
     }
   } catch (err) {
@@ -145,13 +150,68 @@ async function detectApi() {
   pathPrefix = parts.length && !/^(api|lib|data|viewer\.js|viewer\.css)$/i.test(parts[0]) ? '/' + parts[0] : '';
 }
 
-async function loadGamesList() {
+// /api/games/stream sends one line of JSON per game as the server checks it (names first), so the loading screen can say which
+// game it is on. `progress.names(list)` and `progress.game(status)` are called as lines arrive.
+async function streamGamesList(progress) {
+  const response = await fetch(resolveUrl('/api/games/stream'));
+  if (!response.ok || !response.body) throw new Error('no game stream');
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const out = [];
+  let buffer = '';
+  let finished = false;
+  const take = (line) => {
+    if (!line.trim()) return;
+    const msg = JSON.parse(line);
+    if (msg.names) { if (progress && progress.names) progress.names(msg.names); }
+    else if (msg.game) { out.push(msg.game); if (progress && progress.game) progress.game(msg.game); }
+    else if (msg.error) throw new Error(msg.error.message || 'game check failed');
+    else if (msg.done) finished = true;
+  };
+  for (;;) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    buffer += decoder.decode(chunk.value, { stream: true });
+    const nl = String.fromCharCode(10);
+    let at;
+    while ((at = buffer.indexOf(nl)) >= 0) {
+      take(buffer.slice(0, at));
+      buffer = buffer.slice(at + 1);
+    }
+  }
+  take(buffer);
+  if (!finished) throw new Error('game stream ended early');
+  return out;
+}
+
+async function loadGamesList(progress) {
   await detectApi();
   if (useApi) {
-    return fetch(resolveUrl('/api/games')).then((response) => response.json());
+    if (quickNames && progress && progress.names) progress.names(quickNames);
+    try {
+      return await streamGamesList(progress);
+    } catch (err) {
+      /* an older server, or one game failed: the plain list below says why */
+    }
+    const plain = await fetch(resolveUrl('/api/games')).then((response) => response.json());
+    if (progress && progress.names) progress.names(plain.map((g) => ({ id: g.id, title: g.title })));
+    if (progress && progress.game) plain.forEach((g) => progress.game(g));
+    return plain;
   }
-  return fetch(resolveUrl('/games.json')).then((response) => response.json());
+  const staticList = await fetch(resolveUrl('/games.json')).then((response) => response.json());
+  if (progress && progress.names) progress.names(staticList.map((g) => ({ id: g.id, title: g.title })));
+  if (progress && progress.game) staticList.forEach((g) => progress.game(g));
+  return staticList;
 }
+
+// What the loading screen says about a game once the server has looked for its ROM, disc or install.
+function loadingNote(game) {
+  const disc = game.pcAudio && game.pcAudio.segaDisc;
+  if (disc) return disc.image + ' (' + disc.how + (disc.tracks ? ', ' + disc.tracks + ' music tracks' : '') + ')';
+  if (game.rom) return isPcKindClient(game) ? 'install found' : 'ROM found';
+  return game.pixels ? 'built-in data' : 'no ROM, retail layout only';
+}
+function isPcKindClient(game) { return /^pc/.test(String(game.kind || game.id || '')); }
 
 function audioPreviewMeta() {
   if (!audioCatalog || !audioCatalog.previewMeta) return null;
@@ -3081,8 +3141,13 @@ async function ingestRomFolder(entries) {
     const rom = romOf(file.name, bytes, NhlOpenAsset.classify(file.name, bytes));
     if (!rom) continue;
     const id = registerRom(rom, bytes);
-    if (id) found.push({ id, name: file.name });
-    else skipped.push(file.name);
+    if (id) {
+      found.push({ id, name: file.name });
+      if (typeof NhlLoading !== 'undefined') NhlLoading.addGame(id, (games.find((game) => game.id === id) || {}).title || id, 'ready', file.name);
+    } else {
+      skipped.push(file.name);
+      if (typeof NhlLoading !== 'undefined') NhlLoading.addGame('skip:' + file.name, file.name, 'skipped', 'no game profile');
+    }
   }
   if (!found.length) {
     loadError = 'No supported ROMs found in that folder';
@@ -3092,7 +3157,9 @@ async function ingestRomFolder(entries) {
   const open = found.find((rom) => rom.id === state.game) || found[0];
   state.game = open.id;
   el('game').value = open.id;
+  if (typeof NhlLoading !== 'undefined') { NhlLoading.detail('Opening ' + ((games.find((game) => game.id === open.id) || {}).title || open.id) + '…'); NhlLoading.game(open.id, 'working', 'loading pictures, sprites and sounds…'); }
   await loadGame(open.id);
+  if (typeof NhlLoading !== 'undefined') NhlLoading.game(open.id, 'ready', open.name);
   gameInfo = games.find((game) => game.id === open.id) || gameInfo;
   const titles = [...new Set(found.map((rom) => (games.find((game) => game.id === rom.id) || {}).title || rom.id))];
   loadError = 'Loaded ' + found.length + ' ROM' + (found.length === 1 ? '' : 's') + ': ' + titles.join(', ')
@@ -3100,14 +3167,29 @@ async function ingestRomFolder(entries) {
   refreshAll();
 }
 
+// Opening files or a folder shows the loading screen with the games it finds, so a big folder is never a frozen page.
 async function ingestDroppedFiles(fileList) {
   const files = Array.from(fileList || []);
   if (!files.length) return;
-  const entries = await Promise.all(files.map(async (file) => ({
-    file,
-    rel: (file.webkitRelativePath || file.name).replace(/^\/+/, ''),
-    bytes: new Uint8Array(await file.arrayBuffer())
-  })));
+  const folder = files.some((f) => (f.webkitRelativePath || '').indexOf('/') >= 0);
+  const top = folder ? String(files[0].webkitRelativePath).split('/')[0] : files[0].name;
+  if (typeof NhlLoading !== 'undefined') NhlLoading.show({ title: (folder ? 'Opening folder ' : 'Opening ') + top, detail: 'Reading ' + files.length + ' file' + (files.length === 1 ? '' : 's') + '…', games: [] });
+  try {
+    await ingestDroppedFilesCore(files);
+  } finally {
+    if (typeof NhlLoading !== 'undefined') NhlLoading.hide();
+  }
+}
+
+async function ingestDroppedFilesCore(files) {
+  let readCount = 0;
+  const entries = await Promise.all(files.map(async (file) => {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    readCount += 1;
+    if (typeof NhlLoading !== 'undefined' && (readCount % 20 === 0 || readCount === files.length)) NhlLoading.detail('Reading files… ' + readCount + ' of ' + files.length);
+    return { file, rel: (file.webkitRelativePath || file.name).replace(/^\/+/, ''), bytes };
+  }));
+  if (typeof NhlLoading !== 'undefined') NhlLoading.detail('Looking for games in ' + files.length + ' file' + (files.length === 1 ? '' : 's') + '…');
   const isFolder = entries.some((entry) => entry.rel.includes('/'));
   const hasPc = entries.some((entry) => /\.(ppv|qfs|qpp|fsh|asf|vsh|qvs|viv|bnk)$/i.test(entry.rel));
   if (isFolder && hasPc) {
@@ -3125,8 +3207,10 @@ async function ingestDroppedFiles(fileList) {
       paletteFiles: clientPc.catalog.paletteNames
     });
     games = games.map((game) => (game.id === pcId ? entry : game));
+    if (typeof NhlLoading !== 'undefined') NhlLoading.addGame(pcId, entry.title || pcId, 'working', 'loading sprites, pictures and sounds…');
     await loadGame(pcId);
     await loadClientPcPalettes();
+    if (typeof NhlLoading !== 'undefined') NhlLoading.game(pcId, 'ready', 'install loaded');
     return;
   }
   if (isFolder) {
@@ -3343,7 +3427,28 @@ function renderRevision(info) {
 }
 
 async function boot() {
-  const listed = await loadGamesList();
+  if (typeof NhlLoading !== 'undefined') NhlLoading.show({ title: 'Loading NHL9X Studio', detail: 'Finding games, ROMs and discs…' });
+  // The server checks games one at a time; the row being checked is marked, finished rows say what was found.
+  const order = [];
+  const progress = {
+    names(list) {
+      if (order.length === list.length && order.every((id, i) => id === list[i].id)) return; // the stream repeats the names the page already shows
+      order.length = 0;
+      list.forEach((g) => order.push(g.id));
+      if (typeof NhlLoading !== 'undefined') {
+        NhlLoading.setGames(list.map((g) => ({ id: g.id, title: g.title, state: 'waiting' })));
+        if (order.length) NhlLoading.game(order[0], 'working', 'looking for a ROM or disc…');
+      }
+    },
+    game(status) {
+      if (typeof NhlLoading === 'undefined') return;
+      const at = order.indexOf(status.id);
+      NhlLoading.game(status.id, status.rom || status.pixels ? 'ready' : 'skipped', loadingNote(status), status.title);
+      if (at >= 0 && order[at + 1]) NhlLoading.game(order[at + 1], 'working', 'looking for a ROM or disc…');
+    }
+  };
+  const listed = await loadGamesList(progress);
+  if (typeof NhlLoading !== 'undefined') NhlLoading.detail('Opening the first game…');
   baseGames = listed.map(retailGame);
   // A game with revisions comes placed for the ROM on disk (or Rev 0 with none).
   games = listed.map((game, i) => {
@@ -3365,10 +3470,15 @@ async function boot() {
   const onSoundChange = () => { if (soundPanel()) renderList(); };
   if (typeof NhlSoundTestView !== 'undefined') NhlSoundTestView.onChange = onSoundChange;
   if (typeof NhlSoundTestPc94 !== 'undefined') NhlSoundTestPc94.onChange = onSoundChange;
+  if (typeof NhlLoading !== 'undefined') NhlLoading.game(state.game, 'working', 'loading pictures, sprites and sounds…');
   await loadGame(state.game, true);
+  if (typeof NhlLoading !== 'undefined') NhlLoading.game(state.game, 'ready', 'open');
   requestAnimationFrame(clock);
 }
 
-boot().catch((err) => {
+boot().then(() => {
+  if (typeof NhlLoading !== 'undefined') NhlLoading.hide();
+}).catch((err) => {
   el('caption').textContent = err.message;
+  if (typeof NhlLoading !== 'undefined') NhlLoading.hide(0);
 });
