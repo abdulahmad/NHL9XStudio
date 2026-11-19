@@ -120,11 +120,11 @@
    * @param canvas   target <canvas>; its CSS width is the strip's width
    * @param sets     skater sets (setsFromData); skaters are dealt from them in a shuffled order so neighbours differ
    * @param options  scale (pixels per sprite pixel for a 32 px tall skater, default 3), lanes (lines of skaters, default 3),
-   *                 count (skaters, default 14), speed (sprite pixels per second at the average, default 62), puck (default true),
+   *                 count (skaters, default 14), speed (sprite pixels per second at the average, default 130), puck (default true),
    *                 seed, height (CSS px of the strip; default fits the lines)
    */
   function create(canvas, sets, options) {
-    const opts = Object.assign({ scale: 3, lanes: 3, count: 14, speed: 62, puck: true, seed: 7 }, options || {});
+    const opts = Object.assign({ scale: 3, lanes: 3, count: 14, speed: 130, puck: true, seed: 7 }, options || {});
     const usable = (sets || []).filter((s) => s && s.frames && s.frames.length);
     const random = rand(opts.seed);
     let skaters = [];

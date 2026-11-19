@@ -2833,7 +2833,10 @@ function choosePalette(pals, previous, keepSelection) {
 
 async function loadGame(id, keepSelection) {
   rememberImage();
-  if (loadingRun) { const gm = games.find((game) => game.id === id); if (gm) loadingRun.detail('Loading ' + gm.title + '…'); }
+  if (loadingRun) {
+    const gm = games.find((game) => game.id === id);
+    if (gm) { loadingRun.detail('Loading ' + gm.title + '…'); loadingRun.loading(id); }
+  }
   const previous = {
     mode: state.mode,
     bank: state.bank,
@@ -3111,10 +3114,13 @@ async function ingestDroppedFiles(fileList) {
   const run = NhlLoader.start(folder ? 'Opening folder' : 'Opening file', folder ? folder + ' · ' + files.length + ' files' : first.name);
   const mark = loadingRun;
   loadingRun = run;
+  const listGames = () => games.map((game) => ({ id: game.id, title: game.title, state: game.rom || game.pixels ? 'found' : 'missing' }));
+  run.games(listGames()); // every supported game, red when its files are not there
   try {
     await ingestFiles(files);
   } finally {
     loadingRun = mark;
+    run.refresh(listGames()); // what the folder turned out to hold
     run.done();
   }
 }
@@ -3381,7 +3387,7 @@ async function showSkateDemo() {
   let rink = null;
   const build = (scale) => {
     if (rink) rink.stop();
-    rink = NhlSkaters.create(canvas, sets, { scale, lanes: 3, count: 24, speed: 62 });
+    rink = NhlSkaters.create(canvas, sets, { scale, lanes: 3, count: 24, speed: 130 });
     rink.start();
     const shown = rink.skaters();
     box.querySelector('.skate-teams').textContent = shown.map((s) => (data.games.find((g) => g.id === s.game) || {}).title + ' ' + s.team).join(' · ');

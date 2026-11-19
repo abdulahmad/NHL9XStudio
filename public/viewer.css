@@ -658,12 +658,12 @@ select:focus, input:focus, button:focus-visible {
 .loader-now span { color: var(--amber); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 .loader-title { margin: 0 0 4px; font-size: 18px; }
 .loader-detail { margin: 0 0 12px; min-height: 1.3em; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
-.loader-games { margin: 0; padding: 0; list-style: none; max-height: 36vh; overflow: auto; font-size: 14px; }
-.loader-games li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-top: 1px solid var(--line); }
+.loader-games { margin: 0; padding: 0; list-style: none; max-height: 42vh; overflow: auto; font-size: 14px; }
+.loader-games li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-top: 1px solid var(--line); }
 .loader-games em { font-style: normal; color: var(--muted); white-space: nowrap; }
 .loader-games li[data-state="loading"] em { color: var(--amber); }
 .loader-games li[data-state="done"] em { color: var(--good); }
-.loader-games li[data-state="missing"] span { color: var(--muted); }
+.loader-games li[data-state="missing"] span, .loader-games li[data-state="missing"] em { color: var(--red); }
 @media (prefers-reduced-motion: reduce) {
   .loader-puck, .loader-trail { animation: none; }
   .loader-puck { left: calc(50% - 8px); }

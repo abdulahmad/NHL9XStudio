@@ -40,7 +40,7 @@
       const canvas = box.querySelector('.loader-skaters');
       rink.classList.add('has-skaters');
       if (skateRink) skateRink.stop();
-      skateRink = NhlSkaters.create(canvas, skateSets, { scale: 2, lanes: 3, count: 9, speed: 58, seed: 11 });
+      skateRink = NhlSkaters.create(canvas, skateSets, { scale: 2, lanes: 3, count: 9, speed: 130, seed: 11 });
       if (!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) skateRink.start();
     };
     if (skateSets) { begin(); return; }
@@ -97,6 +97,19 @@
     const repaint = () => { if (run.shownAt && !run.ended && active === run.id) paint(); };
     run.detail = function (text) { run.text = text; repaint(); };
     run.games = function (list) { run.list = list; repaint(); };
+    // the game being loaded now: it is 'loading', the one before it is 'done'
+    run.loading = function (id) {
+      for (const g of run.list) if (g.state === 'loading' && g.id !== id) g.state = 'done';
+      const g = run.list.find((x) => x.id === id);
+      if (g) g.state = 'loading';
+      repaint();
+    };
+    // a new list from the same run: games already loaded stay 'done'
+    run.refresh = function (list) {
+      const done = new Set(run.list.filter((g) => g.state === 'done' || g.state === 'loading').map((g) => g.id));
+      run.list = list.map((g) => (done.has(g.id) ? Object.assign({}, g, { state: 'done' }) : g));
+      repaint();
+    };
     run.mark = function (id, state) {
       const g = run.list.find((x) => x.id === id);
       if (g) { g.state = state; repaint(); }
