@@ -640,7 +640,7 @@ select:focus, input:focus, button:focus-visible {
 /* Loading screen (public/loader.js) */
 .loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(3px); }
 .loader[hidden] { display: none; }
-.loader-card { width: min(440px, calc(100vw - 32px)); padding: 24px; background: var(--raise); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+.loader-card { width: min(520px, calc(100vw - 32px)); padding: 24px; background: var(--raise); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
 .loader-rink { position: relative; height: 34px; margin-bottom: 18px; border-radius: 17px; background: linear-gradient(var(--ice), var(--ice-2)); overflow: hidden; }
 .loader-rink::before, .loader-rink::after { content: ""; position: absolute; top: 0; bottom: 0; width: 3px; background: var(--red); opacity: 0.8; }
 .loader-rink::before { left: 22%; }
@@ -649,6 +649,13 @@ select:focus, input:focus, button:focus-visible {
 .loader-trail { position: absolute; top: 15px; left: 0; height: 4px; width: 60px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(11, 13, 16, 0.35)); animation: loader-slide-trail 1.3s ease-in-out infinite alternate; }
 @keyframes loader-slide { from { transform: translateX(8px); } to { transform: translateX(calc(min(440px, 100vw - 32px) - 24px - 24px - 28px)); } }
 @keyframes loader-slide-trail { from { transform: translateX(-52px); } to { transform: translateX(calc(min(440px, 100vw - 32px) - 24px - 24px - 80px)); } }
+.loader-rink.has-skaters { height: auto; border-radius: 8px; }
+.loader-rink.has-skaters::before, .loader-rink.has-skaters::after, .loader-rink.has-skaters .loader-puck, .loader-rink.has-skaters .loader-trail { display: none; }
+.loader-skaters { display: none; width: 100%; image-rendering: pixelated; }
+.loader-rink.has-skaters .loader-skaters { display: block; }
+.loader-now { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 15px; }
+.loader-now[hidden] { display: none; }
+.loader-now span { color: var(--amber); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 .loader-title { margin: 0 0 4px; font-size: 18px; }
 .loader-detail { margin: 0 0 12px; min-height: 1.3em; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
 .loader-games { margin: 0; padding: 0; list-style: none; max-height: 36vh; overflow: auto; font-size: 14px; }

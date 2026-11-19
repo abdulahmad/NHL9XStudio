@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.57.0",
+      "date": "2026-11-19",
+      "changes": [
+        "The loading screen now has skaters instead of a sliding puck: the skating-with-the-puck animation from NHL 92-96 (Genesis), NHL 94-96 (PC) and NHL 94 (SNES), in team jerseys, skating left to right at different speeds and on different lines, with the game's own puck on the stick. Each frame is placed by its origin so the skating stays steady. It also says which game is loading now. The art is built into Studio (skate-data.json), so no ROM is needed. Open Studio with ?skatedemo to see them larger"
+      ]
+    },
+    {
       "version": "1.56.0",
       "date": "2026-11-19",
       "changes": [
