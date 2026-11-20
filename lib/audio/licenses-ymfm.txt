@@ -1,0 +1,12 @@
+ymfm: BSD-3-Clause; see LICENSE.
+nuked-opn2: see licenses/nuked-opn2/LICENSE and README.md.
+mame-ay8910: see licenses/mame-ay8910/LICENSE and README.md.
+mame-gameboy: see licenses/mame-gameboy/LICENSE and README.md.
+mame-huc6280: see licenses/mame-huc6280/LICENSE and README.md.
+mame-k051649: see licenses/mame-k051649/LICENSE and README.md.
+mame-okim6258: see licenses/mame-okim6258/LICENSE and README.md.
+mame-okim6295: see licenses/mame-okim6295/LICENSE and README.md.
+mame-rf5c164: see licenses/mame-rf5c164/LICENSE and README.md.
+mame-segapcm: see licenses/mame-segapcm/LICENSE and README.md.
+Nuked-OPN2 is LGPL-2.1-or-later; the MAME adaptations listed above are BSD-3-Clause.
+No external instrument/sample ROMs are included.

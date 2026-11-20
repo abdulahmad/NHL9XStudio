@@ -1,0 +1,797 @@
+{
+  "gameId": "nhl95",
+  "platform": "genesis",
+  "playback": true,
+  "note": "SFX $0–$2F (SfxTable) + songs $0–$3 (StartSong) + $32–$55 (sound95.asm)",
+  "streamDriver": null,
+  "previewMeta": {
+    "soundBase": 44868,
+    "streamDriver": null
+  },
+  "entries": [
+    {
+      "id": "hockey-snd",
+      "label": "Hockey.snd (ROM)",
+      "group": "Samples",
+      "type": "region",
+      "start": 44868,
+      "end": 425984,
+      "playable": false,
+      "blurb": "95 sound driver segment (bundled slice; full bank to $24214 in retail ROM)"
+    },
+    {
+      "id": "snd-00",
+      "label": "sfx siren",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 0,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-01",
+      "label": "sfx beep1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 1,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-02",
+      "label": "sfx beep2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 2,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-03",
+      "label": "sfx whistle",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 3,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-04",
+      "label": "sfx horn",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 4,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-05",
+      "label": "sfx shotwiff",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 5,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-06",
+      "label": "sfx stdef",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 6,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-07",
+      "label": "sfx puckget",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 7,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-08",
+      "label": "sfx oooh",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 8,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-09",
+      "label": "sfx hithigh",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 9,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0a",
+      "label": "sfx hitlow",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 10,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0b",
+      "label": "sfx crowdcheer",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 11,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0c",
+      "label": "sfx crowdboo",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 12,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0d",
+      "label": "sfx oooh2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 13,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0e",
+      "label": "sfx bglass",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 14,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-0f",
+      "label": "sfx homewin",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 15,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-10",
+      "label": "sfx pass1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 16,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-11",
+      "label": "sfx pass2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 17,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-12",
+      "label": "sfx pass3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 18,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-13",
+      "label": "sfx pass4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 19,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-14",
+      "label": "sfx shotbh1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 20,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-15",
+      "label": "sfx shotbh2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 21,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-16",
+      "label": "sfx shotbh3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 22,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-17",
+      "label": "sfx shotbh4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 23,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-18",
+      "label": "sfx shotfh1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 24,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-19",
+      "label": "sfx shotfh2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 25,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1a",
+      "label": "sfx shotfh3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 26,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1b",
+      "label": "sfx shotfh4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 27,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1c",
+      "label": "sfx check1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 28,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1d",
+      "label": "sfx check2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 29,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1e",
+      "label": "sfx check3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 30,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-1f",
+      "label": "sfx check4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 31,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-20",
+      "label": "sfx playerwall",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 32,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-21",
+      "label": "sfx playerwall2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 33,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-22",
+      "label": "sfx playerwall3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 34,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-23",
+      "label": "sfx playerwall4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 35,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-24",
+      "label": "sfx puckbody",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 36,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-25",
+      "label": "sfx puckpost",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 37,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-26",
+      "label": "sfx id 26 27",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 38,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-27",
+      "label": "sfx id 26 27",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 39,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-28",
+      "label": "sfx puckwall1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 40,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-29",
+      "label": "sfx puckwall2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 41,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2a",
+      "label": "sfx puckwall3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 42,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2b",
+      "label": "sfx puckwall4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 43,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2c",
+      "label": "sfx puckice1",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 44,
+      "playable": true,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2d",
+      "label": "sfx puckice2",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 45,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2e",
+      "label": "sfx puckice3",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 46,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-2f",
+      "label": "sfx puckice4",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 47,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-30",
+      "label": "ChooseSong, TeamSongs BOS",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 48,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-31",
+      "label": "ChooseSong, TeamSongs BOS",
+      "group": "SFX",
+      "type": "sfx",
+      "soundId": 49,
+      "playable": false,
+      "blurb": "NHL95Genesis equals.inc / SfxTable"
+    },
+    {
+      "id": "snd-32",
+      "label": "ChooseSong, TeamSongs BUF / NJ / NYI / NYR / WSH / WPG / ASE / ASW",
+      "group": "Music",
+      "type": "song",
+      "soundId": 50,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
+    },
+    {
+      "id": "snd-33",
+      "label": "ChooseSong, TeamSongs BUF / PHI, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 51,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal, late game"
+    },
+    {
+      "id": "snd-34",
+      "label": "ChooseSong, TeamSongs CGY / PIT / TOR",
+      "group": "Music",
+      "type": "song",
+      "soundId": 52,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
+    },
+    {
+      "id": "snd-35",
+      "label": "ChooseSong, TeamSongs CGY / LA / OTW",
+      "group": "Music",
+      "type": "song",
+      "soundId": 53,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, home goal"
+    },
+    {
+      "id": "snd-36",
+      "label": "ChooseSong, TeamSongs CHI",
+      "group": "Music",
+      "type": "song",
+      "soundId": 54,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal"
+    },
+    {
+      "id": "snd-37",
+      "label": "ChooseSong, TeamSongs CHI / NJ / PHI",
+      "group": "Music",
+      "type": "song",
+      "soundId": 55,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
+    },
+    {
+      "id": "snd-38",
+      "label": "ChooseSong, TeamSongs DET / NJ",
+      "group": "Music",
+      "type": "song",
+      "soundId": 56,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
+    },
+    {
+      "id": "snd-39",
+      "label": "ChooseSong, TeamSongs CHI / DET / LA / OTW",
+      "group": "Music",
+      "type": "song",
+      "soundId": 57,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
+    },
+    {
+      "id": "snd-3a",
+      "label": "ChooseSong, TeamSongs ANH",
+      "group": "Music",
+      "type": "song",
+      "soundId": 58,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start"
+    },
+    {
+      "id": "snd-3b",
+      "label": "ChooseSong, TeamSongs EDM",
+      "group": "Music",
+      "type": "song",
+      "soundId": 59,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start"
+    },
+    {
+      "id": "snd-3c",
+      "label": "ChooseSong, TeamSongs FLA",
+      "group": "Music",
+      "type": "song",
+      "soundId": 60,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
+    },
+    {
+      "id": "snd-3d",
+      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 61,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
+    },
+    {
+      "id": "snd-3e",
+      "label": "ChooseSong, TeamSongs HFD, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 62,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, home goal"
+    },
+    {
+      "id": "snd-3f",
+      "label": "ChooseSong, TeamSongs DET / LA / MTL / WSH / WPG",
+      "group": "Music",
+      "type": "song",
+      "soundId": 63,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off, late game"
+    },
+    {
+      "id": "snd-40",
+      "label": "ChooseSong, TeamSongs ANH / BOS / LA",
+      "group": "Music",
+      "type": "song",
+      "soundId": 64,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, late game"
+    },
+    {
+      "id": "snd-41",
+      "label": "ChooseSong, TeamSongs NYI, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 65,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal, late game"
+    },
+    {
+      "id": "snd-42",
+      "label": "ChooseSong, TeamSongs BOS / DAL / NYI / NYR / STL / VAN / ASE / ASW",
+      "group": "Music",
+      "type": "song",
+      "soundId": 66,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off"
+    },
+    {
+      "id": "snd-43",
+      "label": "ChooseSong, TeamSongs MTL / STL / VAN",
+      "group": "Music",
+      "type": "song",
+      "soundId": 67,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, late game"
+    },
+    {
+      "id": "snd-44",
+      "label": "ChooseSong, TeamSongs MTL",
+      "group": "Music",
+      "type": "song",
+      "soundId": 68,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal"
+    },
+    {
+      "id": "snd-45",
+      "label": "ChooseSong, TeamSongs FLA / HFD / PHI / PIT",
+      "group": "Music",
+      "type": "song",
+      "soundId": 69,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
+    },
+    {
+      "id": "snd-46",
+      "label": "ChooseSong, TeamSongs (25 teams: all but CGY, PHI and SJ)",
+      "group": "Music",
+      "type": "song",
+      "soundId": 70,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: visitor power play"
+    },
+    {
+      "id": "snd-47",
+      "label": "ChooseSong, TeamSongs PIT, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 71,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal, late game"
+    },
+    {
+      "id": "snd-48",
+      "label": "ChooseSong, TeamSongs FLA / QUE",
+      "group": "Music",
+      "type": "song",
+      "soundId": 72,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off"
+    },
+    {
+      "id": "snd-49",
+      "label": "ChooseSong, TeamSongs ANH / CGY / QUE",
+      "group": "Music",
+      "type": "song",
+      "soundId": 73,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, visitor power play, late game"
+    },
+    {
+      "id": "snd-4a",
+      "label": "ChooseSong, TeamSongs OTW / SJ / WSH",
+      "group": "Music",
+      "type": "song",
+      "soundId": 74,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, late game"
+    },
+    {
+      "id": "snd-4b",
+      "label": "ChooseSong, TeamSongs SJ",
+      "group": "Music",
+      "type": "song",
+      "soundId": 75,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
+    },
+    {
+      "id": "snd-4c",
+      "label": "ChooseSong, TeamSongs SJ",
+      "group": "Music",
+      "type": "song",
+      "soundId": 76,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home goal"
+    },
+    {
+      "id": "snd-4d",
+      "label": "ChooseSong, TeamSongs SJ",
+      "group": "Music",
+      "type": "song",
+      "soundId": 77,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: visitor power play"
+    },
+    {
+      "id": "snd-4e",
+      "label": "ChooseSong, TeamSongs CHI / SJ, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 78,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: late game"
+    },
+    {
+      "id": "snd-4f",
+      "label": "ChooseSong, RandomSongs",
+      "group": "Music",
+      "type": "song",
+      "soundId": 79,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs"
+    },
+    {
+      "id": "snd-50",
+      "label": "ChooseSong, TeamSongs STL",
+      "group": "Music",
+      "type": "song",
+      "soundId": 80,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home goal"
+    },
+    {
+      "id": "snd-51",
+      "label": "ChooseSong, TeamSongs BOS / DAL / EDM / NYR / TB / ASE / ASW",
+      "group": "Music",
+      "type": "song",
+      "soundId": 81,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: period start, home power play, face-off, late game"
+    },
+    {
+      "id": "snd-52",
+      "label": "ChooseSong, TeamSongs OTW / TB",
+      "group": "Music",
+      "type": "song",
+      "soundId": 82,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, home goal"
+    },
+    {
+      "id": "snd-53",
+      "label": "ChooseSong, TeamSongs TOR",
+      "group": "Music",
+      "type": "song",
+      "soundId": 83,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off"
+    },
+    {
+      "id": "snd-54",
+      "label": "ChooseSong, TeamSongs ANH / VAN",
+      "group": "Music",
+      "type": "song",
+      "soundId": 84,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: face-off, home goal"
+    },
+    {
+      "id": "snd-55",
+      "label": "ChooseSong, TeamSongs FLA / MTL / WPG",
+      "group": "Music",
+      "type": "song",
+      "soundId": 85,
+      "playable": true,
+      "blurb": "NHL95Genesis sound95.asm TeamSongs / RandomSongs; SongIndex slot: home power play, face-off, home goal"
+    }
+  ]
+}
