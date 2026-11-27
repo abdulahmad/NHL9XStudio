@@ -12,9 +12,14 @@ const el = (id) => document.getElementById(id);
 function isPcGame(kind) {
   return kind === 'pc95' || kind === 'pc94' || kind === 'pc96' || kind === 'pc97';
 }
-/** The frame number shown to the user: PC sprite frames are 0-based like the game's own index (GetHot), others 1-based. */
+/** Sprite frames count from 1 inside (frame 1 is a file's first picture). Shown: Genesis / Sega CD / SNES 1-based,
+ * PC 0-based like the game's own index (GetHot); lib/frame-number.js. The Images tab keeps its 1-up picture numbers. */
+function frameNumbersZeroBased() {
+  return typeof gameInfo !== 'undefined' && !!gameInfo && NhlFrameNumber.zeroBased(gameInfo) && state.mode !== 'image';
+}
+/** The frame number shown to the user for stored frame n. */
 function shownFrame(n) {
-  return typeof gameInfo !== 'undefined' && gameInfo && isPcGame(gameInfo.kind) && state.mode !== 'image' ? n - 1 : n;
+  return frameNumbersZeroBased() ? n - 1 : n;
 }
 /** The Audio tab (Sound test in older docs and links) plays the retail sound chain live (bundled slice): NHL 92, NHLPA 93, NHL 94/95/96 Genesis, NHL 94 SNES, NHLPA 93 SNES, NHL 94/95 PC AdLib/SFX, and NHL 96 PC 1SN .ASF. */
 function hasSoundTest(info) {
@@ -1334,7 +1339,7 @@ function renderList() {
       sub.className = 'sub';
       if (state.mode === 'spf') {
         sub.textContent = entry.end == null
-          ? 'from ' + entry.start
+          ? 'from ' + shownFrame(entry.start)
           : shownFrame(entry.start) + '–' + shownFrame(entry.end) + ' · ' + entry.count + ' frames' +
             (entry.stride ? ' · 8 facings' : '');
       } else {
@@ -1394,10 +1399,15 @@ function scheduleFilmstripPaints() {
   requestAnimationFrame(paintBatch);
 }
 
+/** What the filmstrip shows: the game (its frame numbering and pictures), the sequence and the pin. */
+function filmstripKey(seq) {
+  return state.game + ':' + (frameNumbersZeroBased() ? 0 : 1) + ':' + seq.key + ':' + state.pin;
+}
+
 function renderFilmstrip() {
   const seq = sequence();
   const strip = el('filmstrip');
-  const filmKey = seq.key + ':' + state.pin;
+  const filmKey = filmstripKey(seq);
   if (filmKey === sequenceKey && strip.childElementCount) {
     highlightStep();
     return;
@@ -1811,8 +1821,11 @@ function renderTransport() {
     frameSlider.disabled = false;
     frameSlider.value = String(clampedStep + 1);
     const readout = el('frame-readout');
-    if (stepCount > 1) readout.textContent = frameNum + ' · step ' + (clampedStep + 1) + '/' + stepCount;
-    else readout.textContent = frameNum + ' · index ' + (frameNum - 1);
+    if (stepCount > 1 && state.mode === 'frame') {
+      // The whole bank: the step is the frame, so show the frame and the bank's range in this game's numbering.
+      readout.textContent = shownFrame(frameNum) + ' (of ' + shownFrame(seq.steps[0].frame) + '–' + shownFrame(seq.steps[stepCount - 1].frame) + ')';
+    } else if (stepCount > 1) readout.textContent = shownFrame(frameNum) + ' · step ' + (clampedStep + 1) + '/' + stepCount;
+    else readout.textContent = shownFrame(frameNum) + (frameNumbersZeroBased() ? '' : ' · index ' + (frameNum - 1));
   } else {
     frameSlider.min = '1';
     frameSlider.max = '1';
@@ -1864,7 +1877,7 @@ function refreshPlaybackChrome() {
   renderTransport();
   renderCompass();
   renderMeta();
-  if (sequence().key + ':' + state.pin !== sequenceKey) renderFilmstrip();
+  if (filmstripKey(sequence()) !== sequenceKey) renderFilmstrip();
   else highlightStep();
 }
 
@@ -1886,7 +1899,9 @@ function writeHash() {
     params.set('img', state.image);
   } else if (state.mode === 'frame') {
     params.set('bank', state.bank);
-    params.set('frame', String(state.frame));
+    // In the game's own numbering; base=0 marks a 0-based (PC) number. Links without base carry the stored 1-based frame.
+    params.set('frame', String(shownFrame(state.frame)));
+    if (frameNumbersZeroBased()) params.set('base', '0');
   } else if (state.mode === 'spf') {
     params.set('spf', state.spf);
     params.set('dir', String(state.dir));
@@ -1922,7 +1937,10 @@ function readHash() {
   if (params.get('spa')) state.spa = params.get('spa');
   if (params.get('img')) state.image = params.get('img');
   if (params.get('dir')) state.dir = Math.max(0, Math.min(7, Number(params.get('dir')) || 0));
-  if (params.get('frame')) state.frame = Number(params.get('frame')) || 1;
+  if (params.get('frame')) {
+    const n = Math.floor(Number(params.get('frame')));
+    state.frame = Number.isFinite(n) ? Math.max(1, params.get('base') === '0' ? n + 1 : n) : 1;
+  }
   if (params.get('step')) state.step = Number(params.get('step')) || 0;
   if (params.get('audio')) state.audioId = params.get('audio');
   if (params.get('sndtest')) state.soundTestItem = params.get('sndtest');

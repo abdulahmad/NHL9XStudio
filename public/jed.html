@@ -249,7 +249,7 @@
         <figure><canvas id="fight-93" title="Click a pixel to select its 93 colour"></canvas><figcaption id="fight-93-cap"></figcaption></figure>
         <figure><canvas id="fight-pcf" title="A 95 PC skater frame"></canvas><figcaption>
           <button type="button" id="fight-pc-prev" class="ghost-btn" aria-label="Previous 95 PC frame">◀</button>
-          95 PC frame <input type="number" id="fight-pc-frame" min="1" value="1">
+          95 PC frame <input type="number" id="fight-pc-frame" min="0" value="0" title="95 PC frame number, counted from 0 like the game">
           <button type="button" id="fight-pc-next" class="ghost-btn" aria-label="Next 95 PC frame">▶</button></figcaption></figure>
       </div>
       <p id="fight-note" class="muted"></p>
@@ -257,6 +257,7 @@
   </main>
   <script src="button-icons.js"></script>
   <script src="lib/snespak.js"></script>
+  <script src="lib/frame-number.js"></script>
   <script src="lib/pc95.js"></script>
   <script src="lib/pc94-pack.js"></script>
   <script src="lib/pc94-shape.js"></script>

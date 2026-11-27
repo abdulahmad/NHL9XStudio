@@ -16,11 +16,11 @@ const SUITES = [
   'snes-gm-analysis', 'snes-sfx-midi', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain',
   'nhl95-seq', 'nhl95-stream', 'nhl9x-song-gm', 'nhl9x-stream', 'nhl9x-gm-audition', 'ym-note-tracker', 'nhl92-gm-map',
   'nhl92-sequencer', 'fingerprint-site', 'editor-extras', 'patch-edits-export', 'pc-jersey', 'rom94', 'genesis95-pals', 'pc-rink', 'pc-palette', 'pc-crests',
-  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips'
+  'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips', 'frame-number'
 ];
 // Playwright scripts under test/browser/ that test.js runs.
-const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export'];
-const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips'];
+const BROWSER = ['load-errors', 'audio-list', 'sound-smoke', 'snes93-roll', 'nhl95-sequencer', 'rev-switch', 'revision-picker', 'jed', 'jed-ice', 'jed-server', 'jim', 'indexed-export', 'frame-numbers'];
+const NON_SOUND = ['fingerprint-site', 'pc-jersey', 'pc-rink', 'pc-palette', 'pc-crests', 'jim-roundtrip', 'genesis-quantize', 'jim-compress', 'sjim', 'sscr', 'pc94-shape', 'indexed-image', 'snes94-pals', 'snes95', 'segacd-disc', 'segacd-rips', 'frame-number'];
 const SOUND = SUITES.filter((s) => !NON_SOUND.includes(s));
 const M68K = ['m68k-cpu', 'nhl92-68k-driver', 'nhl92-sound-chain', 'nhl9x-sound-chain', 'nhl95-sound-chain', 'nhl96-sound-chain', 'nhl92-sequencer'];
 const Z80 = ['chip-audio', 'nhl92-z80-driver', 'nhl92-z80-audio', 'nhl92-sound-chain', 'nhl92-68k-driver'];
@@ -86,6 +86,7 @@ const RULES = [
   { re: /^lib\/indexed-image\.js$/, tests: ['indexed-image', 'core', 'browser:indexed-export'], why: 'indexed PNG/BMP export' },
   // Image / parser libraries and data: the core checks only.
   { re: /^(lib\/snes95\.js|data\/frames95snes\.asm|tools\/build-snes95-frames\.js)$/, tests: ['snes95', 'core'], why: 'NHL 95 SNES unpacker and frames' },
+  { re: /^lib\/frame-number\.js$/, tests: ['frame-number', 'browser:frame-numbers', 'browser:jed'], why: 'frame numbering (Genesis 1-based, PC 0-based)' },
   { re: /^lib\/rom94\.js$/, tests: ['rom94'], why: 'NHL 94 ROM team colours' },
   { re: /^lib\/genesis95-pals\.js$/, tests: ['genesis95-pals'], why: 'NHL 95 Genesis team palettes' },
   { re: /^lib\/snes\.js$/, tests: ['snes94-pals', 'core'], why: 'SNES drawing and 94 jersey colours' },
