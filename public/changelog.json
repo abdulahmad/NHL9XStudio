@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "version": "1.58.2",
+      "date": "2026-11-27",
+      "changes": [
+        "Frame numbers follow each game everywhere: from 1 on the Genesis, Sega CD and SNES, from 0 on PC. On PC the step readout, the filmstrip after switching games, SPF ranges, the frame in the link and the Fight colours 95 PC frame box now count from 0 too"
+      ]
+    },
+    {
       "version": "1.58.1",
       "date": "2026-11-25",
       "changes": [
