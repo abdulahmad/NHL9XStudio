@@ -87,7 +87,7 @@ The home of the product. One window, four modes, shared chrome.
 **Must have**
 
 - Switch game without a reload; remember the last game, mode, and frame in the URL hash
-- **Frame:** scrub the active bank (player sheet, ANIM bank, or PC PPV series), 1-based indexes
+- **Frame:** scrub the active bank (player sheet, ANIM bank, or PC PPV series). Frame numbers follow the game: 1-based on Genesis, Sega CD and SNES, 0-based on PC
 - **SPF:** browse named frame ranges; eight-facing sets use the compass
 - **SPA:** play animation sequences per facing with retail timing (vblank hold, 4-vblank glitch, loop bit)
 - **Images:** stills and tilemaps that are not the player sheet, grouped and searchable

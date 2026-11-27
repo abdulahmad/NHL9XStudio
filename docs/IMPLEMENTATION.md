@@ -75,7 +75,7 @@ There is **no database** and **no audio pipeline** in the viewer yet. All state 
 
 | Mode | Purpose |
 |------|---------|
-| **Frame** | Scrub 1-based frame index in the active **bank** (player sheet, ANIM bank, or PC PPV series). |
+| **Frame** | Scrub the frames of the active **bank** (player sheet, ANIM bank, or PC PPV series). Stored 1-based; shown 1-based on Genesis / Sega CD / SNES and 0-based on PC (`lib/frame-number.js`, `shownFrame` in `viewer.js`), in the readout, filmstrip, details, SPF ranges, the `#frame=` hash (`base=0` marks a PC number; links without it carry the stored frame) and export names. |
 | **SPF** | Browse named frame **ranges** from `frames*.asm`; eight-across facings use the compass. |
 | **SPA** | Play **animation sequences** per facing; respects `updateanim` timing (vblank hold, 4-vblank glitch, loop bit). |
 | **Images** | Non–player-sheet pictures: screens, rink, fonts, logos, portraits, PC QFS/QPP stills, SNES tilemaps, etc. |
@@ -238,7 +238,7 @@ Parity with **95PC** in the viewer: Frame / SPF / SPA / Images, team jerseys, ho
 #### C. Viewer UI
 
 - Reuse PC path in `viewer.js` (`gameInfo.kind === 'pc94'` alongside `pc95`).
-- README: `pc94/` layout, restart server, frame index 1-based.
+- README: `pc94/` layout, restart server, frame numbers shown 0-based like every PC game (stored 1-based).
 
 #### D. Optional alignment
 

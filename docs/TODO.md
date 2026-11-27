@@ -155,7 +155,7 @@ How the effects are named: every 93S SFX name comes from the `SFX*` equates in N
 
 ## 95 PC (user, Oct 20 2026)
 
-- [x] Frames are indexed wrong on PC: they should start at 0, not 1. PC frame numbers (filmstrip, title, details, SPF ranges, caption) now show the game's 0-based index (`shownFrame` in `public/viewer.js`).
+- [x] Frames are indexed wrong on PC: they should start at 0, not 1. PC frame numbers (filmstrip, title, details, SPF ranges, caption) now show the game's 0-based index (`shownFrame` in `public/viewer.js`). Nov 27 2026: also the step readout, filmstrip labels after a game switch, SPF "from" entries, the `#frame=` link and the Fight colours 95 PC frame box (`lib/frame-number.js`, `test/frame-number.js`, `test/browser/frame-numbers.js`).
 - [ ] Palette is incorrect: look at what the user's 95PC sprite-extract scripts do, and merge that with rinkpal. Blocked (2026-10-21): the retail NHL 95 PC game files are not on the build box or in the private repo, so a fix can't be rendered and checked. Needs the files in `pc95/`.
 - [ ] SPF needs to be re-evaluated. Many correct ones should be identifiable by frame-matching against 93 and 94. Blocked on the same retail files (the frame pictures are needed for matching).
 
