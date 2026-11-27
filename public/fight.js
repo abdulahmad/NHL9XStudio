@@ -227,7 +227,7 @@
       const skip = f.transparent == null ? 255 : f.transparent, cols = f.dynamic === false ? (pc.game || pc) : pc;
       drawIndexed(pcv, f, (p) => (p === skip ? null : cols[p] || [0, 0, 0]), scale);
     } else { pcv.width = pcv.height = 1; }
-    $('fight-pc-frame').value = String(F.pcFrame);
+    $('fight-pc-frame').value = String(F.pcFrame - 1); // 95 PC counts frames from 0 (lib/frame-number.js); F.pcFrame is 1-based
     const note = [];
     if (!S.sprites) note.push('Open an NHL 95 PC game folder for its skater frames and team colours.');
     if (!F.rom) note.push('Open your NHLPA 93 ROM (or put it in the game folder you open) for the fight frames.');
@@ -309,7 +309,7 @@
     const step = (d) => { const S = st(); const n = S.sprites ? S.sprites.numFrames : 1; F.pcFrame = Math.max(1, Math.min(n, F.pcFrame + d)); renderView(); };
     $('fight-pc-prev').addEventListener('click', () => step(-1));
     $('fight-pc-next').addEventListener('click', () => step(1));
-    $('fight-pc-frame').addEventListener('change', (e) => { F.pcFrame = 1; step(Number(e.target.value) - 1); });
+    $('fight-pc-frame').addEventListener('change', (e) => { F.pcFrame = 1; step(Math.floor(Number(e.target.value)) || 0); });
     let painting = false;
     $('fight-93').addEventListener('pointerdown', (e) => { painting = tool(e) === 'paint'; on93(e); });
     $('fight-93').addEventListener('pointermove', (e) => { if (painting && e.buttons & 1) on93(e); });
