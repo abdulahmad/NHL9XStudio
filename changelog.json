@@ -1,0 +1,701 @@
+{
+  "releases": [
+    {
+      "version": "1.58.2",
+      "date": "2026-11-27",
+      "changes": [
+        "Frame numbers follow each game everywhere: from 1 on the Genesis, Sega CD and SNES, from 0 on PC. On PC the step readout, the filmstrip after switching games, SPF ranges, the frame in the link and the Fight colours 95 PC frame box now count from 0 too"
+      ]
+    },
+    {
+      "version": "1.58.1",
+      "date": "2026-11-25",
+      "changes": [
+        "NHL 95 SNES lists its bold, italic and thin glyph fonts"
+      ]
+    },
+    {
+      "version": "1.58.0",
+      "date": "2026-11-25",
+      "changes": [
+        "NHL 95 SNES now lists the pictures the Genesis side has: the 28 team logos, the Pad Cursor (controller stars), Replay Cursor, puck, goal and goal light, the title and EA logos, the NHL shield and NHLPA, the skater, and the 26 teams' player photos with their own colours",
+        "NHL 95 SNES also lists the centre ice logos, the team nicknames, and the font, bar, line-piece and Won / check tiles (the nickname colours are a guess)"
+      ]
+    },
+    {
+      "version": "1.57.6",
+      "date": "2026-11-24",
+      "changes": [
+        "NHL 94 SNES songs now line up with Genesis: the Audio list runs in 94G song order ($30-$77) under the Genesis names (NHL94_music_NNN) and descriptions, with the SNES song name beside them; songs the SNES merges list under the first 94G song they stand for"
+      ]
+    },
+    {
+      "version": "1.57.5",
+      "date": "2026-11-20",
+      "changes": [
+        "The Jerseys (PC) header button has its jersey icon back (the icon rule only matched the exact label \"Jerseys\")"
+      ]
+    },
+    {
+      "version": "1.57.4",
+      "date": "2026-11-20",
+      "changes": [
+        "The header button that opens the jersey palette editor now reads \"Jerseys (PC)\", since it edits NHL 94 PC and NHL 95 PC palettes"
+      ]
+    },
+    {
+      "version": "1.57.3",
+      "date": "2026-11-19",
+      "changes": [
+        "Loading screen: it now appears at once and stays up for 3 seconds after everything is loaded, so you can see which games loaded and which were not found (click it to close sooner)"
+      ]
+    },
+    {
+      "version": "1.57.2",
+      "date": "2026-11-19",
+      "changes": [
+        "Loading screen: a skater lower on the screen is drawn in front of the ones higher up"
+      ]
+    },
+    {
+      "version": "1.57.1",
+      "date": "2026-11-19",
+      "changes": [
+        "Loading screen: the puck is drawn with the game's own puck colours and placed by its own hot spot at the stick blade tip (the PC puck used the team palette and looked pale)"
+      ]
+    },
+    {
+      "version": "1.57.0",
+      "date": "2026-11-19",
+      "changes": [
+        "The loading screen now shows skaters carrying the puck across NHL 92 ice instead of a sliding puck. Each skater is the game's own skate-with-puck animation (frames, hot spots and frame timing) in a team's colours, for NHL 92, NHLPA 93, 94, 95, 96 and 94 SNES, and NHL 94, 95 and 96 PC. They cross at different speeds and heights, and only games that were found appear",
+        "Every supported game is listed as a pill: green for a found game (solid for the one loading), red for a game not found in the roms or opened folder. Only the skating frames, the puck sprite and a few team palettes are embedded (public/skaters-data.js)"
+      ]
+    },
+    {
+      "version": "1.56.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) CD music is named like the cartridge songs: \"Track 07 · $30 · NHL94_music_001\" with the song and team (\"Go Team Go [E-flat] (BOS)\") underneath. Track 2 is the crowdbed, 3 is $7A (scouting), 4 is $78 (title), 5 is $79 (end of period), and track 7 onward is $30 onward up to track 78 = $77. Tracks 6 and 79 are not used by any song id, so they are labelled not mapped; they are in two groups, Team songs and Shared tracks",
+        "Fixed a crash opening the Sega CD when a .cue's own data track file was missing and an .iso was used instead"
+      ]
+    },
+    {
+      "version": "1.55.0",
+      "date": "2026-11-19",
+      "changes": [
+        "A loading screen (a sliding puck) shows while Studio starts and while a folder, ROM or disc image is opened. It says what is happening: looking for your games, which games were found, and which game is loading. A load that finishes quickly shows nothing"
+      ]
+    },
+    {
+      "version": "1.54.0",
+      "date": "2026-11-19",
+      "changes": [
+        "Sega CD disc loading handles the way different programs rip a disc: .cue sheets with any line ending, encoding, case, quoting, Windows or absolute paths, one file per track or one for the disc, WAVE music files, renamed .bin files, CloneCD (.ccd/.img), a bare ISO or raw image with numbered track files in any naming, and music in another folder. Formats it cannot read (.chd, .nrg, .cdi, FLAC/MP3 music) are named in the Audio tab note instead of silently showing no music"
+      ]
+    },
+    {
+      "version": "1.53.1",
+      "date": "2026-11-19",
+      "changes": [
+        "The Sega CD disc search now follows symlinks and junctions under roms/, so a linked folder with the .cue and tracks works"
+      ]
+    },
+    {
+      "version": "1.53.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) now loads from a .cue/.bin dump as well as an .iso. The disc is recognised by its contents (a data track with GRAPH2.BIN, HOCKEY.BIN and STARTER.BIN), so file names, folders (up to three levels under roms/) and ripping software do not matter: .iso/.img/.bin/.mdf data tracks, cooked 2048 or raw 2352/2336/2448 byte sectors, Mode 1 or Mode 2 XA, with or without the 2 second pregap, and a .cue with one .bin per track or one .bin for the whole disc. The CD music is read from the .cue (any file names, backslashes, any text encoding), or from loose track files beside the disc. A .cue whose data track is present is preferred over a separate .iso"
+      ]
+    },
+    {
+      "version": "1.52.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) Audio always lists the CD music (tracks 2-79, named like the cartridge songs), even when the track files are not beside the ISO; tracks without a file say so and a note explains where to put the files"
+      ]
+    },
+    {
+      "version": "1.51.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) sound effects now sound like the disc: every effect was compared with the real disc running in an emulator (envelope, spectrum, length) and fixed from that. The FM patch bytes were being written to the wrong operators, the notes were an octave off, the FM level and pitch bend range were wrong, and the sample effects now play through the chip's wave RAM the way the disc does (a sample runs on into the next one until a stop byte), with the disc's pitch, volume and pan. The check effects use the right two samples"
+      ]
+    },
+    {
+      "version": "1.50.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) sound effects fixed: the effect table was being read one record off, so effects had the wrong scripts and names. They now use the cartridge's own names and ids (sfx whistle, sfx pass1, sfx crowdcheer, ...). The effects that were played as PSG square waves are sample effects: the disc plays them on its RF5C164 PCM chip from a 13 sample bank in GRAPH2.BIN, and Studio now plays those samples at the right pitch. The disc never uses the PSG",
+        "NHL 94 (Sega CD) CD music tracks 7-79 are named like the cartridge songs (ChooseSong, TeamSongs BOS, ...)"
+      ]
+    },
+    {
+      "version": "1.49.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) Images now has the 28 per-team pages from GRAPH2.BIN: Team details (with the arena photo), Team details without the photo, and the Video player frame the team clips play in, each with the team's name banner and crest. They sit in the groups Team details, Team details, no photo and Video player"
+      ]
+    },
+    {
+      "version": "1.48.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) Images, Screens now has the goalie License screen and the goalie Loading screen, decoded from GRAPH2.BIN (they are stored outside its directory, listed in GTABLE.BIN)"
+      ]
+    },
+    {
+      "version": "1.47.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) Audio now lists the game's 45 sound effects (Sound effects), read from the effect table, scripts and FM patches in MAIN.BIN and played through the YM2612. The disc has its own sound engine, so these are a reconstruction: the pitch, envelopes and the PSG effects (a square wave) are approximate"
+      ]
+    },
+    {
+      "version": "1.46.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (PC) Images, Players now has Player portraits: all 145 faces from PORTRAIT.NSH, decoded from the game file (raw Mode X planes and a 120-color palette). Tags are the game's player numbers",
+        "NHL 94 (Sega CD) Images, Fonts now has the Boot font from STARTER.BIN"
+      ]
+    },
+    {
+      "version": "1.45.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) Images, Screens now also has the boot pictures from STARTER.BIN: Title with credits (the screen with the credits text) and High Score Productions"
+      ]
+    },
+    {
+      "version": "1.44.0",
+      "date": "2026-11-19",
+      "changes": [
+        "NHL 94 (Sega CD) now has the title screen (NHL HOCKEY '94) in Images, Screens. It is the last frame of the disc's intro movie (HOCKEY.SEG), which Studio decodes itself",
+        "NHL 94 (Sega CD) Audio now lists the disc's music: CD audio tracks 2 to 79 under CD music, played as mono. The tracks are not on the ISO's data track, so put the track files (\"NHL '94 (USA) (Track 07).bin\" and the rest) in the roms folder next to the ISO",
+        "Images and Audio lists now start with every group or subgroup of more than 8 items collapsed; smaller ones start open",
+        "npm install no longer reports vulnerabilities: the opl3 package (and its speaker and yargs dependencies) is gone, since Studio already carried its own copy of the OPL3 chip, and Playwright is updated"
+      ]
+    },
+    {
+      "version": "1.43.1",
+      "date": "2026-11-19",
+      "changes": [
+        "Open file on the web page now reads an NHL 94 Sega CD disc image (GRAPH2.BIN and HOCKEY.BIN at the disc root) as NHL 94 (Sega CD), with its pictures and speech clips. Before, it was read as NHL 95 (PC) and showed no pictures"
+      ]
+    },
+    {
+      "version": "1.43.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) Audio tab now plays the rest of the sound effects (the crowd16 and game16 banks, which are Huffman packed 8-bit PCM) and the play-by-play packs (AUDPBP1 and AUDPBP2, grouped by bank and team). The play-by-play rate is not stored in the files and is assumed to be 22050 Hz"
+      ]
+    },
+    {
+      "version": "1.42.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) Audio tab now plays the sound effects in AUDSFX.VIV (the IMA ADPCM sounds in each BNKl bank), listed by bank. The crowd16 and game16 banks and some crowd8 sounds use a bit-packed format that is not decoded yet, and the AUDPBP1 and AUDPBP2 play-by-play packs are not decoded yet either"
+      ]
+    },
+    {
+      "version": "1.41.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) Audio tab now has the announcer speech: the AUDSPK1, AUDSPK2 and AUDSPK3 banks (and the German G banks), one entry per line, played or saved as WAV. The sound effects (AUDSFX.VIV) and the play-by-play packs (AUDPBP1 and 2) are not decoded yet",
+        "NHL 97 (PC) song names now read Ditty, Menu song, Goal horn, and the Audio tab lists them by group"
+      ]
+    },
+    {
+      "version": "1.40.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 95 (Genesis): the two Game Set Up pictures are named and labelled like NHL 94 (GameSetUp95-1 and GameSetUp95-2, labels Game Set Up 1 and 2). The NHL95Genesis extracted files use the same names"
+      ]
+    },
+    {
+      "version": "1.39.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 95 and NHL 96 (Genesis): pictures that do the same job as in NHL 94 now have the same name and label, for example Ice Rink (IceRink95, IceRink96), Refs, Hot, Cold, Crowd, Face Off, Framer, Energy Bar, Ron Barr, Team Blocks, Arrows, Big Font, Small Font and Title. The NHL95Genesis and NHL96Genesis extracted files use the same names",
+        "NHL 94 (Genesis): the picture once labelled Mark Lesser is labelled Hi Score Img"
+      ]
+    },
+    {
+      "version": "1.38.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 96 (PC): the referee frames show their real colors (black and white stripes, skin, gray) from rinkpal.qfs instead of a team jersey palette",
+        "NHL 96 (PC): SPAskateback and SPAglideback are now SPAskatebox and SPAglidebox: they are a player skating to the penalty box after a fight (the second is one held frame of the same skate), not backward skating. NHL96PC has the same rename",
+        "NHL 94 (Sega CD): one Audio tab (the extra Genesis FM sketch tab is gone); the Audio texts say Sega CD and NHL 97"
+      ]
+    },
+    {
+      "version": "1.37.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) has an Audio tab: the menu songs, goal horns, ditties, anthems, fireworks and period horn (EA .ASF, IMA ADPCM stereo, 22 or 44 kHz). The speech (.KSF) and sound-effect (.VIV) packs are not decoded yet",
+        "NHL 97 (PC) pictures are grouped by kind (menu screens, team logos, trophies, goalie masks, player faces by set, arena, uniforms), with the pack as a folder under each, and no longer show sprite or rink banks",
+        "NHL 94 Sega CD now shows the player sprites, and the face and team-logo palettes come from the disc (HOCKEY.BIN holds the logo palettes)",
+        "NHL 94 Sega CD has an Audio tab with the speech and team-name PCM files from the disc (RF5C164 sign-magnitude, about 16 kHz). The CD music tracks are not on the data track"
+      ]
+    },
+    {
+      "version": "1.36.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 97 (PC) is in the Game menu: put the disc at roms/nhl97.iso (or an install in pc97/, or drop the folder) to browse its pictures, the SHPI FSH files in the DATA and GAMEDATA VIV packs: menu art, logos, trophies, faces, masks, arena and the per-team uniform packs. Shapes that carry their own palette now show it",
+        "The players in NHL 97 are polygon models, so there are no sprite frames or SPA sequences to show"
+      ]
+    },
+    {
+      "version": "1.35.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 95 (SNES): the Images tab lists 22 pictures read from the ROM, named as in the NHL95SNES source: the eight award trophies, the title screens, the pause screen, the playoff bracket and team name bars, the referees, the ice rink, the Stanley Cup and the developer credits"
+      ]
+    },
+    {
+      "version": "1.34.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 95 (SNES) is in the Game menu: open nhl95snes.sfc to see its player frames, with the game's own SPF groups and its 59 SPA sequences (named as in the NHL95SNES source), the goalies, the puck flip, and every team's home and away jersey read from the ROM"
+      ]
+    },
+    {
+      "version": "1.33.2",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 94 SNES: all 71 animation sequences use the names from the NHL94SNES source (SPAgready, SPAgdive, SPAfaceoff, SPAflip and so on). The SPAextra placeholders are gone"
+      ]
+    },
+    {
+      "version": "1.33.1",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 94 PC and NHL 95 PC list the player frames as 94 Genesis's groups (SPFskatewp, SPFskate, SPFturnl and so on, same numbers) instead of one SPFskaters run; the hold sequences are spelled SPAHold and SPAHold2 like 94G"
+      ]
+    },
+    {
+      "version": "1.33.0",
+      "date": "2026-11-18",
+      "changes": [
+        "NHL 94 Sega CD is in the Game menu. It reads GRAPH2.BIN straight out of roms/NHL94CD.iso (a data-track ISO of the disc) and lists its 181 pictures: screens, logos, cards, fonts and the rink",
+        "Asset ids follow the disassembly renames: TeamLogo<TEAM> (Anaheim is TeamLogoANH), HiScoreImg, NoPic* and Card* as .map.jim, SmallFont.map.jim, EASportsSplash in NHL 96"
+      ]
+    },
+    {
+      "version": "1.32.3",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 94 SNES: jersey colours come from the ROM's uniform palettes, in the order the game copies them, so each colour lands on the sprite index it was drawn for. Anaheim, Florida and both New York teams are in the menu once that ROM is open"
+      ]
+    },
+    {
+      "version": "1.32.2",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 94 PC centre ice uses the VGA colours in RINKPAL.QPP. The editor was reading that !pal shape as a 95-style palette, so the rink came out black"
+      ]
+    },
+    {
+      "version": "1.32.1",
+      "date": "2026-11-11",
+      "changes": [
+        "NHL 95 Genesis: the palette menu lists every team once the ROM is open. It was stopping at Calgary because only Anaheim, Boston, Buffalo and Calgary had been copied into the bundled palette folder"
+      ]
+    },
+    {
+      "version": "1.32.0",
+      "date": "2026-11-11",
+      "changes": [
+        "Fight colours: a jersey's default is that team's NHL 94 colours (Anaheim and Florida included). Stick, skin, eyes, skate blade and shadow stay the 95 PC colours, and FIGHTPAL.TXT still overrides"
+      ]
+    },
+    {
+      "version": "1.31.0",
+      "date": "2026-11-09",
+      "changes": [
+        "Fight colours: every jersey (team, home and away) has its own fight palette, starting from that team's own NHLPA 93 jersey; FIGHTPAL.TXT holds them all"
+      ]
+    },
+    {
+      "version": "1.30.1",
+      "date": "2026-11-09",
+      "changes": [
+        "Fight colours: a toolbar with Paint (B) and Dropper (I or Alt-click) and a brush colour. Paint on the 93 fight frame; take colours from either frame, the 93 colour list or the 95 PC palette"
+      ]
+    },
+    {
+      "version": "1.30.0",
+      "date": "2026-11-09",
+      "changes": [
+        "Jersey editor: new Fight colours tab. Match NHLPA 93's fight and injury frames to NHL 95 PC's colours side by side, pick colours from the 95 PC palette or a 95 PC skater frame, and export FIGHTPAL.TXT for the NHL 95 PC port"
+      ]
+    },
+    {
+      "version": "1.29.0",
+      "date": "2026-11-06",
+      "changes": [
+        "NHL 96 Genesis Sound test: the bundled slice $24486–$88A18 (SndDriver through TitleScreenImg) plays the 78 catalog songs and SFX through the 95 driver at 96 addresses. Sequencer and MIDI stay off"
+      ]
+    },
+    {
+      "version": "1.28.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF music: compressed 1SNh/1SNd payloads start with a 20-byte EA IMA block (dwOutSize, idxL, idxR, predL, predR; loc_CC55E / sub_CC048 add 14h). Each chunk reloads predictor/index; EACS+8 is bits and EACS+9 is channels; 1SNl+8 is the loop jump in samples. Voice PCM is unchanged"
+      ]
+    },
+    {
+      "version": "1.27.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF click: 1SNh size includes the header (sample frames = (size-0x28)/(ch*bps), dword_123BEC=4 for ADPCM), 1SNd size includes its 8-byte id, predictor/index carry across chunks, and trailing padding is not decoded. PCM stays signed",
+        "GAMEART total.ref / fight.ref / cup.ref: packed 10 FB after the 16-byte SHPI header is the raw pixel buffer (not SPIT RLE). A Copyright prefix is skipped (sub_AF85C). Frames are placed in SHPI directory order (sub_BF034)",
+        "ICELOGO keeps each FSH in-file !pal (sub_25E4D locateshape icelogo — not newpal). Calendar day-box logos are SETLOGO.REF team tags (sub_1B05E) with PNT.FSH !lgo (sub_1B6BC). CALNDxx.FSH is the month background; CALBUTT.FSH holds DK%02d chrome"
+      ]
+    },
+    {
+      "version": "1.26.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC .ASF songs play: EACS+0x0B is the voice slot (not a codec), EACS+0x0A==2 is EA IMA ADPCM from HOCKEY.EXE sub_D57B4 / sub_D585C, and PCM is signed",
+        "GAMEART total.ref / fight.ref / cup.ref decode packed 10 FB shapes and grow the player sheet instead of 3680 empty frames. setlogo.ref is one Images item. ARENAART.VIV uses rinkpal.qfs",
+        "96 PC Images list DATA then GERMAN, each VIV as a folder, each FSH or REF as one item, and SHPI tags in the filmstrip. Selecting a VIV subfile still lets you collapse that VIV"
+      ]
+    },
+    {
+      "version": "1.25.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 PC Images list DATA then GERMAN, each VIV as a folder, and name each picture from its SHPI tag. Player sprites are GAMEART.VIV total.ref, fight.ref, and cup.ref with team colors from GAMEART.VIV/newpal.qfs",
+        "The last global 96 PC palette pass is reverted (type 0x22 is not a palette unless the tag is ! or pal*). ICELOGO, AWARDS team logos, and calendar box icons use newpal.qfs. Banners keep the palette in the banner file. BASEFILE.VIV/intro.fsh nhlp uses !pl1; other intro.fsh images are left alone",
+        "SPA scripts are HOCKEY.EXE unk_117A9C (file 0x1502f0): flags, pair count, (frame, time) pairs, facing added to the frame. Studio plays them with the GAMEART REF sheets"
+      ]
+    },
+    {
+      "version": "1.24.0",
+      "date": "2026-11-05",
+      "changes": [
+        "NHL 96 Genesis pictures actually show: SetSframe menu sprite lists (Main Menu, Pause, Line Editor, …) are 95-style frame banks, including frame 0. Arena anim and Cup celebration sprites play the same way. Team logos use TeamLogoPalettes instead of the dummy JIM line. The spinning puck is eight 56×56 frames. Jersey colors are the 26 retail CRAM pals from the ROM (not the four leftover 95 files)",
+        "NHL 96 PC palettes follow HOCKEY.EXE: SHPI types 0x22/0x24 are palettes even without a !pal tag, ice borrows rinkpal.qfs (not PAL.FSH), and teampal.qda sits on the rink colors from that file instead of the 95 Tools ACT"
+      ]
+    },
+    {
+      "version": "1.23.0",
+      "date": "2026-11-04",
+      "changes": [
+        "NHL 96 PC actually opens: GAMEART.VIV and the other art packs are locatebig C0 FB (not BIGF), so the pictures inside list and load. Songs are 1SNh wrapping an EACS header. Jersey colors come from teampal.qda. With no SPA table the Game menu opens Images",
+        "NHL 95 PC and NHL 96 PC accept the CD image in roms/ (nhl95.iso / nhl96.iso) or as a dropped ISO, so you do not have to unpack the install folder"
+      ]
+    },
+    {
+      "version": "1.22.0",
+      "date": "2026-11-04",
+      "changes": [
+        "NHL 96 PC is in the Game menu: copy the install into pc96/ or drop the folder. Pictures are SHPI .FSH (and .VIV BIGF art packs) named from NHL96PC HOCKEY.EXE, not 94/95 PPV sheets. Songs are EA 1SN .ASF. Frame / SPF / SPA stay empty — the EXE has no updateanim table"
+      ]
+    },
+    {
+      "version": "1.21.0",
+      "date": "2026-11-04",
+      "changes": [
+        "NHL 96 Genesis is in the Game menu: player sheet (95-style records), SPA names from frames96.asm, and the pictures extractAssets96.js names. Drop roms/nhl96.bin or Open file. Sound test waits on a bundled sound slice"
+      ]
+    },
+    {
+      "version": "1.20.0",
+      "date": "2026-11-01",
+      "changes": [
+        "Export frame / Export all frames write 8-bit indexed PNGs with the selected palette stored in the file (PLTE, and tRNS for sprite color 0 or picture holes). Centre-ice logo/rink PNG and scoreboard crest PNG do the same"
+      ]
+    },
+    {
+      "version": "1.19.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94/95 PC Audio lists desk Songs, then all team songs together, then MT-32. Speech groups are the VIV packs: NHL 95 PC is XBRUCE2.VIV (OpenAnnouncerBank) with collapsible NUM / COR / TEA / PEN / FRM rink-call subgroups, then BAR / INT / HOM / AWA / RNK; NHL 94 PC splits XBRUCE2.VIV and XRBARR2.VIV the same way (BRU, HOM, …)"
+      ]
+    },
+    {
+      "version": "1.18.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 95 PC in-game rink announcer (.NUM / .COR in XBRUCE2.VIV, 73.NUM through 1SECOND.COR) plays through mixer flag 1 (SpeechTimerTick sub_8FC37 / loc_A91DA word_D7414), not ReadSpeechSample DPCM. Retail XBRUCE2.VIV is C0 FB like 94, so decode follows the first byte of each clip rather than the archive magic. 47 FB clips (BACKMOMT.INT through LA.RNK) stay on the DPCM path"
+      ]
+    },
+    {
+      "version": "1.17.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94 PC MAP 0x800 is a true 8-pixel reverse (VgaStamp8 reads plane p, writes plane 3-p, and swaps the two bytes — 7-px, not a 4-pixel group swap). BUF / HFD / CHI 0x1800 logo halves face the right way",
+        "NHL 94 PC jersey and centre ice use RINKPAL.QPP (LoadTeamPalette !pal), not the bundled NHL 95 PC rinkpal.act",
+        "NHL 95 PC Audio: Play intro + loop sits next to Play intro / Play loop / Play once for FORM 8SVX songs (desk mixer: one-shot head, then the repeating tail)"
+      ]
+    },
+    {
+      "version": "1.16.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94 PC RINK.TIL and team .TIL files are four concatenated Mode X planes (hockey94demo VgaStorePlanes / sub_2447D), not 64-byte linear tiles. The Images tab Ice rink is sparkly ice, faceoff circles, and crowd — the same picture the game scrolls, not a scanline dither"
+      ]
+    },
+    {
+      "version": "1.15.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 95 PC IFF desk music: FORM 8SVX VHDR oneShotHiSamples then repeatHiSamples is an intro plus a looping tail (NHL95PC mixer loc_A92E6), not verse/chorus branches. The Audio tab can play the intro, the loop, the whole BODY once, or the game path (intro then looping tail)",
+        "NHL 94/95 PC Audio exports the playing song to 16-bit WAV or AIFF (IFF files keep the smpl loop when VHDR repeat is set; AdLib songs export the OPL2 render)",
+        "pioneer.iff is not a path in NHL95PC. RunIntro plays pioneer2.iff, pioneer3.iff, and pioneer4.iff over the pioneer1 / pioneer2 graphics; a leftover pioneer.iff was never wired up",
+        "NHL 94 PC gameplay ice with 4-pointed sparkles is TRINKND.QPP (Mode X planar, LoadTransparentRinkEndOverlay). RINK.TIL + RINK.MAP stays the overhead 384×592 tile map: linear 8×8 on disk, repeating dithered ice-fill tile, VgaStamp8 0x800/0x1000 on blit"
+      ]
+    },
+    {
+      "version": "1.14.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 95 PC IFF desk music follows the NHL95PC mixer: FORM 8SVX BODY is word_D7414 4-bit Fibonacci deltas (two samples per byte, acc starts 0) at the VHDR rate, volume 0x4C from MainDeskLoop. Playing the packed nibbles as PCM was scratchy and loud; AFAN.IFF stays ≥ 7 s like ADAFAN.KMS",
+        "NHL 94 PC RINK.TIL is linear 8×8 on disk. VgaStamp8 (94 PC seg000) still supplies the blit flags: 0x800 swaps the two 4-pixel groups, 0x1000 flips vertically. Treating the 64 disk bytes as Mode X planes striped the ice fill"
+      ]
+    },
+    {
+      "version": "1.13.0",
+      "date": "2026-11-01",
+      "changes": [
+        "NHL 94/95 PC AdLib songs play to the end of the sequencer (ADAWARDS is about a minute, not cut off at 12 seconds)",
+        "NHL 94/95 PC AdLib visualizer: click a lane to mute it, like Genesis. OPL1–OPL9 sit in the left gutter; $E7 track names (bsec, trum, kick/snar, …) are tags at the left of each lane, same placement as the Genesis instrument tags",
+        "NHL 94/95 PC AdLib songs keep the FM patch total level. Mapping MIDI velocity onto OPL TL 38 made KMS a whisper next to IFF and speech",
+        "NHL 95 PC IFF desk music: FORM 8SVX is signed 8-bit. VHDR 22050/22500 is 2× the play rate (AFAN.IFF at the header rate was ~3.6 s and scratchy; half that rate is ≥ 7 s, same as ADAFAN.KMS). RIFF WAVE XOR 80h, then 8-bit unless fmt bits is 16",
+        "NHL 94 PC XBRUCE2.VIV / XRBARR2.VIV directory is offset, size, name from byte 6 (count at +4). TWELVE, TWENTY, and TWO play the clip on their own label; PIT.CTY and EDM.RNK are real last clips, not garbage",
+        "NHL 94 PC RINK.TIL tiles are VGA Mode X planar 8×8 (four 16-byte planes). Horizontal flip 0x800 swaps the two 4-pixel groups (VgaStamp8), not a reverse of eight pixels. 95 PC tiles stay linear",
+        "NHL 94/95 PC Images inspector lists the shape header fields: tag, type, offset (the QFS/QPP xOffset/yOffset), position, quads, extra, and flags. 94 pictures use the header hotspot instead of 0,0"
+      ]
+    },
+    {
+      "version": "1.12.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 and 95 PC Audio now follow the game executables (NHL94PC MUSIC_FORMAT / SFX_FORMAT from HOCKEY.EXE and YM30.BGP), not the old EA-NHL-Tools format notes: KMS/CFG songs, 95 PC IFF desk music, 95 PC VIV OpenSpeechBank plus ReadSpeechSample DPCM, and 94 PC VIV clip names keep their suffixes (TWELVE (Bruce), Boston (city), THE3RD (Barr))",
+        "NHL 94/95 PC AdLib songs add 24 to every MIDI note (HOCKEY.EXE 1844:022E) and use the YM30 fnum table (block = note/12) with real OPL2 operator offsets. Without +24 the organ tunes were two octaves low and sounded like little pops. PAT rec[7] is still the signed transpose the driver adds at note-on",
+        "NHL 95 PC IFF desk music is RIFF WAVE XOR 80h then 16-bit (sub_8FB8E halves the byte counts), or FORM 8SVX (no XOR; Fibonacci-delta when the header says so). Playing 16-bit as 8-bit was twice as fast and static. 94 PC has no IFF music files",
+        "NHL 94 PC Images lists the full ice rink from RINK.TIL and RINK.MAP (384×592, the same LoadRink blit as the jersey ice tab). 94 PC has no RINK.QFS. 94 PC tiles stay linear 8×8 (the same as 95), not Mode X unswizzle",
+        "NHL 94 PC is listed before NHL 95 PC. Either shows [loaded] when sprites, pictures, both jersey bins, and AdLib songs are present. Jersey editor prefers 94 PC and loads CRESTS4.QPP; PLAYER.QPP stays a picture, not a sprite sheet. Audio tab has the Genesis-style channel visualizer: nine AdLib (YM3812) piano-roll lanes, or a waveform for speech / IFF / SFX"
+      ]
+    },
+    {
+      "version": "1.11.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 95 PC Audio: AdLib .KMS/.CFG songs, PCFF digital SFX, XBRUCE2.VIV announcer clips, and IFF 8SVX samples play in the Audio tab"
+      ]
+    },
+    {
+      "version": "1.10.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: SPA scripts now come from retail HOCKEY.EXE (file offset 0x358A4, 95 sequences) instead of an interim 95 PC subset",
+        "NHL 94 PC Audio: XBRUCE2.VIV and XRBARR2.VIV announcer clips unpack and play in the Audio tab",
+        "NHL 94 PC: player-frame hotspots use the planar bank header; arrows, puck, siren, glass, and referee keep the game palette"
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 PC: player sheets, rink and crowd PPV, and QPP pictures decode as Mode X planar banks (Huffman 30 FB or BTree 46 FB), not NHL 95 PC SHPI/RefPack",
+        "NHL 94 PC Audio: AdLib .KMS/.CFG songs and PCFF digital SFX play in the Audio tab"
+      ]
+    },
+    {
+      "version": "1.8.2",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis Audio: team song titles are shorter, such as $30 · NHL94_music_001, with the song name and usage (Go Team Go [E-flat] (BOS)) on the line below"
+      ]
+    },
+    {
+      "version": "1.8.1",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis: the animation and frame lists follow the disassembly's renamed tables and the new sprite animation commentary",
+        "NHLPA 93 Genesis and both SNES games: animation names and comments match the latest disassembly (goalie save list names, the hold-frame label)"
+      ]
+    },
+    {
+      "version": "1.8.0",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis Audio: songs $30-$77 now use the NHL94.com forum's Music # names (NHL94_music_001 to _072) with each track's description, such as Go Team Go [E-flat] (BOS)"
+      ]
+    },
+    {
+      "version": "1.7.1",
+      "date": "2026-10-31",
+      "changes": [
+        "NHL 94 Genesis: the player card pictures are named .map.jim, which is the format they are in"
+      ]
+    },
+    {
+      "version": "1.7.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Open folder now also loads a folder of ROMs: each supported game and revision in it is detected and kept, and the Game list switches between them"
+      ]
+    },
+    {
+      "version": "1.6.2",
+      "date": "2026-10-30",
+      "changes": [
+        "NHL 94 Genesis: EASN is now named EASports in the Images list"
+      ]
+    },
+    {
+      "version": "1.6.1",
+      "date": "2026-10-30",
+      "changes": [
+        "The Revision picker is now really hidden on games with one retail layout (it stayed on screen after leaving NHLPA 93 or NHL 92)",
+        "Games and revisions with a ROM open are marked [loaded] in the Game and Revision lists"
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: every group heading in the SPF, SPA, Images and Audio lists can now be collapsed and expanded",
+        "Images: player cards are split into their own Player cards group, which starts collapsed in every game"
+      ]
+    },
+    {
+      "version": "1.5.3",
+      "date": "2026-10-30",
+      "changes": [
+        "NHLPA 93 and NHL 94 Genesis: pictures renamed to match what they show (EASportsBG, EASportsSplash, IceRinkHor, NHLLogo, NHLPALogo, MarkLesser, Hot, Cold, StanleyCup)",
+        "NHL 94 Genesis: the two New York teams are now New York I and New York R"
+      ]
+    },
+    {
+      "version": "1.5.2",
+      "date": "2026-10-30",
+      "changes": [
+        "Images: sprite banks (such as NHL 94 Face Off sprites) now list all four palette lines and which ones their frames use, like the pictures do"
+      ]
+    },
+    {
+      "version": "1.5.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: asset names in the Images list no longer get an icon in front of them"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Studio: the top bar buttons, the Frame/SPF/SPA/Images/Audio tabs and the playback controls are now square icon-over-label buttons like the Image Editor, and Loop, Game timing and Transparency are toggle buttons"
+      ]
+    },
+    {
+      "version": "1.4.2",
+      "date": "2026-10-30",
+      "changes": [
+        "NHLPA 93 Genesis: Title 2, Title 3, Title Logo and Game Setup now take their colors from the title and setup pictures they load with, instead of the ice palette"
+      ]
+    },
+    {
+      "version": "1.4.1",
+      "date": "2026-10-30",
+      "changes": [
+        "Images: the palette panel now shows all four palette lines stored with the picture, and marks which lines its tiles actually use (the old swatch showed line 2, which is often an unused placeholder, so it looked all magenta)"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "2026-10-30",
+      "changes": [
+        "A Revision picker next to Game lists the retail revisions of a game. NHLPA 93 offers Rev 0, Rev A and Rev B (offsets move); picking one re-places the pictures and sprite sheet at that revision's offsets, and the revision of an open ROM is marked loaded",
+        "NHL 92 offers Retail and Rev A (the pictures sit at the same offsets; an open ROM is told apart by the credit line)",
+        "Games with a single retail layout hide the picker"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-10-30",
+      "changes": [
+        "Every button across Studio, the Image Editor, Jerseys and the chip lab now has an icon in the Image Editor style, plus a tooltip on any button that did not have one"
+      ]
+    },
+    {
+      "version": "1.2.3",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor: a color swatch sits left of the R/G/B sliders, 8-bit RGB sits next to Hex, and the Pal/index/CRAM header line is gone"
+      ]
+    },
+    {
+      "version": "1.2.2",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor paint copies a unique tile when that 8×8 is shared (including H/V-flipped squares), so painting one cell does not draw into the others",
+        "Paint writes the selected color index and leaves the cell’s palette; it does not recolor the whole 8×8"
+      ]
+    },
+    {
+      "version": "1.2.1",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor Import has a Color mode: Genesis 3-bit (GEN) or SNES 5-bit (SNES)",
+        "3-bit (GEN) / 5-bit (SNES) color reduction only: Step A only, palettes off, export PNG",
+        "Reduce count only (for export): keeps 8-bit color, palettes off, export PNG",
+        "Export asks to apply a floating image first, or cancel and leave Export closed",
+        "The centre pane grows so Apply and import previews stay on screen",
+        "Floating import: Pal moves clicked or dragged tiles onto the selected palette and rebuilds that pal from all tiles on it; Optimize (next to Pal) groups matching tiles to free ink slots",
+        "Lock on a palette does not rebuild a floating import; Lock seams keeps Pal assignments when color options change",
+        "Image Editor starts with palettes at 0,0,0; type #RRGGBB (Genesis snaps to 3-bit × 36); pals with no tiles go back to black",
+        "5-bit quantization is available everywhere 3-bit is"
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor tools have icons, labels, and a mouse cursor that matches the selected tool",
+        "Erase cell writes a blank tile filled with palette color 0",
+        "Paste and Import into current Image float with a dotted outline until you Apply",
+        "Export is a format picker",
+        "Remove duplicate tiles, including H-flip and V-flip matches; new-image and import-into-image do this automatically",
+        "Import .pal and .snespal palettes and choose which file lines fill which editor pals",
+        "Select is the default Image Editor tool; toolbar order is Pan, Select, Pick, Place, Paint, Erase, then Undo/Redo, then Grid/Trans/Seams icons that highlight when on",
+        "Zoom sits next to 270° and goes to 32×; Resize and Kind stay compact",
+        "The zoomed tile preview only picks a color (it no longer paints)",
+        "Cell inspector: tile index beside palette, H-flip beside V-flip, Word next to Cell, View under Priority",
+        "Import Tiles appends to the tile set and leaves the map picture alone",
+        "Export greys out with a reason next to the buttons instead of an error popup; picking SNES .map.sjim or NHL 94 SNES .zip from a Genesis map converts when tiles fit (1024)",
+        "Packed is only offered when the format has both packed and unpacked; the 94S zip line lists the files inside",
+        "Export .ACT is a dialog (one palette or all combined), not a radio on the format picker",
+        "← NHL9X Studio | page title sits on one line in the Image Editor, Jerseys, and Chip lab headers"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-10-29",
+      "changes": [
+        "Image Editor for Genesis .map.jim, SNES .map.sjim, and NHL 94 SNES screens",
+        "Import a picture onto the map (overwrite cells, add tiles, or new image) with ACT-locked palettes",
+        "Player portrait encode; packed export matches 93G/94G DecompressBytecode",
+        "Title screens show solid ice by default; Transparency still punches VDP holes if you check it",
+        "Chip Lab is hidden from the header (the page is still there)"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-10-20",
+      "changes": [
+        "NHL 94 SNES pictures: face-off, team blocks, EASN, refs, fonts, sprites",
+        "93S songs by cue, named sound effects, play button",
+        "Audio and image lists aligned across 92, 93G and 93S",
+        "NHLPA 93 SNES rinks open on a team palette",
+        "Jersey editor: scoreboard crest import/export"
+      ]
+    }
+  ]
+}

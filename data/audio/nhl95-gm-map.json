@@ -1,0 +1,1048 @@
+{
+ "note": "Hand-editable NHL 95 (Genesis) patch -> General MIDI table: the 43 type-0 items of SoundBanks bank 0. Patch kind from byte 0 (0 FM, 2 PCM sample, 4 PSG); names and characters from the songs and SfxTable ($67890) entries that use each patch; GM targets chosen by ear-less judgement (low confidence). Load list 0 is the menus (songs 0-3), 1 the game. node test/nhl95-stream.js checks it.",
+ "schema": 1,
+ "game": 95,
+ "loadLists": [
+  {
+   "list": 0,
+   "name": "Menus (title songs 0-3)",
+   "patches": [
+    11,
+    13,
+    14,
+    17,
+    19,
+    20,
+    21,
+    22,
+    24,
+    27,
+    28,
+    29
+   ]
+  },
+  {
+   "list": 1,
+   "name": "In game (team and arena songs, effects)",
+   "patches": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    25,
+    51,
+    54,
+    56,
+    57,
+    59,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73
+   ]
+  }
+ ],
+ "patches": [
+  {
+   "patch": 0,
+   "kind": "pcm",
+   "name": "PCM 0 · song $19",
+   "character": "PCM sample 0 (song $19)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$19"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 1,
+   "kind": "pcm",
+   "name": "PCM 1 · song $29",
+   "character": "PCM sample 1 (song $29)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$29"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 2,
+   "kind": "pcm",
+   "name": "PCM 2 · puckice2",
+   "character": "PCM sample 2: puckice2, puckice3",
+   "target": {
+    "kind": "drum",
+    "note": 37,
+    "name": "Side Stick"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$1a",
+    "$27",
+    "$28"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 3,
+   "kind": "pcm",
+   "name": "PCM 3 · song $1b",
+   "character": "PCM sample 3 (song $1b)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$1b"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 4,
+   "kind": "pcm",
+   "name": "PCM 4 · oooh",
+   "character": "PCM sample 4: oooh, puckpost, id 26 27",
+   "target": {
+    "kind": "program",
+    "program": 126,
+    "name": "Applause"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$4"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 5,
+   "kind": "pcm",
+   "name": "PCM 5 · song $5",
+   "character": "PCM sample 5 (song $5)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$5"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 6,
+   "kind": "pcm",
+   "name": "PCM 6 · song $6",
+   "character": "PCM sample 6 (song $6)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$6"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 7,
+   "kind": "pcm",
+   "name": "PCM 7 · song $7",
+   "character": "PCM sample 7 (song $7)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$7"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 8,
+   "kind": "pcm",
+   "name": "PCM 8 · shotbh1",
+   "character": "PCM sample 8: shotbh1, shotbh2, shotbh3, shotbh4, shotfh1, shotfh2, shotfh3, shotfh4",
+   "target": {
+    "kind": "drum",
+    "note": 37,
+    "name": "Side Stick"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$8"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 9,
+   "kind": "pcm",
+   "name": "PCM 9 · stdef",
+   "character": "PCM sample 9: stdef",
+   "target": {
+    "kind": "drum",
+    "note": 37,
+    "name": "Side Stick"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$9"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 10,
+   "kind": "pcm",
+   "name": "PCM 10 · song $a",
+   "character": "PCM sample 10 (song $a)",
+   "target": {
+    "kind": "program",
+    "program": 127,
+    "name": "Gunshot"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$a"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 11,
+   "kind": "fm",
+   "name": "FM 11 · Title-song lead",
+   "character": "Title-song lead (load list 0 only; no song selects it)",
+   "target": {
+    "kind": "program",
+    "program": 81,
+    "name": "Lead 2 (sawtooth)"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [],
+   "confidence": "low"
+  },
+  {
+   "patch": 12,
+   "kind": "pcm",
+   "name": "PCM 12 · hand clap",
+   "character": "PCM sample 12: hand clap on channel 8 of the team songs (note 105)",
+   "target": {
+    "kind": "drum",
+    "note": 39,
+    "name": "Hand Clap"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$32",
+    "$35",
+    "$3c",
+    "$40",
+    "$4b",
+    "$4c",
+    "$51"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 13,
+   "kind": "fm",
+   "name": "FM 13 · Menu chords and arpeggios",
+   "character": "Menu chords and arpeggios, notes 22-86, short",
+   "target": {
+    "kind": "program",
+    "program": 62,
+    "name": "Synth Brass 1"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 14,
+   "kind": "fm",
+   "name": "FM 14 · Menu stab",
+   "character": "Menu stab, four pitches (50-57) on one channel",
+   "target": {
+    "kind": "program",
+    "program": 47,
+    "name": "Timpani"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 17,
+   "kind": "fm",
+   "name": "FM 17 · Menu bass line",
+   "character": "Menu bass line, notes 24-55",
+   "target": {
+    "kind": "program",
+    "program": 38,
+    "name": "Synth Bass 1"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 19,
+   "kind": "psg",
+   "name": "PSG 19 · PSG noise",
+   "character": "PSG noise: hi-hats and crash (note 120 closed, 108 open, 96 crash)",
+   "target": {
+    "kind": "drum",
+    "note": 42,
+    "name": "Closed Hi-Hat"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 20,
+   "kind": "psg",
+   "name": "PSG 20 · PSG square lead",
+   "character": "PSG square lead, notes 43-79",
+   "target": {
+    "kind": "program",
+    "program": 80,
+    "name": "Lead 1 (square)"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 21,
+   "kind": "fm",
+   "name": "FM 21 · FM drum kit",
+   "character": "FM drum kit: the note picks the drum (0 kick, 9 tom, 17 crash, 19 snare)",
+   "target": {
+    "kind": "drum",
+    "note": 36,
+    "name": "Bass Drum 1"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 22,
+   "kind": "fm",
+   "name": "FM 22 · Menu low line",
+   "character": "Menu low line, notes 21-39",
+   "target": {
+    "kind": "program",
+    "program": 33,
+    "name": "Electric Bass (finger)"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$1"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 24,
+   "kind": "fm",
+   "name": "FM 24 · Menu pad / counter-melody",
+   "character": "Menu pad / counter-melody, notes 38-67, long",
+   "target": {
+    "kind": "program",
+    "program": 48,
+    "name": "String Ensemble 1"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1",
+    "$2",
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 25,
+   "kind": "fm",
+   "name": "FM 25 · Arena organ",
+   "character": "Arena organ: every team and arena song",
+   "target": {
+    "kind": "program",
+    "program": 16,
+    "name": "Drawbar Organ"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$32",
+    "$33",
+    "$34",
+    "$35",
+    "$36",
+    "$37",
+    "$38",
+    "$39",
+    "$3a",
+    "$3b",
+    "$3d",
+    "$3e",
+    "$3f",
+    "$40",
+    "$41",
+    "$42",
+    "$43",
+    "$44",
+    "$45",
+    "$46",
+    "$47",
+    "$48",
+    "$49",
+    "$4a",
+    "$4b",
+    "$4c",
+    "$4d",
+    "$4e",
+    "$4f",
+    "$50",
+    "$51",
+    "$52",
+    "$53",
+    "$54",
+    "$55"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 27,
+   "kind": "fm",
+   "name": "FM 27 · Menu lead",
+   "character": "Menu lead, notes 40-48",
+   "target": {
+    "kind": "program",
+    "program": 30,
+    "name": "Distortion Guitar"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 28,
+   "kind": "fm",
+   "name": "FM 28 · Menu bass",
+   "character": "Menu bass, notes 24-43",
+   "target": {
+    "kind": "program",
+    "program": 39,
+    "name": "Synth Bass 2"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$0",
+    "$1"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 29,
+   "kind": "fm",
+   "name": "FM 29 · Menu bell line",
+   "character": "Menu bell line, notes 50-67",
+   "target": {
+    "kind": "program",
+    "program": 11,
+    "name": "Vibraphone"
+   },
+   "loadLists": [
+    0
+   ],
+   "songs": [
+    "$3"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 51,
+   "kind": "pcm",
+   "name": "PCM 51 · pass1",
+   "character": "PCM sample 11: pass1, pass2, pass3, pass4",
+   "target": {
+    "kind": "drum",
+    "note": 37,
+    "name": "Side Stick"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$b"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 54,
+   "kind": "pcm",
+   "name": "PCM 54 · homewin",
+   "character": "PCM sample 14: homewin",
+   "target": {
+    "kind": "program",
+    "program": 126,
+    "name": "Applause"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$e",
+    "$28"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 56,
+   "kind": "pcm",
+   "name": "PCM 56 · crowdcheer",
+   "character": "PCM sample 16: crowdcheer",
+   "target": {
+    "kind": "program",
+    "program": 126,
+    "name": "Applause"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$10"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 57,
+   "kind": "pcm",
+   "name": "PCM 57 · puckice1",
+   "character": "PCM sample 17: puckice1",
+   "target": {
+    "kind": "drum",
+    "note": 37,
+    "name": "Side Stick"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$11"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 59,
+   "kind": "pcm",
+   "name": "PCM 59 · oooh2",
+   "character": "PCM sample 19: oooh2",
+   "target": {
+    "kind": "program",
+    "program": 126,
+    "name": "Applause"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$13"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 61,
+   "kind": "pcm",
+   "name": "PCM 61 · playerwall2",
+   "character": "PCM sample 21: playerwall2, playerwall3, playerwall4",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$15"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 62,
+   "kind": "fm",
+   "name": "FM 62 · Horn effect",
+   "character": "Horn effect (FM)",
+   "target": {
+    "kind": "program",
+    "program": 56,
+    "name": "Trumpet"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$16"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 63,
+   "kind": "fm",
+   "name": "FM 63 · Whistle effect",
+   "character": "Whistle effect (FM)",
+   "target": {
+    "kind": "program",
+    "program": 72,
+    "name": "Piccolo"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$17"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 64,
+   "kind": "fm",
+   "name": "FM 64 · Player into the boards",
+   "character": "Player into the boards (FM thump)",
+   "target": {
+    "kind": "drum",
+    "note": 41,
+    "name": "Low Floor Tom"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$18"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 65,
+   "kind": "pcm",
+   "name": "PCM 65 · crowdboo",
+   "character": "PCM sample 22: crowdboo",
+   "target": {
+    "kind": "program",
+    "program": 126,
+    "name": "Applause"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$1e",
+    "$27"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 66,
+   "kind": "pcm",
+   "name": "PCM 66 · bglass",
+   "character": "PCM sample 23: bglass",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$20"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 67,
+   "kind": "pcm",
+   "name": "PCM 67 · check1",
+   "character": "PCM sample 24: check1",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$21"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 68,
+   "kind": "pcm",
+   "name": "PCM 68 · check4",
+   "character": "PCM sample 25: check4",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$22"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 69,
+   "kind": "fm",
+   "name": "FM 69 · Goal siren",
+   "character": "Goal siren (FM)",
+   "target": {
+    "kind": "program",
+    "program": 125,
+    "name": "Helicopter"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$26"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 70,
+   "kind": "pcm",
+   "name": "PCM 70 · check2",
+   "character": "PCM sample 27: check2, check3",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$23"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 71,
+   "kind": "fm",
+   "name": "FM 71 · FM effect",
+   "character": "FM effect (no table entry)",
+   "target": {
+    "kind": "program",
+    "program": 122,
+    "name": "Seashore"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$24"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 72,
+   "kind": "pcm",
+   "name": "PCM 72 · puckget",
+   "character": "PCM sample 29: puckget, puckbody",
+   "target": {
+    "kind": "drum",
+    "note": 49,
+    "name": "Crash Cymbal 1"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$25"
+   ],
+   "confidence": "low"
+  },
+  {
+   "patch": 73,
+   "kind": "fm",
+   "name": "FM 73 · Menu beeps",
+   "character": "Menu beeps (FM)",
+   "target": {
+    "kind": "program",
+    "program": 80,
+    "name": "Lead 1 (square)"
+   },
+   "loadLists": [
+    1
+   ],
+   "songs": [
+    "$1c",
+    "$1d"
+   ],
+   "confidence": "low"
+  }
+ ],
+ "gmToNhl": {
+  "note": "MIDI import: per load list, GM program family (program >> 3) -> patch, and GM drum notes -> patch + note. Only patches in the song's load list are used.",
+  "lists": {
+   "0": {
+    "families": [
+     13,
+     13,
+     24,
+     27,
+     22,
+     17,
+     24,
+     24,
+     27,
+     24,
+     13,
+     29,
+     24,
+     13,
+     13,
+     13
+    ],
+    "programOverrides": {
+     "11": 29,
+     "33": 22,
+     "38": 17,
+     "39": 28,
+     "47": 14,
+     "80": 20,
+     "81": 11
+    },
+    "defaultDrum": {
+     "patch": 21,
+     "note": 9
+    },
+    "drums": [
+     {
+      "notes": [
+       35,
+       36
+      ],
+      "patch": 21,
+      "note": 0
+     },
+     {
+      "notes": [
+       37,
+       38,
+       39,
+       40
+      ],
+      "patch": 21,
+      "note": 19
+     },
+     {
+      "notes": [
+       42,
+       44
+      ],
+      "patch": 19,
+      "note": 120
+     },
+     {
+      "notes": [
+       46
+      ],
+      "patch": 19,
+      "note": 108
+     },
+     {
+      "notes": [
+       49,
+       51,
+       52,
+       55,
+       57,
+       59
+      ],
+      "patch": 19,
+      "note": 96
+     },
+     {
+      "notes": [
+       41,
+       43,
+       45,
+       47,
+       48,
+       50
+      ],
+      "patch": 21,
+      "note": 9
+     }
+    ]
+   },
+   "1": {
+    "families": [
+     25,
+     25,
+     25,
+     25,
+     25,
+     25,
+     25,
+     25,
+     62,
+     63,
+     25,
+     73,
+     25,
+     25,
+     25,
+     25
+    ],
+    "programOverrides": {
+     "56": 62,
+     "72": 63,
+     "80": 73,
+     "125": 69
+    },
+    "defaultDrum": {
+     "patch": 12,
+     "note": 105
+    },
+    "drums": [
+     {
+      "notes": [
+       39
+      ],
+      "patch": 12,
+      "note": 105
+     },
+     {
+      "notes": [
+       41,
+       43,
+       45
+      ],
+      "patch": 64,
+      "note": 48
+     }
+    ]
+   }
+  }
+ }
+}
